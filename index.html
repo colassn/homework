@@ -29,7 +29,7 @@
     </div>
 
     <!-- 1. 登入視窗 -->
-    <div id="view-login" class="hidden absolute inset-0 bg-slate-50 z-10 flex flex-col items-center justify-center p-6 overflow-y-auto">
+    <div id="view-login" class="hidden absolute inset-0 bg-slate-50 z-50 flex flex-col items-center justify-center p-6 overflow-y-auto">
         <div class="w-full max-w-md bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/60 p-8 sm:p-10 border border-slate-100 fade-in text-center my-auto">
             <div class="mb-6 flex justify-center">
                 <div class="p-4 bg-slate-900 rounded-2xl shadow-lg shadow-slate-900/20">
@@ -73,47 +73,44 @@
         </div>
     </div>
 
-    <!-- 2. 強制暱稱 Modal (優先級高) -->
-    <div id="view-nickname" class="hidden absolute inset-0 bg-slate-900/95 backdrop-blur-sm z-30 flex items-center justify-center p-4 fade-in">
-        <div class="bg-white rounded-[2rem] p-8 w-full max-w-md shadow-2xl text-center">
-            <div class="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                <i data-lucide="user" class="w-8 h-8 text-indigo-600"></i>
-            </div>
-            <h2 class="text-2xl font-bold text-slate-800 mb-2">還差一步！</h2>
-            <p class="text-slate-500 mb-6 text-sm">請輸入您的<strong>英文短名 (English Nickname)</strong><br>方便老師和同學識別。</p>
-            
-            <input type="text" id="input-modal-nickname" placeholder="例如: Justin, Mary" class="w-full p-4 rounded-xl border border-slate-200 bg-slate-50 text-lg text-center font-medium mb-4 outline-none focus:ring-2 focus:ring-indigo-500" autocomplete="off">
-            <button id="btn-save-nickname" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-indigo-200 transition-all">確認並開始</button>
-        </div>
-    </div>
-
-    <!-- 3. 強制同意條款 (Consent) -->
-    <div id="view-consent" class="hidden absolute inset-0 bg-slate-50 z-20 flex flex-col items-center justify-center p-6 fade-in">
+    <!-- 2. 強制同意條款 (Consent) - 優先級次高 -->
+    <div id="view-consent" class="hidden absolute inset-0 bg-slate-50 z-40 flex flex-col items-center justify-center p-6 fade-in">
         <div class="max-w-md w-full bg-white p-8 rounded-[2rem] shadow-2xl shadow-slate-200/50 border border-slate-100 text-center">
             <div class="w-16 h-16 bg-slate-900 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-slate-900/20">
                 <i data-lucide="shield-check" class="w-8 h-8 text-white"></i>
             </div>
             <h2 class="text-xl font-bold text-slate-900 mb-2">3B 班級專屬平台</h2>
             <p class="text-xs font-bold text-indigo-600 tracking-widest uppercase mb-6">Internal Confidentiality Notice</p>
-            
             <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100 mb-8 text-left">
                 <p class="text-sm text-slate-600 leading-relaxed text-justify">
-                    歡迎使用本班級管理系統。本平台僅供 <strong>3B 班級內部成員</strong>使用，內容包含學習紀錄與個人資訊。<br><br>
+                    歡迎使用本班級管理系統。本平台僅供 <strong>3B 班級內部成員</strong>使用。<br><br>
                     為保障大家的隱私安全，<span class="text-red-500 font-bold">請勿將本網頁連結或任何內容外洩予非本班成員</span>。
                 </p>
             </div>
-
-            <button id="btn-agree" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-4 rounded-xl transition-all active:scale-[0.98] shadow-xl shadow-slate-900/10 flex items-center justify-center gap-2 group">
+            <button id="btn-agree" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-4 rounded-xl transition-all shadow-xl shadow-slate-900/10 flex items-center justify-center gap-2 group">
                 <span>我理解並同意</span>
                 <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
             </button>
         </div>
     </div>
 
+    <!-- 3. 補填暱稱 Modal -->
+    <div id="view-nickname" class="hidden absolute inset-0 bg-slate-900/95 backdrop-blur-sm z-[60] flex items-center justify-center p-4 fade-in">
+        <div class="bg-white rounded-[2rem] p-8 w-full max-w-md shadow-2xl text-center">
+            <div class="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i data-lucide="user" class="w-8 h-8 text-indigo-600"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-slate-800 mb-2">還差一步！</h2>
+            <p class="text-slate-500 mb-6 text-sm">請輸入您的<strong>英文短名 (English Nickname)</strong><br>方便識別。</p>
+            <input type="text" id="input-modal-nickname" placeholder="例如: Justin, Mary" class="w-full p-4 rounded-xl border border-slate-200 bg-slate-50 text-lg text-center font-medium mb-4 outline-none focus:ring-2 focus:ring-indigo-500" autocomplete="off">
+            <button id="btn-save-nickname" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-indigo-200 transition-all">確認並開始</button>
+        </div>
+    </div>
+
     <!-- 4. 主介面 (Dashboard) -->
     <div id="view-dashboard" class="hidden flex-grow flex flex-col h-full overflow-hidden fade-in">
         <!-- Navbar -->
-        <nav class="bg-white/90 backdrop-blur-md z-40 border-b border-slate-100 flex-shrink-0">
+        <nav class="bg-white/90 backdrop-blur-md z-30 border-b border-slate-100 flex-shrink-0">
             <div class="container mx-auto px-4 py-3 flex justify-between items-center max-w-5xl">
                 <div class="flex items-center gap-2">
                     <div class="bg-indigo-600 p-1.5 rounded-lg shadow-sm">
@@ -124,6 +121,7 @@
                 <div class="flex items-center gap-3">
                     <div class="text-right hidden sm:block">
                         <div id="user-name" class="text-sm font-semibold text-slate-700">User</div>
+                        <div id="user-role-label" class="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Student</div>
                     </div>
                     <div id="user-avatar" class="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold border-2 border-white shadow-sm text-sm">U</div>
                     <button id="btn-logout" class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"><i data-lucide="log-out" class="w-5 h-5"></i></button>
@@ -132,8 +130,15 @@
         </nav>
 
         <!-- Content -->
-        <div class="flex-grow overflow-y-auto overflow-x-hidden">
+        <div class="flex-grow overflow-y-auto overflow-x-hidden relative">
+            
+            <!-- 錯誤提示區 (如果資料載入失敗會顯示) -->
+            <div id="error-banner" class="hidden absolute top-0 left-0 w-full bg-red-50 p-4 text-center text-red-600 text-sm border-b border-red-100 z-10">
+                無法載入資料，請檢查網絡或聯絡管理員。
+            </div>
+
             <div class="container mx-auto p-4 max-w-5xl pb-20">
+                
                 <!-- ADMIN VIEW -->
                 <div id="admin-panel" class="hidden space-y-6">
                     <div class="flex bg-white p-1.5 rounded-2xl shadow-sm border border-slate-100 w-fit">
@@ -231,41 +236,39 @@
 
         const loader = document.getElementById('global-loader');
 
+        // Helper to switch views strictly
         function switchView(viewId) {
             ['view-login', 'view-consent', 'view-nickname', 'view-dashboard'].forEach(id => {
-                document.getElementById(id).classList.add('hidden');
+                const el = document.getElementById(id);
+                if(el) el.classList.add('hidden');
             });
-            document.getElementById(viewId).classList.remove('hidden');
-            loader.classList.add('opacity-0', 'pointer-events-none');
-            setTimeout(() => loader.classList.add('hidden'), 500);
+            const target = document.getElementById(viewId);
+            if(target) target.classList.remove('hidden');
+            
+            // Hide loader with delay
+            setTimeout(() => {
+                loader.classList.add('opacity-0', 'pointer-events-none');
+                setTimeout(() => loader.classList.add('hidden'), 500);
+            }, 300);
             lucide.createIcons();
         }
 
-        // --- Core Auth Logic (修正版) ---
+        // --- Core Auth Logic ---
         onAuthStateChanged(auth, async (user) => {
-            // 清除舊的監聽器
+            // Cleanup old listeners
             listeners.forEach(unsub => unsub());
             listeners = [];
 
             if (user) {
                 currentUser = user;
-                isAdmin = (user.email === ADMIN_EMAIL);
-                console.log("Logged in as:", user.email, "Admin:", isAdmin);
+                // Force check Admin email strictly
+                isAdmin = (user.email.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim());
+                
+                console.log("User:", user.email, "Is Admin:", isAdmin);
 
                 try {
-                    // 1. 同步用戶資料
+                    // Update basic user info immediately
                     const userRef = doc(db, 'artifacts', APP_ID, 'public', 'data', `user_${user.uid}`);
-                    
-                    // 嘗試讀取資料庫中的 nickname (不使用 Google displayName)
-                    let dbNickname = null;
-                    try {
-                        const snap = await getDoc(userRef);
-                        if (snap.exists()) dbNickname = snap.data().nickname;
-                    } catch (e) {
-                        console.log("New user or fetch error", e);
-                    }
-
-                    // 寫入基本資料 (保留 nickname 不覆蓋)
                     await setDoc(userRef, {
                         uid: user.uid,
                         email: user.email,
@@ -274,21 +277,35 @@
                         role: isAdmin ? 'admin' : 'student'
                     }, { merge: true });
 
-                    // 2. 判斷流程
-                    // 只有在資料庫裡真的有 nickname 欄位才算有，否則一律跳去設定
-                    if (!dbNickname && !isAdmin) {
-                        switchView('view-nickname');
-                    } else {
-                        // 有暱稱或者是管理員，進入同意畫面
-                        switchView('view-consent'); 
-                    }
-
-                    // 3. 預先載入資料 (確保畫面有東西)
+                    // Setup UI based on role immediately (Don't wait for DB read to switch view)
+                    updateDashboardUI();
                     initListeners();
 
+                    // Check nickname logic
+                    if (isAdmin) {
+                        // Admin goes straight to Dashboard, bypassing consent/nickname
+                        switchView('view-dashboard');
+                    } else {
+                        // Check if nickname exists in DB
+                        try {
+                            const snap = await getDoc(userRef);
+                            const dbNick = snap.exists() ? snap.data().nickname : null;
+                            
+                            if (!dbNick) {
+                                switchView('view-nickname');
+                            } else {
+                                switchView('view-consent');
+                            }
+                        } catch (e) {
+                            console.error("Fetch profile failed", e);
+                            // If fail, safe fallback to consent
+                            switchView('view-consent');
+                        }
+                    }
+
                 } catch (err) {
-                    console.error("Auth flow error:", err);
-                    alert("登入過程發生錯誤，請重試");
+                    console.error("Critical Init Error:", err);
+                    alert("初始化失敗: " + err.message);
                     switchView('view-login');
                 }
             } else {
@@ -301,31 +318,36 @@
 
         // --- Listeners ---
         function initListeners() {
-            // 監聽功課 (通用)
+            console.log("Initializing Listeners...");
+            
+            // 1. Homework Listener (All users need this)
             const qHw = query(collection(db, 'artifacts', APP_ID, 'public', 'data', 'homework'), orderBy('createdAt', 'desc'));
             const unsubHw = onSnapshot(qHw, (snap) => {
                 homeworkList = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                renderDashboard();
+                renderDashboard(); // Re-render when data comes
+            }, (error) => {
+                console.error("HW Listener Error:", error);
+                document.getElementById('error-banner').classList.remove('hidden');
             });
             listeners.push(unsubHw);
 
             if (isAdmin) {
-                // 管理員監聽全班
+                // 2. Admin Monitor Listener
                 const unsubAll = onSnapshot(collection(db, 'artifacts', APP_ID, 'public', 'data'), (snap) => {
                     const allDocs = snap.docs.map(d => d.data());
                     studentsData = allDocs.filter(d => d.uid && d.email !== ADMIN_EMAIL).sort((a,b) => (b.lastLogin?.seconds || 0) - (a.lastLogin?.seconds || 0));
                     renderAdminMonitor();
-                });
+                }, (error) => console.error("Admin Monitor Error:", error));
                 listeners.push(unsubAll);
             } else {
-                // 學生監聽自己狀態
+                // 3. Student Self Listener
                 const unsubSelf = onSnapshot(doc(db, 'artifacts', APP_ID, 'public', 'data', `user_${currentUser.uid}`), (snap) => {
                     if(snap.exists()) completedIds = snap.data().completedHomeworkIds || [];
                     renderStudentHw();
                 });
                 listeners.push(unsubSelf);
 
-                // 學生監聽備忘錄
+                // 4. Student Memo Listener
                 const qMemo = query(collection(db, 'artifacts', APP_ID, 'users', currentUser.uid, 'memos'), orderBy('createdAt', 'desc'));
                 const unsubMemo = onSnapshot(qMemo, (snap) => {
                     const memos = snap.docs.map(d => ({id: d.id, ...d.data()}));
@@ -335,44 +357,37 @@
             }
         }
 
-        // --- UI Actions ---
+        // --- UI Interactions ---
 
-        // 同意條款 -> 進入主畫面
         document.getElementById('btn-agree').addEventListener('click', () => {
             switchView('view-dashboard');
+            // Force re-render to ensure UI is correct
             updateDashboardUI();
             renderDashboard();
         });
 
-        // 儲存暱稱 -> 進入同意畫面
         document.getElementById('btn-save-nickname').addEventListener('click', async () => {
             const val = document.getElementById('input-modal-nickname').value.trim();
             if(!val) return;
             
             const btn = document.getElementById('btn-save-nickname');
-            btn.innerText = "儲存中...";
-            btn.disabled = true;
-
+            btn.innerText = "Saving...";
+            
             try {
-                // 寫入暱稱到資料庫
                 await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', `user_${currentUser.uid}`), {
                     nickname: val,
-                    displayName: val // 兼容舊欄位
+                    displayName: val
                 }, { merge: true });
-                
-                // 更新 Auth Profile
                 await updateProfile(currentUser, { displayName: val });
-
-                btn.innerText = "確認並開始";
-                btn.disabled = false;
-                switchView('view-consent'); // 成功後去同意頁
+                
+                switchView('view-consent');
             } catch(e) {
-                alert("儲存失敗: " + e.message);
-                btn.disabled = false;
+                alert("Error: " + e.message);
+                btn.innerText = "確認";
             }
         });
 
-        // 登入相關 UI
+        // Auth Forms
         let isRegister = false;
         document.getElementById('btn-switch-mode').addEventListener('click', (e) => {
             e.preventDefault();
@@ -389,25 +404,17 @@
             const email = document.getElementById('input-email').value;
             const pass = document.getElementById('input-password').value;
             const nick = document.getElementById('input-nickname').value;
-            
             try {
                 if (isRegister) {
                     if (!nick.trim()) throw new Error("請填寫英文短名");
                     const cred = await createUserWithEmailAndPassword(auth, email, pass);
                     await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', `user_${cred.user.uid}`), {
-                        nickname: nick,
-                        displayName: nick,
-                        uid: cred.user.uid,
-                        email: cred.user.email,
-                        role: 'student',
-                        lastLogin: serverTimestamp()
+                        nickname: nick, displayName: nick, uid: cred.user.uid, email: cred.user.email, role: 'student', lastLogin: serverTimestamp()
                     }, { merge: true });
                 } else {
                     await signInWithEmailAndPassword(auth, email, pass);
                 }
-            } catch (err) {
-                alert(err.message);
-            }
+            } catch (err) { alert(err.message); }
         });
 
         document.getElementById('btn-google').addEventListener('click', async () => {
@@ -419,22 +426,23 @@
         // --- Render Logic ---
 
         function updateDashboardUI() {
-            const userRef = doc(db, 'artifacts', APP_ID, 'public', 'data', `user_${currentUser.uid}`);
-            // 嘗試從資料庫拿最新的暱稱顯示，如果沒有就用 email
-            getDoc(userRef).then(snap => {
-                const name = (snap.exists() && snap.data().nickname) ? snap.data().nickname : currentUser.email.split('@')[0];
-                document.getElementById('user-name').innerText = name;
-                document.getElementById('user-avatar').innerText = name.charAt(0).toUpperCase();
-            });
-
+            const name = currentUser.displayName || currentUser.email.split('@')[0];
+            document.getElementById('user-name').innerText = name;
+            document.getElementById('user-avatar').innerText = name.charAt(0).toUpperCase();
+            
             document.getElementById('nav-title').innerText = isAdmin ? '管理後台' : '我的功課';
+            document.getElementById('user-role-label').innerText = isAdmin ? 'Admin' : 'Student';
+            
+            // Toggle Panels Visibility
+            const adminPanel = document.getElementById('admin-panel');
+            const studentPanel = document.getElementById('student-panel');
             
             if (isAdmin) {
-                document.getElementById('admin-panel').classList.remove('hidden');
-                document.getElementById('student-panel').classList.add('hidden');
+                adminPanel.classList.remove('hidden');
+                studentPanel.classList.add('hidden');
             } else {
-                document.getElementById('admin-panel').classList.add('hidden');
-                document.getElementById('student-panel').classList.remove('hidden');
+                adminPanel.classList.add('hidden');
+                studentPanel.classList.remove('hidden');
             }
         }
 
@@ -448,6 +456,7 @@
             lucide.createIcons();
         }
 
+        // Student Renders
         function renderStudentHw() {
             const list = document.getElementById('student-hw-list');
             list.innerHTML = '';
@@ -455,8 +464,7 @@
             const rate = homeworkList.length > 0 ? Math.round((completedIds.length / homeworkList.length) * 100) : 0;
             document.getElementById('progress-bar').style.width = `${rate}%`;
             document.getElementById('progress-text').innerText = `${rate}%`;
-            if(rate === 100) document.getElementById('progress-bar').classList.replace('bg-indigo-500', 'bg-green-500');
-            else document.getElementById('progress-bar').className = "h-full bg-indigo-500 transition-all duration-500";
+            document.getElementById('progress-bar').className = `h-full transition-all duration-500 ${rate===100 ? 'bg-green-500' : 'bg-indigo-500'}`;
 
             if(homeworkList.length === 0) list.innerHTML = '<div class="text-center py-10 text-slate-400 text-sm">暫無功課</div>';
 
@@ -480,16 +488,12 @@
                 div.onclick = () => toggleHw(hw.id);
                 list.appendChild(div);
             });
-            lucide.createIcons();
         }
 
         async function toggleHw(id) {
             const ref = doc(db, 'artifacts', APP_ID, 'public', 'data', `user_${currentUser.uid}`);
-            if(completedIds.includes(id)) {
-                await updateDoc(ref, { completedHomeworkIds: arrayRemove(id) });
-            } else {
-                await setDoc(ref, { completedHomeworkIds: arrayUnion(id) }, { merge: true });
-            }
+            if(completedIds.includes(id)) await updateDoc(ref, { completedHomeworkIds: arrayRemove(id) });
+            else await setDoc(ref, { completedHomeworkIds: arrayUnion(id) }, { merge: true });
         }
 
         function renderMemos(memos) {
@@ -516,16 +520,19 @@
 
         // Admin Helpers
         window.switchAdminTab = (tab) => {
+            const m = document.getElementById('section-monitor');
+            const h = document.getElementById('section-homework');
+            const btM = document.getElementById('tab-monitor');
+            const btH = document.getElementById('tab-homework');
+            
             if(tab === 'monitor') {
-                document.getElementById('tab-monitor').className = "px-6 py-2 rounded-xl text-sm font-bold bg-slate-800 text-white shadow transition-all";
-                document.getElementById('tab-homework').className = "px-6 py-2 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-50 transition-all";
-                document.getElementById('section-monitor').classList.remove('hidden');
-                document.getElementById('section-homework').classList.add('hidden');
+                m.classList.remove('hidden'); h.classList.add('hidden');
+                btM.className = "px-6 py-2 rounded-xl text-sm font-bold bg-slate-800 text-white shadow";
+                btH.className = "px-6 py-2 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-50";
             } else {
-                document.getElementById('tab-homework').className = "px-6 py-2 rounded-xl text-sm font-bold bg-slate-800 text-white shadow transition-all";
-                document.getElementById('tab-monitor').className = "px-6 py-2 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-50 transition-all";
-                document.getElementById('section-homework').classList.remove('hidden');
-                document.getElementById('section-monitor').classList.add('hidden');
+                h.classList.remove('hidden'); m.classList.add('hidden');
+                btH.className = "px-6 py-2 rounded-xl text-sm font-bold bg-slate-800 text-white shadow";
+                btM.className = "px-6 py-2 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-50";
             }
         };
 
@@ -544,16 +551,12 @@
 
         window.exportData = async () => {
             if(!isAdmin) return alert("權限不足");
-            const confirmBackup = confirm("確定要下載備份？");
-            if(!confirmBackup) return;
-            const backupData = { timestamp: new Date().toISOString(), exportedBy: currentUser.email, homework: homeworkList, students: studentsData };
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
-            const dlNode = document.createElement('a');
-            dlNode.setAttribute("href", dataStr);
-            dlNode.setAttribute("download", "3B_Backup_" + new Date().toISOString().slice(0,10) + ".json");
-            document.body.appendChild(dlNode);
-            dlNode.click();
-            dlNode.remove();
+            if(!confirm("下載備份？")) return;
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ timestamp: new Date(), homework: homeworkList, students: studentsData }));
+            const dl = document.createElement('a');
+            dl.setAttribute("href", dataStr);
+            dl.setAttribute("download", "3B_Backup.json");
+            document.body.appendChild(dl); dl.click(); dl.remove();
         };
 
         function renderAdminHw() {
@@ -578,12 +581,11 @@
             studentsData.forEach(stu => {
                 const completed = stu.completedHomeworkIds || [];
                 const percent = homeworkList.length > 0 ? Math.round((completed.length / homeworkList.length) * 100) : 0;
-                const displayName = stu.nickname || stu.email.split('@')[0];
+                const displayName = stu.nickname || stu.displayName || stu.email.split('@')[0];
                 const lastLogin = stu.lastLogin ? new Date(stu.lastLogin.seconds * 1000).toLocaleString('zh-HK', {month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit'}) : '無';
-                let barColor = percent === 100 ? 'bg-green-500' : (percent < 50 ? 'bg-red-400' : 'bg-indigo-500');
                 
                 const tr = document.createElement('tr');
-                tr.innerHTML = `<td class="p-4"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs border border-white shadow-sm">${displayName.charAt(0).toUpperCase()}</div><div><div class="font-bold text-slate-800">${displayName}</div><div class="text-[10px] text-slate-400">${stu.email}</div></div></div></td><td class="p-4 text-xs font-mono text-slate-500">${lastLogin}</td><td class="p-4"><div class="flex items-center gap-2 w-24"><div class="flex-1 bg-slate-100 rounded-full h-1.5 overflow-hidden"><div class="h-full rounded-full ${barColor}" style="width: ${percent}%"></div></div><span class="text-[10px] font-bold text-slate-600">${percent}%</span></div></td><td class="p-4 text-center"><button class="text-slate-300 hover:text-indigo-600 toggle-detail"><i data-lucide="chevron-down" class="w-4 h-4"></i></button></td>`;
+                tr.innerHTML = `<td class="p-4"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs border border-white shadow-sm">${displayName.charAt(0).toUpperCase()}</div><div><div class="font-bold text-slate-800">${displayName}</div><div class="text-[10px] text-slate-400">${stu.email}</div></div></div></td><td class="p-4 text-xs font-mono text-slate-500">${lastLogin}</td><td class="p-4"><div class="flex items-center gap-2 w-24"><div class="flex-1 bg-slate-100 rounded-full h-1.5 overflow-hidden"><div class="h-full rounded-full ${percent===100?'bg-green-500':(percent<50?'bg-red-400':'bg-indigo-500')}" style="width: ${percent}%"></div></div><span class="text-[10px] font-bold text-slate-600">${percent}%</span></div></td><td class="p-4 text-center"><button class="text-slate-300 hover:text-indigo-600 toggle-detail"><i data-lucide="chevron-down" class="w-4 h-4"></i></button></td>`;
                 
                 const trDetail = document.createElement('tr');
                 trDetail.className = "bg-slate-50/50 hidden shadow-inner";
