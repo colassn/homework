@@ -2,205 +2,246 @@
 <html lang="zh-HK">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>3B Hub - 班級平台</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3B Hub 班級作業管理平台</title>
     
-    <!-- 1. 載入函式庫 -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
 
-    <!-- 2. UI 樣式 -->
+    <!-- Google Font (Noto Sans TC) -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+
     <style>
-        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f3f4f6; }
-        .page { display: none; min-height: 100vh; flex-direction: column; }
-        .page.active { display: flex; animation: fadeIn 0.3s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .spinner { border: 3px solid #f3f3f3; border-top: 3px solid #4f46e5; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
-        .btn { transition: all 0.2s; transform: scale(1); }
-        .btn:active { transform: scale(0.96); }
-        .btn:disabled { opacity: 0.7; cursor: not-allowed; }
+        body { font-family: 'Noto Sans TC', sans-serif; }
+        .hidden { display: none !important; }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
-<body class="text-slate-800">
+<body class="bg-slate-50 text-slate-800 h-screen flex flex-col overflow-hidden">
 
-    <!-- 全局提示框 (Toast) -->
-    <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-6 py-3 rounded-full shadow-xl z-[9999] hidden text-sm font-bold flex items-center gap-2 transition-all duration-300">
-        <span id="toast-msg">提示訊息</span>
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+        <p class="text-slate-500 animate-pulse">正在連接 3B Hub...</p>
     </div>
 
-    <!-- 載入遮罩 -->
-    <div id="global-loader" class="fixed inset-0 bg-white z-[999] flex flex-col items-center justify-center transition-opacity duration-300">
-        <div class="w-10 h-10 border-4 border-slate-100 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
-        <p class="text-xs font-bold text-slate-400 tracking-[0.2em]">CONNECTING</p>
-    </div>
-
-    <!-- 頁面 1: 登入 (Login) -->
-    <div id="page-login" class="page active items-center justify-center p-6 bg-white">
-        <div class="w-full max-w-sm text-center">
-            <div class="w-20 h-20 bg-indigo-600 rounded-3xl mx-auto mb-6 flex items-center justify-center shadow-lg shadow-indigo-200 transform -rotate-3">
-                <i data-lucide="graduation-cap" class="w-10 h-10 text-white"></i>
+    <!-- Auth Screen (Login) -->
+    <div id="auth-screen" class="hidden fixed inset-0 bg-slate-100 z-40 flex items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md text-center">
+            <div class="flex justify-center mb-6">
+                <div class="bg-blue-100 p-4 rounded-full">
+                    <i data-lucide="book-open-check" class="w-10 h-10 text-blue-600"></i>
+                </div>
             </div>
-            <h1 class="text-3xl font-bold mb-2 text-slate-900">3B Hub</h1>
-            <p class="text-slate-400 mb-8 text-sm">班級專屬作業平台</p>
-
-            <!-- Google 按鈕 -->
-            <button onclick="app.doGoogleLogin()" id="btn-google" class="btn w-full bg-white border-2 border-slate-100 p-4 rounded-2xl font-bold text-slate-700 flex items-center justify-center gap-3 mb-6 hover:bg-slate-50 transition-colors shadow-sm">
-                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5">
-                <span>Google 登入</span>
+            <h1 class="text-2xl font-bold text-slate-800 mb-2">歡迎來到 3B Hub</h1>
+            <p class="text-slate-500 mb-8">請登入以查看功課與進度</p>
+            
+            <button id="google-login-btn" class="w-full flex items-center justify-center gap-3 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium py-3 px-4 rounded-lg transition-all mb-4">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5" alt="Google">
+                使用 Google 帳號登入
             </button>
 
-            <div class="flex items-center gap-4 mb-6 opacity-60">
-                <div class="h-px bg-slate-200 flex-1"></div>
-                <span class="text-xs text-slate-400 font-bold">OR</span>
-                <div class="h-px bg-slate-200 flex-1"></div>
+            <!-- 簡易電郵登入 (Fallback) -->
+            <div class="relative my-6">
+                <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-200"></div></div>
+                <div class="relative flex justify-center text-sm"><span class="px-2 bg-white text-slate-500">或使用電郵</span></div>
             </div>
 
-            <!-- 電郵表單 -->
-            <div class="space-y-3 text-left">
-                <div id="div-nick" class="hidden">
-                    <label class="text-xs font-bold text-slate-400 ml-1">英文短名 (e.g. Justin)</label>
-                    <input type="text" id="inp-nick" class="w-full p-3 rounded-xl bg-slate-50 border border-transparent focus:bg-white focus:border-indigo-500 outline-none font-bold">
-                </div>
-                <div>
-                    <label class="text-xs font-bold text-slate-400 ml-1">電郵</label>
-                    <input type="email" id="inp-email" class="w-full p-3 rounded-xl bg-slate-50 border border-transparent focus:bg-white focus:border-indigo-500 outline-none font-bold">
-                </div>
-                <div>
-                    <label class="text-xs font-bold text-slate-400 ml-1">密碼</label>
-                    <input type="password" id="inp-pass" class="w-full p-3 rounded-xl bg-slate-50 border border-transparent focus:bg-white focus:border-indigo-500 outline-none font-bold">
-                </div>
-                <button onclick="app.doEmailAuth()" id="btn-auth" class="btn w-full bg-slate-900 text-white p-4 rounded-2xl font-bold shadow-lg shadow-slate-300 mt-2">登入</button>
-            </div>
+            <form id="email-login-form" class="space-y-4">
+                <input type="email" id="email-input" placeholder="student@example.com" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:outline-none" required>
+                <input type="password" id="password-input" placeholder="密碼 (至少6位)" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:outline-none" required>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition-all">登入 / 註冊</button>
+            </form>
+        </div>
+    </div>
 
-            <p class="mt-6 text-sm">
-                <span id="txt-mode" class="text-slate-400">沒有帳號？</span>
-                <button onclick="app.toggleMode()" class="text-indigo-600 font-bold ml-1 hover:underline">立即註冊</button>
+    <!-- Nickname Modal -->
+    <div id="nickname-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-sm">
+            <h2 class="text-xl font-bold mb-4">設定暱稱</h2>
+            <p class="text-slate-500 text-sm mb-4">為了方便老師辨識，請輸入你的英文短名 (例如: Justin)。</p>
+            <input type="text" id="nickname-input" class="w-full border border-slate-300 rounded-lg p-3 mb-4 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="輸入英文名字">
+            <button id="save-nickname-btn" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">儲存並繼續</button>
+        </div>
+    </div>
+
+    <!-- Privacy Disclaimer Screen -->
+    <div id="privacy-screen" class="hidden fixed inset-0 bg-white z-40 flex flex-col items-center justify-center p-6 text-center">
+        <div class="max-w-lg">
+            <i data-lucide="shield-check" class="w-16 h-16 text-emerald-500 mx-auto mb-6"></i>
+            <h2 class="text-2xl font-bold mb-4">保密聲明</h2>
+            <p class="text-slate-600 mb-8 leading-relaxed">
+                本平台僅供 3B 班級內部作業管理使用。你的作業完成狀態僅供管理員 (老師) 查看。
+                請勿隨意洩漏同學資料。點擊「同意」即代表你了解並願意遵守此規則。
             </p>
-        </div>
-        <p class="absolute bottom-6 text-[10px] font-bold text-slate-300 tracking-widest">CLASS 3B • 2026</p>
-    </div>
-
-    <!-- 頁面 2: 設定暱稱 (Nickname) -->
-    <div id="page-nickname" class="page items-center justify-center p-6 bg-slate-50 fixed inset-0 z-50">
-        <div class="w-full max-w-sm bg-white p-8 rounded-[2rem] shadow-xl text-center">
-            <div class="w-16 h-16 bg-indigo-100 rounded-full mx-auto mb-4 flex items-center justify-center text-indigo-600">
-                <i data-lucide="user-plus" class="w-8 h-8"></i>
-            </div>
-            <h2 class="text-xl font-bold mb-2 text-slate-900">建立個人檔案</h2>
-            <p class="text-xs text-slate-400 mb-6">請輸入您的英文短名，方便大家識別</p>
-            <input type="text" id="inp-setup-nick" placeholder="e.g. Mary" class="w-full p-4 rounded-xl border-2 border-slate-100 text-center text-lg font-bold mb-4 outline-none focus:border-indigo-500 text-slate-800 placeholder:font-normal">
-            <button onclick="app.saveNickname()" id="btn-save-nick" class="btn w-full bg-indigo-600 text-white p-3.5 rounded-xl font-bold shadow-lg shadow-indigo-200">確認並開始</button>
-        </div>
-    </div>
-
-    <!-- 頁面 3: 同意條款 (Consent) -->
-    <div id="page-consent" class="page items-center justify-center p-6 bg-white z-40 fixed inset-0">
-        <div class="w-full max-w-sm text-center">
-            <div class="w-16 h-16 bg-slate-800 rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-lg">
-                <i data-lucide="shield-check" class="w-8 h-8 text-white"></i>
-            </div>
-            <h2 class="text-2xl font-bold mb-2 text-slate-900">保密聲明</h2>
-            <p class="text-xs font-bold text-indigo-500 tracking-widest uppercase mb-8">Internal Use Only</p>
-            <div class="bg-slate-50 p-6 rounded-3xl text-left text-sm text-slate-600 mb-8 font-medium leading-relaxed border border-slate-100">
-                本平台僅供 <strong>3B 班級</strong> 內部使用。<br><br>
-                為保障同學隱私，請承諾不將帳號借予他人或將內容截圖外傳。
-            </div>
-            <button onclick="app.gotoDash()" class="btn w-full bg-slate-900 text-white p-4 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg hover:bg-slate-800">
-                我理解並同意 <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            <button id="agree-privacy-btn" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-8 rounded-full transition-transform transform hover:scale-105">
+                我同意並進入
             </button>
         </div>
     </div>
 
-    <!-- 頁面 4: 主介面 (Dashboard) -->
-    <div id="page-dashboard" class="page bg-[#F8FAFC]">
-        <!-- 導航 -->
-        <div class="bg-white/80 backdrop-blur-md px-6 py-4 flex justify-between items-center sticky top-0 z-30 border-b border-slate-100">
-            <div class="flex items-center gap-3">
-                <div class="bg-indigo-600 text-white p-2 rounded-lg shadow-sm"><i data-lucide="book-open" class="w-5 h-5"></i></div>
-                <div>
-                    <h1 class="font-bold text-lg leading-none text-slate-800">3B Hub</h1>
-                    <span id="user-role" class="text-[10px] font-bold text-slate-400 tracking-wider uppercase">Student</span>
-                </div>
+    <!-- App Header -->
+    <header id="app-header" class="hidden bg-white border-b border-slate-200 px-4 py-3 flex justify-between items-center shrink-0">
+        <div class="flex items-center gap-2">
+            <div class="bg-blue-600 p-2 rounded-lg text-white">
+                <i data-lucide="graduation-cap" class="w-5 h-5"></i>
             </div>
-            <div class="flex items-center gap-3">
-                <span id="user-display" class="text-sm font-bold text-slate-700 hidden sm:block">User</span>
-                <button onclick="app.logout()" class="p-2 bg-white border border-slate-200 rounded-full hover:bg-red-50 hover:text-red-500 text-slate-400 transition-colors"><i data-lucide="log-out" class="w-4 h-4"></i></button>
+            <div>
+                <h1 class="font-bold text-lg leading-tight">3B Hub</h1>
+                <p id="user-display-name" class="text-xs text-slate-500">載入中...</p>
             </div>
         </div>
+        <button id="logout-btn" class="text-slate-500 hover:text-red-500 p-2 transition-colors" title="登出">
+            <i data-lucide="log-out" class="w-5 h-5"></i>
+        </button>
+    </header>
 
-        <div class="flex-1 overflow-y-auto p-4 pb-24">
-            <div class="max-w-4xl mx-auto space-y-6">
-                
-                <!-- 管理員面板 -->
-                <div id="panel-admin" class="hidden space-y-6">
-                    <div class="flex gap-2 p-1 bg-white rounded-xl border border-slate-100 shadow-sm w-fit">
-                        <button onclick="app.setAdminTab('monitor')" id="tab-mon" class="px-6 py-2 rounded-lg text-sm font-bold bg-slate-800 text-white shadow-md transition-all">全班狀態</button>
-                        <button onclick="app.setAdminTab('hw')" id="tab-hw" class="px-6 py-2 rounded-lg text-sm font-bold text-slate-500 hover:bg-slate-50 transition-all">發布功課</button>
-                    </div>
-
-                    <!-- 監控 -->
-                    <div id="view-monitor" class="bg-white rounded-[2rem] shadow-sm overflow-hidden border border-slate-100">
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-sm text-left whitespace-nowrap">
-                                <thead class="bg-slate-50 text-slate-400 text-xs uppercase font-bold tracking-wider"><tr><th class="p-5">學生</th><th class="p-5">進度</th></tr></thead>
-                                <tbody id="list-students" class="divide-y divide-slate-50"></tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <!-- 發布 -->
-                    <div id="view-hw-pub" class="hidden bg-white rounded-[2rem] shadow-sm p-6 border border-slate-100">
-                        <h3 class="font-bold mb-6 text-lg flex items-center gap-2"><span class="bg-indigo-100 p-1.5 rounded-lg text-indigo-600"><i data-lucide="plus" class="w-4 h-4"></i></span> 發布新功課</h3>
-                        <div class="space-y-4">
-                            <select id="hw-sub" class="w-full p-3 bg-slate-50 rounded-xl font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500"><option>中文</option><option>英文</option><option>數學</option><option>常識</option><option>其他</option></select>
-                            <input id="hw-tit" placeholder="內容 (e.g. 作 P.1)" class="w-full p-3 bg-slate-50 rounded-xl font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500">
-                            <input id="hw-due" type="date" class="w-full p-3 bg-slate-50 rounded-xl font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500">
-                            <button onclick="app.addHomework()" class="w-full bg-slate-900 text-white py-3.5 rounded-xl font-bold shadow-lg active:scale-95 transition-transform">立即發布</button>
-                        </div>
-                        <div id="list-admin-hw" class="mt-8 space-y-3"></div>
-                    </div>
+    <!-- Main Content Area -->
+    <main id="main-content" class="hidden flex-1 overflow-hidden flex flex-col md:flex-row relative">
+        
+        <!-- Sidebar / Topbar for Student Stats -->
+        <aside class="md:w-80 bg-slate-50 border-r border-slate-200 flex flex-col h-full shrink-0">
+            <!-- Progress Card -->
+            <div class="p-4 border-b border-slate-200 bg-white">
+                <div class="flex justify-between items-end mb-2">
+                    <span class="text-sm font-medium text-slate-500">本學期進度</span>
+                    <span id="progress-text" class="text-2xl font-bold text-blue-600">0%</span>
                 </div>
-
-                <!-- 學生面板 -->
-                <div id="panel-student" class="hidden space-y-6">
-                    <!-- 進度卡 -->
-                    <div class="bg-gradient-to-br from-indigo-600 to-violet-600 rounded-[2.5rem] p-8 text-white shadow-2xl shadow-indigo-200 relative overflow-hidden">
-                        <div class="relative z-10">
-                            <p class="text-indigo-200 text-xs font-bold uppercase tracking-widest mb-1">Today's Progress</p>
-                            <h2 class="text-4xl font-bold" id="prog-txt">0%</h2>
-                            <div class="w-full bg-white/20 h-2 rounded-full mt-4 overflow-hidden"><div id="prog-bar" class="bg-white h-full transition-all duration-500" style="width: 0%"></div></div>
-                        </div>
-                    </div>
-
-                    <!-- 功課表 -->
-                    <div id="list-student-hw" class="space-y-3"></div>
-
-                    <!-- 備忘錄 -->
-                    <div class="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-lg">
-                        <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2"><i data-lucide="sticky-note" class="w-4 h-4 text-yellow-500"></i> 備忘錄</h3>
-                        <div class="flex gap-2 mb-4">
-                            <input id="memo-in" placeholder="新增..." class="flex-1 p-3 bg-slate-50 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-yellow-400">
-                            <button onclick="app.addMemo()" class="bg-yellow-400 text-yellow-900 p-3 rounded-xl hover:bg-yellow-500 transition-colors"><i data-lucide="plus" class="w-4 h-4"></i></button>
-                        </div>
-                        <div id="list-memos" class="space-y-2 max-h-40 overflow-y-auto pr-1"></div>
-                    </div>
+                <div class="w-full bg-slate-100 rounded-full h-2.5">
+                    <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
                 </div>
-
+                <p id="pending-count" class="text-xs text-slate-400 mt-2 text-right">還有 0 份作業未完成</p>
             </div>
+
+            <!-- Admin Actions (Only visible to Admin) -->
+            <div id="admin-panel" class="hidden p-4 border-b border-slate-200 bg-amber-50">
+                <h3 class="text-xs font-bold text-amber-700 uppercase tracking-wider mb-3">管理員控制台</h3>
+                <button id="add-hw-modal-btn" class="w-full flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white text-sm py-2 px-4 rounded-lg mb-2 shadow-sm transition-colors">
+                    <i data-lucide="plus-circle" class="w-4 h-4"></i> 發布新功課
+                </button>
+                <button id="download-backup-btn" class="w-full flex items-center justify-center gap-2 bg-white border border-amber-300 text-amber-700 hover:bg-amber-100 text-sm py-2 px-4 rounded-lg transition-colors">
+                    <i data-lucide="download" class="w-4 h-4"></i> 下載資料備份
+                </button>
+            </div>
+
+            <!-- Memos Section (Students only) -->
+            <div id="memos-section" class="flex-1 overflow-y-auto p-4 flex flex-col">
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <i data-lucide="sticky-note" class="w-3 h-3"></i> 私人備忘錄
+                </h3>
+                <div id="memos-list" class="space-y-2 flex-1">
+                    <!-- Memos injected here -->
+                </div>
+                <div class="mt-4 pt-2 border-t border-slate-200">
+                    <div class="flex gap-2">
+                        <input type="text" id="new-memo-input" placeholder="新增備忘..." class="flex-1 text-sm border border-slate-300 rounded px-2 py-1.5 focus:border-blue-500 outline-none">
+                        <button id="add-memo-btn" class="bg-slate-800 text-white p-1.5 rounded hover:bg-slate-700">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Student List (Replaces Memos for Admin) -->
+            <div id="admin-student-list-section" class="hidden flex-1 overflow-y-auto p-4">
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">班級概況</h3>
+                <div id="student-list-container" class="space-y-3">
+                    <!-- Student stats injected here -->
+                </div>
+            </div>
+        </aside>
+
+        <!-- Homework Feed -->
+        <div class="flex-1 overflow-y-auto bg-slate-50/50 p-4 md:p-8">
+            <div class="max-w-3xl mx-auto">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-slate-800">作業看板</h2>
+                    <span id="current-date" class="text-sm text-slate-500 bg-white px-3 py-1 rounded-full shadow-sm border border-slate-200"></span>
+                </div>
+
+                <div id="homework-list" class="space-y-3">
+                    <!-- Homework Items injected here -->
+                    <div class="text-center py-12 text-slate-400">
+                        <i data-lucide="inbox" class="w-12 h-12 mx-auto mb-2 opacity-50"></i>
+                        <p>目前沒有作業</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add Homework Modal -->
+    <div id="add-hw-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-md">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold">發布新功課</h3>
+                <button id="close-hw-modal" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="add-hw-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">科目</label>
+                    <select id="hw-subject" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-amber-500 outline-none">
+                        <option value="中文">中文</option>
+                        <option value="英文">英文</option>
+                        <option value="數學">數學</option>
+                        <option value="常識">常識</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">內容</label>
+                    <input type="text" id="hw-title" placeholder="例如：作業 P.10 (1-5)" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-amber-500 outline-none" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">截止日期</label>
+                    <input type="date" id="hw-due" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-amber-500 outline-none" required>
+                </div>
+                <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium py-2.5 rounded-lg transition-colors">
+                    發布
+                </button>
+            </form>
         </div>
     </div>
 
-    <!-- 3. FIREBASE SDK (Compat Version) -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <!-- Logic Script -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
+        import { 
+            getAuth, 
+            onAuthStateChanged, 
+            signInWithPopup, 
+            GoogleAuthProvider, 
+            signInWithEmailAndPassword,
+            createUserWithEmailAndPassword,
+            signOut 
+        } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
+        import { 
+            getFirestore, 
+            collection, 
+            doc, 
+            setDoc, 
+            getDoc, 
+            onSnapshot, 
+            addDoc, 
+            deleteDoc,
+            updateDoc,
+            query,
+            orderBy,
+            serverTimestamp,
+            getDocs 
+        } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 
-    <!-- 4. 核心邏輯 -->
-    <script>
+        // --- 1. CONFIGURATION ---
+        const ADMIN_EMAIL = 'chimhinhin@gmail.com';
+        
+        // 使用者提供的配置
         const firebaseConfig = {
             apiKey: "AIzaSyDVj1OMXGD-51-9lX7N7rW8C4fEMLdp6M8",
             authDomain: "pkhw-f6bcf.firebaseapp.com",
@@ -211,371 +252,553 @@
             measurementId: "G-1W7W93WTY7"
         };
 
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
-        const ADMIN_EMAIL = 'chimhinhin@gmail.com';
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
 
-        // 全域應用程式
-        window.app = {
-            user: null,
-            isAdmin: false,
-            isReg: false,
-            homeworks: [],
-            doneIds: [],
-            students: [],
+        // Environment Helper (for strict path rules in Canvas)
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        
+        // Path References (Strictly following Rule 1)
+        // Public data: readable by all users (homework, user public profiles for leaderboard/admin view)
+        const HOMEWORK_COLLECTION_REF = collection(db, 'artifacts', appId, 'public', 'data', 'homework');
+        const USERS_PUBLIC_REF = collection(db, 'artifacts', appId, 'public', 'data', 'users');
+        
+        // --- 2. STATE MANAGEMENT ---
+        let currentUser = null;
+        let currentUserData = null;
+        let homeworkList = [];
+        let unsubscribeHomework = null;
+        let unsubscribeUser = null;
+        let unsubscribeAllUsers = null;
+        let unsubscribeMemos = null;
 
-            // Helper: 切換頁面
-            showPage: (id) => {
-                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-                const el = document.getElementById(id);
-                if(el) el.classList.add('active');
-                document.getElementById('global-loader').classList.add('hidden');
-                lucide.createIcons();
-            },
-
-            // Helper: 提示框
-            toast: (msg) => {
-                const t = document.getElementById('toast');
-                document.getElementById('toast-msg').innerText = msg;
-                t.classList.remove('hidden');
-                t.style.opacity = '1';
-                t.style.transform = 'translate(-50%, 0)';
-                setTimeout(() => {
-                    t.style.opacity = '0';
-                    t.style.transform = 'translate(-50%, -20px)';
-                    setTimeout(() => t.classList.add('hidden'), 300);
-                }, 3000);
-            },
-
-            setBtnLoading: (id, isLoading) => {
-                const btn = document.getElementById(id);
-                if(!btn) return;
-                if(isLoading) {
-                    btn.dataset.html = btn.innerHTML;
-                    btn.innerHTML = '<span class="spinner"></span>';
-                    btn.disabled = true;
-                } else {
-                    btn.innerHTML = btn.dataset.html || '確認';
-                    btn.disabled = false;
-                }
-            },
-
-            // --- 1. 登入相關 ---
-            toggleMode: () => {
-                app.isReg = !app.isReg;
-                document.getElementById('div-nick').classList.toggle('hidden', !app.isReg);
-                document.getElementById('btn-auth').innerText = app.isReg ? "註冊帳號" : "登入";
-                document.getElementById('txt-mode').innerText = app.isReg ? "已有帳號？" : "沒有帳號？";
-            },
-
-            doGoogleLogin: () => {
-                app.setBtnLoading('btn-google', true);
-                const provider = new firebase.auth.GoogleAuthProvider();
-                auth.signInWithPopup(provider).catch(e => {
-                    app.toast(e.message);
-                    app.setBtnLoading('btn-google', false);
-                });
-            },
-
-            doEmailAuth: () => {
-                const email = document.getElementById('inp-email').value;
-                const pass = document.getElementById('inp-pass').value;
-                const nick = document.getElementById('inp-nick').value;
-
-                if(!email || !pass) return app.toast("請填寫完整");
-                
-                app.setBtnLoading('btn-auth', true);
-
-                if(app.isReg) {
-                    if(!nick) {
-                        app.setBtnLoading('btn-auth', false);
-                        return app.toast("請填寫英文短名");
-                    }
-                    auth.createUserWithEmailAndPassword(email, pass)
-                        .then(cred => {
-                            // 註冊成功，寫入暱稱
-                            return db.collection('users').doc(cred.user.uid).set({
-                                nickname: nick,
-                                email: email,
-                                role: 'student',
-                                completed: [],
-                                lastLogin: firebase.firestore.FieldValue.serverTimestamp()
-                            }, { merge: true }).then(() => cred.user.updateProfile({ displayName: nick }));
-                        })
-                        .catch(e => {
-                            app.toast(e.message);
-                            app.setBtnLoading('btn-auth', false);
-                        });
-                } else {
-                    auth.signInWithEmailAndPassword(email, pass).catch(e => {
-                        app.toast(e.message);
-                        app.setBtnLoading('btn-auth', false);
-                    });
-                }
-            },
-
-            logout: () => auth.signOut(),
-
-            // --- 2. 登入後檢查流程 ---
-            handleLoginSuccess: async (user) => {
-                app.user = user;
-                app.isAdmin = (user.email.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim());
-
-                console.log("Logged in:", user.email);
-
-                // 1. 強制寫入基本資料 (防止資料庫無此人)
-                db.collection('users').doc(user.uid).set({
-                    email: user.email,
-                    uid: user.uid,
-                    lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
-                    role: app.isAdmin ? 'admin' : 'student'
-                }, { merge: true });
-
-                // 2. 管理員直接進
-                if (app.isAdmin) {
-                    app.initDash();
-                    return;
-                }
-
-                // 3. 學生檢查暱稱
-                try {
-                    const doc = await db.collection('users').doc(user.uid).get();
-                    if (!doc.exists || !doc.data().nickname) {
-                        app.showPage('page-nickname');
-                    } else {
-                        app.showPage('page-consent');
-                    }
-                } catch (e) {
-                    console.error("Profile check failed", e);
-                    app.showPage('page-consent'); // 容錯：失敗也讓進
-                }
-            },
-
-            // 儲存暱稱 (修復卡住問題)
-            saveNickname: () => {
-                const val = document.getElementById('inp-setup-nick').value.trim();
-                if(!val) return app.toast("請輸入名字");
-                
-                app.setBtnLoading('btn-save-nick', true);
-                
-                // 寫入 DB
-                db.collection('users').doc(app.user.uid).set({ nickname: val }, { merge: true })
-                  .then(() => {
-                      // 更新 Profile (非阻塞)
-                      app.user.updateProfile({ displayName: val });
-                      // 強制跳轉
-                      app.showPage('page-consent');
-                  })
-                  .catch(e => {
-                      app.toast("儲存失敗: " + e.message);
-                      app.setBtnLoading('btn-save-nick', false);
-                      // 即使失敗也嘗試跳轉，避免卡死
-                      setTimeout(() => app.showPage('page-consent'), 1000);
-                  });
-            },
-
-            gotoDash: () => app.initDash(),
-
-            // --- 3. 儀表板與數據 ---
-            initDash: () => {
-                app.showPage('page-dashboard');
-                
-                // UI Info
-                const name = app.user.displayName || app.user.email.split('@')[0];
-                document.getElementById('user-display').innerText = name;
-                document.getElementById('user-role').innerText = app.isAdmin ? "ADMIN" : "STUDENT";
-
-                // Toggle Panels
-                if (app.isAdmin) {
-                    document.getElementById('panel-admin').classList.remove('hidden');
-                    document.getElementById('panel-student').classList.add('hidden');
-                    app.listenAdmin();
-                } else {
-                    document.getElementById('panel-admin').classList.add('hidden');
-                    document.getElementById('panel-student').classList.remove('hidden');
-                    app.listenStudent();
-                }
-                
-                // Listen Homework (Global)
-                db.collection('homework').orderBy('createdAt', 'desc').onSnapshot(snap => {
-                    app.homeworks = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                    app.render();
-                });
-            },
-
-            listenStudent: () => {
-                // Self Status
-                db.collection('users').doc(app.user.uid).onSnapshot(snap => {
-                    if(snap.exists) app.doneIds = snap.data().completed || [];
-                    app.renderStudent();
-                });
-                // Memos
-                db.collection('users').doc(app.user.uid).collection('memos').orderBy('createdAt', 'desc').onSnapshot(snap => {
-                    const list = document.getElementById('list-memos');
-                    list.innerHTML = '';
-                    if(snap.empty) list.innerHTML = '<p class="text-center text-xs text-slate-300 py-4">無事項</p>';
-                    snap.docs.forEach(doc => {
-                        const m = doc.data();
-                        list.innerHTML += `<div class="bg-white p-3 rounded-xl border border-slate-100 flex justify-between items-center group"><span class="font-bold text-sm text-slate-700">${m.text}</span><button onclick="app.delMemo('${doc.id}')" class="text-slate-300 hover:text-red-400"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div>`;
-                    });
-                    lucide.createIcons();
-                });
-            },
-
-            listenAdmin: () => {
-                db.collection('users').onSnapshot(snap => {
-                    app.students = snap.docs.map(d => d.data()).filter(u => u.email !== ADMIN_EMAIL);
-                    app.renderAdmin();
-                });
-            },
-
-            // --- 動作 ---
-            addMemo: () => {
-                const v = document.getElementById('memo-in').value.trim();
-                if(!v) return;
-                db.collection('users').doc(app.user.uid).collection('memos').add({ text: v, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
-                document.getElementById('memo-in').value = '';
-            },
-            delMemo: (id) => db.collection('users').doc(app.user.uid).collection('memos').doc(id).delete(),
-
-            toggleHw: (id) => {
-                const ref = db.collection('users').doc(app.user.uid);
-                if (app.doneIds.includes(id)) ref.update({ completed: firebase.firestore.FieldValue.arrayRemove(id) });
-                else {
-                    ref.update({ completed: firebase.firestore.FieldValue.arrayUnion(id) });
-                    app.toast("已完成！");
-                }
-            },
-
-            addHomework: () => {
-                const sub = document.getElementById('hw-sub').value;
-                const tit = document.getElementById('hw-tit').value;
-                const due = document.getElementById('hw-due').value;
-                if(!tit) return app.toast("請填寫內容");
-
-                db.collection('homework').add({
-                    subject: sub, title: tit, due: due,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                app.toast("發布成功");
-                document.getElementById('hw-tit').value = '';
-            },
-            delHw: (id) => { if(confirm("刪除?")) db.collection('homework').doc(id).delete(); },
-
-            setAdminTab: (tab) => {
-                const m = document.getElementById('view-monitor');
-                const h = document.getElementById('view-hw-pub');
-                const tm = document.getElementById('tab-mon');
-                const th = document.getElementById('tab-hw');
-                
-                if(tab === 'monitor') {
-                    m.classList.remove('hidden'); h.classList.add('hidden');
-                    tm.className = "flex-1 bg-slate-800 text-white py-2 rounded-lg font-bold text-sm shadow-md";
-                    th.className = "flex-1 bg-white text-slate-500 py-2 rounded-lg font-bold text-sm border";
-                } else {
-                    h.classList.remove('hidden'); m.classList.add('hidden');
-                    th.className = "flex-1 bg-slate-800 text-white py-2 rounded-lg font-bold text-sm shadow-md";
-                    tm.className = "flex-1 bg-white text-slate-500 py-2 rounded-lg font-bold text-sm border";
-                }
-            },
-
-            dlBackup: () => {
-                if(!confirm("下載備份?")) return;
-                const s = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ts:new Date(), hw:app.homeworks, users:app.students}));
-                const a = document.createElement('a'); a.href=s; a.download="Backup.json"; document.body.appendChild(a); a.click(); a.remove();
-            },
-
-            // --- 渲染 ---
-            render: () => {
-                if(app.isAdmin) app.renderAdmin();
-                else app.renderStudent();
-                lucide.createIcons();
-            },
-
-            renderStudent: () => {
-                const list = document.getElementById('list-student-hw');
-                list.innerHTML = '';
-                
-                const pct = app.homeworks.length ? Math.round((app.doneIds.length / app.homeworks.length)*100) : 0;
-                document.getElementById('prog-txt').innerText = `${pct}%`;
-                document.getElementById('prog-bar').style.width = `${pct}%`;
-
-                if(app.homeworks.length === 0) { list.innerHTML = '<div class="text-center p-8 text-slate-300 font-bold border-2 border-dashed border-slate-200 rounded-2xl">暫無功課</div>'; return; }
-
-                app.homeworks.forEach(hw => {
-                    const done = app.doneIds.includes(hw.id);
-                    list.innerHTML += `
-                        <div onclick="app.toggleHw('${hw.id}')" class="bg-white p-5 rounded-2xl border ${done?'border-green-200 bg-green-50/50':'border-slate-100'} shadow-sm flex items-start gap-4 cursor-pointer transition-all active:scale-95">
-                            <div class="w-10 h-10 rounded-xl flex items-center justify-center ${done?'bg-green-500 text-white':'bg-slate-100 text-slate-300'}"><i data-lucide="check" class="w-5 h-5"></i></div>
-                            <div class="flex-1">
-                                <div class="flex items-center gap-2 mb-1">
-                                    <span class="text-[10px] bg-slate-100 px-2 py-1 rounded text-slate-500 font-bold">${hw.subject}</span>
-                                    <h3 class="font-bold text-slate-800 ${done?'line-through text-slate-400':''}">${hw.title}</h3>
-                                </div>
-                                <p class="text-xs text-slate-400 font-bold">Due: ${hw.due||'-'}</p>
-                            </div>
-                        </div>
-                    `;
-                });
-            },
-
-            renderAdmin: () => {
-                // Monitor
-                const tb = document.getElementById('list-students');
-                tb.innerHTML = '';
-                app.students.forEach(s => {
-                    const doneCnt = s.completed ? s.completed.length : 0;
-                    const pct = app.homeworks.length ? Math.round((doneCnt/app.homeworks.length)*100) : 0;
-                    const name = s.nickname || s.email.split('@')[0];
-                    const last = s.lastLogin ? new Date(s.lastLogin.seconds*1000).toLocaleDateString() : '-';
-                    
-                    let barColor = pct===100 ? 'bg-green-500' : (pct<50 ? 'bg-red-400' : 'bg-indigo-500');
-
-                    tb.innerHTML += `
-                        <tr class="border-b border-slate-50">
-                            <td class="p-4">
-                                <div class="font-bold text-slate-800">${name}</div>
-                                <div class="text-[10px] text-slate-400 uppercase">${last}</div>
-                            </td>
-                            <td class="p-4">
-                                <div class="flex items-center gap-2">
-                                    <div class="flex-1 h-2 bg-slate-100 rounded-full w-20 overflow-hidden"><div class="${barColor} h-full" style="width:${pct}%"></div></div>
-                                    <span class="text-xs font-bold text-slate-500">${pct}%</span>
-                                </div>
-                            </td>
-                        </tr>
-                    `;
-                });
-
-                // HW List
-                const hl = document.getElementById('list-admin-hw');
-                hl.innerHTML = '';
-                app.homeworks.forEach(hw => {
-                    hl.innerHTML += `
-                        <div class="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
-                            <div><span class="text-xs font-bold bg-white px-2 py-1 rounded text-indigo-500 mr-2 border border-slate-100">${hw.subject}</span><span class="font-bold text-sm text-slate-700">${hw.title}</span></div>
-                            <button onclick="app.delHw('${hw.id}')" class="text-slate-300 hover:text-red-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                        </div>
-                    `;
-                });
-            }
+        // UI Elements
+        const els = {
+            loading: document.getElementById('loading-screen'),
+            auth: document.getElementById('auth-screen'),
+            nicknameModal: document.getElementById('nickname-modal'),
+            privacy: document.getElementById('privacy-screen'),
+            header: document.getElementById('app-header'),
+            main: document.getElementById('main-content'),
+            googleBtn: document.getElementById('google-login-btn'),
+            emailForm: document.getElementById('email-login-form'),
+            nicknameInput: document.getElementById('nickname-input'),
+            saveNicknameBtn: document.getElementById('save-nickname-btn'),
+            agreePrivacyBtn: document.getElementById('agree-privacy-btn'),
+            logoutBtn: document.getElementById('logout-btn'),
+            homeworkList: document.getElementById('homework-list'),
+            progressBar: document.getElementById('progress-bar'),
+            progressText: document.getElementById('progress-text'),
+            pendingCount: document.getElementById('pending-count'),
+            displayName: document.getElementById('user-display-name'),
+            currentDate: document.getElementById('current-date'),
+            adminPanel: document.getElementById('admin-panel'),
+            memosSection: document.getElementById('memos-section'),
+            adminStudentSection: document.getElementById('admin-student-list-section'),
+            addHwModalBtn: document.getElementById('add-hw-modal-btn'),
+            downloadBackupBtn: document.getElementById('download-backup-btn'),
+            addHwModal: document.getElementById('add-hw-modal'),
+            closeHwModal: document.getElementById('close-hw-modal'),
+            addHwForm: document.getElementById('add-hw-form'),
+            memosList: document.getElementById('memos-list'),
+            newMemoInput: document.getElementById('new-memo-input'),
+            addMemoBtn: document.getElementById('add-memo-btn'),
+            studentListContainer: document.getElementById('student-list-container')
         };
 
-        // --- 啟動監聽 ---
-        auth.onAuthStateChanged(user => {
-            if(user) app.handleLoginSuccess(user);
-            else app.showPage('page-login');
+        // Init Icons
+        lucide.createIcons();
+        els.currentDate.textContent = new Date().toLocaleDateString('zh-HK');
+
+        // --- 3. AUTH LOGIC ---
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                console.log("User logged in:", user.uid);
+                currentUser = user;
+                els.auth.classList.add('hidden');
+                els.loading.classList.remove('hidden');
+                await handleUserLogin(user);
+            } else {
+                console.log("No user.");
+                currentUser = null;
+                currentUserData = null;
+                showAuthScreen();
+            }
         });
 
-        // 登入頁按鈕切換
-        document.getElementById('btn-toggle-email').onclick = () => {
-            document.getElementById('form-auth').classList.remove('hidden');
-            document.getElementById('form-auth').classList.add('fade-in');
-            document.getElementById('btn-toggle-email').classList.add('hidden');
-        };
+        function showAuthScreen() {
+            els.loading.classList.add('hidden');
+            els.header.classList.add('hidden');
+            els.main.classList.add('hidden');
+            els.auth.classList.remove('hidden');
+            els.nicknameModal.classList.add('hidden');
+            els.privacy.classList.add('hidden');
+            
+            // Cleanup listeners
+            if (unsubscribeHomework) unsubscribeHomework();
+            if (unsubscribeUser) unsubscribeUser();
+            if (unsubscribeAllUsers) unsubscribeAllUsers();
+            if (unsubscribeMemos) unsubscribeMemos();
+        }
 
-        lucide.createIcons();
+        // Login Handlers
+        els.googleBtn.addEventListener('click', async () => {
+            const provider = new GoogleAuthProvider();
+            try {
+                await signInWithPopup(auth, provider);
+            } catch (error) {
+                alert("登入失敗: " + error.message);
+            }
+        });
+
+        els.emailForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email-input').value;
+            const password = document.getElementById('password-input').value;
+            
+            try {
+                // Try login first
+                await signInWithEmailAndPassword(auth, email, password);
+            } catch (loginError) {
+                if (loginError.code === 'auth/user-not-found' || loginError.code === 'auth/invalid-credential') {
+                    // Try register
+                    try {
+                        await createUserWithEmailAndPassword(auth, email, password);
+                    } catch (regError) {
+                        alert("註冊/登入失敗: " + regError.message);
+                    }
+                } else {
+                    alert("登入錯誤: " + loginError.message);
+                }
+            }
+        });
+
+        els.logoutBtn.addEventListener('click', () => signOut(auth));
+
+        // --- 4. USER FLOW LOGIC ---
+
+        async function handleUserLogin(user) {
+            const isAdmin = user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+            const role = isAdmin ? 'admin' : 'student';
+            const userDocRef = doc(USERS_PUBLIC_REF, user.uid);
+
+            // Sync User Data to Public Collection (So Admin can see it)
+            // Note: In a real app, strict security rules are needed.
+            // We use setDoc with merge to update lastLogin without wiping completed array
+            try {
+                // 1. Check if doc exists to preserve 'completed' and 'nickname'
+                const docSnap = await getDoc(userDocRef);
+                
+                let dataToUpdate = {
+                    email: user.email,
+                    role: role,
+                    lastLogin: serverTimestamp(),
+                };
+
+                if (!docSnap.exists()) {
+                    // New User
+                    dataToUpdate.nickname = "";
+                    dataToUpdate.completed = [];
+                    await setDoc(userDocRef, dataToUpdate);
+                    currentUserData = dataToUpdate;
+                } else {
+                    // Existing User
+                    await updateDoc(userDocRef, dataToUpdate);
+                    currentUserData = docSnap.data();
+                }
+
+                // 2. Routing Logic
+                if (isAdmin) {
+                    currentUserData.nickname = "Admin"; // Force Admin Nickname
+                    currentUserData.role = "admin";
+                    setupDashboard(true);
+                } else {
+                    // Check Nickname
+                    if (!currentUserData.nickname) {
+                        els.loading.classList.add('hidden');
+                        els.nicknameModal.classList.remove('hidden');
+                    } else {
+                        // Show Privacy Disclaimer (Simple one-time session check or always)
+                        els.loading.classList.add('hidden');
+                        els.privacy.classList.remove('hidden');
+                    }
+                }
+
+            } catch (err) {
+                console.error("Error syncing user:", err);
+                alert("資料庫連接錯誤: " + err.message);
+            }
+        }
+
+        // Nickname Handler
+        els.saveNicknameBtn.addEventListener('click', async () => {
+            const val = els.nicknameInput.value.trim();
+            if (!val) return alert("請輸入暱稱");
+            
+            try {
+                await updateDoc(doc(USERS_PUBLIC_REF, currentUser.uid), { nickname: val });
+                currentUserData.nickname = val;
+                els.nicknameModal.classList.add('hidden');
+                els.privacy.classList.remove('hidden');
+            } catch (e) {
+                alert("儲存失敗: " + e.message);
+            }
+        });
+
+        // Privacy Handler
+        els.agreePrivacyBtn.addEventListener('click', () => {
+            els.privacy.classList.add('hidden');
+            setupDashboard(false);
+        });
+
+        // --- 5. DASHBOARD LOGIC ---
+
+        function setupDashboard(isAdmin) {
+            els.loading.classList.add('hidden');
+            els.main.classList.remove('hidden');
+            els.header.classList.remove('hidden');
+            
+            els.displayName.textContent = `${currentUserData.nickname} (${isAdmin ? '管理員' : '學生'})`;
+
+            // Common Listener: Homework
+            setupHomeworkListener(isAdmin);
+
+            if (isAdmin) {
+                // Admin View Setup
+                els.adminPanel.classList.remove('hidden');
+                els.memosSection.classList.add('hidden');
+                els.adminStudentSection.classList.remove('hidden');
+                setupAllStudentsListener(); // See everyone's progress
+            } else {
+                // Student View Setup
+                els.adminPanel.classList.add('hidden');
+                els.memosSection.classList.remove('hidden');
+                els.adminStudentSection.classList.add('hidden');
+                setupUserListener(); // Listen to self for 'completed' sync
+                setupMemosListener(); // Private memos
+            }
+            lucide.createIcons();
+        }
+
+        // --- 6. DATA LISTENERS ---
+
+        function setupHomeworkListener(isAdmin) {
+            // Sort by createdAt desc
+            const q = query(HOMEWORK_COLLECTION_REF, orderBy('due', 'asc')); // Show earliest due first
+            
+            unsubscribeHomework = onSnapshot(q, (snapshot) => {
+                homeworkList = [];
+                snapshot.forEach(doc => {
+                    homeworkList.push({ id: doc.id, ...doc.data() });
+                });
+                renderHomeworkList(isAdmin);
+                if (!isAdmin) calculateMyProgress();
+            });
+        }
+
+        function setupUserListener() {
+            // Listen to current user's public doc for 'completed' changes
+            unsubscribeUser = onSnapshot(doc(USERS_PUBLIC_REF, currentUser.uid), (docSnap) => {
+                if (docSnap.exists()) {
+                    currentUserData = docSnap.data();
+                    renderHomeworkList(false); // Re-render checks
+                    calculateMyProgress();
+                }
+            });
+        }
+
+        function setupMemosListener() {
+            // Private path: artifacts/{appId}/users/{uid}/memos
+            const MEMO_REF = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'memos');
+            const q = query(MEMO_REF, orderBy('createdAt', 'desc'));
+            
+            unsubscribeMemos = onSnapshot(q, (snapshot) => {
+                els.memosList.innerHTML = '';
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    const el = document.createElement('div');
+                    el.className = 'bg-yellow-50 p-3 rounded border border-yellow-200 text-sm relative group animate-fade-in';
+                    el.innerHTML = `
+                        <p class="text-slate-700 break-words pr-6">${data.text}</p>
+                        <button class="delete-memo absolute top-2 right-2 text-slate-400 hover:text-red-500 hidden group-hover:block" data-id="${docSnap.id}">
+                            <i data-lucide="trash-2" class="w-3 h-3"></i>
+                        </button>
+                    `;
+                    els.memosList.appendChild(el);
+                });
+                
+                // Attach delete handlers
+                document.querySelectorAll('.delete-memo').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        e.stopPropagation();
+                        await deleteDoc(doc(MEMO_REF, btn.dataset.id));
+                    });
+                });
+                lucide.createIcons();
+            });
+        }
+
+        function setupAllStudentsListener() {
+            // Admin only: Listen to all users to calculate stats
+            const q = query(USERS_PUBLIC_REF);
+            unsubscribeAllUsers = onSnapshot(q, (snapshot) => {
+                const students = [];
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data.role !== 'admin') {
+                        students.push(data);
+                    }
+                });
+                renderStudentStats(students);
+            });
+        }
+
+        // --- 7. RENDERING & INTERACTIONS ---
+
+        function renderHomeworkList(isAdmin) {
+            els.homeworkList.innerHTML = '';
+            
+            if (homeworkList.length === 0) {
+                els.homeworkList.innerHTML = `
+                    <div class="text-center py-12 text-slate-400">
+                        <i data-lucide="inbox" class="w-12 h-12 mx-auto mb-2 opacity-50"></i>
+                        <p>目前沒有作業</p>
+                    </div>`;
+                lucide.createIcons();
+                return;
+            }
+
+            homeworkList.forEach(hw => {
+                const isCompleted = currentUserData?.completed?.includes(hw.id);
+                const item = document.createElement('div');
+                item.className = `bg-white p-4 rounded-xl border ${isCompleted ? 'border-emerald-200 bg-emerald-50/30' : 'border-slate-200'} shadow-sm flex items-center justify-between transition-all hover:shadow-md`;
+                
+                // Color coding for subject
+                const subjectColors = {
+                    '中文': 'bg-red-100 text-red-700',
+                    '英文': 'bg-blue-100 text-blue-700',
+                    '數學': 'bg-green-100 text-green-700',
+                    '常識': 'bg-purple-100 text-purple-700'
+                };
+                const badgeClass = subjectColors[hw.subject] || 'bg-slate-100 text-slate-700';
+
+                let actionHtml = '';
+                if (isAdmin) {
+                    actionHtml = `
+                        <button class="delete-hw-btn text-slate-400 hover:text-red-500 p-2" data-id="${hw.id}" title="刪除">
+                            <i data-lucide="trash" class="w-5 h-5"></i>
+                        </button>
+                    `;
+                } else {
+                    actionHtml = `
+                        <button class="toggle-hw-btn w-6 h-6 rounded border-2 ${isCompleted ? 'bg-emerald-500 border-emerald-500' : 'border-slate-300'} flex items-center justify-center transition-colors" data-id="${hw.id}">
+                            ${isCompleted ? '<i data-lucide="check" class="w-4 h-4 text-white"></i>' : ''}
+                        </button>
+                    `;
+                }
+
+                item.innerHTML = `
+                    <div class="flex items-center gap-4 flex-1">
+                        <div class="flex flex-col items-center justify-center w-14 h-14 bg-slate-50 rounded-lg border border-slate-100 text-xs font-bold text-slate-500 shrink-0">
+                            <span>${hw.due.split('-')[1]}/${hw.due.split('-')[2]}</span>
+                            <span class="text-[10px] font-normal">截止</span>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${badgeClass}">${hw.subject}</span>
+                                <span class="text-xs text-slate-400">${hw.due}</span>
+                            </div>
+                            <h3 class="font-bold text-slate-800 ${isCompleted ? 'line-through text-slate-400' : ''}">${hw.title}</h3>
+                        </div>
+                    </div>
+                    ${actionHtml}
+                `;
+
+                els.homeworkList.appendChild(item);
+            });
+
+            // Attach Listeners
+            if (isAdmin) {
+                document.querySelectorAll('.delete-hw-btn').forEach(btn => {
+                    btn.addEventListener('click', () => deleteHomework(btn.dataset.id));
+                });
+            } else {
+                document.querySelectorAll('.toggle-hw-btn').forEach(btn => {
+                    btn.addEventListener('click', () => toggleHomework(btn.dataset.id));
+                });
+            }
+            lucide.createIcons();
+        }
+
+        function calculateMyProgress() {
+            if (!currentUserData || !currentUserData.completed) return;
+            const completedCount = currentUserData.completed.length;
+            const total = homeworkList.length;
+            
+            // Note: completed array might contain IDs of deleted homeworks. 
+            // In a robust app, we filter them. For now, simple length check or intersection.
+            const validCompleted = currentUserData.completed.filter(id => homeworkList.some(h => h.id === id)).length;
+            
+            const pct = total === 0 ? 0 : Math.round((validCompleted / total) * 100);
+            const pending = total - validCompleted;
+
+            els.progressBar.style.width = `${pct}%`;
+            els.progressText.textContent = `${pct}%`;
+            els.pendingCount.textContent = total === 0 ? "目前沒有作業" : (pending === 0 ? "太棒了！全部完成" : `還有 ${pending} 份作業未完成`);
+        }
+
+        function renderStudentStats(students) {
+            els.studentListContainer.innerHTML = '';
+            
+            const totalHw = homeworkList.length;
+
+            if (students.length === 0) {
+                els.studentListContainer.innerHTML = '<p class="text-slate-400 text-sm text-center">暫無學生資料</p>';
+                return;
+            }
+
+            students.forEach(student => {
+                const completed = student.completed || [];
+                const validCompleted = completed.filter(id => homeworkList.some(h => h.id === id)).length;
+                const pct = totalHw === 0 ? 0 : Math.round((validCompleted / totalHw) * 100);
+                
+                const card = document.createElement('div');
+                card.className = 'bg-white p-3 rounded-lg border border-slate-200';
+                card.innerHTML = `
+                    <div class="flex justify-between items-center mb-2">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xs">
+                                ${student.nickname.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                                <p class="font-bold text-sm text-slate-800">${student.nickname}</p>
+                                <p class="text-[10px] text-slate-400">上次登入: ${student.lastLogin ? new Date(student.lastLogin.seconds * 1000).toLocaleDateString() : '未知'}</p>
+                            </div>
+                        </div>
+                        <span class="text-sm font-bold ${pct === 100 ? 'text-emerald-500' : 'text-blue-600'}">${pct}%</span>
+                    </div>
+                    <div class="w-full bg-slate-100 rounded-full h-1.5">
+                        <div class="bg-blue-500 h-1.5 rounded-full" style="width: ${pct}%"></div>
+                    </div>
+                `;
+                els.studentListContainer.appendChild(card);
+            });
+        }
+
+        // --- 8. ACTIONS ---
+
+        async function toggleHomework(hwId) {
+            if (!currentUserData) return;
+            const completed = currentUserData.completed || [];
+            let newCompleted;
+
+            if (completed.includes(hwId)) {
+                newCompleted = completed.filter(id => id !== hwId);
+            } else {
+                newCompleted = [...completed, hwId];
+            }
+
+            try {
+                // Update local state immediately for snappy UI
+                currentUserData.completed = newCompleted;
+                renderHomeworkList(false);
+                calculateMyProgress();
+
+                await updateDoc(doc(USERS_PUBLIC_REF, currentUser.uid), {
+                    completed: newCompleted
+                });
+            } catch (e) {
+                console.error(e);
+                alert("更新失敗，請檢查網絡");
+            }
+        }
+
+        async function deleteHomework(hwId) {
+            if (!confirm("確定要刪除這份功課嗎？學生將不再看到它。")) return;
+            try {
+                await deleteDoc(doc(HOMEWORK_COLLECTION_REF, hwId));
+            } catch (e) {
+                alert("刪除失敗: " + e.message);
+            }
+        }
+
+        // Add Homework UI Handlers
+        els.addHwModalBtn.addEventListener('click', () => els.addHwModal.classList.remove('hidden'));
+        els.closeHwModal.addEventListener('click', () => els.addHwModal.classList.add('hidden'));
+
+        els.addHwForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const subject = document.getElementById('hw-subject').value;
+            const title = document.getElementById('hw-title').value;
+            const due = document.getElementById('hw-due').value;
+
+            try {
+                await addDoc(HOMEWORK_COLLECTION_REF, {
+                    subject,
+                    title,
+                    due,
+                    createdAt: serverTimestamp()
+                });
+                els.addHwModal.classList.add('hidden');
+                els.addHwForm.reset();
+            } catch (err) {
+                alert("發布失敗: " + err.message);
+            }
+        });
+
+        // Add Memo Handler
+        els.addMemoBtn.addEventListener('click', async () => {
+            const text = els.newMemoInput.value.trim();
+            if (!text) return;
+
+            const MEMO_REF = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'memos');
+            try {
+                await addDoc(MEMO_REF, {
+                    text,
+                    createdAt: serverTimestamp()
+                });
+                els.newMemoInput.value = '';
+            } catch (e) {
+                alert("新增備忘失敗");
+            }
+        });
+
+        // Download Backup (Admin)
+        els.downloadBackupBtn.addEventListener('click', async () => {
+            try {
+                // Fetch Users
+                const usersSnap = await getDocs(query(USERS_PUBLIC_REF));
+                const users = [];
+                usersSnap.forEach(d => users.push(d.data()));
+
+                // Fetch Homework
+                const hwSnap = await getDocs(query(HOMEWORK_COLLECTION_REF));
+                const homework = [];
+                hwSnap.forEach(d => homework.push({id: d.id, ...d.data()}));
+
+                const backup = {
+                    date: new Date().toISOString(),
+                    homework,
+                    users
+                };
+
+                const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `3b-hub-backup-${new Date().toISOString().slice(0,10)}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+
+            } catch (e) {
+                alert("備份失敗: " + e.message);
+            }
+        });
+
     </script>
 </body>
 </html>
