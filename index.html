@@ -14,7 +14,7 @@
     <style>
         body { font-family: 'Inter', 'Noto Sans TC', sans-serif; background-color: #F8FAFC; }
         .fade-in { animation: fadeIn 0.4s ease-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.99); } to { opacity: 1; transform: scale(1); } }
         /* 隱藏捲軸 */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -26,7 +26,7 @@
 <body class="text-slate-800 antialiased h-screen flex flex-col overflow-hidden">
 
     <!-- 全局載入遮罩 (優先級最高) -->
-    <div id="global-loader" class="fixed inset-0 bg-white z-[999] flex items-center justify-center">
+    <div id="global-loader" class="fixed inset-0 bg-white z-[999] flex items-center justify-center transition-opacity duration-500">
         <div class="text-center">
             <div class="loader mx-auto mb-4"></div>
             <p class="text-slate-400 text-xs font-bold tracking-widest uppercase">System Loading</p>
@@ -253,14 +253,18 @@
         function switchView(viewId) {
             // Hide all views first
             const views = ['view-login', 'view-consent', 'view-nickname', 'view-dashboard'];
-            views.forEach(id => document.getElementById(id).classList.add('hidden'));
+            views.forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.classList.add('hidden');
+            });
             
             // Show target view
             const target = document.getElementById(viewId);
             if(target) target.classList.remove('hidden');
             
             // Ensure loader is gone
-            loader.classList.add('hidden');
+            loader.classList.add('opacity-0', 'pointer-events-none');
+            setTimeout(() => loader.classList.add('hidden'), 500);
             
             // Re-render icons for new content
             lucide.createIcons();
@@ -272,44 +276,61 @@
                 currentUser = user;
                 isAdmin = (user.email === ADMIN_EMAIL);
                 
-                // Fetch User Profile
-                const userRef = doc(db, 'artifacts', APP_ID, 'public', 'data', `user_${user.uid}`);
-                const snap = await getDoc(userRef);
-                
-                let nickname = user.displayName;
-                let needsNickname = false;
+                try {
+                    // Check User Profile in DB
+                    const userRef = doc(db, 'artifacts', APP_ID, 'public', 'data', `user_${user.uid}`);
+                    let nickname = user.displayName;
+                    let needsNickname = false;
 
-                if (snap.exists()) {
-                    nickname = snap.data().nickname || user.displayName;
-                    if (!nickname) needsNickname = true;
-                } else {
-                    needsNickname = true;
+                    // Try to fetch doc. If fails (rules/network), catch block handles it
+                    try {
+                        const snap = await getDoc(userRef);
+                        if (snap.exists()) {
+                            nickname = snap.data().nickname || user.displayName;
+                            if (!nickname) needsNickname = true;
+                        } else {
+                            needsNickname = true;
+                        }
+                    } catch (fetchErr) {
+                        console.log("Fetching user doc failed (expected for new users):", fetchErr);
+                        needsNickname = !user.displayName;
+                    }
+
+                    // Sync basic info (fail-safe)
+                    try {
+                        await setDoc(userRef, {
+                            uid: user.uid,
+                            email: user.email,
+                            photoURL: user.photoURL,
+                            lastLogin: serverTimestamp(),
+                            role: isAdmin ? 'admin' : 'student'
+                        }, { merge: true });
+                    } catch (syncErr) {
+                        console.error("Sync failed:", syncErr);
+                    }
+
+                    // Flow Control
+                    if (needsNickname && !isAdmin) {
+                        switchView('view-nickname');
+                    } else {
+                        switchView('view-consent'); // Always show consent after login/check
+                    }
+                    
+                    // Initialize Listeners
+                    updateDashboardUI();
+                    initListeners();
+
+                } catch (err) {
+                    console.error("Critical Auth Logic Error:", err);
+                    // Fallback to consent view so user isn't stuck
+                    switchView('view-consent'); 
                 }
-
-                // Sync basic info
-                await setDoc(userRef, {
-                    uid: user.uid,
-                    email: user.email,
-                    photoURL: user.photoURL,
-                    lastLogin: serverTimestamp(),
-                    role: isAdmin ? 'admin' : 'student'
-                }, { merge: true });
-
-                // Flow Control
-                if (needsNickname && !isAdmin) {
-                    switchView('view-nickname');
-                } else {
-                    switchView('view-consent'); // Always show consent after login/check
-                }
-                
-                // Initialize Listeners
-                updateDashboardUI();
-                initListeners();
 
             } else {
                 currentUser = null;
                 isAdmin = false;
                 switchView('view-login');
+                loader.classList.remove('hidden', 'opacity-0', 'pointer-events-none');
             }
         });
 
@@ -326,9 +347,10 @@
             const val = document.getElementById('input-modal-nickname').value.trim();
             if(!val) return;
             
-            // Show loader briefly
             const btn = document.getElementById('btn-save-nickname');
-            btn.innerText = "Saving...";
+            const originalText = btn.innerText;
+            btn.innerText = "處理中...";
+            btn.disabled = true;
             
             try {
                 await updateProfile(currentUser, { displayName: val });
@@ -338,10 +360,14 @@
                 }, { merge: true });
                 
                 btn.innerText = "確認";
-                switchView('view-consent'); // Move to consent
+                btn.disabled = false;
+                switchView('view-consent'); 
             } catch(e) {
-                alert("Error: " + e.message);
-                btn.innerText = "確認";
+                alert("儲存失敗: " + e.message);
+                btn.innerText = originalText;
+                btn.disabled = false;
+                // Fallback: let them pass anyway
+                switchView('view-consent');
             }
         });
 
@@ -365,23 +391,37 @@
             const pass = document.getElementById('input-password').value;
             const nick = document.getElementById('input-nickname').value;
             const errEl = document.getElementById('auth-error');
+            const btn = document.getElementById('btn-submit-auth');
+            
             errEl.classList.add('hidden');
+            btn.innerText = "處理中...";
+            btn.disabled = true;
 
             try {
                 if (isRegister) {
                     if (!nick.trim()) throw new Error("請填寫英文短名");
                     const cred = await createUserWithEmailAndPassword(auth, email, pass);
                     await updateProfile(cred.user, { displayName: nick });
-                    await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', `user_${cred.user.uid}`), {
-                        nickname: nick,
-                        displayName: nick
-                    }, { merge: true });
+                    // Try setting doc, but don't fail entire flow if rights issue
+                    try {
+                        await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', `user_${cred.user.uid}`), {
+                            nickname: nick,
+                            displayName: nick,
+                            uid: cred.user.uid,
+                            email: cred.user.email,
+                            role: 'student',
+                            lastLogin: serverTimestamp()
+                        }, { merge: true });
+                    } catch(dbErr) { console.warn("Initial DB set failed", dbErr); }
                 } else {
                     await signInWithEmailAndPassword(auth, email, pass);
                 }
             } catch (err) {
                 errEl.innerText = err.message.replace('Firebase: ', '');
                 errEl.classList.remove('hidden');
+            } finally {
+                btn.innerText = isRegister ? '註冊' : '登入';
+                btn.disabled = false;
             }
         });
 
@@ -411,28 +451,34 @@
         }
 
         function initListeners() {
-            const qHw = query(collection(db, 'artifacts', APP_ID, 'public', 'data', 'homework'), orderBy('createdAt', 'desc'));
-            onSnapshot(qHw, (snap) => {
-                homeworkList = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                renderDashboard();
-            });
+            // Error handling wrapper for listeners
+            try {
+                const qHw = query(collection(db, 'artifacts', APP_ID, 'public', 'data', 'homework'), orderBy('createdAt', 'desc'));
+                onSnapshot(qHw, (snap) => {
+                    homeworkList = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                    renderDashboard();
+                }, (err) => console.log("Hw listener err", err));
 
-            if (isAdmin) {
-                onSnapshot(collection(db, 'artifacts', APP_ID, 'public', 'data'), (snap) => {
-                    const allDocs = snap.docs.map(d => d.data());
-                    studentsData = allDocs.filter(d => d.uid && d.email !== ADMIN_EMAIL).sort((a,b) => (b.lastLogin?.seconds || 0) - (a.lastLogin?.seconds || 0));
-                    renderAdminMonitor();
-                });
-            } else {
-                onSnapshot(doc(db, 'artifacts', APP_ID, 'public', 'data', `user_${currentUser.uid}`), (snap) => {
-                    if(snap.exists()) completedIds = snap.data().completedHomeworkIds || [];
-                    renderStudentHw();
-                });
-                const qMemo = query(collection(db, 'artifacts', APP_ID, 'users', currentUser.uid, 'memos'), orderBy('createdAt', 'desc'));
-                onSnapshot(qMemo, (snap) => {
-                    const memos = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                    renderMemos(memos);
-                });
+                if (isAdmin) {
+                    onSnapshot(collection(db, 'artifacts', APP_ID, 'public', 'data'), (snap) => {
+                        const allDocs = snap.docs.map(d => d.data());
+                        studentsData = allDocs.filter(d => d.uid && d.email !== ADMIN_EMAIL).sort((a,b) => (b.lastLogin?.seconds || 0) - (a.lastLogin?.seconds || 0));
+                        renderAdminMonitor();
+                    }, (err) => console.log("Admin listener err", err));
+                } else {
+                    onSnapshot(doc(db, 'artifacts', APP_ID, 'public', 'data', `user_${currentUser.uid}`), (snap) => {
+                        if(snap.exists()) completedIds = snap.data().completedHomeworkIds || [];
+                        renderStudentHw();
+                    }, (err) => console.log("User doc listener err", err));
+                    
+                    const qMemo = query(collection(db, 'artifacts', APP_ID, 'users', currentUser.uid, 'memos'), orderBy('createdAt', 'desc'));
+                    onSnapshot(qMemo, (snap) => {
+                        const memos = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                        renderMemos(memos);
+                    }, (err) => console.log("Memo listener err", err));
+                }
+            } catch (e) {
+                console.error("Listener init failed", e);
             }
         }
 
@@ -454,6 +500,7 @@
             document.getElementById('progress-bar').style.width = `${rate}%`;
             document.getElementById('progress-text').innerText = `${rate}%`;
             if(rate === 100) document.getElementById('progress-bar').classList.replace('bg-indigo-500', 'bg-green-500');
+            else document.getElementById('progress-bar').className = "h-full bg-indigo-500 transition-all duration-500";
 
             if(homeworkList.length === 0) list.innerHTML = '<div class="text-center py-10 text-slate-400 text-sm">暫無功課</div>';
 
