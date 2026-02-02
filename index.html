@@ -27,9 +27,18 @@
 <body class="bg-slate-50 text-slate-800 h-screen flex flex-col overflow-hidden">
 
     <!-- Loading Screen -->
-    <div id="loading-screen" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-        <p class="text-slate-500 animate-pulse">正在連接 3B Hub...</p>
+    <div id="loading-screen" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center p-6 text-center">
+        <div id="loading-spinner" class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+        <p id="loading-text" class="text-slate-500 animate-pulse">正在連接 3B Hub...</p>
+        
+        <!-- Error / Timeout Message Area -->
+        <div id="loading-error" class="hidden mt-4 max-w-sm">
+            <p class="text-amber-600 text-sm mb-4"><i data-lucide="alert-circle" class="inline w-4 h-4 mr-1"></i>連線回應較慢</p>
+            <button id="force-login-btn" class="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition shadow-lg">
+                進入登入畫面
+            </button>
+            <p id="technical-error" class="text-xs text-red-400 mt-4 font-mono text-left bg-slate-100 p-2 rounded hidden"></p>
+        </div>
     </div>
 
     <!-- Auth Screen (Login) -->
@@ -220,7 +229,9 @@
             GoogleAuthProvider, 
             signInWithEmailAndPassword,
             createUserWithEmailAndPassword,
-            signOut 
+            signOut,
+            setPersistence,
+            browserLocalPersistence
         } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
         import { 
             getFirestore, 
@@ -241,7 +252,6 @@
         // --- 1. CONFIGURATION ---
         const ADMIN_EMAIL = 'chimhinhin@gmail.com';
         
-        // 使用者提供的配置
         const firebaseConfig = {
             apiKey: "AIzaSyDVj1OMXGD-51-9lX7N7rW8C4fEMLdp6M8",
             authDomain: "pkhw-f6bcf.firebaseapp.com",
@@ -252,31 +262,14 @@
             measurementId: "G-1W7W93WTY7"
         };
 
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-
-        // Environment Helper (for strict path rules in Canvas)
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        
-        // Path References (Strictly following Rule 1)
-        // Public data: readable by all users (homework, user public profiles for leaderboard/admin view)
-        const HOMEWORK_COLLECTION_REF = collection(db, 'artifacts', appId, 'public', 'data', 'homework');
-        const USERS_PUBLIC_REF = collection(db, 'artifacts', appId, 'public', 'data', 'users');
-        
-        // --- 2. STATE MANAGEMENT ---
-        let currentUser = null;
-        let currentUserData = null;
-        let homeworkList = [];
-        let unsubscribeHomework = null;
-        let unsubscribeUser = null;
-        let unsubscribeAllUsers = null;
-        let unsubscribeMemos = null;
-
-        // UI Elements
+        // --- 2. INITIALIZATION WITH ERROR HANDLING ---
+        let app, auth, db;
         const els = {
             loading: document.getElementById('loading-screen'),
+            loadingError: document.getElementById('loading-error'),
+            loadingText: document.getElementById('loading-text'),
+            forceLoginBtn: document.getElementById('force-login-btn'),
+            technicalError: document.getElementById('technical-error'),
             auth: document.getElementById('auth-screen'),
             nicknameModal: document.getElementById('nickname-modal'),
             privacy: document.getElementById('privacy-screen'),
@@ -308,18 +301,62 @@
             studentListContainer: document.getElementById('student-list-container')
         };
 
+        try {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+            
+            // Set persistence explicitly
+            setPersistence(auth, browserLocalPersistence)
+                .catch((error) => console.error("Persistence Error:", error));
+                
+        } catch (e) {
+            showError("Firebase 初始化失敗: " + e.message);
+        }
+
+        // Environment Helper (for strict path rules in Canvas)
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const HOMEWORK_COLLECTION_REF = collection(db, 'artifacts', appId, 'public', 'data', 'homework');
+        const USERS_PUBLIC_REF = collection(db, 'artifacts', appId, 'public', 'data', 'users');
+        
+        // --- 3. STATE MANAGEMENT ---
+        let currentUser = null;
+        let currentUserData = null;
+        let homeworkList = [];
+        let unsubscribeHomework = null;
+        let unsubscribeUser = null;
+        let unsubscribeAllUsers = null;
+        let unsubscribeMemos = null;
+        let authCheckTimeout = null;
+
         // Init Icons
         lucide.createIcons();
         els.currentDate.textContent = new Date().toLocaleDateString('zh-HK');
 
-        // --- 3. AUTH LOGIC ---
+        // --- 4. AUTH LOGIC ---
+
+        // Timeout fallback: If Auth takes > 3.5 seconds, show option to manually login
+        authCheckTimeout = setTimeout(() => {
+            if (!currentUser) {
+                els.loadingError.classList.remove('hidden');
+                els.loadingText.textContent = "連線回應較慢...";
+            }
+        }, 3500);
+
+        els.forceLoginBtn.addEventListener('click', () => {
+             showAuthScreen();
+        });
 
         onAuthStateChanged(auth, async (user) => {
+            clearTimeout(authCheckTimeout); // Clear timeout if connected
+            
             if (user) {
                 console.log("User logged in:", user.uid);
                 currentUser = user;
                 els.auth.classList.add('hidden');
+                els.loadingError.classList.add('hidden');
                 els.loading.classList.remove('hidden');
+                els.loadingText.textContent = "正在載入您的資料...";
                 await handleUserLogin(user);
             } else {
                 console.log("No user.");
@@ -327,7 +364,18 @@
                 currentUserData = null;
                 showAuthScreen();
             }
+        }, (error) => {
+            showError("Auth Error: " + error.message);
         });
+
+        function showError(msg) {
+            els.loadingError.classList.remove('hidden');
+            els.loadingText.textContent = "發生錯誤";
+            els.technicalError.textContent = msg;
+            els.technicalError.classList.remove('hidden');
+            els.forceLoginBtn.textContent = "重試";
+            els.forceLoginBtn.onclick = () => window.location.reload();
+        }
 
         function showAuthScreen() {
             els.loading.classList.add('hidden');
@@ -337,7 +385,6 @@
             els.nicknameModal.classList.add('hidden');
             els.privacy.classList.add('hidden');
             
-            // Cleanup listeners
             if (unsubscribeHomework) unsubscribeHomework();
             if (unsubscribeUser) unsubscribeUser();
             if (unsubscribeAllUsers) unsubscribeAllUsers();
@@ -360,11 +407,9 @@
             const password = document.getElementById('password-input').value;
             
             try {
-                // Try login first
                 await signInWithEmailAndPassword(auth, email, password);
             } catch (loginError) {
                 if (loginError.code === 'auth/user-not-found' || loginError.code === 'auth/invalid-credential') {
-                    // Try register
                     try {
                         await createUserWithEmailAndPassword(auth, email, password);
                     } catch (regError) {
@@ -378,18 +423,14 @@
 
         els.logoutBtn.addEventListener('click', () => signOut(auth));
 
-        // --- 4. USER FLOW LOGIC ---
+        // --- 5. USER FLOW LOGIC ---
 
         async function handleUserLogin(user) {
             const isAdmin = user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
             const role = isAdmin ? 'admin' : 'student';
             const userDocRef = doc(USERS_PUBLIC_REF, user.uid);
 
-            // Sync User Data to Public Collection (So Admin can see it)
-            // Note: In a real app, strict security rules are needed.
-            // We use setDoc with merge to update lastLogin without wiping completed array
             try {
-                // 1. Check if doc exists to preserve 'completed' and 'nickname'
                 const docSnap = await getDoc(userDocRef);
                 
                 let dataToUpdate = {
@@ -399,29 +440,24 @@
                 };
 
                 if (!docSnap.exists()) {
-                    // New User
                     dataToUpdate.nickname = "";
                     dataToUpdate.completed = [];
                     await setDoc(userDocRef, dataToUpdate);
                     currentUserData = dataToUpdate;
                 } else {
-                    // Existing User
                     await updateDoc(userDocRef, dataToUpdate);
                     currentUserData = docSnap.data();
                 }
 
-                // 2. Routing Logic
                 if (isAdmin) {
-                    currentUserData.nickname = "Admin"; // Force Admin Nickname
+                    currentUserData.nickname = "Admin";
                     currentUserData.role = "admin";
                     setupDashboard(true);
                 } else {
-                    // Check Nickname
                     if (!currentUserData.nickname) {
                         els.loading.classList.add('hidden');
                         els.nicknameModal.classList.remove('hidden');
                     } else {
-                        // Show Privacy Disclaimer (Simple one-time session check or always)
                         els.loading.classList.add('hidden');
                         els.privacy.classList.remove('hidden');
                     }
@@ -429,7 +465,7 @@
 
             } catch (err) {
                 console.error("Error syncing user:", err);
-                alert("資料庫連接錯誤: " + err.message);
+                showError("資料庫連接失敗: " + err.message);
             }
         }
 
@@ -454,7 +490,7 @@
             setupDashboard(false);
         });
 
-        // --- 5. DASHBOARD LOGIC ---
+        // --- 6. DASHBOARD LOGIC ---
 
         function setupDashboard(isAdmin) {
             els.loading.classList.add('hidden');
@@ -463,31 +499,27 @@
             
             els.displayName.textContent = `${currentUserData.nickname} (${isAdmin ? '管理員' : '學生'})`;
 
-            // Common Listener: Homework
             setupHomeworkListener(isAdmin);
 
             if (isAdmin) {
-                // Admin View Setup
                 els.adminPanel.classList.remove('hidden');
                 els.memosSection.classList.add('hidden');
                 els.adminStudentSection.classList.remove('hidden');
-                setupAllStudentsListener(); // See everyone's progress
+                setupAllStudentsListener(); 
             } else {
-                // Student View Setup
                 els.adminPanel.classList.add('hidden');
                 els.memosSection.classList.remove('hidden');
                 els.adminStudentSection.classList.add('hidden');
-                setupUserListener(); // Listen to self for 'completed' sync
-                setupMemosListener(); // Private memos
+                setupUserListener(); 
+                setupMemosListener();
             }
             lucide.createIcons();
         }
 
-        // --- 6. DATA LISTENERS ---
+        // --- 7. DATA LISTENERS ---
 
         function setupHomeworkListener(isAdmin) {
-            // Sort by createdAt desc
-            const q = query(HOMEWORK_COLLECTION_REF, orderBy('due', 'asc')); // Show earliest due first
+            const q = query(HOMEWORK_COLLECTION_REF, orderBy('due', 'asc')); 
             
             unsubscribeHomework = onSnapshot(q, (snapshot) => {
                 homeworkList = [];
@@ -496,22 +528,22 @@
                 });
                 renderHomeworkList(isAdmin);
                 if (!isAdmin) calculateMyProgress();
+            }, (error) => {
+                console.error("Homework listener error:", error);
             });
         }
 
         function setupUserListener() {
-            // Listen to current user's public doc for 'completed' changes
             unsubscribeUser = onSnapshot(doc(USERS_PUBLIC_REF, currentUser.uid), (docSnap) => {
                 if (docSnap.exists()) {
                     currentUserData = docSnap.data();
-                    renderHomeworkList(false); // Re-render checks
+                    renderHomeworkList(false); 
                     calculateMyProgress();
                 }
             });
         }
 
         function setupMemosListener() {
-            // Private path: artifacts/{appId}/users/{uid}/memos
             const MEMO_REF = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'memos');
             const q = query(MEMO_REF, orderBy('createdAt', 'desc'));
             
@@ -530,7 +562,6 @@
                     els.memosList.appendChild(el);
                 });
                 
-                // Attach delete handlers
                 document.querySelectorAll('.delete-memo').forEach(btn => {
                     btn.addEventListener('click', async (e) => {
                         e.stopPropagation();
@@ -542,7 +573,6 @@
         }
 
         function setupAllStudentsListener() {
-            // Admin only: Listen to all users to calculate stats
             const q = query(USERS_PUBLIC_REF);
             unsubscribeAllUsers = onSnapshot(q, (snapshot) => {
                 const students = [];
@@ -556,7 +586,7 @@
             });
         }
 
-        // --- 7. RENDERING & INTERACTIONS ---
+        // --- 8. RENDERING ---
 
         function renderHomeworkList(isAdmin) {
             els.homeworkList.innerHTML = '';
@@ -576,7 +606,6 @@
                 const item = document.createElement('div');
                 item.className = `bg-white p-4 rounded-xl border ${isCompleted ? 'border-emerald-200 bg-emerald-50/30' : 'border-slate-200'} shadow-sm flex items-center justify-between transition-all hover:shadow-md`;
                 
-                // Color coding for subject
                 const subjectColors = {
                     '中文': 'bg-red-100 text-red-700',
                     '英文': 'bg-blue-100 text-blue-700',
@@ -620,7 +649,6 @@
                 els.homeworkList.appendChild(item);
             });
 
-            // Attach Listeners
             if (isAdmin) {
                 document.querySelectorAll('.delete-hw-btn').forEach(btn => {
                     btn.addEventListener('click', () => deleteHomework(btn.dataset.id));
@@ -637,11 +665,7 @@
             if (!currentUserData || !currentUserData.completed) return;
             const completedCount = currentUserData.completed.length;
             const total = homeworkList.length;
-            
-            // Note: completed array might contain IDs of deleted homeworks. 
-            // In a robust app, we filter them. For now, simple length check or intersection.
             const validCompleted = currentUserData.completed.filter(id => homeworkList.some(h => h.id === id)).length;
-            
             const pct = total === 0 ? 0 : Math.round((validCompleted / total) * 100);
             const pending = total - validCompleted;
 
@@ -652,7 +676,6 @@
 
         function renderStudentStats(students) {
             els.studentListContainer.innerHTML = '';
-            
             const totalHw = homeworkList.length;
 
             if (students.length === 0) {
@@ -688,8 +711,6 @@
             });
         }
 
-        // --- 8. ACTIONS ---
-
         async function toggleHomework(hwId) {
             if (!currentUserData) return;
             const completed = currentUserData.completed || [];
@@ -702,7 +723,6 @@
             }
 
             try {
-                // Update local state immediately for snappy UI
                 currentUserData.completed = newCompleted;
                 renderHomeworkList(false);
                 calculateMyProgress();
@@ -769,12 +789,10 @@
         // Download Backup (Admin)
         els.downloadBackupBtn.addEventListener('click', async () => {
             try {
-                // Fetch Users
                 const usersSnap = await getDocs(query(USERS_PUBLIC_REF));
                 const users = [];
                 usersSnap.forEach(d => users.push(d.data()));
 
-                // Fetch Homework
                 const hwSnap = await getDocs(query(HOMEWORK_COLLECTION_REF));
                 const homework = [];
                 hwSnap.forEach(d => homework.push({id: d.id, ...d.data()}));
@@ -802,4 +820,5 @@
     </script>
 </body>
 </html>
+
 
