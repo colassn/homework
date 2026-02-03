@@ -81,7 +81,8 @@
             createUserWithEmailAndPassword, 
             signInWithEmailAndPassword, 
             signOut, 
-            onAuthStateChanged 
+            onAuthStateChanged,
+            updateProfile 
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { 
             getFirestore, 
@@ -105,7 +106,7 @@
         const googleProvider = new GoogleAuthProvider();
 
         // 將 Firebase 功能掛載到 window 以便 React 使用
-        window.firebaseServices = { auth, db, googleProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs };
+        window.firebaseServices = { auth, db, googleProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs };
     </script>
 
     <script type="text/babel">
@@ -116,8 +117,9 @@
             const [isLogin, setIsLogin] = useState(true);
             const [email, setEmail] = useState('');
             const [password, setPassword] = useState('');
+            const [displayName, setDisplayName] = useState(''); // 新增：顯示名稱
             const [loading, setLoading] = useState(false);
-            const { auth, googleProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword } = window.firebaseServices;
+            const { auth, googleProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } = window.firebaseServices;
 
             // 修正：當視窗打開時，重置所有狀態
             useEffect(() => {
@@ -125,12 +127,12 @@
                     setLoading(false);
                     setEmail('');
                     setPassword('');
+                    setDisplayName('');
                     setIsLogin(true);
                     if (window.lucide) window.lucide.createIcons();
                 }
             }, [isOpen]);
 
-            // 當切換登入/註冊模式時刷新圖示
             useEffect(() => {
                 if (window.lucide && isOpen) window.lucide.createIcons();
             }, [isLogin]);
@@ -152,13 +154,22 @@
             const handleEmailAuth = async (e) => {
                 e.preventDefault();
                 if(!email || !password) return;
+                // 如果是註冊，必須填寫名字
+                if(!isLogin && !displayName.trim()) {
+                    triggerAlert("請輸入英文短名以便識別！");
+                    return;
+                }
                 
                 try {
                     setLoading(true);
                     if (isLogin) {
                         await signInWithEmailAndPassword(auth, email, password);
                     } else {
-                        await createUserWithEmailAndPassword(auth, email, password);
+                        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                        // 註冊成功後，立即更新 Profile
+                        await updateProfile(userCredential.user, {
+                            displayName: displayName.trim()
+                        });
                     }
                     onClose();
                 } catch (error) {
@@ -194,6 +205,23 @@
                         </div>
 
                         <form onSubmit={handleEmailAuth} className="space-y-4 relative">
+                            {/* 註冊時顯示名字輸入框 */}
+                            {!isLogin && (
+                                <div className="relative group">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors">
+                                        <i data-lucide="user" className="w-5 h-5"></i>
+                                    </div>
+                                    <input 
+                                        type="text" 
+                                        className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium"
+                                        placeholder="英文短名 (例如: Miss Wong)"
+                                        value={displayName}
+                                        onChange={e => setDisplayName(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                            )}
+
                             <div className="relative group">
                                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors">
                                     <i data-lucide="mail" className="w-5 h-5"></i>
@@ -292,6 +320,11 @@
             const fileInputRef = useRef(null);
 
             // --- Helpers ---
+            const getTodayDateString = () => {
+                const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+                return new Date().toLocaleDateString('zh-HK', options);
+            };
+
             const getNextSchoolDay = () => {
                 const d = new Date();
                 const day = d.getDay(); 
@@ -390,6 +423,7 @@
                                 const dupSnapshot = await getDocs(dupQuery);
                                 if (dupSnapshot.empty) {
                                     // 如果沒有找到，代表這是新發放的功課 -> 自動加入
+                                    // 確保 senderName 被複製過去
                                     await addDoc(userItemsRef, {
                                         ...publicData,
                                         publicRefId: publicId, // 標記來源 ID
@@ -444,6 +478,7 @@
 
                 if ((!description.trim() && !selectedImage) || !dueDate) return;
 
+                // 準備新項目
                 const newItem = {
                     type: inputType,
                     description: description.trim(),
@@ -455,7 +490,10 @@
 
                 try {
                     if (isBroadcast && isAdmin) {
-                        // 管理員發放模式
+                        // 管理員發放模式：加入發送者名稱
+                        // 優先使用 displayName，如果沒有則使用 '老師'
+                        newItem.senderName = user.displayName || '老師';
+                        
                         await addDoc(collection(db, "public_assignments"), newItem);
                         triggerAlert("已發放功課給全班！");
                     } else {
@@ -604,7 +642,8 @@
                                         <div className="flex items-center gap-2">
                                             {getTypeIcon(item.type)}
                                             <span className="text-xs font-bold text-slate-500">{getTypeName(item.type)}</span>
-                                            {item.publicRefId && <span className="text-[10px] bg-yellow-100 text-yellow-700 px-1.5 rounded">老師發放</span>}
+                                            {/* 顯示發放者 */}
+                                            {item.publicRefId && <span className="text-[10px] bg-yellow-100 text-yellow-700 px-1.5 rounded">由 {item.senderName || '老師'} 發放</span>}
                                         </div>
                                         <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold shadow-sm border ${status.color} ${status.border}`}>
                                             {daysLeft < 0 && <i data-lucide="alert-circle" className="w-3 h-3"></i>}
@@ -633,6 +672,8 @@
                                 <h1 className="text-xl sm:text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center gap-2">
                                     {viewMode === 'current' ? (<><i data-lucide="graduation-cap" className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-600"></i>學生小幫手</>) : (<><i data-lucide="history" className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600"></i>完成紀錄</>)}
                                 </h1>
+                                {/* 日期顯示 */}
+                                <p className="text-slate-500 text-sm mt-1 ml-1">{getTodayDateString()}</p>
                             </div>
                             <div className="flex gap-2">
                                 <button 
