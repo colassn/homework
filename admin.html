@@ -63,7 +63,6 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        const ADMIN_EMAIL = 'chimhinhin@gmail.com';
         const SUBJECTS = [
             { name: '中文', color: 'bg-red-100 text-red-700 border-red-200' },
             { name: '英文', color: 'bg-blue-100 text-blue-700 border-blue-200' },
@@ -95,7 +94,6 @@
         };
         const LESSON_START_TIMES = [510, 545, 595, 630, 675, 710, 815, 850, 895, 930];
 
-        // --- Helpers ---
         const getNextLesson = (subjectName, now) => {
             if (!subjectName || subjectName === '其他') return null;
             const currentDay = now.getDay(); const currentMinutes = now.getHours() * 60 + now.getMinutes(); const currentSeconds = now.getSeconds();
@@ -113,28 +111,47 @@
         };
         const formatCountdown = (ms) => { const totalSeconds = Math.floor(ms / 1000); const hours = Math.floor(totalSeconds / 3600); const minutes = Math.floor((totalSeconds % 3600) / 60); const seconds = totalSeconds % 60; return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`; };
 
-        // --- Components ---
         function BlockScreen({ type, estimatedTime, customMessage, onLogin, user }) {
-            const defaultMessage = type === 'access_denied' ? '你的帳號不在白名單內，請聯絡管理員 (chimhinhin) 開通權限。' : '管理員正在進行系統維護，請稍後再回來。';
+            const defaultMessage = type === 'access_denied' 
+                ? '抱歉，此網站目前僅限白名單用戶訪問。\n請聯絡管理員 (chimhinhin) 開通權限。' 
+                : '管理員正在進行系統維護，請稍後再回來。';
+                
             return (
-                <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-6 text-center relative overflow-hidden z-[9999]">
+                <div className="fixed inset-0 z-40 flex flex-col items-center justify-center bg-slate-50 p-6 text-center overflow-hidden">
                     <div className="absolute inset-0 z-0 opacity-30"><div className="absolute top-10 left-10 w-64 h-64 bg-indigo-300 rounded-full mix-blend-multiply filter blur-3xl animate-blob"></div><div className="absolute bottom-10 right-10 w-64 h-64 bg-pink-300 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000"></div></div>
                     <div className="bg-white/80 backdrop-blur-xl p-8 rounded-3xl shadow-xl border border-white/50 max-w-md w-full relative z-10">
-                        <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">{type === 'updating' ? <i data-lucide="hammer" className="w-10 h-10 text-orange-500"></i> : type === 'restructuring' ? <i data-lucide="database" className="w-10 h-10 text-blue-500"></i> : <i data-lucide="shield-alert" className="w-10 h-10 text-red-500"></i>}</div>
-                        <h1 className="text-2xl font-black text-slate-800 mb-2">{type === 'updating' ? '網站更新中' : type === 'restructuring' ? '資料重整中' : '無法存取網站'}</h1>
+                        <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                            {type === 'updating' ? <i data-lucide="hammer" className="w-10 h-10 text-orange-500"></i> : 
+                             type === 'restructuring' ? <i data-lucide="database" className="w-10 h-10 text-blue-500"></i> :
+                             <i data-lucide="lock" className="w-10 h-10 text-red-500"></i>}
+                        </div>
+                        <h1 className="text-2xl font-black text-slate-800 mb-2">
+                            {type === 'updating' ? '網站更新中' : 
+                             type === 'restructuring' ? '資料重整中' : 
+                             '存取被拒'}
+                        </h1>
                         <p className="text-slate-500 font-medium mb-6 whitespace-pre-wrap">{customMessage || defaultMessage}</p>
-                        {estimatedTime && (type === 'updating' || type === 'restructuring') && (<div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex items-center gap-3"><i data-lucide="timer" className="w-5 h-5 text-indigo-600"></i><div className="text-left"><div className="text-xs font-bold text-indigo-400 uppercase">預計恢復時間</div><div className="text-sm font-bold text-indigo-700">{estimatedTime}</div></div></div>)}
                         
-                        {!user && (type === 'updating' || type === 'restructuring') && (
-                            <button onClick={onLogin} className="mt-6 px-4 py-2 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-md">
-                                我是白名單用戶 / 管理員 (登入)
+                        {estimatedTime && (type === 'updating' || type === 'restructuring') && (
+                            <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex items-center gap-3">
+                                <i data-lucide="timer" className="w-5 h-5 text-indigo-600"></i>
+                                <div className="text-left"><div className="text-xs font-bold text-indigo-400 uppercase">預計恢復時間</div><div className="text-sm font-bold text-indigo-700">{estimatedTime}</div></div>
+                            </div>
+                        )}
+                        
+                        {!user && (
+                            <button onClick={onLogin} className="mt-6 w-full py-3 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-md flex items-center justify-center gap-2">
+                                <i data-lucide="log-in" className="w-4 h-4"></i> 我是白名單用戶 (登入)
                             </button>
                         )}
                         
                         {user && (
-                             <button onClick={() => window.firebaseServices.signOut(window.firebaseServices.auth)} className="mt-6 text-sm font-bold text-slate-400 hover:text-slate-600 underline">
-                                {type === 'access_denied' ? '登出切換帳號' : '登出'}
-                             </button>
+                             <div className="mt-6">
+                                <p className="text-xs text-slate-400 mb-2">當前帳號: {user.email}</p>
+                                <button onClick={() => window.firebaseServices.signOut(window.firebaseServices.auth)} className="text-sm font-bold text-slate-500 hover:text-slate-700 underline">
+                                    登出 / 切換帳號
+                                </button>
+                             </div>
                         )}
                     </div>
                 </div>
@@ -167,8 +184,6 @@
 
         function AdminSystemPanel({ db, systemConfig, onBack }) { const [newEmail, setNewEmail] = useState(''); const [isSubmitting, setIsSubmitting] = useState(false); const { doc, updateDoc, arrayUnion, arrayRemove, setDoc } = window.firebaseServices; const configRef = doc(db, "system_settings", "config"); const updateConfig = async (key, value) => { try { await setDoc(configRef, { [key]: value }, { merge: true }); } catch (e) { console.error(e); alert("設定更新失敗"); } }; const handleAddWhitelist = async (e) => { e.preventDefault(); if (!newEmail.trim()) return; setIsSubmitting(true); try { await updateDoc(configRef, { allowedEmails: arrayUnion(newEmail.trim()) }); setNewEmail(''); } catch (e) { console.error(e); alert("新增失敗"); } setIsSubmitting(false); }; const handleRemoveWhitelist = async (email) => { if (window.confirm(`確定要移除 ${email} 嗎？`)) { await updateDoc(configRef, { allowedEmails: arrayRemove(email) }); } }; return ( <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 min-h-[500px]"> <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4"><button onClick={onBack} className="p-2 hover:bg-slate-100 rounded-full transition-colors"><i data-lucide="arrow-left" className="w-5 h-5 text-slate-500"></i></button><h2 className="text-xl font-bold text-slate-800">系統控制台</h2></div> <div className="mb-8"><h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">網站狀態控制</h3><div className="bg-slate-50 rounded-xl p-4 border border-slate-200 space-y-4"><div className="grid grid-cols-3 gap-2">{['normal', 'updating', 'restructuring'].map(mode => (<button key={mode} onClick={() => updateConfig('maintenanceMode', mode)} className={`py-2 px-3 rounded-lg text-sm font-bold border transition-all ${systemConfig?.maintenanceMode === mode ? (mode === 'normal' ? 'bg-green-100 text-green-700 border-green-200' : mode === 'updating' ? 'bg-orange-100 text-orange-700 border-orange-200' : 'bg-blue-100 text-blue-700 border-blue-200') : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-100'}`}>{mode === 'normal' ? '🟢 正常運作' : mode === 'updating' ? '🟠 網站更新中' : '🔵 資料重整中'}</button>))}</div>{systemConfig?.maintenanceMode !== 'normal' && (<div className="space-y-3 pt-2 border-t border-slate-200"><div><label className="block text-xs font-bold text-slate-500 mb-1">自訂維護訊息</label><input type="text" className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" placeholder="例如：系統正在升級，請稍候..." value={systemConfig?.message || ''} onChange={(e) => updateConfig('message', e.target.value)} /></div><div><label className="block text-xs font-bold text-slate-500 mb-1">預計恢復時間</label><input type="text" className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" placeholder="例如: 下午 4:00" value={systemConfig?.estimatedTime || ''} onChange={(e) => updateConfig('estimatedTime', e.target.value)} /></div></div>)}</div></div> <div><div className="flex items-center justify-between mb-3"><h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider">白名單存取控制</h3><label className="relative inline-flex items-center cursor-pointer"><input type="checkbox" className="sr-only peer" checked={systemConfig?.whitelistEnabled || false} onChange={(e) => updateConfig('whitelistEnabled', e.target.checked)} /><div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div></label></div><div className={`bg-slate-50 rounded-xl p-4 border border-slate-200 transition-opacity ${!systemConfig?.whitelistEnabled ? 'opacity-50 pointer-events-none' : ''}`}><form onSubmit={handleAddWhitelist} className="flex gap-2 mb-4"><input type="email" className="flex-1 px-3 py-2 rounded-lg border border-slate-200 text-sm" placeholder="輸入允許的 Google 電郵" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} required /><button type="submit" disabled={isSubmitting} className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-indigo-700"><i data-lucide="plus" className="w-4 h-4"></i></button></form><div className="space-y-2 max-h-[200px] overflow-y-auto">{(systemConfig?.allowedEmails || []).map(email => (<div key={email} className="flex items-center justify-between bg-white p-2 rounded-lg border border-slate-100 text-sm"><span className="text-slate-700">{email}</span><button onClick={() => handleRemoveWhitelist(email)} className="text-slate-400 hover:text-red-500"><i data-lucide="trash-2" className="w-4 h-4"></i></button></div>))}{(!systemConfig?.allowedEmails || systemConfig.allowedEmails.length === 0) && <div className="text-center text-slate-400 text-xs">暫無白名單用戶</div>}</div></div></div> </div> ); }
 
-        function Timetable({ currentDay, subjects, onDayChange }) { const weekDays = ['日', '一', '二', '三', '四', '五', '六']; const generateSchedule = (daySubjects) => { if (!daySubjects) return []; const startTime = new Date(); startTime.setHours(8, 30, 0, 0); const schedule = []; const addMinutes = (date, minutes) => new Date(date.getTime() + minutes * 60000); const formatTime = (date) => date.toLocaleTimeString('zh-HK', { hour: '2-digit', minute: '2-digit' }); let currentTime = startTime; let lessonIndex = 0; for (let i = 0; i < 2; i++) { const nextTime = addMinutes(currentTime, 35); schedule.push({ time: `${formatTime(currentTime)} - ${formatTime(nextTime)}`, type: 'lesson', subject: daySubjects[lessonIndex++] }); currentTime = nextTime; } let nextTime = addMinutes(currentTime, 15); schedule.push({ time: `${formatTime(currentTime)} - ${formatTime(nextTime)}`, type: 'break', subject: '小息 (15分鐘)' }); currentTime = nextTime; for (let i = 0; i < 2; i++) { nextTime = addMinutes(currentTime, 35); schedule.push({ time: `${formatTime(currentTime)} - ${formatTime(nextTime)}`, type: 'lesson', subject: daySubjects[lessonIndex++] }); currentTime = nextTime; } nextTime = addMinutes(currentTime, 10); schedule.push({ time: `${formatTime(currentTime)} - ${formatTime(nextTime)}`, type: 'break', subject: '小息 (10分鐘)' }); currentTime = nextTime; for (let i = 0; i < 2; i++) { nextTime = addMinutes(currentTime, 35); schedule.push({ time: `${formatTime(currentTime)} - ${formatTime(nextTime)}`, type: 'lesson', subject: daySubjects[lessonIndex++] }); currentTime = nextTime; } nextTime = addMinutes(currentTime, 70); schedule.push({ time: `${formatTime(currentTime)} - ${formatTime(nextTime)}`, type: 'lunch', subject: '午膳時間 (1小時10分)' }); currentTime = nextTime; for (let i = 0; i < 2; i++) { nextTime = addMinutes(currentTime, 35); schedule.push({ time: `${formatTime(currentTime)} - ${formatTime(nextTime)}`, type: 'lesson', subject: daySubjects[lessonIndex++] }); currentTime = nextTime; } nextTime = addMinutes(currentTime, 10); schedule.push({ time: `${formatTime(currentTime)} - ${formatTime(nextTime)}`, type: 'break', subject: '小息 (10分鐘)' }); currentTime = nextTime; for (let i = 0; i < 2; i++) { nextTime = addMinutes(currentTime, 35); schedule.push({ time: `${formatTime(currentTime)} - ${formatTime(nextTime)}`, type: 'lesson', subject: daySubjects[lessonIndex++] }); currentTime = nextTime; } return schedule; }; const scheduleData = generateSchedule(subjects[currentDay]); const isCurrent = (timeRangeStr) => { const now = new Date(); const [startStr, endStr] = timeRangeStr.split(' - '); const [startH, startM] = startStr.split(':').map(Number); const [endH, endM] = endStr.split(':').map(Number); const start = new Date(); start.setHours(startH, startM, 0); const end = new Date(); end.setHours(endH, endM, 0); return now >= start && now < end; }; return ( <div className="space-y-4"> <div className="flex bg-white rounded-xl p-1 shadow-sm overflow-x-auto">{[1, 2, 3, 4, 5].map(day => (<button key={day} onClick={() => onDayChange(day)} className={`flex-1 py-2 px-3 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${currentDay === day ? 'bg-indigo-600 text-white shadow' : 'text-slate-500 hover:bg-slate-50'}`}>星期{weekDays[day]}</button>))}</div> <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4">{scheduleData.length > 0 ? scheduleData.map((slot, idx) => { const active = isCurrent(slot.time); return (<div key={idx} className={`relative pl-6 pb-6 last:pb-0 border-l-2 ${active ? 'border-indigo-500' : 'border-slate-100'}`}><div className={`absolute -left-[9px] top-0 w-4 h-4 rounded-full border-2 ${active ? 'bg-indigo-500 border-indigo-100 animate-pulse' : 'bg-white border-slate-200'}`}></div><div className={`flex justify-between items-start ${active ? 'opacity-100' : 'opacity-80'}`}><div><div className="text-xs font-mono text-slate-400 mb-0.5">{slot.time}</div><div className={`text-base font-bold ${slot.type === 'lesson' ? 'text-slate-800' : 'text-slate-500 italic'} ${slot.type === 'break' || slot.type === 'lunch' ? 'text-sm' : ''}`}>{slot.subject}</div></div>{active && <span className="text-[10px] bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded-full font-bold">進行中</span>}</div></div>); }) : (<div className="text-center py-10 text-slate-400">是日休息或未設定課程</div>)}</div> </div> ); }
-
         // --- Main App ---
         function App() {
             // --- State ---
@@ -176,7 +191,7 @@
             const [authLoading, setAuthLoading] = useState(true);
             const [configLoading, setConfigLoading] = useState(true); 
             const [items, setItems] = useState([]);
-            const { auth, db, signOut, onAuthStateChanged, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs, setDoc, getDoc } = window.firebaseServices || {};
+            const { auth, db, signOut, onAuthStateChanged, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs, setDoc, getDoc, arrayUnion } = window.firebaseServices || {};
 
             const [inputType, setInputType] = useState('homework');
             const [subject, setSubject] = useState('中文');
@@ -226,6 +241,8 @@
             const handleFilterChange = (newFilter) => { if (newFilter === filterSubject) return; setIsListVisible(false); setTimeout(() => { setFilterSubject(newFilter); setIsListVisible(true); }, 200); };
             const handleSortChange = (newSort) => { if (newSort === sortOption) return; setIsListVisible(false); setTimeout(() => { setSortOption(newSort); setIsListVisible(true); }, 200); };
 
+            const guestStyle = !user ? "opacity-60 grayscale" : "";
+
             useEffect(() => { const timer = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(timer); }, []);
             
             useEffect(() => {
@@ -258,11 +275,10 @@
                             const userDocSnap = await getDoc(userDocRef);
                             
                             if (!userDocSnap.exists() || !userDocSnap.data().displayName) {
-                                // If no record or no display name, show name setup
                                 setShowNameSetup(true);
                             } else {
-                                // Update last seen
                                 await setDoc(userDocRef, { 
+                                    email: currentUser.email, // Ensure email is kept up to date
                                     lastSeen: serverTimestamp() 
                                 }, { merge: true });
                             }
@@ -303,7 +319,7 @@
                                         ...publicData, 
                                         publicRefId: publicId, 
                                         completed: false, 
-                                        forceExpired: publicData.forceExpired || false // Safe default
+                                        forceExpired: publicData.forceExpired || false 
                                     });
                                     triggerAlert(`收到新功課：[${publicData.subject || '其他'}] ${publicData.description}`);
                                 }
@@ -379,21 +395,27 @@
             const whitelistEnabled = systemConfig?.whitelistEnabled || false;
             const allowedEmails = systemConfig?.allowedEmails || [];
             
-            // Define isWhitelisted helper here
             const isWhitelisted = user && allowedEmails.includes(user.email);
 
             if (authLoading || configLoading) return <div className="min-h-screen flex items-center justify-center bg-slate-50"><div className="animate-pulse flex flex-col items-center"><div className="w-12 h-12 bg-indigo-200 rounded-full mb-4"></div><div className="h-4 w-32 bg-slate-200 rounded"></div></div></div>;
 
-            // 1. Maintenance Check (Allow Admin OR Whitelisted)
+            // --- SYSTEM GUARD LOGIC ---
+            // 1. Maintenance Mode: Block everyone except Admin AND Whitelisted (regardless of whitelist toggle)
             if (maintenanceMode !== 'normal' && !isAdmin && !isWhitelisted) { 
                 return <BlockScreen type={maintenanceMode} estimatedTime={systemConfig?.estimatedTime} customMessage={systemConfig?.message} onLogin={() => setIsAuthModalOpen(true)} user={user} />; 
             }
 
-            // 2. Access Control Check (If whitelist enabled, must be Admin OR Whitelisted)
-            if (whitelistEnabled && user && !isAdmin && !isWhitelisted) { 
+            // 2. Access Control: Only block if Whitelist is ENABLED
+            if (whitelistEnabled && !isAdmin && !isWhitelisted) {
+                // If user is null (Guest), show Access Denied screen to prompt login
+                if (!user) {
+                     return <BlockScreen type="access_denied" onLogin={() => setIsAuthModalOpen(true)} user={null} />; 
+                }
+                // If logged in but not in list
                 return <BlockScreen type="access_denied" user={user} />; 
             }
 
+            // --- Render Main App ---
             const activeItems = items.filter(i => !i.completed && !i.forceExpired);
             const todayHomeworks = activeItems.filter(i => i.type === 'homework' && getDaysRemaining(i.dueDate) <= 0);
             const tomorrowHomeworks = activeItems.filter(i => i.type === 'homework' && getDaysRemaining(i.dueDate) === 1);
@@ -424,8 +446,43 @@
             const getTypeIcon = (type) => type !== 'homework' ? <i data-lucide="file-question" className="w-4 h-4 text-purple-500"></i> : <i data-lucide="book-open" className="w-4 h-4 text-indigo-500"></i>;
             const getTypeName = (type) => type !== 'homework' ? '默書/測驗' : '功課';
             
-            const displayedItems = items.filter(item => { const isVisible = viewMode === 'current' ? !item.completed : item.completed; if (!isVisible) return false; if (filterSubject !== '全部' && (item.subject || '其他') !== filterSubject) return false; return true; }).sort((a, b) => { const dateA = new Date(a.dueDate); const dateB = new Date(b.dueDate); const createdA = a.createdAt ? new Date(a.createdAt) : new Date(0); const createdB = b.createdAt ? new Date(b.createdAt) : new Date(0); const getTypePriority = (item) => item.type !== 'homework' ? 1 : 0; if (a.forceExpired !== b.forceExpired) return a.forceExpired ? 1 : -1; switch (sortOption) { case 'date_asc': if (dateA - dateB !== 0) return dateA - dateB; break; case 'date_desc': if (dateB - dateA !== 0) return dateB - dateA; break; case 'type_assess': if (getTypePriority(b) - getTypePriority(a) !== 0) return getTypePriority(b) - getTypePriority(a); if (dateA - dateB !== 0) return dateA - dateB; break; case 'type_hw': if (getTypePriority(a) - getTypePriority(b) !== 0) return getTypePriority(a) - getTypePriority(b); if (dateA - dateB !== 0) return dateA - dateB; break; default: if (dateA - dateB !== 0) return dateA - dateB; } return createdB - createdA; });
-            const guestStyle = !user ? "opacity-60 grayscale pointer-events-none select-none" : "";
+            const displayedItems = items
+                .filter(item => {
+                    const isVisible = viewMode === 'current' ? !item.completed : item.completed;
+                    if (!isVisible) return false;
+                    if (filterSubject !== '全部' && (item.subject || '其他') !== filterSubject) return false;
+                    return true;
+                })
+                .sort((a, b) => {
+                    const dateA = new Date(a.dueDate);
+                    const dateB = new Date(b.dueDate);
+                    const createdA = a.createdAt ? new Date(a.createdAt) : new Date(0);
+                    const createdB = b.createdAt ? new Date(b.createdAt) : new Date(0);
+                    
+                    const getTypePriority = (item) => item.type !== 'homework' ? 1 : 0;
+                    if (a.forceExpired !== b.forceExpired) return a.forceExpired ? 1 : -1;
+
+                    switch (sortOption) {
+                        case 'date_asc': 
+                            if (dateA - dateB !== 0) return dateA - dateB;
+                            break;
+                        case 'date_desc': 
+                            if (dateB - dateA !== 0) return dateB - dateA;
+                            break;
+                        case 'type_assess': 
+                            if (getTypePriority(b) - getTypePriority(a) !== 0) return getTypePriority(b) - getTypePriority(a);
+                            if (dateA - dateB !== 0) return dateA - dateB;
+                            break;
+                        case 'type_hw': 
+                             if (getTypePriority(a) - getTypePriority(b) !== 0) return getTypePriority(a) - getTypePriority(b);
+                             if (dateA - dateB !== 0) return dateA - dateB;
+                             break;
+                        default:
+                             if (dateA - dateB !== 0) return dateA - dateB;
+                    }
+
+                    return createdB - createdA;
+                });
 
             const renderItemCard = (item, index) => {
                 const daysLeft = getDaysRemaining(item.dueDate); const isExiting = exitingIds.includes(item.id); const isVisuallyCompleted = item.completed || isExiting; const status = getStatusBadge(item); const isTest = item.type !== 'homework';
@@ -437,7 +494,9 @@
                     <div key={item.id} style={{ animationDelay: `${index * 0.05}s` }} className={`animate-item relative group overflow-hidden bg-white rounded-xl p-4 shadow-sm border transition-all duration-300 ${isExiting ? 'scale-95 opacity-0 translate-y-4' : 'hover:shadow-md'} ${isVisuallyCompleted ? 'bg-slate-50 border-slate-100' : 'border-slate-100'} ${!isVisuallyCompleted && isTest ? 'border-l-4 border-l-purple-400' : ''} ${item.forceExpired ? 'opacity-75' : ''}`}>
                         {!isTest && (<div className={`absolute left-0 top-0 bottom-0 w-1.5 ${item.forceExpired ? 'bg-gray-300' : (daysLeft < 0 && !isVisuallyCompleted ? 'bg-red-500' : (daysLeft === 0 && !isVisuallyCompleted ? 'bg-orange-500' : 'bg-transparent'))}`}></div>)}
                         <div className="flex items-start gap-3">
-                            <button onClick={() => handleToggle(item.id, item.completed)} disabled={isExiting || item.forceExpired} className={`flex-shrink-0 mt-1 w-6 h-6 rounded-full border-2 transition-all duration-300 flex items-center justify-center overflow-hidden ${isVisuallyCompleted ? 'bg-green-500 border-green-500 text-white scale-110 shadow-green-200' : (!isTest ? 'border-slate-300 hover:border-indigo-500 hover:bg-indigo-50' : 'border-purple-300 hover:border-purple-500 hover:bg-purple-50')} ${item.forceExpired ? 'border-gray-200 cursor-not-allowed bg-gray-50' : ''}`}><i data-lucide="check-circle" className={`w-3.5 h-3.5 transition-transform duration-300 ${isVisuallyCompleted ? 'scale-100' : 'scale-0'}`}></i></button>
+                            <button onClick={() => handleToggle(item.id, item.completed)} disabled={isExiting || item.forceExpired} className={`flex-shrink-0 mt-1 w-6 h-6 rounded-full border-2 transition-all duration-300 flex items-center justify-center overflow-hidden ${isVisuallyCompleted ? 'bg-green-500 border-green-500 text-white scale-110 shadow-green-200' : (!isTest ? 'border-slate-300 hover:border-indigo-500 hover:bg-indigo-50' : 'border-purple-300 hover:border-purple-500 hover:bg-purple-50')} ${item.forceExpired ? 'border-gray-200 cursor-not-allowed bg-gray-50' : ''}`}>
+                                <i data-lucide="check-circle" className={`w-3.5 h-3.5 transition-transform duration-300 ${isVisuallyCompleted ? 'scale-100' : 'scale-0'}`}></i>
+                            </button>
                             <div className="flex-grow min-w-0">
                                 <div className="flex flex-col gap-1">
                                     <div className="flex items-center justify-between">
@@ -460,6 +519,35 @@
 
             return (
                 <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-4 sm:p-6 md:p-8 font-sans text-slate-800 relative">
+                     {/* Always render Modals and Notifications at the top level */}
+                     <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} triggerAlert={triggerAlert} />
+                     {notification.isOpen && (<div className="fixed inset-0 z-[200] flex items-center justify-center px-4"><div className="absolute inset-0 bg-black/30 backdrop-blur-[2px]"></div><div className="notification-animate relative bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center transform scale-100"><div className={`mx-auto w-12 h-12 rounded-full flex items-center justify-center mb-4 ${notification.type === 'confirm' ? 'bg-red-100 text-red-500' : 'bg-indigo-100 text-indigo-500'}`}>{notification.type === 'confirm' ? <i data-lucide="alert-triangle" className="w-6 h-6"></i> : <i data-lucide="info" className="w-6 h-6"></i>}</div><h3 className="text-lg font-bold text-slate-800 mb-2">{notification.type === 'confirm' ? '確認操作' : '提示'}</h3><p className="text-slate-600 mb-6 leading-relaxed">{notification.message}</p><div className="flex gap-3 justify-center">{notification.type === 'confirm' ? (<><button onClick={closeNotification} className="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 text-slate-600 font-medium hover:bg-slate-50 transition-colors">取消</button><button onClick={handleNotificationConfirm} className="flex-1 py-2.5 px-4 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 shadow-lg shadow-red-200 transition-all active:scale-95">確認</button></>) : (<button onClick={closeNotification} className="w-full py-2.5 px-4 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all active:scale-95">知道了</button>)}</div></div></div>)}
+                     
+                     {/* Loading State */}
+                     {(authLoading || configLoading) && (
+                         <div className="fixed inset-0 z-[300] flex items-center justify-center bg-slate-50">
+                             <div className="animate-pulse flex flex-col items-center">
+                                 <div className="w-12 h-12 bg-indigo-200 rounded-full mb-4"></div>
+                                 <div className="h-4 w-32 bg-slate-200 rounded"></div>
+                             </div>
+                         </div>
+                     )}
+
+                     {/* Block Screen Logic */}
+                     {/* 1. Maintenance Mode: Block everyone except Admin AND Whitelisted */}
+                     {(!authLoading && !configLoading && maintenanceMode !== 'normal' && !isAdmin && !isWhitelisted) && (
+                         <BlockScreen type={maintenanceMode} estimatedTime={systemConfig?.estimatedTime} customMessage={systemConfig?.message} onLogin={() => setIsAuthModalOpen(true)} user={user} />
+                     )}
+                     
+                     {/* 2. Whitelist Mode: Block non-whitelisted users */}
+                     {(!authLoading && !configLoading && whitelistEnabled && !isAdmin && !isWhitelisted) && (
+                          <BlockScreen type="access_denied" onLogin={() => setIsAuthModalOpen(true)} user={user} />
+                     )}
+
+                     {/* Main App Content (Only rendered if not blocked, but in React we can render it hidden or just conditional) */}
+                     {/* We use a simple conditional here. If blocked, we returned above. If not, we render below. */}
+                     {/* Note: The above returns prevent this part from executing if blocked. */}
+
                     <div className="max-w-3xl mx-auto">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
                             <div>
@@ -470,7 +558,14 @@
                             </div>
                             <div className="flex gap-2 flex-wrap justify-end">
                                 <button onClick={() => !user ? setIsAuthModalOpen(true) : setViewMode('timetable')} className={`group justify-center relative flex items-center gap-2 px-3 py-2.5 rounded-full font-bold text-sm transition-all duration-300 shadow-md hover:shadow-xl transform hover:-translate-y-1 ${viewMode === 'timetable' ? 'bg-orange-500 text-white' : 'bg-white text-slate-700 border-2 border-slate-100 hover:border-orange-200'} ${guestStyle}`}><i data-lucide="calendar-days" className="w-4 h-4"></i>時間表</button>
-                                {isAdmin && (<><button onClick={() => setViewMode('admin_users')} className={`group justify-center relative flex items-center gap-2 px-3 py-2.5 rounded-full font-bold text-sm transition-all duration-300 shadow-md hover:shadow-xl transform hover:-translate-y-1 ${viewMode === 'admin_users' ? 'bg-blue-600 text-white' : 'bg-white text-slate-700 border-2 border-slate-100 hover:border-blue-200'}`}><i data-lucide="users" className="w-4 h-4"></i>用戶</button><button onClick={() => setViewMode('system_admin')} className={`group justify-center relative flex items-center gap-2 px-3 py-2.5 rounded-full font-bold text-sm transition-all duration-300 shadow-md hover:shadow-xl transform hover:-translate-y-1 ${viewMode === 'system_admin' ? 'bg-slate-700 text-white' : 'bg-white text-slate-700 border-2 border-slate-100 hover:border-slate-300'}`}><i data-lucide="settings" className="w-4 h-4"></i>設定</button></>)}
+                                
+                                {isAdmin && (
+                                    <>
+                                        <button onClick={() => setViewMode('admin_users')} className={`group justify-center relative flex items-center gap-2 px-3 py-2.5 rounded-full font-bold text-sm transition-all duration-300 shadow-md hover:shadow-xl transform hover:-translate-y-1 ${viewMode === 'admin_users' ? 'bg-blue-600 text-white' : 'bg-white text-slate-700 border-2 border-slate-100 hover:border-blue-200'}`}><i data-lucide="users" className="w-4 h-4"></i>用戶</button>
+                                        <button onClick={() => setViewMode('system_admin')} className={`group justify-center relative flex items-center gap-2 px-3 py-2.5 rounded-full font-bold text-sm transition-all duration-300 shadow-md hover:shadow-xl transform hover:-translate-y-1 ${viewMode === 'system_admin' ? 'bg-slate-700 text-white' : 'bg-white text-slate-700 border-2 border-slate-100 hover:border-slate-300'}`}><i data-lucide="settings" className="w-4 h-4"></i>設定</button>
+                                    </>
+                                )}
+
                                 <button onClick={() => !user ? setIsAuthModalOpen(true) : setViewMode(viewMode === 'current' ? 'history' : 'current')} className={`group justify-center relative flex items-center gap-2 px-3 py-2.5 rounded-full font-bold text-sm transition-all duration-300 shadow-md hover:shadow-xl transform hover:-translate-y-1 ${viewMode === 'current' ? 'bg-white text-slate-700 border-2 border-slate-100 hover:border-indigo-200' : (viewMode === 'history' ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-transparent' : 'bg-white text-slate-700 border-2 border-slate-100 hover:border-indigo-200')} ${guestStyle}`}>
                                     {viewMode === 'history' || viewMode === 'admin_users' || viewMode === 'system_admin' ? (<><i data-lucide="arrow-left" className="w-4 h-4"></i>返主頁</>) : (<><i data-lucide="history" className="w-4 h-4"></i>睇紀錄</>)}
                                 </button>
