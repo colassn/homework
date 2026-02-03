@@ -25,6 +25,7 @@
         input[type="file"]::file-selector-button {
             display: none;
         }
+        /* 彈窗動畫 */
         @keyframes fadeIn {
             from { opacity: 0; transform: scale(0.95); }
             to { opacity: 1; transform: scale(1); }
@@ -35,6 +36,8 @@
         .notification-animate {
             animation: fadeIn 0.15s ease-out forwards;
         }
+        
+        /* 登入頁背景動畫 */
         @keyframes blob {
             0% { transform: translate(0px, 0px) scale(1); }
             33% { transform: translate(30px, -50px) scale(1.1); }
@@ -96,60 +99,86 @@
             getDocs
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+        // 初始化 Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
         const googleProvider = new GoogleAuthProvider();
 
+        // 將 Firebase 功能掛載到 window 以便 React 使用
         window.firebaseServices = { auth, db, googleProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs };
     </script>
 
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        // --- Auth Modal (保持不變) ---
+        // --- 全新設計的登入 Modal 組件 ---
         function AuthModal({ isOpen, onClose, triggerAlert }) {
             const [isLogin, setIsLogin] = useState(true);
             const [email, setEmail] = useState('');
             const [password, setPassword] = useState('');
-            const [displayName, setDisplayName] = useState('');
+            const [displayName, setDisplayName] = useState(''); // 新增：顯示名稱
             const [loading, setLoading] = useState(false);
             const { auth, googleProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } = window.firebaseServices;
 
+            // 修正：當視窗打開時，重置所有狀態
             useEffect(() => {
                 if (isOpen) {
-                    setLoading(false); setEmail(''); setPassword(''); setDisplayName(''); setIsLogin(true);
+                    setLoading(false);
+                    setEmail('');
+                    setPassword('');
+                    setDisplayName('');
+                    setIsLogin(true);
                     if (window.lucide) window.lucide.createIcons();
                 }
             }, [isOpen]);
 
-            useEffect(() => { if (window.lucide && isOpen) window.lucide.createIcons(); }, [isLogin]);
+            useEffect(() => {
+                if (window.lucide && isOpen) window.lucide.createIcons();
+            }, [isLogin]);
 
             if (!isOpen) return null;
 
             const handleGoogleLogin = async () => {
                 try {
-                    setLoading(true); await signInWithPopup(auth, googleProvider); onClose();
+                    setLoading(true);
+                    await signInWithPopup(auth, googleProvider);
+                    onClose();
                 } catch (error) {
-                    console.error(error); triggerAlert("Google 登入失敗: " + error.message); setLoading(false);
+                    console.error(error);
+                    triggerAlert("Google 登入失敗: " + error.message);
+                    setLoading(false);
                 }
             };
 
             const handleEmailAuth = async (e) => {
                 e.preventDefault();
                 if(!email || !password) return;
-                if(!isLogin && !displayName.trim()) { triggerAlert("請輸入英文短名以便識別！"); return; }
+                // 如果是註冊，必須填寫名字
+                if(!isLogin && !displayName.trim()) {
+                    triggerAlert("請輸入英文短名以便識別！");
+                    return;
+                }
+                
                 try {
                     setLoading(true);
-                    if (isLogin) { await signInWithEmailAndPassword(auth, email, password); } 
-                    else {
+                    if (isLogin) {
+                        await signInWithEmailAndPassword(auth, email, password);
+                    } else {
                         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                        await updateProfile(userCredential.user, { displayName: displayName.trim() });
+                        // 註冊成功後，立即更新 Profile
+                        await updateProfile(userCredential.user, {
+                            displayName: displayName.trim()
+                        });
                     }
                     onClose();
                 } catch (error) {
                     console.error(error);
-                    triggerAlert(isLogin ? "登入失敗: " + error.message : "註冊失敗: " + error.message);
+                    let msg = error.message;
+                    if(error.code === 'auth/invalid-credential') msg = "電郵或密碼錯咗喎！";
+                    if(error.code === 'auth/email-already-in-use') msg = "呢個電郵註冊過啦！";
+                    if(error.code === 'auth/weak-password') msg = "密碼太弱啦，要長啲！";
+                    triggerAlert(isLogin ? "登入失敗: " + msg : "註冊失敗: " + msg);
                     setLoading(false);
                 }
             };
@@ -157,20 +186,101 @@
             return (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
+
                     <div className="modal-animate bg-white/90 backdrop-blur-2xl rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.3)] w-full max-w-md p-8 relative z-10 border border-white/50 overflow-hidden">
-                         <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"><i data-lucide="x" className="w-6 h-6"></i></button>
+                         <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors">
+                            <i data-lucide="x" className="w-6 h-6"></i>
+                        </button>
+
                         <div className="absolute -top-10 -left-10 w-40 h-40 bg-purple-300 rounded-full mix-blend-multiply filter blur-2xl opacity-50 animate-blob pointer-events-none"></div>
                         <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-blue-300 rounded-full mix-blend-multiply filter blur-2xl opacity-50 animate-blob animation-delay-2000 pointer-events-none"></div>
-                        <div className="text-center mb-8 relative"><h2 className="text-2xl font-black text-slate-800 tracking-tight">{isLogin ? '登入帳戶' : '立即註冊'}</h2><p className="text-slate-500 mt-1 text-sm">{isLogin ? '登入即可儲存及同步你的資料' : '只需幾秒，開始雲端記錄'}</p></div>
+
+                        <div className="text-center mb-8 relative">
+                            <h2 className="text-2xl font-black text-slate-800 tracking-tight">
+                                {isLogin ? '登入帳戶' : '立即註冊'}
+                            </h2>
+                            <p className="text-slate-500 mt-1 text-sm">
+                                {isLogin ? '登入即可儲存及同步你的資料' : '只需幾秒，開始雲端記錄'}
+                            </p>
+                        </div>
+
                         <form onSubmit={handleEmailAuth} className="space-y-4 relative">
-                            {!isLogin && (<div className="relative group"><div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors"><i data-lucide="user" className="w-5 h-5"></i></div><input type="text" className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium" placeholder="英文短名 (例如: Miss Wong)" value={displayName} onChange={e => setDisplayName(e.target.value)} required /></div>)}
-                            <div className="relative group"><div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors"><i data-lucide="mail" className="w-5 h-5"></i></div><input type="email" className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium" placeholder="電子郵件" value={email} onChange={e => setEmail(e.target.value)} required /></div>
-                            <div className="relative group"><div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors"><i data-lucide="lock" className="w-5 h-5"></i></div><input type="password" className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium" placeholder="密碼" value={password} onChange={e => setPassword(e.target.value)} required /></div>
-                            <button type="submit" disabled={loading} className="w-full py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold text-lg shadow-lg shadow-indigo-500/30 transform transition-all active:scale-[0.98] disabled:opacity-70 flex items-center justify-center">{loading ? '處理中...' : (isLogin ? '登入' : '註冊')}</button>
+                            {/* 註冊時顯示名字輸入框 */}
+                            {!isLogin && (
+                                <div className="relative group">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors">
+                                        <i data-lucide="user" className="w-5 h-5"></i>
+                                    </div>
+                                    <input 
+                                        type="text" 
+                                        className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium"
+                                        placeholder="英文短名 (例如: Miss Wong)"
+                                        value={displayName}
+                                        onChange={e => setDisplayName(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                            )}
+
+                            <div className="relative group">
+                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors">
+                                    <i data-lucide="mail" className="w-5 h-5"></i>
+                                </div>
+                                <input 
+                                    type="email" 
+                                    className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium"
+                                    placeholder="電子郵件"
+                                    value={email}
+                                    onChange={e => setEmail(e.target.value)}
+                                    required
+                                />
+                            </div>
+                            
+                            <div className="relative group">
+                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors">
+                                    <i data-lucide="lock" className="w-5 h-5"></i>
+                                </div>
+                                <input 
+                                    type="password" 
+                                    className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium"
+                                    placeholder="密碼"
+                                    value={password}
+                                    onChange={e => setPassword(e.target.value)}
+                                    required
+                                />
+                            </div>
+                            
+                            <button 
+                                type="submit" 
+                                disabled={loading}
+                                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold text-lg shadow-lg shadow-indigo-500/30 transform transition-all active:scale-[0.98] disabled:opacity-70 flex items-center justify-center"
+                            >
+                                {loading ? '處理中...' : (isLogin ? '登入' : '註冊')}
+                            </button>
                         </form>
-                        <div className="relative my-6"><div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100"></div></div><div className="relative flex justify-center text-xs uppercase tracking-wider font-bold text-slate-400"><span className="px-3 bg-white/80 backdrop-blur">或</span></div></div>
-                        <button onClick={handleGoogleLogin} disabled={loading} className="w-full py-3 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center justify-center gap-3 shadow-sm active:scale-[0.98]"><img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />Google 登入</button>
-                        <div className="mt-6 text-center"><p className="text-slate-500 text-sm">{isLogin ? '還沒有帳號？' : '已經有帳號了？'} <button onClick={() => setIsLogin(!isLogin)} className="text-indigo-600 font-bold hover:text-indigo-700 ml-1 transition-colors">{isLogin ? '立即註冊' : '直接登入'}</button></p></div>
+
+                        <div className="relative my-6">
+                            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100"></div></div>
+                            <div className="relative flex justify-center text-xs uppercase tracking-wider font-bold text-slate-400"><span className="px-3 bg-white/80 backdrop-blur">或</span></div>
+                        </div>
+
+                        <button 
+                            onClick={handleGoogleLogin}
+                            disabled={loading}
+                            className="w-full py-3 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center justify-center gap-3 shadow-sm active:scale-[0.98]"
+                        >
+                            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
+                            Google 登入
+                        </button>
+
+                        <div className="mt-6 text-center">
+                             <p className="text-slate-500 text-sm">
+                                {isLogin ? '還沒有帳號？' : '已經有帳號了？'} 
+                                <button onClick={() => setIsLogin(!isLogin)} className="text-indigo-600 font-bold hover:text-indigo-700 ml-1 transition-colors">
+                                    {isLogin ? '立即註冊' : '直接登入'}
+                                </button>
+                            </p>
+                        </div>
                     </div>
                 </div>
             );
@@ -182,8 +292,11 @@
             const [user, setUser] = useState(null);
             const [authLoading, setAuthLoading] = useState(true);
             const [items, setItems] = useState([]);
+            
+            // Firebase Services from window
             const { auth, db, signOut, onAuthStateChanged, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs } = window.firebaseServices || {};
 
+            // 輸入框 State
             const [inputType, setInputType] = useState('homework');
             const [description, setDescription] = useState('');
             const [dueDate, setDueDate] = useState(''); 
@@ -193,108 +306,257 @@
             const [activeModal, setActiveModal] = useState(null);
             const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
             
+            // ADMIN STATE
             const [isAdmin, setIsAdmin] = useState(false);
             const [isBroadcast, setIsBroadcast] = useState(false);
-            const [notification, setNotification] = useState({ isOpen: false, type: 'alert', message: '', onConfirm: null });
+            
+            const [notification, setNotification] = useState({
+                isOpen: false,
+                type: 'alert',
+                message: '',
+                onConfirm: null
+            });
+
             const fileInputRef = useRef(null);
 
             // --- Helpers ---
-            const getTodayDateString = () => new Date().toLocaleDateString('zh-HK', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
-            const getNextSchoolDay = () => { const d = new Date(); const day = d.getDay(); let addDays = 1; if (day === 5) addDays = 3; else if (day === 6) addDays = 2; else if (day === 0) addDays = 1; d.setDate(d.getDate() + addDays); const y = d.getFullYear(); const m = String(d.getMonth() + 1).padStart(2, '0'); const dd = String(d.getDate()).padStart(2, '0'); return `${y}-${m}-${dd}`; };
-            const getDaysRemaining = (dateString) => { const today = new Date(); today.setHours(0, 0, 0, 0); const due = new Date(dateString); due.setHours(0, 0, 0, 0); return Math.ceil((due - today) / (1000 * 60 * 60 * 24)); };
+            const getTodayDateString = () => {
+                const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+                return new Date().toLocaleDateString('zh-HK', options);
+            };
+
+            const getNextSchoolDay = () => {
+                const d = new Date();
+                const day = d.getDay(); 
+                let addDays = 1;
+                if (day === 5) addDays = 3;
+                else if (day === 6) addDays = 2;
+                else if (day === 0) addDays = 1;
+                d.setDate(d.getDate() + addDays);
+                const y = d.getFullYear();
+                const m = String(d.getMonth() + 1).padStart(2, '0');
+                const dd = String(d.getDate()).padStart(2, '0');
+                return `${y}-${m}-${dd}`;
+            };
+
+            const getDaysRemaining = (dateString) => {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const due = new Date(dateString);
+                due.setHours(0, 0, 0, 0);
+                return Math.ceil((due - today) / (1000 * 60 * 60 * 24));
+            };
+
             const triggerAlert = (message) => setNotification({ isOpen: true, type: 'alert', message, onConfirm: null });
             const triggerConfirm = (message, onConfirmAction) => setNotification({ isOpen: true, type: 'confirm', message, onConfirm: onConfirmAction });
             const closeNotification = () => setNotification(prev => ({ ...prev, isOpen: false }));
-            const handleNotificationConfirm = () => { if (notification.onConfirm) notification.onConfirm(); closeNotification(); };
+            const handleNotificationConfirm = () => {
+                if (notification.onConfirm) notification.onConfirm();
+                closeNotification();
+            };
 
             // --- Effects ---
+
+            // 1. 監聽登入與管理員狀態
             useEffect(() => {
                 if (!window.firebaseServices) return;
+                
                 const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-                    setUser(currentUser); setAuthLoading(false);
+                    setUser(currentUser);
+                    setAuthLoading(false);
                     if (currentUser) {
-                        setDueDate(getNextSchoolDay()); setIsAuthModalOpen(false);
-                        if (currentUser.email === 'chimhinhin@gmail.com') setIsAdmin(true); else setIsAdmin(false);
-                    } else { setItems([]); setIsAdmin(false); }
+                        setDueDate(getNextSchoolDay());
+                        setIsAuthModalOpen(false);
+                        // 檢查管理員
+                        if (currentUser.email === 'chimhinhin@gmail.com') {
+                            setIsAdmin(true);
+                        } else {
+                            setIsAdmin(false);
+                        }
+                    } else {
+                        setItems([]); 
+                        setIsAdmin(false);
+                    }
                 });
                 return () => unsubscribe();
             }, []);
 
+            // 2. 監聽私人數據
             useEffect(() => {
-                if (!user || !db) { setItems([]); return; }
+                if (!user || !db) {
+                    setItems([]);
+                    return;
+                }
+
                 const q = query(collection(db, "users", user.uid, "items"), orderBy("dueDate"));
                 const unsubscribe = onSnapshot(q, (snapshot) => {
-                    const newItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    const newItems = snapshot.docs.map(doc => ({
+                        id: doc.id,
+                        ...doc.data()
+                    }));
                     setItems(newItems);
-                }, (error) => console.error(error));
+                }, (error) => {
+                    console.error("Error fetching data: ", error);
+                });
+
                 return () => unsubscribe();
             }, [user]);
 
+            // 3. 監聽公共數據 (自動接收功課邏輯)
             useEffect(() => {
                 if (!user || !db) return;
+
+                // 監聽 `public_assignments` 集合的變化
                 const q = query(collection(db, "public_assignments"), orderBy("createdAt", "desc"));
+                
                 const unsubscribe = onSnapshot(q, (snapshot) => {
                     snapshot.docChanges().forEach(async (change) => {
                         if (change.type === "added") {
                             const publicData = change.doc.data();
                             const publicId = change.doc.id;
+
+                            // 檢查這個功課是否已經存在於用戶的私人列表中
                             const userItemsRef = collection(db, "users", user.uid, "items");
                             const dupQuery = query(userItemsRef, where("publicRefId", "==", publicId));
+                            
                             try {
                                 const dupSnapshot = await getDocs(dupQuery);
                                 if (dupSnapshot.empty) {
-                                    await addDoc(userItemsRef, { ...publicData, publicRefId: publicId, completed: false });
+                                    // 如果沒有找到，代表這是新發放的功課 -> 自動加入
+                                    // 確保 senderName 被複製過去
+                                    await addDoc(userItemsRef, {
+                                        ...publicData,
+                                        publicRefId: publicId, // 標記來源 ID
+                                        completed: false // 重置為未完成
+                                    });
                                     triggerAlert(`收到新功課：${publicData.description}`);
                                 }
-                            } catch (e) { console.error("Auto-sync error:", e); }
+                            } catch (e) {
+                                console.error("Auto-sync error:", e);
+                            }
                         }
                     });
                 });
+
                 return () => unsubscribe();
             }, [user]);
 
-            useEffect(() => { if (window.lucide) window.lucide.createIcons(); });
+            // Icons
+            useEffect(() => {
+                if (window.lucide) window.lucide.createIcons();
+            });
 
-            // --- Handlers ---
-            const handleGuestAction = () => { if (!user) { setIsAuthModalOpen(true); return true; } return false; };
-            const handleImageUpload = (e) => { if (handleGuestAction()) return; const file = e.target.files[0]; if (file) { if (file.size > 500000) { triggerAlert("圖片太大啦！請用細過 500KB 嘅圖。"); return; } const reader = new FileReader(); reader.onloadend = () => setSelectedImage(reader.result); reader.readAsDataURL(file); } };
-            
+            // --- 權限檢查 Guard (UI 攔截) ---
+            const handleGuestAction = () => {
+                if (!user) {
+                    setIsAuthModalOpen(true);
+                    return true;
+                }
+                return false;
+            };
+
+            // --- Data Handlers ---
+
+            const handleImageUpload = (e) => {
+                if (handleGuestAction()) return;
+
+                const file = e.target.files[0];
+                if (file) {
+                    if (file.size > 500000) { 
+                        triggerAlert("圖片太大啦！由於資料庫限制，請用細過 500KB 嘅圖。");
+                        return;
+                    }
+                    const reader = new FileReader();
+                    reader.onloadend = () => setSelectedImage(reader.result);
+                    reader.readAsDataURL(file);
+                }
+            };
+
             const handleSubmit = async (e) => {
-                e.preventDefault(); if (handleGuestAction()) return;
+                e.preventDefault();
+                if (handleGuestAction()) return;
+
                 if ((!description.trim() && !selectedImage) || !dueDate) return;
-                const newItem = { type: inputType, description: description.trim(), image: selectedImage, dueDate, completed: false, createdAt: new Date().toISOString() };
+
+                // 準備新項目
+                const newItem = {
+                    type: inputType,
+                    description: description.trim(),
+                    image: selectedImage,
+                    dueDate,
+                    completed: false,
+                    createdAt: new Date().toISOString()
+                };
+
                 try {
                     if (isBroadcast && isAdmin) {
+                        // 管理員發放模式：加入發送者名稱
+                        // 優先使用 displayName，如果沒有則使用 '老師'
                         newItem.senderName = user.displayName || '老師';
+                        
                         await addDoc(collection(db, "public_assignments"), newItem);
                         triggerAlert("已發放功課給全班！");
-                    } else { await addDoc(collection(db, "users", user.uid, "items"), newItem); }
-                    setDescription(''); setSelectedImage(null); if (fileInputRef.current) fileInputRef.current.value = ""; setDueDate(getNextSchoolDay()); setViewMode('current'); setIsBroadcast(false); 
-                } catch (error) { console.error(error); triggerAlert("新增失敗，請稍後再試"); }
+                    } else {
+                        // 普通模式
+                        await addDoc(collection(db, "users", user.uid, "items"), newItem);
+                    }
+                    
+                    setDescription('');
+                    setSelectedImage(null);
+                    if (fileInputRef.current) fileInputRef.current.value = "";
+                    setDueDate(getNextSchoolDay());
+                    setViewMode('current');
+                    setIsBroadcast(false); 
+                } catch (error) {
+                    console.error("Error adding document: ", error);
+                    triggerAlert("新增失敗，請稍後再試");
+                }
             };
 
             const handleToggle = async (id, currentCompletedStatus) => {
                 if (handleGuestAction()) return;
+
                 if (!currentCompletedStatus) {
                     setExitingIds(prev => [...prev, id]);
                     setTimeout(async () => {
-                        try { const itemRef = doc(db, "users", user.uid, "items", id); await updateDoc(itemRef, { completed: true }); } catch (e) { console.error(e); }
+                        try {
+                            const itemRef = doc(db, "users", user.uid, "items", id);
+                            await updateDoc(itemRef, { completed: true });
+                        } catch (e) { console.error(e); }
                         setExitingIds(prev => prev.filter(eid => eid !== id));
                     }, 1000);
-                } else { try { const itemRef = doc(db, "users", user.uid, "items", id); await updateDoc(itemRef, { completed: false }); } catch (e) { console.error(e); } }
+                } else {
+                    try {
+                        const itemRef = doc(db, "users", user.uid, "items", id);
+                        await updateDoc(itemRef, { completed: false });
+                    } catch (e) { console.error(e); }
+                }
             };
 
             const deleteItem = (id) => {
                 if (handleGuestAction()) return;
-                triggerConfirm('確定要刪除這項紀錄？', async () => { try { await deleteDoc(doc(db, "users", user.uid, "items", id)); } catch (e) { console.error(e); triggerAlert("刪除失敗"); } });
+
+                triggerConfirm('堅係要刪除？雲端刪咗就救唔返架喎！', async () => {
+                    try {
+                        await deleteDoc(doc(db, "users", user.uid, "items", id));
+                    } catch (e) {
+                        console.error(e);
+                        triggerAlert("刪除失敗");
+                    }
+                });
             };
 
-            const deletePublicItem = (publicId) => {
+            const deletePublicItem = (publicId, privateId) => {
                 if (handleGuestAction()) return;
-                triggerConfirm('⚠️ 確定要刪除全班的這份功課？(這將停止發放，但同學已收到的紀錄不會消失)', async () => {
+                triggerConfirm('⚠️ 確定要刪除全班的這份功課？(會同時刪除你的私人備份)', async () => {
                     try {
+                        // 1. 刪除公共原稿
                         await deleteDoc(doc(db, "public_assignments", publicId));
-                        triggerAlert("已從公共資料庫刪除");
+                        // 2. 刪除管理員自己的私人複本，確保畫面立刻消失
+                        if (privateId) {
+                            await deleteDoc(doc(db, "users", user.uid, "items", privateId));
+                        }
+                        triggerAlert("已從公共資料庫及您的清單刪除");
                     } catch (e) {
                         console.error(e);
                         triggerAlert("刪除失敗");
@@ -302,22 +564,61 @@
                 });
             };
             
-            const handleSignOut = () => { triggerConfirm('確定要登出？', async () => { try { await signOut(auth); setActiveModal(null); setIsAdmin(false); } catch(e) { console.error(e); } }); };
-            const handleDashboardClick = (modalType) => { if (!user) { setIsAuthModalOpen(true); } else { setActiveModal(modalType); } };
+            const handleSignOut = () => {
+                triggerConfirm('確定要登出？', async () => {
+                    try {
+                        await signOut(auth);
+                        setActiveModal(null);
+                        setIsAdmin(false);
+                    } catch(e) { console.error(e); }
+                });
+            };
 
-            // --- Render ---
-            if (authLoading) return <div className="min-h-screen flex items-center justify-center bg-slate-50"><div className="animate-pulse flex flex-col items-center"><div className="w-12 h-12 bg-indigo-200 rounded-full mb-4"></div><div className="h-4 w-32 bg-slate-200 rounded"></div></div></div>;
+            const handleDashboardClick = (modalType) => {
+                if (!user) {
+                    setIsAuthModalOpen(true);
+                } else {
+                    setActiveModal(modalType);
+                }
+            };
+
+            // --- Rendering Logic ---
+            if (authLoading) {
+                return (
+                    <div className="min-h-screen flex items-center justify-center bg-slate-50">
+                        <div className="animate-pulse flex flex-col items-center">
+                            <div className="w-12 h-12 bg-indigo-200 rounded-full mb-4"></div>
+                            <div className="h-4 w-32 bg-slate-200 rounded"></div>
+                        </div>
+                    </div>
+                );
+            }
 
             const activeItems = items.filter(i => !i.completed);
             const todayHomeworks = activeItems.filter(i => i.type === 'homework' && getDaysRemaining(i.dueDate) <= 0);
             const upcomingHomeworks = activeItems.filter(i => i.type === 'homework' && getDaysRemaining(i.dueDate) >= 1);
             const activeTests = activeItems.filter(i => i.type !== 'homework');
             activeTests.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
-            const nextTest = activeTests[0]; const nextTestDays = nextTest ? getDaysRemaining(nextTest.dueDate) : null; const testCount = activeTests.length;
-            const getModalTitle = () => { if (activeModal === 'today') return '今日要交嘅功課'; if (activeModal === 'upcoming') return '日後要交嘅功課'; if (activeModal === 'revision') return '所有測驗默書'; return ''; };
-            const getModalItems = () => { if (activeModal === 'today') return todayHomeworks; if (activeModal === 'upcoming') return upcomingHomeworks.sort((a,b) => new Date(a.dueDate) - new Date(b.dueDate)); if (activeModal === 'revision') return activeTests; return []; };
+            const nextTest = activeTests[0];
+            const nextTestDays = nextTest ? getDaysRemaining(nextTest.dueDate) : null;
+            const testCount = activeTests.length;
+
+            const getModalTitle = () => {
+                if (activeModal === 'today') return '今日要交嘅功課';
+                if (activeModal === 'upcoming') return '日後要交嘅功課';
+                if (activeModal === 'revision') return '所有測驗默書';
+                return '';
+            };
+            const getModalItems = () => {
+                if (activeModal === 'today') return todayHomeworks;
+                if (activeModal === 'upcoming') return upcomingHomeworks.sort((a,b) => new Date(a.dueDate) - new Date(b.dueDate));
+                if (activeModal === 'revision') return activeTests;
+                return [];
+            };
+
             const getStatusBadge = (item) => {
-                const daysLeft = getDaysRemaining(item.dueDate); const isCompleted = item.completed || exitingIds.includes(item.id);
+                const daysLeft = getDaysRemaining(item.dueDate);
+                const isCompleted = item.completed || exitingIds.includes(item.id);
                 if (isCompleted) return { text: '已完成', color: 'bg-blue-100 text-blue-700', border: 'border-blue-200' };
                 if (item.type === 'homework') {
                     if (daysLeft < 0) return { text: `遲咗 ${Math.abs(daysLeft)} 日`, color: 'bg-red-500 text-white', border: 'border-red-500' };
@@ -333,39 +634,53 @@
             };
             const getTypeIcon = (type) => type !== 'homework' ? <i data-lucide="file-question" className="w-4 h-4 text-purple-500"></i> : <i data-lucide="book-open" className="w-4 h-4 text-indigo-500"></i>;
             const getTypeName = (type) => type !== 'homework' ? '默書/測驗' : '功課';
+            
             const displayedItems = items.filter(item => viewMode === 'current' ? !item.completed : item.completed).sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+            
+            // 訪客樣式：變灰
             const guestStyle = !user ? "opacity-60 grayscale" : "";
 
             const renderItemCard = (item) => {
-                const daysLeft = getDaysRemaining(item.dueDate); const isExiting = exitingIds.includes(item.id); const isVisuallyCompleted = item.completed || isExiting; const status = getStatusBadge(item); const isTest = item.type !== 'homework';
-                
+                const daysLeft = getDaysRemaining(item.dueDate);
+                const isExiting = exitingIds.includes(item.id);
+                const isVisuallyCompleted = item.completed || isExiting;
+                const status = getStatusBadge(item);
+                const isTest = item.type !== 'homework';
+
                 return (
                     <div key={item.id} className={`relative group overflow-hidden bg-white rounded-xl p-4 shadow-sm border transition-all duration-300 ${isExiting ? 'scale-95 opacity-0 translate-y-4' : 'hover:shadow-md'} ${isVisuallyCompleted ? 'bg-slate-50 border-slate-100' : 'border-slate-100'} ${!isVisuallyCompleted && isTest ? 'border-l-4 border-l-purple-400' : ''}`}>
                         {!isTest && (<div className={`absolute left-0 top-0 bottom-0 w-1.5 ${daysLeft < 0 && !isVisuallyCompleted ? 'bg-red-500' : (daysLeft === 0 && !isVisuallyCompleted ? 'bg-orange-500' : 'bg-transparent')}`}></div>)}
                         <div className="flex items-start gap-3">
-                            <button onClick={() => handleToggle(item.id, item.completed)} disabled={isExiting} className={`flex-shrink-0 mt-1 w-6 h-6 rounded-full border-2 transition-all duration-300 flex items-center justify-center overflow-hidden ${isVisuallyCompleted ? 'bg-green-500 border-green-500 text-white scale-110 shadow-green-200' : (!isTest ? 'border-slate-300 hover:border-indigo-500 hover:bg-indigo-50' : 'border-purple-300 hover:border-purple-500 hover:bg-purple-50')}`}><i data-lucide="check-circle" className={`w-3.5 h-3.5 transition-transform duration-300 ${isVisuallyCompleted ? 'scale-100' : 'scale-0'}`}></i></button>
+                            <button onClick={() => handleToggle(item.id, item.completed)} disabled={isExiting} className={`flex-shrink-0 mt-1 w-6 h-6 rounded-full border-2 transition-all duration-300 flex items-center justify-center overflow-hidden ${isVisuallyCompleted ? 'bg-green-500 border-green-500 text-white scale-110 shadow-green-200' : (!isTest ? 'border-slate-300 hover:border-indigo-500 hover:bg-indigo-50' : 'border-purple-300 hover:border-purple-500 hover:bg-purple-50')}`}>
+                                <i data-lucide="check-circle" className={`w-3.5 h-3.5 transition-transform duration-300 ${isVisuallyCompleted ? 'scale-100' : 'scale-0'}`}></i>
+                            </button>
                             <div className="flex-grow min-w-0">
                                 <div className="flex flex-col gap-1">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
                                             {getTypeIcon(item.type)}
                                             <span className="text-xs font-bold text-slate-500">{getTypeName(item.type)}</span>
+                                            {/* 顯示發放者 */}
                                             {item.publicRefId && <span className="text-[10px] bg-yellow-100 text-yellow-700 px-1.5 rounded">由 {item.senderName || '老師'} 發放</span>}
                                         </div>
                                         <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold shadow-sm border ${status.color} ${status.border}`}>
-                                            {daysLeft < 0 && <i data-lucide="alert-circle" className="w-3 h-3"></i>}{daysLeft <= 3 && daysLeft >= 0 && <i data-lucide="clock" className="w-3 h-3"></i>}{status.text}
+                                            {daysLeft < 0 && <i data-lucide="alert-circle" className="w-3 h-3"></i>}
+                                            {daysLeft <= 3 && daysLeft >= 0 && <i data-lucide="clock" className="w-3 h-3"></i>}
+                                            {status.text}
                                         </span>
                                     </div>
-                                    <div className={`text-base font-medium whitespace-pre-wrap leading-relaxed ${isVisuallyCompleted ? 'line-through text-slate-400' : 'text-slate-800'}`}>{item.description}</div>
+                                    <div className={`text-base font-medium whitespace-pre-wrap leading-relaxed ${isVisuallyCompleted ? 'line-through text-slate-400' : 'text-slate-800'}`}>
+                                        {item.description}
+                                    </div>
                                     {item.image && (<div className="mt-2 relative group/image w-fit"><img src={item.image} alt="Upload" className={`max-h-32 rounded-lg border border-slate-200 object-cover ${isVisuallyCompleted ? 'opacity-50 grayscale' : ''}`} /></div>)}
                                     <div className="flex items-center gap-1 text-xs text-slate-400 mt-1"><i data-lucide="calendar" className="w-3 h-3"></i>{item.dueDate}</div>
                                 </div>
                             </div>
-                            {/* 刪除按鈕區域 - 管理員且為公共功課顯示兩個按鈕，否則顯示一個 */}
+                            {/* 刪除按鈕區域 - 修正後的邏輯 */}
                             {isAdmin && item.publicRefId ? (
                                 <div className="flex flex-col gap-2">
                                     <button onClick={() => deleteItem(item.id)} className="flex items-center justify-center p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all" title="刪除 (自己)"><i data-lucide="trash-2" className="w-4 h-4"></i><span className="text-[10px] font-bold ml-0.5">自己</span></button>
-                                    <button onClick={() => deletePublicItem(item.publicRefId)} className="flex items-center justify-center p-1.5 text-indigo-300 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all" title="刪除 (全班)"><i data-lucide="globe" className="w-4 h-4"></i><span className="text-[10px] font-bold ml-0.5">全班</span></button>
+                                    <button onClick={() => deletePublicItem(item.publicRefId, item.id)} className="flex items-center justify-center p-1.5 text-indigo-300 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all" title="刪除 (全班)"><i data-lucide="globe" className="w-4 h-4"></i><span className="text-[10px] font-bold ml-0.5">全班</span></button>
                                 </div>
                             ) : (
                                 <button onClick={() => deleteItem(item.id)} className="flex-shrink-0 p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"><i data-lucide="trash-2" className="w-4 h-4"></i></button>
@@ -383,13 +698,26 @@
                                 <h1 className="text-xl sm:text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center gap-2">
                                     {viewMode === 'current' ? (<><i data-lucide="graduation-cap" className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-600"></i>學生小幫手</>) : (<><i data-lucide="history" className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600"></i>完成紀錄</>)}
                                 </h1>
+                                {/* 日期顯示 */}
                                 <p className="text-slate-500 text-sm mt-1 ml-1 font-medium">{getTodayDateString()}</p>
                             </div>
                             <div className="flex gap-2">
-                                <button onClick={() => !user ? setIsAuthModalOpen(true) : setViewMode(viewMode === 'current' ? 'history' : 'current')} className={`group justify-center relative flex items-center gap-2 px-4 py-2.5 rounded-full font-bold text-sm transition-all duration-300 shadow-md hover:shadow-xl transform hover:-translate-y-1 ${viewMode === 'current' ? 'bg-white text-slate-700 border-2 border-slate-100 hover:border-indigo-200' : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-transparent'} ${guestStyle}`}>
+                                <button 
+                                    onClick={() => !user ? setIsAuthModalOpen(true) : setViewMode(viewMode === 'current' ? 'history' : 'current')} 
+                                    className={`group justify-center relative flex items-center gap-2 px-4 py-2.5 rounded-full font-bold text-sm transition-all duration-300 shadow-md hover:shadow-xl transform hover:-translate-y-1 ${viewMode === 'current' ? 'bg-white text-slate-700 border-2 border-slate-100 hover:border-indigo-200' : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-transparent'} ${guestStyle}`}
+                                >
                                     {viewMode === 'current' ? (<><i data-lucide="history" className="w-4 h-4 group-hover:rotate-12 transition-transform"></i>睇紀錄</>) : (<><i data-lucide="arrow-left" className="w-4 h-4 group-hover:-translate-x-1 transition-transform"></i>返首頁</>)}
                                 </button>
-                                {user ? (<button onClick={handleSignOut} className="group justify-center relative flex items-center gap-2 px-4 py-2.5 rounded-full font-bold text-sm bg-slate-200 text-slate-600 hover:bg-slate-300 transition-all shadow-sm"><i data-lucide="log-out" className="w-4 h-4"></i>登出</button>) : (<button onClick={() => setIsAuthModalOpen(true)} className="group justify-center relative flex items-center gap-2 px-4 py-2.5 rounded-full font-bold text-sm bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-md shadow-indigo-200"><i data-lucide="log-in" className="w-4 h-4"></i>登入/註冊</button>)}
+                                
+                                {user ? (
+                                    <button onClick={handleSignOut} className="group justify-center relative flex items-center gap-2 px-4 py-2.5 rounded-full font-bold text-sm bg-slate-200 text-slate-600 hover:bg-slate-300 transition-all shadow-sm">
+                                        <i data-lucide="log-out" className="w-4 h-4"></i>登出
+                                    </button>
+                                ) : (
+                                    <button onClick={() => setIsAuthModalOpen(true)} className="group justify-center relative flex items-center gap-2 px-4 py-2.5 rounded-full font-bold text-sm bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-md shadow-indigo-200">
+                                        <i data-lucide="log-in" className="w-4 h-4"></i>登入/註冊
+                                    </button>
+                                )}
                             </div>
                         </div>
 
@@ -416,6 +744,7 @@
 
                         {viewMode === 'current' && (
                             <div className="relative">
+                                {/* Guest Overlay - Catches Clicks */}
                                 {!user && (<div className="absolute inset-0 z-20 cursor-pointer rounded-3xl" onClick={() => setIsAuthModalOpen(true)}></div>)}
                                 <div className={`relative bg-white/80 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-4 sm:p-6 mb-8 sm:mb-10 border border-white/50 ring-1 ring-indigo-50 transition-all ${guestStyle}`}>
                                     <div className="flex bg-slate-100/80 p-1 rounded-xl mb-4">
@@ -445,7 +774,9 @@
                     </div>
 
                     {/* Watermark */}
-                    <div className="fixed bottom-3 right-3 text-slate-300/50 text-xs font-mono pointer-events-none select-none z-0">Made by @colasonyt1123</div>
+                    <div className="fixed bottom-3 right-3 text-slate-300/50 text-xs font-mono pointer-events-none select-none z-0">
+                        Made by @colasonyt1123
+                    </div>
 
                     {activeModal && (<div className="fixed inset-0 z-50 flex items-center justify-center px-4"><div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setActiveModal(null)}></div><div className="modal-animate relative bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[80vh] flex flex-col overflow-hidden"><div className="p-5 border-b border-slate-100 flex items-center justify-between bg-white z-10"><h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">{activeModal === 'today' && <i data-lucide="flame" className="w-6 h-6 text-red-500"></i>}{activeModal === 'upcoming' && <i data-lucide="calendar-range" className="w-6 h-6 text-sky-500"></i>}{activeModal === 'revision' && <i data-lucide="brain-circuit" className="w-6 h-6 text-purple-500"></i>}{getModalTitle()}</h3><button onClick={() => setActiveModal(null)} className="p-2 bg-slate-100 rounded-full hover:bg-slate-200 transition-colors"><i data-lucide="x" className="w-5 h-5 text-slate-500"></i></button></div><div className="p-4 overflow-y-auto space-y-3 bg-slate-50 flex-1">{getModalItems().length === 0 ? (<div className="text-center py-10 text-slate-400">暫時沒有相關項目</div>) : (getModalItems().map(item => renderItemCard(item)))}</div></div></div>)}
                     <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} triggerAlert={triggerAlert} />
