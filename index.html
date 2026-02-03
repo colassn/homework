@@ -3,820 +3,584 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3B Hub 班級作業管理平台</title>
+    <title>功課與默書追蹤小幫手 (班級版)</title>
     
-    <!-- Tailwind CSS -->
+    <!-- 引入 React 和 ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    
+    <!-- 引入 Babel 用來解析 JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- 引入 Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Lucide Icons -->
+    <!-- 引入 Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
-    <!-- Google Font (Noto Sans TC) -->
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
-
     <style>
-        body { font-family: 'Noto Sans TC', sans-serif; }
-        .hidden { display: none !important; }
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        input[type="file"]::file-selector-button {
+            display: none;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .modal-animate {
+            animation: fadeIn 0.2s ease-out forwards;
+        }
+        .notification-animate {
+            animation: fadeIn 0.15s ease-out forwards;
+        }
+        
+        @keyframes blob {
+            0% { transform: translate(0px, 0px) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+            100% { transform: translate(0px, 0px) scale(1); }
+        }
+        .animate-blob {
+            animation: blob 7s infinite;
+        }
+        .animation-delay-2000 {
+            animation-delay: 2s;
+        }
+        .animation-delay-4000 {
+            animation-delay: 4s;
+        }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 h-screen flex flex-col overflow-hidden">
+<body class="bg-slate-50">
+    <div id="root"></div>
 
-    <!-- Loading Screen -->
-    <div id="loading-screen" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center p-6 text-center">
-        <div id="loading-spinner" class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-        <p id="loading-text" class="text-slate-500 animate-pulse">正在連接 3B Hub...</p>
-        
-        <!-- Error / Timeout Message Area -->
-        <div id="loading-error" class="hidden mt-4 max-w-sm">
-            <p class="text-amber-600 text-sm mb-4"><i data-lucide="alert-circle" class="inline w-4 h-4 mr-1"></i>連線回應較慢</p>
-            <button id="force-login-btn" class="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition shadow-lg">
-                進入登入畫面
-            </button>
-            <p id="technical-error" class="text-xs text-red-400 mt-4 font-mono text-left bg-slate-100 p-2 rounded hidden"></p>
-        </div>
-    </div>
-
-    <!-- Auth Screen (Login) -->
-    <div id="auth-screen" class="hidden fixed inset-0 bg-slate-100 z-40 flex items-center justify-center p-4">
-        <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md text-center">
-            <div class="flex justify-center mb-6">
-                <div class="bg-blue-100 p-4 rounded-full">
-                    <i data-lucide="book-open-check" class="w-10 h-10 text-blue-600"></i>
-                </div>
-            </div>
-            <h1 class="text-2xl font-bold text-slate-800 mb-2">歡迎來到 3B Hub</h1>
-            <p class="text-slate-500 mb-8">請登入以查看功課與進度</p>
-            
-            <button id="google-login-btn" class="w-full flex items-center justify-center gap-3 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium py-3 px-4 rounded-lg transition-all mb-4">
-                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5" alt="Google">
-                使用 Google 帳號登入
-            </button>
-
-            <!-- 簡易電郵登入 (Fallback) -->
-            <div class="relative my-6">
-                <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-200"></div></div>
-                <div class="relative flex justify-center text-sm"><span class="px-2 bg-white text-slate-500">或使用電郵</span></div>
-            </div>
-
-            <form id="email-login-form" class="space-y-4">
-                <input type="email" id="email-input" placeholder="student@example.com" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:outline-none" required>
-                <input type="password" id="password-input" placeholder="密碼 (至少6位)" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:outline-none" required>
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition-all">登入 / 註冊</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Nickname Modal -->
-    <div id="nickname-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-        <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-sm">
-            <h2 class="text-xl font-bold mb-4">設定暱稱</h2>
-            <p class="text-slate-500 text-sm mb-4">為了方便老師辨識，請輸入你的英文短名 (例如: Justin)。</p>
-            <input type="text" id="nickname-input" class="w-full border border-slate-300 rounded-lg p-3 mb-4 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="輸入英文名字">
-            <button id="save-nickname-btn" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">儲存並繼續</button>
-        </div>
-    </div>
-
-    <!-- Privacy Disclaimer Screen -->
-    <div id="privacy-screen" class="hidden fixed inset-0 bg-white z-40 flex flex-col items-center justify-center p-6 text-center">
-        <div class="max-w-lg">
-            <i data-lucide="shield-check" class="w-16 h-16 text-emerald-500 mx-auto mb-6"></i>
-            <h2 class="text-2xl font-bold mb-4">保密聲明</h2>
-            <p class="text-slate-600 mb-8 leading-relaxed">
-                本平台僅供 3B 班級內部作業管理使用。你的作業完成狀態僅供管理員 (老師) 查看。
-                請勿隨意洩漏同學資料。點擊「同意」即代表你了解並願意遵守此規則。
-            </p>
-            <button id="agree-privacy-btn" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-8 rounded-full transition-transform transform hover:scale-105">
-                我同意並進入
-            </button>
-        </div>
-    </div>
-
-    <!-- App Header -->
-    <header id="app-header" class="hidden bg-white border-b border-slate-200 px-4 py-3 flex justify-between items-center shrink-0">
-        <div class="flex items-center gap-2">
-            <div class="bg-blue-600 p-2 rounded-lg text-white">
-                <i data-lucide="graduation-cap" class="w-5 h-5"></i>
-            </div>
-            <div>
-                <h1 class="font-bold text-lg leading-tight">3B Hub</h1>
-                <p id="user-display-name" class="text-xs text-slate-500">載入中...</p>
-            </div>
-        </div>
-        <button id="logout-btn" class="text-slate-500 hover:text-red-500 p-2 transition-colors" title="登出">
-            <i data-lucide="log-out" class="w-5 h-5"></i>
-        </button>
-    </header>
-
-    <!-- Main Content Area -->
-    <main id="main-content" class="hidden flex-1 overflow-hidden flex flex-col md:flex-row relative">
-        
-        <!-- Sidebar / Topbar for Student Stats -->
-        <aside class="md:w-80 bg-slate-50 border-r border-slate-200 flex flex-col h-full shrink-0">
-            <!-- Progress Card -->
-            <div class="p-4 border-b border-slate-200 bg-white">
-                <div class="flex justify-between items-end mb-2">
-                    <span class="text-sm font-medium text-slate-500">本學期進度</span>
-                    <span id="progress-text" class="text-2xl font-bold text-blue-600">0%</span>
-                </div>
-                <div class="w-full bg-slate-100 rounded-full h-2.5">
-                    <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
-                </div>
-                <p id="pending-count" class="text-xs text-slate-400 mt-2 text-right">還有 0 份作業未完成</p>
-            </div>
-
-            <!-- Admin Actions (Only visible to Admin) -->
-            <div id="admin-panel" class="hidden p-4 border-b border-slate-200 bg-amber-50">
-                <h3 class="text-xs font-bold text-amber-700 uppercase tracking-wider mb-3">管理員控制台</h3>
-                <button id="add-hw-modal-btn" class="w-full flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white text-sm py-2 px-4 rounded-lg mb-2 shadow-sm transition-colors">
-                    <i data-lucide="plus-circle" class="w-4 h-4"></i> 發布新功課
-                </button>
-                <button id="download-backup-btn" class="w-full flex items-center justify-center gap-2 bg-white border border-amber-300 text-amber-700 hover:bg-amber-100 text-sm py-2 px-4 rounded-lg transition-colors">
-                    <i data-lucide="download" class="w-4 h-4"></i> 下載資料備份
-                </button>
-            </div>
-
-            <!-- Memos Section (Students only) -->
-            <div id="memos-section" class="flex-1 overflow-y-auto p-4 flex flex-col">
-                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                    <i data-lucide="sticky-note" class="w-3 h-3"></i> 私人備忘錄
-                </h3>
-                <div id="memos-list" class="space-y-2 flex-1">
-                    <!-- Memos injected here -->
-                </div>
-                <div class="mt-4 pt-2 border-t border-slate-200">
-                    <div class="flex gap-2">
-                        <input type="text" id="new-memo-input" placeholder="新增備忘..." class="flex-1 text-sm border border-slate-300 rounded px-2 py-1.5 focus:border-blue-500 outline-none">
-                        <button id="add-memo-btn" class="bg-slate-800 text-white p-1.5 rounded hover:bg-slate-700">
-                            <i data-lucide="plus" class="w-4 h-4"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Admin Student List (Replaces Memos for Admin) -->
-            <div id="admin-student-list-section" class="hidden flex-1 overflow-y-auto p-4">
-                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">班級概況</h3>
-                <div id="student-list-container" class="space-y-3">
-                    <!-- Student stats injected here -->
-                </div>
-            </div>
-        </aside>
-
-        <!-- Homework Feed -->
-        <div class="flex-1 overflow-y-auto bg-slate-50/50 p-4 md:p-8">
-            <div class="max-w-3xl mx-auto">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold text-slate-800">作業看板</h2>
-                    <span id="current-date" class="text-sm text-slate-500 bg-white px-3 py-1 rounded-full shadow-sm border border-slate-200"></span>
-                </div>
-
-                <div id="homework-list" class="space-y-3">
-                    <!-- Homework Items injected here -->
-                    <div class="text-center py-12 text-slate-400">
-                        <i data-lucide="inbox" class="w-12 h-12 mx-auto mb-2 opacity-50"></i>
-                        <p>目前沒有作業</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <!-- Add Homework Modal -->
-    <div id="add-hw-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-        <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-md">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-bold">發布新功課</h3>
-                <button id="close-hw-modal" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
-            </div>
-            <form id="add-hw-form" class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">科目</label>
-                    <select id="hw-subject" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-amber-500 outline-none">
-                        <option value="中文">中文</option>
-                        <option value="英文">英文</option>
-                        <option value="數學">數學</option>
-                        <option value="常識">常識</option>
-                        <option value="其他">其他</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">內容</label>
-                    <input type="text" id="hw-title" placeholder="例如：作業 P.10 (1-5)" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-amber-500 outline-none" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">截止日期</label>
-                    <input type="date" id="hw-due" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-amber-500 outline-none" required>
-                </div>
-                <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium py-2.5 rounded-lg transition-colors">
-                    發布
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Logic Script -->
     <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
+        // ==========================================
+        // 你的 Firebase Config
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyA7C10miZnBWXLBluCDU9nezCn9StmWZ3U",
+            authDomain: "recordhw-ad1f9.firebaseapp.com",
+            projectId: "recordhw-ad1f9",
+            storageBucket: "recordhw-ad1f9.firebasestorage.app",
+            messagingSenderId: "600838574849",
+            appId: "1:600838574849:web:425fd3ede2eb6ebaae0100", 
+            measurementId: "G-8VCPLTE2QT"
+        };
+
+        // 引入 Firebase SDK
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { 
             getAuth, 
-            onAuthStateChanged, 
             signInWithPopup, 
             GoogleAuthProvider, 
-            signInWithEmailAndPassword,
-            createUserWithEmailAndPassword,
-            signOut,
-            setPersistence,
-            browserLocalPersistence
-        } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
+            createUserWithEmailAndPassword, 
+            signInWithEmailAndPassword, 
+            signOut, 
+            onAuthStateChanged 
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { 
             getFirestore, 
             collection, 
-            doc, 
-            setDoc, 
-            getDoc, 
-            onSnapshot, 
             addDoc, 
-            deleteDoc,
-            updateDoc,
-            query,
+            updateDoc, 
+            deleteDoc, 
+            doc, 
+            onSnapshot, 
+            query, 
             orderBy,
             serverTimestamp,
-            getDocs 
-        } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
+            where,
+            getDocs
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- 1. CONFIGURATION ---
-        const ADMIN_EMAIL = 'chimhinhin@gmail.com';
-        
-        const firebaseConfig = {
-            apiKey: "AIzaSyDVj1OMXGD-51-9lX7N7rW8C4fEMLdp6M8",
-            authDomain: "pkhw-f6bcf.firebaseapp.com",
-            projectId: "pkhw-f6bcf",
-            storageBucket: "pkhw-f6bcf.firebasestorage.app",
-            messagingSenderId: "169847959955",
-            appId: "1:169847959955:web:4d88fb31dfac054af17866",
-            measurementId: "G-1W7W93WTY7"
-        };
+        // 初始化 Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const googleProvider = new GoogleAuthProvider();
 
-        // --- 2. INITIALIZATION WITH ERROR HANDLING ---
-        let app, auth, db;
-        const els = {
-            loading: document.getElementById('loading-screen'),
-            loadingError: document.getElementById('loading-error'),
-            loadingText: document.getElementById('loading-text'),
-            forceLoginBtn: document.getElementById('force-login-btn'),
-            technicalError: document.getElementById('technical-error'),
-            auth: document.getElementById('auth-screen'),
-            nicknameModal: document.getElementById('nickname-modal'),
-            privacy: document.getElementById('privacy-screen'),
-            header: document.getElementById('app-header'),
-            main: document.getElementById('main-content'),
-            googleBtn: document.getElementById('google-login-btn'),
-            emailForm: document.getElementById('email-login-form'),
-            nicknameInput: document.getElementById('nickname-input'),
-            saveNicknameBtn: document.getElementById('save-nickname-btn'),
-            agreePrivacyBtn: document.getElementById('agree-privacy-btn'),
-            logoutBtn: document.getElementById('logout-btn'),
-            homeworkList: document.getElementById('homework-list'),
-            progressBar: document.getElementById('progress-bar'),
-            progressText: document.getElementById('progress-text'),
-            pendingCount: document.getElementById('pending-count'),
-            displayName: document.getElementById('user-display-name'),
-            currentDate: document.getElementById('current-date'),
-            adminPanel: document.getElementById('admin-panel'),
-            memosSection: document.getElementById('memos-section'),
-            adminStudentSection: document.getElementById('admin-student-list-section'),
-            addHwModalBtn: document.getElementById('add-hw-modal-btn'),
-            downloadBackupBtn: document.getElementById('download-backup-btn'),
-            addHwModal: document.getElementById('add-hw-modal'),
-            closeHwModal: document.getElementById('close-hw-modal'),
-            addHwForm: document.getElementById('add-hw-form'),
-            memosList: document.getElementById('memos-list'),
-            newMemoInput: document.getElementById('new-memo-input'),
-            addMemoBtn: document.getElementById('add-memo-btn'),
-            studentListContainer: document.getElementById('student-list-container')
-        };
+        // 將 Firebase 功能掛載到 window
+        window.firebaseServices = { auth, db, googleProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs };
+    </script>
 
-        try {
-            app = initializeApp(firebaseConfig);
-            auth = getAuth(app);
-            db = getFirestore(app);
-            
-            // Set persistence explicitly
-            setPersistence(auth, browserLocalPersistence)
-                .catch((error) => console.error("Persistence Error:", error));
-                
-        } catch (e) {
-            showError("Firebase 初始化失敗: " + e.message);
-        }
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
 
-        // Environment Helper (for strict path rules in Canvas)
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const HOMEWORK_COLLECTION_REF = collection(db, 'artifacts', appId, 'public', 'data', 'homework');
-        const USERS_PUBLIC_REF = collection(db, 'artifacts', appId, 'public', 'data', 'users');
-        
-        // --- 3. STATE MANAGEMENT ---
-        let currentUser = null;
-        let currentUserData = null;
-        let homeworkList = [];
-        let unsubscribeHomework = null;
-        let unsubscribeUser = null;
-        let unsubscribeAllUsers = null;
-        let unsubscribeMemos = null;
-        let authCheckTimeout = null;
+        // --- Auth Modal (保持不變) ---
+        function AuthModal({ isOpen, onClose, triggerAlert }) {
+            const [isLogin, setIsLogin] = useState(true);
+            const [email, setEmail] = useState('');
+            const [password, setPassword] = useState('');
+            const [loading, setLoading] = useState(false);
+            const { auth, googleProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword } = window.firebaseServices;
 
-        // Init Icons
-        lucide.createIcons();
-        els.currentDate.textContent = new Date().toLocaleDateString('zh-HK');
+            useEffect(() => {
+                if (window.lucide && isOpen) window.lucide.createIcons();
+            }, [isOpen, isLogin]);
 
-        // --- 4. AUTH LOGIC ---
+            if (!isOpen) return null;
 
-        // Timeout fallback: If Auth takes > 3.5 seconds, show option to manually login
-        authCheckTimeout = setTimeout(() => {
-            if (!currentUser) {
-                els.loadingError.classList.remove('hidden');
-                els.loadingText.textContent = "連線回應較慢...";
-            }
-        }, 3500);
-
-        els.forceLoginBtn.addEventListener('click', () => {
-             showAuthScreen();
-        });
-
-        onAuthStateChanged(auth, async (user) => {
-            clearTimeout(authCheckTimeout); // Clear timeout if connected
-            
-            if (user) {
-                console.log("User logged in:", user.uid);
-                currentUser = user;
-                els.auth.classList.add('hidden');
-                els.loadingError.classList.add('hidden');
-                els.loading.classList.remove('hidden');
-                els.loadingText.textContent = "正在載入您的資料...";
-                await handleUserLogin(user);
-            } else {
-                console.log("No user.");
-                currentUser = null;
-                currentUserData = null;
-                showAuthScreen();
-            }
-        }, (error) => {
-            showError("Auth Error: " + error.message);
-        });
-
-        function showError(msg) {
-            els.loadingError.classList.remove('hidden');
-            els.loadingText.textContent = "發生錯誤";
-            els.technicalError.textContent = msg;
-            els.technicalError.classList.remove('hidden');
-            els.forceLoginBtn.textContent = "重試";
-            els.forceLoginBtn.onclick = () => window.location.reload();
-        }
-
-        function showAuthScreen() {
-            els.loading.classList.add('hidden');
-            els.header.classList.add('hidden');
-            els.main.classList.add('hidden');
-            els.auth.classList.remove('hidden');
-            els.nicknameModal.classList.add('hidden');
-            els.privacy.classList.add('hidden');
-            
-            if (unsubscribeHomework) unsubscribeHomework();
-            if (unsubscribeUser) unsubscribeUser();
-            if (unsubscribeAllUsers) unsubscribeAllUsers();
-            if (unsubscribeMemos) unsubscribeMemos();
-        }
-
-        // Login Handlers
-        els.googleBtn.addEventListener('click', async () => {
-            const provider = new GoogleAuthProvider();
-            try {
-                await signInWithPopup(auth, provider);
-            } catch (error) {
-                alert("登入失敗: " + error.message);
-            }
-        });
-
-        els.emailForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('email-input').value;
-            const password = document.getElementById('password-input').value;
-            
-            try {
-                await signInWithEmailAndPassword(auth, email, password);
-            } catch (loginError) {
-                if (loginError.code === 'auth/user-not-found' || loginError.code === 'auth/invalid-credential') {
-                    try {
-                        await createUserWithEmailAndPassword(auth, email, password);
-                    } catch (regError) {
-                        alert("註冊/登入失敗: " + regError.message);
-                    }
-                } else {
-                    alert("登入錯誤: " + loginError.message);
+            const handleGoogleLogin = async () => {
+                try {
+                    setLoading(true);
+                    await signInWithPopup(auth, googleProvider);
+                    onClose();
+                } catch (error) {
+                    console.error(error);
+                    triggerAlert("Google 登入失敗: " + error.message);
+                    setLoading(false);
                 }
-            }
-        });
+            };
 
-        els.logoutBtn.addEventListener('click', () => signOut(auth));
-
-        // --- 5. USER FLOW LOGIC ---
-
-        async function handleUserLogin(user) {
-            const isAdmin = user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
-            const role = isAdmin ? 'admin' : 'student';
-            const userDocRef = doc(USERS_PUBLIC_REF, user.uid);
-
-            try {
-                const docSnap = await getDoc(userDocRef);
-                
-                let dataToUpdate = {
-                    email: user.email,
-                    role: role,
-                    lastLogin: serverTimestamp(),
-                };
-
-                if (!docSnap.exists()) {
-                    dataToUpdate.nickname = "";
-                    dataToUpdate.completed = [];
-                    await setDoc(userDocRef, dataToUpdate);
-                    currentUserData = dataToUpdate;
-                } else {
-                    await updateDoc(userDocRef, dataToUpdate);
-                    currentUserData = docSnap.data();
-                }
-
-                if (isAdmin) {
-                    currentUserData.nickname = "Admin";
-                    currentUserData.role = "admin";
-                    setupDashboard(true);
-                } else {
-                    if (!currentUserData.nickname) {
-                        els.loading.classList.add('hidden');
-                        els.nicknameModal.classList.remove('hidden');
+            const handleEmailAuth = async (e) => {
+                e.preventDefault();
+                if(!email || !password) return;
+                try {
+                    setLoading(true);
+                    if (isLogin) {
+                        await signInWithEmailAndPassword(auth, email, password);
                     } else {
-                        els.loading.classList.add('hidden');
-                        els.privacy.classList.remove('hidden');
+                        await createUserWithEmailAndPassword(auth, email, password);
                     }
+                    onClose();
+                } catch (error) {
+                    console.error(error);
+                    triggerAlert("驗證失敗: " + error.message);
+                    setLoading(false);
                 }
+            };
 
-            } catch (err) {
-                console.error("Error syncing user:", err);
-                showError("資料庫連接失敗: " + err.message);
-            }
+            return (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
+                    <div className="modal-animate bg-white/90 backdrop-blur-2xl rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.3)] w-full max-w-md p-8 relative z-10 border border-white/50 overflow-hidden">
+                         <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"><i data-lucide="x" className="w-6 h-6"></i></button>
+                        <div className="absolute -top-10 -left-10 w-40 h-40 bg-purple-300 rounded-full mix-blend-multiply filter blur-2xl opacity-50 animate-blob pointer-events-none"></div>
+                        <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-blue-300 rounded-full mix-blend-multiply filter blur-2xl opacity-50 animate-blob animation-delay-2000 pointer-events-none"></div>
+                        <div className="text-center mb-8 relative">
+                            <h2 className="text-2xl font-black text-slate-800 tracking-tight">{isLogin ? '登入帳戶' : '立即註冊'}</h2>
+                            <p className="text-slate-500 mt-1 text-sm">{isLogin ? '登入即可儲存及同步你的資料' : '只需幾秒，開始雲端記錄'}</p>
+                        </div>
+                        <form onSubmit={handleEmailAuth} className="space-y-4 relative">
+                            <div className="relative group"><div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors"><i data-lucide="mail" className="w-5 h-5"></i></div><input type="email" className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium" placeholder="電子郵件" value={email} onChange={e => setEmail(e.target.value)} required /></div>
+                            <div className="relative group"><div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors"><i data-lucide="lock" className="w-5 h-5"></i></div><input type="password" className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium" placeholder="密碼" value={password} onChange={e => setPassword(e.target.value)} required /></div>
+                            <button type="submit" disabled={loading} className="w-full py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold text-lg shadow-lg shadow-indigo-500/30 transform transition-all active:scale-[0.98] disabled:opacity-70 flex items-center justify-center">{loading ? '處理中...' : (isLogin ? '登入' : '註冊')}</button>
+                        </form>
+                        <div className="relative my-6"><div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100"></div></div><div className="relative flex justify-center text-xs uppercase tracking-wider font-bold text-slate-400"><span className="px-3 bg-white/80 backdrop-blur">或</span></div></div>
+                        <button onClick={handleGoogleLogin} disabled={loading} className="w-full py-3 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center justify-center gap-3 shadow-sm active:scale-[0.98]"><img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />Google 登入</button>
+                        <div className="mt-6 text-center"><p className="text-slate-500 text-sm">{isLogin ? '還沒有帳號？' : '已經有帳號了？'} <button onClick={() => setIsLogin(!isLogin)} className="text-indigo-600 font-bold hover:text-indigo-700 ml-1 transition-colors">{isLogin ? '立即註冊' : '直接登入'}</button></p></div>
+                    </div>
+                </div>
+            );
         }
 
-        // Nickname Handler
-        els.saveNicknameBtn.addEventListener('click', async () => {
-            const val = els.nicknameInput.value.trim();
-            if (!val) return alert("請輸入暱稱");
+        // --- 主程式組件 ---
+        function App() {
+            // --- State ---
+            const [user, setUser] = useState(null);
+            const [authLoading, setAuthLoading] = useState(true);
+            const [items, setItems] = useState([]);
             
-            try {
-                await updateDoc(doc(USERS_PUBLIC_REF, currentUser.uid), { nickname: val });
-                currentUserData.nickname = val;
-                els.nicknameModal.classList.add('hidden');
-                els.privacy.classList.remove('hidden');
-            } catch (e) {
-                alert("儲存失敗: " + e.message);
-            }
-        });
+            // Firebase Services
+            const { auth, db, signOut, onAuthStateChanged, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs } = window.firebaseServices || {};
 
-        // Privacy Handler
-        els.agreePrivacyBtn.addEventListener('click', () => {
-            els.privacy.classList.add('hidden');
-            setupDashboard(false);
-        });
-
-        // --- 6. DASHBOARD LOGIC ---
-
-        function setupDashboard(isAdmin) {
-            els.loading.classList.add('hidden');
-            els.main.classList.remove('hidden');
-            els.header.classList.remove('hidden');
+            // 輸入框 State
+            const [inputType, setInputType] = useState('homework');
+            const [description, setDescription] = useState('');
+            const [dueDate, setDueDate] = useState(''); 
+            const [selectedImage, setSelectedImage] = useState(null);
+            const [viewMode, setViewMode] = useState('current');
+            const [exitingIds, setExitingIds] = useState([]);
+            const [activeModal, setActiveModal] = useState(null);
+            const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
             
-            els.displayName.textContent = `${currentUserData.nickname} (${isAdmin ? '管理員' : '學生'})`;
-
-            setupHomeworkListener(isAdmin);
-
-            if (isAdmin) {
-                els.adminPanel.classList.remove('hidden');
-                els.memosSection.classList.add('hidden');
-                els.adminStudentSection.classList.remove('hidden');
-                setupAllStudentsListener(); 
-            } else {
-                els.adminPanel.classList.add('hidden');
-                els.memosSection.classList.remove('hidden');
-                els.adminStudentSection.classList.add('hidden');
-                setupUserListener(); 
-                setupMemosListener();
-            }
-            lucide.createIcons();
-        }
-
-        // --- 7. DATA LISTENERS ---
-
-        function setupHomeworkListener(isAdmin) {
-            const q = query(HOMEWORK_COLLECTION_REF, orderBy('due', 'asc')); 
+            // ADMIN STATE
+            const [isAdmin, setIsAdmin] = useState(false);
+            const [isBroadcast, setIsBroadcast] = useState(false);
             
-            unsubscribeHomework = onSnapshot(q, (snapshot) => {
-                homeworkList = [];
-                snapshot.forEach(doc => {
-                    homeworkList.push({ id: doc.id, ...doc.data() });
+            const [notification, setNotification] = useState({ isOpen: false, type: 'alert', message: '', onConfirm: null });
+            const fileInputRef = useRef(null);
+
+            // --- Helpers ---
+            const getNextSchoolDay = () => {
+                const d = new Date();
+                const day = d.getDay(); 
+                let addDays = 1;
+                if (day === 5) addDays = 3;
+                else if (day === 6) addDays = 2;
+                else if (day === 0) addDays = 1;
+                d.setDate(d.getDate() + addDays);
+                const y = d.getFullYear();
+                const m = String(d.getMonth() + 1).padStart(2, '0');
+                const dd = String(d.getDate()).padStart(2, '0');
+                return `${y}-${m}-${dd}`;
+            };
+
+            const getDaysRemaining = (dateString) => {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const due = new Date(dateString);
+                due.setHours(0, 0, 0, 0);
+                return Math.ceil((due - today) / (1000 * 60 * 60 * 24));
+            };
+
+            const triggerAlert = (message) => setNotification({ isOpen: true, type: 'alert', message, onConfirm: null });
+            const triggerConfirm = (message, onConfirmAction) => setNotification({ isOpen: true, type: 'confirm', message, onConfirm: onConfirmAction });
+            const closeNotification = () => setNotification(prev => ({ ...prev, isOpen: false }));
+            const handleNotificationConfirm = () => { if (notification.onConfirm) notification.onConfirm(); closeNotification(); };
+
+            // --- Effects ---
+
+            // 1. 監聽登入與管理員狀態
+            useEffect(() => {
+                if (!window.firebaseServices) return;
+                const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+                    setUser(currentUser);
+                    setAuthLoading(false);
+                    if (currentUser) {
+                        setDueDate(getNextSchoolDay());
+                        setIsAuthModalOpen(false);
+                        // 檢查管理員
+                        if (currentUser.email === 'chimhinhin@gmail.com') {
+                            setIsAdmin(true);
+                        } else {
+                            setIsAdmin(false);
+                        }
+                    } else {
+                        setItems([]); 
+                        setIsAdmin(false);
+                    }
                 });
-                renderHomeworkList(isAdmin);
-                if (!isAdmin) calculateMyProgress();
-            }, (error) => {
-                console.error("Homework listener error:", error);
-            });
-        }
+                return () => unsubscribe();
+            }, []);
 
-        function setupUserListener() {
-            unsubscribeUser = onSnapshot(doc(USERS_PUBLIC_REF, currentUser.uid), (docSnap) => {
-                if (docSnap.exists()) {
-                    currentUserData = docSnap.data();
-                    renderHomeworkList(false); 
-                    calculateMyProgress();
+            // 2. 監聽私人數據
+            useEffect(() => {
+                if (!user || !db) {
+                    setItems([]);
+                    return;
                 }
-            });
-        }
+                const q = query(collection(db, "users", user.uid, "items"), orderBy("dueDate"));
+                const unsubscribe = onSnapshot(q, (snapshot) => {
+                    const newItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    setItems(newItems);
+                }, (error) => console.error("Error fetching private data: ", error));
+                return () => unsubscribe();
+            }, [user]);
 
-        function setupMemosListener() {
-            const MEMO_REF = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'memos');
-            const q = query(MEMO_REF, orderBy('createdAt', 'desc'));
-            
-            unsubscribeMemos = onSnapshot(q, (snapshot) => {
-                els.memosList.innerHTML = '';
-                snapshot.forEach(docSnap => {
-                    const data = docSnap.data();
-                    const el = document.createElement('div');
-                    el.className = 'bg-yellow-50 p-3 rounded border border-yellow-200 text-sm relative group animate-fade-in';
-                    el.innerHTML = `
-                        <p class="text-slate-700 break-words pr-6">${data.text}</p>
-                        <button class="delete-memo absolute top-2 right-2 text-slate-400 hover:text-red-500 hidden group-hover:block" data-id="${docSnap.id}">
-                            <i data-lucide="trash-2" class="w-3 h-3"></i>
-                        </button>
-                    `;
-                    els.memosList.appendChild(el);
-                });
+            // 3. 監聽公共數據 (自動接收功課邏輯)
+            useEffect(() => {
+                if (!user || !db) return;
+
+                // 監聽最近建立的公共功課 (例如今天之後建立的，避免拉取舊資料，這裡簡化為監聽所有，實務上可加時間限制)
+                // 這裡我們監聽 `public_assignments` 集合的變化
+                const q = query(collection(db, "public_assignments"), orderBy("createdAt", "desc"));
                 
-                document.querySelectorAll('.delete-memo').forEach(btn => {
-                    btn.addEventListener('click', async (e) => {
-                        e.stopPropagation();
-                        await deleteDoc(doc(MEMO_REF, btn.dataset.id));
+                const unsubscribe = onSnapshot(q, (snapshot) => {
+                    snapshot.docChanges().forEach(async (change) => {
+                        if (change.type === "added") {
+                            const publicData = change.doc.data();
+                            const publicId = change.doc.id;
+
+                            // 檢查這個功課是否已經存在於用戶的私人列表中 (透過 publicRefId)
+                            // 這裡我們需要在客戶端進行檢查 (或發送查詢)
+                            // 為了效率，我們可以在這裡發一個一次性的 query 檢查是否已存在
+                            const userItemsRef = collection(db, "users", user.uid, "items");
+                            const dupQuery = query(userItemsRef, where("publicRefId", "==", publicId));
+                            
+                            try {
+                                const dupSnapshot = await getDocs(dupQuery);
+                                if (dupSnapshot.empty) {
+                                    // 如果沒有找到，代表這是新發放的功課 -> 自動加入
+                                    await addDoc(userItemsRef, {
+                                        ...publicData,
+                                        publicRefId: publicId, // 標記來源 ID
+                                        completed: false // 重置為未完成
+                                    });
+                                    triggerAlert(`收到新功課：${publicData.description}`);
+                                }
+                            } catch (e) {
+                                console.error("Auto-sync error:", e);
+                            }
+                        }
                     });
                 });
-                lucide.createIcons();
+
+                return () => unsubscribe();
+            }, [user]);
+
+            useEffect(() => {
+                if (window.lucide) window.lucide.createIcons();
             });
-        }
 
-        function setupAllStudentsListener() {
-            const q = query(USERS_PUBLIC_REF);
-            unsubscribeAllUsers = onSnapshot(q, (snapshot) => {
-                const students = [];
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    if (data.role !== 'admin') {
-                        students.push(data);
-                    }
-                });
-                renderStudentStats(students);
-            });
-        }
+            // --- Handlers ---
 
-        // --- 8. RENDERING ---
-
-        function renderHomeworkList(isAdmin) {
-            els.homeworkList.innerHTML = '';
-            
-            if (homeworkList.length === 0) {
-                els.homeworkList.innerHTML = `
-                    <div class="text-center py-12 text-slate-400">
-                        <i data-lucide="inbox" class="w-12 h-12 mx-auto mb-2 opacity-50"></i>
-                        <p>目前沒有作業</p>
-                    </div>`;
-                lucide.createIcons();
-                return;
-            }
-
-            homeworkList.forEach(hw => {
-                const isCompleted = currentUserData?.completed?.includes(hw.id);
-                const item = document.createElement('div');
-                item.className = `bg-white p-4 rounded-xl border ${isCompleted ? 'border-emerald-200 bg-emerald-50/30' : 'border-slate-200'} shadow-sm flex items-center justify-between transition-all hover:shadow-md`;
-                
-                const subjectColors = {
-                    '中文': 'bg-red-100 text-red-700',
-                    '英文': 'bg-blue-100 text-blue-700',
-                    '數學': 'bg-green-100 text-green-700',
-                    '常識': 'bg-purple-100 text-purple-700'
-                };
-                const badgeClass = subjectColors[hw.subject] || 'bg-slate-100 text-slate-700';
-
-                let actionHtml = '';
-                if (isAdmin) {
-                    actionHtml = `
-                        <button class="delete-hw-btn text-slate-400 hover:text-red-500 p-2" data-id="${hw.id}" title="刪除">
-                            <i data-lucide="trash" class="w-5 h-5"></i>
-                        </button>
-                    `;
-                } else {
-                    actionHtml = `
-                        <button class="toggle-hw-btn w-6 h-6 rounded border-2 ${isCompleted ? 'bg-emerald-500 border-emerald-500' : 'border-slate-300'} flex items-center justify-center transition-colors" data-id="${hw.id}">
-                            ${isCompleted ? '<i data-lucide="check" class="w-4 h-4 text-white"></i>' : ''}
-                        </button>
-                    `;
+            const handleGuestAction = () => {
+                if (!user) {
+                    setIsAuthModalOpen(true);
+                    return true;
                 }
+                return false;
+            };
 
-                item.innerHTML = `
-                    <div class="flex items-center gap-4 flex-1">
-                        <div class="flex flex-col items-center justify-center w-14 h-14 bg-slate-50 rounded-lg border border-slate-100 text-xs font-bold text-slate-500 shrink-0">
-                            <span>${hw.due.split('-')[1]}/${hw.due.split('-')[2]}</span>
-                            <span class="text-[10px] font-normal">截止</span>
-                        </div>
-                        <div>
-                            <div class="flex items-center gap-2 mb-1">
-                                <span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${badgeClass}">${hw.subject}</span>
-                                <span class="text-xs text-slate-400">${hw.due}</span>
-                            </div>
-                            <h3 class="font-bold text-slate-800 ${isCompleted ? 'line-through text-slate-400' : ''}">${hw.title}</h3>
-                        </div>
-                    </div>
-                    ${actionHtml}
-                `;
+            const handleImageUpload = (e) => {
+                if (handleGuestAction()) return;
+                const file = e.target.files[0];
+                if (file) {
+                    if (file.size > 500000) { 
+                        triggerAlert("圖片太大啦！由於資料庫限制，請用細過 500KB 嘅圖。");
+                        return;
+                    }
+                    const reader = new FileReader();
+                    reader.onloadend = () => setSelectedImage(reader.result);
+                    reader.readAsDataURL(file);
+                }
+            };
 
-                els.homeworkList.appendChild(item);
-            });
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                if (handleGuestAction()) return;
+                if ((!description.trim() && !selectedImage) || !dueDate) return;
 
-            if (isAdmin) {
-                document.querySelectorAll('.delete-hw-btn').forEach(btn => {
-                    btn.addEventListener('click', () => deleteHomework(btn.dataset.id));
-                });
-            } else {
-                document.querySelectorAll('.toggle-hw-btn').forEach(btn => {
-                    btn.addEventListener('click', () => toggleHomework(btn.dataset.id));
-                });
-            }
-            lucide.createIcons();
-        }
-
-        function calculateMyProgress() {
-            if (!currentUserData || !currentUserData.completed) return;
-            const completedCount = currentUserData.completed.length;
-            const total = homeworkList.length;
-            const validCompleted = currentUserData.completed.filter(id => homeworkList.some(h => h.id === id)).length;
-            const pct = total === 0 ? 0 : Math.round((validCompleted / total) * 100);
-            const pending = total - validCompleted;
-
-            els.progressBar.style.width = `${pct}%`;
-            els.progressText.textContent = `${pct}%`;
-            els.pendingCount.textContent = total === 0 ? "目前沒有作業" : (pending === 0 ? "太棒了！全部完成" : `還有 ${pending} 份作業未完成`);
-        }
-
-        function renderStudentStats(students) {
-            els.studentListContainer.innerHTML = '';
-            const totalHw = homeworkList.length;
-
-            if (students.length === 0) {
-                els.studentListContainer.innerHTML = '<p class="text-slate-400 text-sm text-center">暫無學生資料</p>';
-                return;
-            }
-
-            students.forEach(student => {
-                const completed = student.completed || [];
-                const validCompleted = completed.filter(id => homeworkList.some(h => h.id === id)).length;
-                const pct = totalHw === 0 ? 0 : Math.round((validCompleted / totalHw) * 100);
-                
-                const card = document.createElement('div');
-                card.className = 'bg-white p-3 rounded-lg border border-slate-200';
-                card.innerHTML = `
-                    <div class="flex justify-between items-center mb-2">
-                        <div class="flex items-center gap-2">
-                            <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xs">
-                                ${student.nickname.charAt(0).toUpperCase()}
-                            </div>
-                            <div>
-                                <p class="font-bold text-sm text-slate-800">${student.nickname}</p>
-                                <p class="text-[10px] text-slate-400">上次登入: ${student.lastLogin ? new Date(student.lastLogin.seconds * 1000).toLocaleDateString() : '未知'}</p>
-                            </div>
-                        </div>
-                        <span class="text-sm font-bold ${pct === 100 ? 'text-emerald-500' : 'text-blue-600'}">${pct}%</span>
-                    </div>
-                    <div class="w-full bg-slate-100 rounded-full h-1.5">
-                        <div class="bg-blue-500 h-1.5 rounded-full" style="width: ${pct}%"></div>
-                    </div>
-                `;
-                els.studentListContainer.appendChild(card);
-            });
-        }
-
-        async function toggleHomework(hwId) {
-            if (!currentUserData) return;
-            const completed = currentUserData.completed || [];
-            let newCompleted;
-
-            if (completed.includes(hwId)) {
-                newCompleted = completed.filter(id => id !== hwId);
-            } else {
-                newCompleted = [...completed, hwId];
-            }
-
-            try {
-                currentUserData.completed = newCompleted;
-                renderHomeworkList(false);
-                calculateMyProgress();
-
-                await updateDoc(doc(USERS_PUBLIC_REF, currentUser.uid), {
-                    completed: newCompleted
-                });
-            } catch (e) {
-                console.error(e);
-                alert("更新失敗，請檢查網絡");
-            }
-        }
-
-        async function deleteHomework(hwId) {
-            if (!confirm("確定要刪除這份功課嗎？學生將不再看到它。")) return;
-            try {
-                await deleteDoc(doc(HOMEWORK_COLLECTION_REF, hwId));
-            } catch (e) {
-                alert("刪除失敗: " + e.message);
-            }
-        }
-
-        // Add Homework UI Handlers
-        els.addHwModalBtn.addEventListener('click', () => els.addHwModal.classList.remove('hidden'));
-        els.closeHwModal.addEventListener('click', () => els.addHwModal.classList.add('hidden'));
-
-        els.addHwForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const subject = document.getElementById('hw-subject').value;
-            const title = document.getElementById('hw-title').value;
-            const due = document.getElementById('hw-due').value;
-
-            try {
-                await addDoc(HOMEWORK_COLLECTION_REF, {
-                    subject,
-                    title,
-                    due,
-                    createdAt: serverTimestamp()
-                });
-                els.addHwModal.classList.add('hidden');
-                els.addHwForm.reset();
-            } catch (err) {
-                alert("發布失敗: " + err.message);
-            }
-        });
-
-        // Add Memo Handler
-        els.addMemoBtn.addEventListener('click', async () => {
-            const text = els.newMemoInput.value.trim();
-            if (!text) return;
-
-            const MEMO_REF = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'memos');
-            try {
-                await addDoc(MEMO_REF, {
-                    text,
-                    createdAt: serverTimestamp()
-                });
-                els.newMemoInput.value = '';
-            } catch (e) {
-                alert("新增備忘失敗");
-            }
-        });
-
-        // Download Backup (Admin)
-        els.downloadBackupBtn.addEventListener('click', async () => {
-            try {
-                const usersSnap = await getDocs(query(USERS_PUBLIC_REF));
-                const users = [];
-                usersSnap.forEach(d => users.push(d.data()));
-
-                const hwSnap = await getDocs(query(HOMEWORK_COLLECTION_REF));
-                const homework = [];
-                hwSnap.forEach(d => homework.push({id: d.id, ...d.data()}));
-
-                const backup = {
-                    date: new Date().toISOString(),
-                    homework,
-                    users
+                const newItem = {
+                    type: inputType,
+                    description: description.trim(),
+                    image: selectedImage,
+                    dueDate,
+                    completed: false,
+                    createdAt: new Date().toISOString()
                 };
 
-                const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `3b-hub-backup-${new Date().toISOString().slice(0,10)}.json`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
+                try {
+                    if (isBroadcast && isAdmin) {
+                        // 管理員發放模式：寫入公共區域
+                        await addDoc(collection(db, "public_assignments"), newItem);
+                        triggerAlert("已發放功課給全班！");
+                        // 注意：這裡不需要手動加入自己的列表，因為上方的 useEffect 會自動偵測到並加入
+                    } else {
+                        // 普通模式：寫入私人區域
+                        await addDoc(collection(db, "users", user.uid, "items"), newItem);
+                    }
+                    
+                    // Reset Form
+                    setDescription('');
+                    setSelectedImage(null);
+                    if (fileInputRef.current) fileInputRef.current.value = "";
+                    setDueDate(getNextSchoolDay());
+                    setViewMode('current');
+                    setIsBroadcast(false); // 重置發放按鈕
+                } catch (error) {
+                    console.error("Error adding document: ", error);
+                    triggerAlert("新增失敗，請稍後再試");
+                }
+            };
 
-            } catch (e) {
-                alert("備份失敗: " + e.message);
-            }
-        });
+            const handleToggle = async (id, currentCompletedStatus) => {
+                if (handleGuestAction()) return;
+                if (!currentCompletedStatus) {
+                    setExitingIds(prev => [...prev, id]);
+                    setTimeout(async () => {
+                        try {
+                            const itemRef = doc(db, "users", user.uid, "items", id);
+                            await updateDoc(itemRef, { completed: true });
+                        } catch (e) { console.error(e); }
+                        setExitingIds(prev => prev.filter(eid => eid !== id));
+                    }, 1000);
+                } else {
+                    try {
+                        const itemRef = doc(db, "users", user.uid, "items", id);
+                        await updateDoc(itemRef, { completed: false });
+                    } catch (e) { console.error(e); }
+                }
+            };
 
+            const deleteItem = (id) => {
+                if (handleGuestAction()) return;
+                triggerConfirm('堅係要刪除？雲端刪咗就救唔返架喎！', async () => {
+                    try {
+                        await deleteDoc(doc(db, "users", user.uid, "items", id));
+                    } catch (e) { console.error(e); triggerAlert("刪除失敗"); }
+                });
+            };
+            
+            const handleSignOut = () => {
+                triggerConfirm('確定要登出？', async () => {
+                    try { await signOut(auth); setActiveModal(null); setIsAdmin(false); } catch(e) { console.error(e); }
+                });
+            };
+
+            const handleDashboardClick = (modalType) => {
+                if (!user) { setIsAuthModalOpen(true); } else { setActiveModal(modalType); }
+            };
+
+            // --- Rendering Logic ---
+            if (authLoading) return <div className="min-h-screen flex items-center justify-center bg-slate-50"><div className="animate-pulse flex flex-col items-center"><div className="w-12 h-12 bg-indigo-200 rounded-full mb-4"></div><div className="h-4 w-32 bg-slate-200 rounded"></div></div></div>;
+
+            const activeItems = items.filter(i => !i.completed);
+            const todayHomeworks = activeItems.filter(i => i.type === 'homework' && getDaysRemaining(i.dueDate) <= 0);
+            const upcomingHomeworks = activeItems.filter(i => i.type === 'homework' && getDaysRemaining(i.dueDate) >= 1);
+            const activeTests = activeItems.filter(i => i.type !== 'homework');
+            activeTests.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+            const nextTest = activeTests[0];
+            const nextTestDays = nextTest ? getDaysRemaining(nextTest.dueDate) : null;
+            const testCount = activeTests.length;
+
+            const getModalTitle = () => {
+                if (activeModal === 'today') return '今日要交嘅功課';
+                if (activeModal === 'upcoming') return '日後要交嘅功課';
+                if (activeModal === 'revision') return '所有測驗默書';
+                return '';
+            };
+            const getModalItems = () => {
+                if (activeModal === 'today') return todayHomeworks;
+                if (activeModal === 'upcoming') return upcomingHomeworks.sort((a,b) => new Date(a.dueDate) - new Date(b.dueDate));
+                if (activeModal === 'revision') return activeTests;
+                return [];
+            };
+
+            const getStatusBadge = (item) => {
+                const daysLeft = getDaysRemaining(item.dueDate);
+                const isCompleted = item.completed || exitingIds.includes(item.id);
+                if (isCompleted) return { text: '已完成', color: 'bg-blue-100 text-blue-700', border: 'border-blue-200' };
+                if (item.type === 'homework') {
+                    if (daysLeft < 0) return { text: `遲咗 ${Math.abs(daysLeft)} 日`, color: 'bg-red-500 text-white', border: 'border-red-500' };
+                    if (daysLeft === 0) return { text: '今日要交！', color: 'bg-orange-500 text-white font-bold', border: 'border-orange-500' };
+                    if (daysLeft === 1) return { text: '聽日要交', color: 'bg-amber-100 text-amber-800', border: 'border-amber-200' };
+                    return { text: `仲有 ${daysLeft} 日`, color: 'bg-emerald-100 text-emerald-700', border: 'border-emerald-200' };
+                } else {
+                    if (daysLeft < 0) return { text: '已結束', color: 'bg-gray-100 text-gray-500', border: 'border-gray-200' };
+                    if (daysLeft === 0) return { text: '今日考！', color: 'bg-red-600 text-white font-bold animate-pulse', border: 'border-red-600' };
+                    if (daysLeft === 1) return { text: '聽日考！', color: 'bg-red-100 text-red-700 font-bold', border: 'border-red-200' };
+                    return { text: `仲有 ${daysLeft} 日`, color: 'bg-indigo-100 text-indigo-700', border: 'border-indigo-200' };
+                }
+            };
+            const getTypeIcon = (type) => type !== 'homework' ? <i data-lucide="file-question" className="w-4 h-4 text-purple-500"></i> : <i data-lucide="book-open" className="w-4 h-4 text-indigo-500"></i>;
+            const getTypeName = (type) => type !== 'homework' ? '默書/測驗' : '功課';
+            
+            const displayedItems = items.filter(item => viewMode === 'current' ? !item.completed : item.completed).sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+            const guestStyle = !user ? "opacity-60 grayscale" : "";
+
+            const renderItemCard = (item) => {
+                const daysLeft = getDaysRemaining(item.dueDate);
+                const isExiting = exitingIds.includes(item.id);
+                const isVisuallyCompleted = item.completed || isExiting;
+                const status = getStatusBadge(item);
+                const isTest = item.type !== 'homework';
+
+                return (
+                    <div key={item.id} className={`relative group overflow-hidden bg-white rounded-xl p-4 shadow-sm border transition-all duration-300 ${isExiting ? 'scale-95 opacity-0 translate-y-4' : 'hover:shadow-md'} ${isVisuallyCompleted ? 'bg-slate-50 border-slate-100' : 'border-slate-100'} ${!isVisuallyCompleted && isTest ? 'border-l-4 border-l-purple-400' : ''}`}>
+                        {!isTest && (<div className={`absolute left-0 top-0 bottom-0 w-1.5 ${daysLeft < 0 && !isVisuallyCompleted ? 'bg-red-500' : (daysLeft === 0 && !isVisuallyCompleted ? 'bg-orange-500' : 'bg-transparent')}`}></div>)}
+                        <div className="flex items-start gap-3">
+                            <button onClick={() => handleToggle(item.id, item.completed)} disabled={isExiting} className={`flex-shrink-0 mt-1 w-6 h-6 rounded-full border-2 transition-all duration-300 flex items-center justify-center overflow-hidden ${isVisuallyCompleted ? 'bg-green-500 border-green-500 text-white scale-110 shadow-green-200' : (!isTest ? 'border-slate-300 hover:border-indigo-500 hover:bg-indigo-50' : 'border-purple-300 hover:border-purple-500 hover:bg-purple-50')}`}>
+                                <i data-lucide="check-circle" className={`w-3.5 h-3.5 transition-transform duration-300 ${isVisuallyCompleted ? 'scale-100' : 'scale-0'}`}></i>
+                            </button>
+                            <div className="flex-grow min-w-0">
+                                <div className="flex flex-col gap-1">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            {getTypeIcon(item.type)}
+                                            <span className="text-xs font-bold text-slate-500">{getTypeName(item.type)}</span>
+                                            {item.publicRefId && <span className="text-[10px] bg-yellow-100 text-yellow-700 px-1.5 rounded">老師發放</span>}
+                                        </div>
+                                        <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold shadow-sm border ${status.color} ${status.border}`}>
+                                            {daysLeft < 0 && <i data-lucide="alert-circle" className="w-3 h-3"></i>}
+                                            {daysLeft <= 3 && daysLeft >= 0 && <i data-lucide="clock" className="w-3 h-3"></i>}
+                                            {status.text}
+                                        </span>
+                                    </div>
+                                    <div className={`text-base font-medium whitespace-pre-wrap leading-relaxed ${isVisuallyCompleted ? 'line-through text-slate-400' : 'text-slate-800'}`}>
+                                        {item.description}
+                                    </div>
+                                    {item.image && (<div className="mt-2 relative group/image w-fit"><img src={item.image} alt="Upload" className={`max-h-32 rounded-lg border border-slate-200 object-cover ${isVisuallyCompleted ? 'opacity-50 grayscale' : ''}`} /></div>)}
+                                    <div className="flex items-center gap-1 text-xs text-slate-400 mt-1"><i data-lucide="calendar" className="w-3 h-3"></i>{item.dueDate}</div>
+                                </div>
+                            </div>
+                            <button onClick={() => deleteItem(item.id)} className="flex-shrink-0 p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"><i data-lucide="trash-2" className="w-4 h-4"></i></button>
+                        </div>
+                    </div>
+                );
+            };
+
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-4 sm:p-6 md:p-8 font-sans text-slate-800 relative">
+                    <div className="max-w-3xl mx-auto">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+                            <div>
+                                <h1 className="text-xl sm:text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center gap-2">
+                                    {viewMode === 'current' ? (<><i data-lucide="graduation-cap" className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-600"></i>學生小幫手</>) : (<><i data-lucide="history" className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600"></i>完成紀錄</>)}
+                                </h1>
+                            </div>
+                            <div className="flex gap-2">
+                                <button onClick={() => !user ? setIsAuthModalOpen(true) : setViewMode(viewMode === 'current' ? 'history' : 'current')} className={`group justify-center relative flex items-center gap-2 px-4 py-2.5 rounded-full font-bold text-sm transition-all duration-300 shadow-md hover:shadow-xl transform hover:-translate-y-1 ${viewMode === 'current' ? 'bg-white text-slate-700 border-2 border-slate-100 hover:border-indigo-200' : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-transparent'} ${guestStyle}`}>
+                                    {viewMode === 'current' ? (<><i data-lucide="history" className="w-4 h-4 group-hover:rotate-12 transition-transform"></i>睇紀錄</>) : (<><i data-lucide="arrow-left" className="w-4 h-4 group-hover:-translate-x-1 transition-transform"></i>返首頁</>)}
+                                </button>
+                                {user ? (<button onClick={handleSignOut} className="group justify-center relative flex items-center gap-2 px-4 py-2.5 rounded-full font-bold text-sm bg-slate-200 text-slate-600 hover:bg-slate-300 transition-all shadow-sm"><i data-lucide="log-out" className="w-4 h-4"></i>登出</button>) : (<button onClick={() => setIsAuthModalOpen(true)} className="group justify-center relative flex items-center gap-2 px-4 py-2.5 rounded-full font-bold text-sm bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-md shadow-indigo-200"><i data-lucide="log-in" className="w-4 h-4"></i>登入/註冊</button>)}
+                            </div>
+                        </div>
+
+                        {viewMode === 'current' && (
+                            <div className={`grid grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8 ${guestStyle}`}>
+                                <div onClick={() => handleDashboardClick('today')} className="cursor-pointer bg-white/80 backdrop-blur rounded-2xl p-3 sm:p-4 shadow-sm border border-red-100 flex flex-col items-center justify-center text-center ring-1 ring-red-50 hover:scale-105 hover:shadow-md transition-all active:scale-95">
+                                    <div className="text-red-500 mb-1"><i data-lucide="flame" className="w-5 h-5 sm:w-6 sm:h-6"></i></div>
+                                    <div className="text-2xl sm:text-3xl font-bold text-slate-800">{todayHomeworks.length}</div>
+                                    <div className="text-xs sm:text-sm font-medium text-slate-500">今日要交</div>
+                                </div>
+                                <div onClick={() => handleDashboardClick('upcoming')} className="cursor-pointer bg-white/80 backdrop-blur rounded-2xl p-3 sm:p-4 shadow-sm border border-sky-100 flex flex-col items-center justify-center text-center ring-1 ring-sky-50 hover:scale-105 hover:shadow-md transition-all active:scale-95">
+                                    <div className="text-sky-500 mb-1"><i data-lucide="calendar-range" className="w-5 h-5 sm:w-6 sm:h-6"></i></div>
+                                    <div className="text-2xl sm:text-3xl font-bold text-slate-800">{upcomingHomeworks.length}</div>
+                                    <div className="text-xs sm:text-sm font-medium text-slate-500">日後要交</div>
+                                </div>
+                                <div onClick={() => handleDashboardClick('revision')} className={`cursor-pointer bg-white/80 backdrop-blur rounded-2xl p-3 sm:p-4 shadow-sm border flex flex-col items-center justify-center text-center ring-1 hover:scale-105 hover:shadow-md transition-all active:scale-95 ${nextTestDays !== null && nextTestDays <= 3 ? 'border-purple-200 ring-purple-100 bg-purple-50/50' : 'border-indigo-100 ring-indigo-50'}`}>
+                                    <div className="text-purple-500 mb-1"><i data-lucide="brain-circuit" className="w-5 h-5 sm:w-6 sm:h-6"></i></div>
+                                    <div className="text-2xl sm:text-3xl font-bold text-slate-800">{testCount}</div>
+                                    <div className="text-xs sm:text-sm font-medium text-slate-500">溫習考核</div>
+                                    {nextTestDays !== null && (<div className="text-[10px] text-purple-600 font-bold mt-1 bg-purple-100 px-1.5 py-0.5 rounded-full">{nextTestDays < 0 ? '已完' : (nextTestDays === 0 ? '今日考' : `${nextTestDays}日後`)}</div>)}
+                                </div>
+                            </div>
+                        )}
+
+                        {viewMode === 'current' && (
+                            <div className="relative">
+                                {!user && (<div className="absolute inset-0 z-20 cursor-pointer rounded-3xl" onClick={() => setIsAuthModalOpen(true)}></div>)}
+                                <div className={`relative bg-white/80 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-4 sm:p-6 mb-8 sm:mb-10 border border-white/50 ring-1 ring-indigo-50 transition-all ${guestStyle}`}>
+                                    <div className="flex bg-slate-100/80 p-1 rounded-xl mb-4">
+                                        <button onClick={() => setInputType('homework')} className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-bold transition-all ${inputType === 'homework' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}><i data-lucide="book-open" className="w-4 h-4"></i> 做功課</button>
+                                        <button onClick={() => setInputType('assessment')} className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-bold transition-all ${inputType === 'assessment' ? 'bg-white text-purple-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}><i data-lucide="file-question" className="w-4 h-4"></i> 溫默書/測驗</button>
+                                    </div>
+                                    <form onSubmit={handleSubmit} className="flex flex-col gap-3 sm:gap-4">
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+                                            <div className="md:col-span-2 space-y-3">
+                                                <textarea placeholder={inputType === 'homework' ? "打返功課內容..." : "輸入範圍 (例如: 第3課 / P.20-25)"} value={description} onChange={(e) => setDescription(e.target.value)} rows="2" className="w-full min-h-[80px] rounded-xl sm:rounded-2xl border-slate-200 bg-slate-50/50 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all p-3 sm:p-4 border text-slate-700 placeholder:text-slate-400 resize-none text-sm sm:text-base" />
+                                                {inputType !== 'homework' && (<div className="flex items-center gap-2"><label className="cursor-pointer flex items-center gap-2 px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-600 text-sm transition-colors border border-slate-200"><i data-lucide="image" className="w-4 h-4"></i>{selectedImage ? '換張相' : '上傳範圍圖片'}<input type="file" accept="image/*" ref={fileInputRef} onChange={handleImageUpload} className="hidden" /></label>{selectedImage && (<div className="flex items-center gap-2 bg-indigo-50 px-2 py-1 rounded text-xs text-indigo-600 border border-indigo-100"><span>已選圖片</span><button type="button" onClick={() => {setSelectedImage(null); fileInputRef.current.value="";}} className="hover:text-red-500"><i data-lucide="x" className="w-3 h-3"></i></button></div>)}</div>)}
+                                            </div>
+                                            <div className="flex flex-row md:flex-col gap-2 sm:gap-3 justify-between">
+                                                <div className="w-1/2 md:w-full"><label className="block text-xs font-medium text-slate-500 mb-1 ml-1">{inputType === 'homework' ? '繳交日期' : '考試日期'}</label><input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="w-full h-10 sm:h-12 rounded-lg sm:rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all px-3 sm:px-4 border text-slate-600 font-medium text-sm sm:text-base" required /></div>
+                                                <button type="submit" className={`w-1/2 md:w-full h-auto md:flex-1 text-white font-bold rounded-lg sm:rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-lg active:scale-95 text-sm sm:text-base ${inputType === 'homework' ? 'bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 shadow-indigo-200' : 'bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 shadow-purple-200'}`}><i data-lucide="plus" className="w-4 h-4 sm:w-5 sm:h-5"></i>{isAdmin && isBroadcast ? '發放給全班' : (inputType === 'homework' ? '加功課' : 'Mark 低')}</button>
+                                            </div>
+                                        </div>
+                                        {isAdmin && (<div className="flex items-center gap-2 mt-2 pt-2 border-t border-slate-100"><label className="relative inline-flex items-center cursor-pointer"><input type="checkbox" className="sr-only peer" checked={isBroadcast} onChange={e => setIsBroadcast(e.target.checked)} /><div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div><span className="ml-3 text-sm font-medium text-slate-600">📢 發放給全班</span></label></div>)}
+                                    </form>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="space-y-3 sm:space-y-4 pb-12">
+                            {displayedItems.length === 0 ? (<div className="text-center py-12 sm:py-20"><div className="relative inline-block"><div className="absolute inset-0 bg-indigo-200 blur-2xl opacity-20 rounded-full animate-pulse"></div><div className="relative bg-white p-4 sm:p-6 rounded-full shadow-sm mb-4 inline-flex"><i data-lucide="sparkles" className="w-8 h-8 sm:w-12 sm:h-12 text-indigo-300"></i></div></div><h3 className="text-lg sm:text-xl font-bold text-slate-700 mb-2">{viewMode === 'current' ? (user ? '太好了！暫時冇嘢做' : '登入後就可以使用') : '暫時未有紀錄'}</h3></div>) : (displayedItems.map(item => renderItemCard(item)))}
+                        </div>
+                    </div>
+
+                    {activeModal && (<div className="fixed inset-0 z-50 flex items-center justify-center px-4"><div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setActiveModal(null)}></div><div className="modal-animate relative bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[80vh] flex flex-col overflow-hidden"><div className="p-5 border-b border-slate-100 flex items-center justify-between bg-white z-10"><h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">{activeModal === 'today' && <i data-lucide="flame" className="w-6 h-6 text-red-500"></i>}{activeModal === 'upcoming' && <i data-lucide="calendar-range" className="w-6 h-6 text-sky-500"></i>}{activeModal === 'revision' && <i data-lucide="brain-circuit" className="w-6 h-6 text-purple-500"></i>}{getModalTitle()}</h3><button onClick={() => setActiveModal(null)} className="p-2 bg-slate-100 rounded-full hover:bg-slate-200 transition-colors"><i data-lucide="x" className="w-5 h-5 text-slate-500"></i></button></div><div className="p-4 overflow-y-auto space-y-3 bg-slate-50 flex-1">{getModalItems().length === 0 ? (<div className="text-center py-10 text-slate-400">暫時沒有相關項目</div>) : (getModalItems().map(item => renderItemCard(item)))}</div></div></div>)}
+                    <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} triggerAlert={triggerAlert} />
+                    {notification.isOpen && (<div className="fixed inset-0 z-[60] flex items-center justify-center px-4"><div className="absolute inset-0 bg-black/30 backdrop-blur-[2px]"></div><div className="notification-animate relative bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center transform scale-100"><div className={`mx-auto w-12 h-12 rounded-full flex items-center justify-center mb-4 ${notification.type === 'confirm' ? 'bg-red-100 text-red-500' : 'bg-indigo-100 text-indigo-500'}`}>{notification.type === 'confirm' ? <i data-lucide="alert-triangle" className="w-6 h-6"></i> : <i data-lucide="info" className="w-6 h-6"></i>}</div><h3 className="text-lg font-bold text-slate-800 mb-2">{notification.type === 'confirm' ? '確認操作' : '提示'}</h3><p className="text-slate-600 mb-6 leading-relaxed">{notification.message}</p><div className="flex gap-3 justify-center">{notification.type === 'confirm' ? (<><button onClick={closeNotification} className="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 text-slate-600 font-medium hover:bg-slate-50 transition-colors">取消</button><button onClick={handleNotificationConfirm} className="flex-1 py-2.5 px-4 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 shadow-lg shadow-red-200 transition-all active:scale-95">確認</button></>) : (<button onClick={closeNotification} className="w-full py-2.5 px-4 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all active:scale-95">知道了</button>)}</div></div></div>)}
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
     </script>
 </body>
 </html>
