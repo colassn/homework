@@ -706,19 +706,34 @@
             const handleNameSetupSave = async (name) => { 
                 const currentUser = auth.currentUser;
                 if (!currentUser) return; 
+                
                 setNameSetupLoading(true); 
                 try { 
+                    // 1. Update Auth Profile
                     await updateProfile(currentUser, { displayName: name }); 
-                    await setDoc(doc(db, "users_public", currentUser.uid), { 
-                        email: currentUser.email, 
-                        displayName: name, 
-                        lastSeen: serverTimestamp() 
-                    }, { merge: true }); 
+                    
+                    // 2. Force update local user state to reflect name change immediately
+                    // This is crucial because auth listener might not fire immediately for profile updates
+                    const forcedUser = { ...currentUser, displayName: name };
+                    setUser(forcedUser);
+
+                    // 3. Try to update public record
+                    try {
+                        await setDoc(doc(db, "users_public", currentUser.uid), { 
+                            email: currentUser.email, 
+                            displayName: name, 
+                            lastSeen: serverTimestamp() 
+                        }, { merge: true }); 
+                    } catch (fsError) {
+                        console.error("Public profile sync error (non-critical):", fsError);
+                        // We ignore this error for the user flow, so they can enter the app even if DB write fails
+                    }
+
                     setShowNameSetup(false); 
                     triggerAlert(`歡迎, ${name}!`); 
                 } catch (e) { 
                     console.error(e); 
-                    triggerAlert("設定失敗，請重試"); 
+                    triggerAlert("設定失敗: " + (e.message || "請重試")); 
                 } finally { 
                     setNameSetupLoading(false); 
                 } 
