@@ -239,9 +239,6 @@
                 message = customMessage || '資料庫正在進行重整優化，期間暫停服務。\n感謝您的耐心等待。';
             } 
             
-            // "Public Operation" means everyone can use. BlockScreen is NOT shown for Public.
-            // But if user requested "whitelist OFF" -> "Closed", I use maintenance mode.
-            
             return (
                 <div className="fixed inset-0 z-40 flex flex-col items-center justify-center p-6 text-center overflow-hidden">
                     <div className="absolute inset-0 bg-white/70 backdrop-blur-3xl z-0"></div>
@@ -424,7 +421,7 @@
                 } 
             }; 
             
-            return ( <div className="fixed inset-0 z-[200] flex items-center justify-center p-4"> <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md transition-opacity duration-300" onClick={onClose}></div> <div className="modal-animate glass-panel w-full max-w-md p-8 rounded-3xl relative z-10 overflow-hidden shadow-2xl"> <button onClick={onClose} className="absolute top-5 right-5 p-2 rounded-full hover:bg-white/50 text-slate-400 hover:text-slate-600 transition-colors"><Icon name="x" className="w-6 h-6" /></button> <div className="text-center mb-8"><h2 className="text-3xl font-black text-slate-800 tracking-tight mb-2">{isLogin ? '歡迎回來' : '建立帳戶'}</h2><p className="text-slate-500 font-medium">{isLogin ? '登入即可同步你的資料' : '只需幾秒，開始雲端記錄'} </p></div> <form onSubmit={handleEmailAuth} className="space-y-4"> <div className="relative group"><div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors"><Icon name="mail" className="w-5 h-5" /></div><input type="email" className="w-full pl-12 pr-4 py-4 rounded-2xl modern-input text-slate-800 placeholder:text-slate-400 focus:outline-none font-medium" placeholder="電子郵件" value={email} onChange={e => setEmail(e.target.value)} required /></div> <div className="relative group"><div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors"><Icon name="lock" className="w-5 h-5" /></div><input type="password" className="w-full pl-12 pr-4 py-4 rounded-2xl modern-input text-slate-800 placeholder:text-slate-400 focus:outline-none font-medium" placeholder="密碼" value={password} onChange={e => setPassword(e.target.value)} required /></div> <button type="submit" disabled={loading} className="w-full py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-lg shadow-lg shadow-indigo-200 transform transition-all active:scale-[0.98] disabled:opacity-70 flex items-center justify-center">{loading ? '處理中...' : (isLogin ? '登入' : '註冊')}</button> </form> <div className="relative my-8"><div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200/60"></div></div><div className="relative flex justify-center text-xs uppercase tracking-wider font-bold text-slate-400"><span className="px-4 bg-white/30 backdrop-blur-sm rounded-full">或</span></div></div> <button onClick={handleGoogleLogin} disabled={loading} className="w-full py-3.5 rounded-2xl bg-white border border-slate-100 text-slate-700 font-bold hover:bg-slate-50 transition-all flex items-center justify-center gap-3 shadow-sm hover:shadow-md active:scale-[0.98] hover:translate-y-[-1px]"><img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />Google 登入</button> <div className="mt-8 text-center"><p className="text-slate-500 text-sm font-medium">{isLogin ? '還沒有帳號？' : '已經有帳號了？'} <button onClick={() => setIsLogin(!isLogin)} className="text-indigo-600 font-bold hover:text-indigo-700 ml-1 transition-colors underline decoration-2 underline-offset-4">{isLogin ? '立即註冊' : '直接登入'}</button></p></div> </div> </div> ); }
+            return ( <div className="fixed inset-0 z-[200] flex items-center justify-center p-4"> <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md transition-opacity duration-300" onClick={onClose}></div> <div className="modal-animate glass-panel w-full max-w-md p-8 rounded-3xl relative z-10 overflow-hidden shadow-2xl"> <button onClick={onClose} className="absolute top-5 right-5 p-2 rounded-full hover:bg-white/50 text-slate-400 hover:text-slate-600 transition-colors"><Icon name="x" className="w-6 h-6" /></button> <div className="text-center mb-8"><h2 className="text-3xl font-black text-slate-800 tracking-tight mb-2">{isLogin ? '歡迎回來' : '建立帳戶'}</h2><p className="text-slate-500 font-medium">{isLogin ? '登入即可同步你的資料' : '只需幾秒，開始雲端記錄'} </p></div> <form onSubmit={handleEmailAuth} className="space-y-4"> <div className="relative group"><div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors"><Icon name="mail" className="w-5 h-5" /></div><input type="email" className="w-full pl-12 pr-4 py-4 rounded-2xl modern-input text-slate-800 placeholder:text-slate-400 focus:outline-none font-medium" placeholder="電子郵件" value={email} onChange={e => setEmail(e.target.value)} required /></div> <div className="relative group"><div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors"><Icon name="lock" className="w-5 h-5" /></div><input type="password" className="w-full pl-12 pr-4 py-4 rounded-2xl modern-input text-slate-800 placeholder:text-slate-400 focus:outline-none font-medium" placeholder="密碼" value={password} onChange={e => setPassword(e.target.value)} required /></div> <button type="submit" disabled={loading} className="w-full py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-lg shadow-lg shadow-indigo-200 transform transition-all active:scale-[0.98] disabled:opacity-70 flex items-center justify-center hover:translate-y-[-2px]">{loading ? '處理中...' : (isLogin ? '登入' : '註冊')}</button> </form> <div className="relative my-8"><div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200/60"></div></div><div className="relative flex justify-center text-xs uppercase tracking-wider font-bold text-slate-400"><span className="px-4 bg-white/30 backdrop-blur-sm rounded-full">或</span></div></div> <button onClick={handleGoogleLogin} disabled={loading} className="w-full py-3.5 rounded-2xl bg-white border border-slate-100 text-slate-700 font-bold hover:bg-slate-50 transition-all flex items-center justify-center gap-3 shadow-sm hover:shadow-md active:scale-[0.98] hover:translate-y-[-1px]"><img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />Google 登入</button> <div className="mt-8 text-center"><p className="text-slate-500 text-sm font-medium">{isLogin ? '還沒有帳號？' : '已經有帳號了？'} <button onClick={() => setIsLogin(!isLogin)} className="text-indigo-600 font-bold hover:text-indigo-700 ml-1 transition-colors underline decoration-2 underline-offset-4">{isLogin ? '立即註冊' : '直接登入'}</button></p></div> </div> </div> ); }
 
         function AdminUserView({ db, onBack, systemConfig, triggerIsland }) { 
             const [users, setUsers] = useState([]); 
@@ -434,13 +431,7 @@
             const [newItemDesc, setNewItemDesc] = useState('');
             const [newItemSubject, setNewItemSubject] = useState('中文');
             const [newItemDate, setNewItemDate] = useState('');
-            
-            // New state for adding user
-            const [showAddUserForm, setShowAddUserForm] = useState(false);
-            const [newUserEmail, setNewUserEmail] = useState('');
-            const [newUserPassword, setNewUserPassword] = useState('');
-            
-            const { collection, getDocs, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc, addDoc, arrayUnion, arrayRemove, createUserWithEmailAndPassword } = window.firebaseServices; 
+            const { collection, getDocs, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc, addDoc, arrayUnion, arrayRemove } = window.firebaseServices; 
             const allowedEmails = systemConfig?.allowedEmails || [];
 
             useEffect(() => { const fetchUsers = async () => { const q = query(collection(db, "users_public"), orderBy("lastSeen", "desc")); const snapshot = await getDocs(q); setUsers(snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() }))); }; fetchUsers(); }, [db]); 
@@ -459,47 +450,26 @@
             const handleAdminUpdate = async (id, data) => { try { await updateDoc(doc(db, "users", selectedUser.uid, "items", id), data); triggerIsland("更新成功", "success"); } catch(e) { console.error(e); triggerIsland("更新失敗", "error"); } };
             const handleAdminToggle = async (item) => { try { await updateDoc(doc(db, "users", selectedUser.uid, "items", item.id), { completed: !item.completed }); } catch(e) { console.error(e); } };
             const handleAdminAdd = async (e) => { e.preventDefault(); if (!newItemDesc || !newItemDate) return; try { await addDoc(collection(db, "users", selectedUser.uid, "items"), { description: newItemDesc, subject: newItemSubject, dueDate: newItemDate, completed: false, type: 'homework', createdAt: new Date().toISOString() }); setNewItemDesc(''); triggerIsland("已新增功課", "success"); } catch(e) { console.error(e); triggerIsland("新增失敗", "error"); } };
-
-            // DELETE ALL USER DATA logic
-            const handleDeleteUserFull = async (targetUser) => {
-                const confirmDelete = window.confirm(`⚠️ 危險操作！\n\n確定要刪除 ${targetUser.email} 的所有資料嗎？\n這將清除該用戶的所有功課紀錄和個人資料。\n\n(注意：這不會刪除他們的登入帳號，但會清空他們的所有內容)`);
+            
+            // Format User Data Logic (replaces "Delete Account" button logic per request)
+            const handleFormatUser = async (targetUser) => {
+                const confirmDelete = window.confirm(`⚠️ 危險操作！\n\n確定要格式化 ${targetUser.email} 的資料嗎？\n這將清除該用戶的所有功課紀錄和個人設定，無法復原。`);
                 if (!confirmDelete) return;
 
-                triggerIsland("正在刪除用戶資料...", "success");
+                triggerIsland("正在格式化用戶...", "success");
                 try {
-                    // 1. Delete all items in subcollection
                     const itemsRef = collection(db, "users", targetUser.uid, "items");
                     const itemsSnapshot = await getDocs(itemsRef);
                     const deletePromises = itemsSnapshot.docs.map(doc => deleteDoc(doc.ref));
                     await Promise.all(deletePromises);
-
-                    // 2. Delete public profile
                     await deleteDoc(doc(db, "users_public", targetUser.uid));
-                    
-                    // 3. Remove from whitelist if present
                     const configRef = doc(db, "system_settings", "config");
                     await updateDoc(configRef, { allowedEmails: arrayRemove(targetUser.email) });
-
-                    triggerIsland("用戶資料已清空", "success");
-                    setSelectedUser(null); // Go back to list
+                    triggerIsland("用戶資料已格式化", "success");
+                    setSelectedUser(null);
                 } catch (e) {
                     console.error(e);
-                    triggerIsland("刪除部分失敗，請檢查權限", "error");
-                }
-            };
-            
-            // Create User Logic
-            const handleCreateUser = async (e) => {
-                e.preventDefault();
-                const confirmCreate = window.confirm(`⚠️ 注意：建立新用戶會自動將您登出，並登入新帳號。\n\n您確定要繼續嗎？請確保您知道管理員帳號密碼以便稍後登回。`);
-                if (!confirmCreate) return;
-
-                try {
-                    await createUserWithEmailAndPassword(auth, newUserEmail, newUserPassword);
-                    // Auth state change will handle the rest (user will be logged in as new user)
-                } catch (error) {
-                    console.error(error);
-                    triggerIsland("建立失敗: " + error.message, "error");
+                    triggerIsland("格式化失敗", "error");
                 }
             };
 
@@ -507,28 +477,7 @@
                 <div className="glass-panel rounded-3xl p-8 shadow-xl min-h-[600px] border border-white/40 page-enter"> 
                     <div className="flex items-center gap-4 mb-8 border-b border-slate-200/50 pb-6"> <button onClick={() => selectedUser ? setSelectedUser(null) : onBack()} className="p-3 bg-white/50 hover:bg-white rounded-xl transition-colors shadow-sm"><Icon name="arrow-left" className="w-5 h-5 text-slate-600" /></button> <h2 className="text-2xl font-black text-slate-800">{selectedUser ? `${selectedUser.displayName} 的紀錄` : '所有用戶管理'}</h2> </div> 
                     {!selectedUser ? ( 
-                        <div className="space-y-4">
-                            {/* Create User Button/Form Toggle */}
-                            <div className="mb-6">
-                                {!showAddUserForm ? (
-                                    <button onClick={() => setShowAddUserForm(true)} className="w-full py-3 rounded-xl border-2 border-dashed border-indigo-200 text-indigo-500 font-bold hover:bg-indigo-50 hover:border-indigo-300 transition-all flex items-center justify-center gap-2">
-                                        <Icon name="user-plus" className="w-5 h-5" /> 建立新用戶 (登入帳號)
-                                    </button>
-                                ) : (
-                                    <div className="bg-indigo-50 p-4 rounded-2xl border border-indigo-100 animate-item-enter">
-                                        <div className="flex justify-between items-center mb-3">
-                                            <h4 className="font-bold text-indigo-800">建立新帳號</h4>
-                                            <button onClick={() => setShowAddUserForm(false)} className="text-slate-400 hover:text-slate-600"><Icon name="x" className="w-4 h-4" /></button>
-                                        </div>
-                                        <form onSubmit={handleCreateUser} className="space-y-3">
-                                            <input type="email" placeholder="Email" className="w-full p-2 rounded-lg border border-indigo-200 text-sm" value={newUserEmail} onChange={e => setNewUserEmail(e.target.value)} required />
-                                            <input type="password" placeholder="密碼" className="w-full p-2 rounded-lg border border-indigo-200 text-sm" value={newUserPassword} onChange={e => setNewUserPassword(e.target.value)} required />
-                                            <button type="submit" className="w-full py-2 bg-indigo-600 text-white rounded-lg font-bold text-sm hover:bg-indigo-700">建立並登入</button>
-                                        </form>
-                                    </div>
-                                )}
-                            </div>
-
+                        <div className="space-y-4"> 
                             {users.map(u => {
                                 const isWhitelisted = allowedEmails.includes(u.email);
                                 return ( 
@@ -554,10 +503,9 @@
                         </div> 
                     ) : ( 
                         <div className="space-y-8 page-enter"> 
-                             {/* Delete User Section */}
                              <div className="flex justify-end">
-                                <button onClick={() => handleDeleteUserFull(selectedUser)} className="text-red-500 hover:text-red-700 font-bold text-xs flex items-center gap-1 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors">
-                                    <Icon name="trash-2" className="w-4 h-4" /> 刪除此帳戶資料
+                                <button onClick={() => handleFormatUser(selectedUser)} className="text-red-500 hover:text-red-700 font-bold text-xs flex items-center gap-1 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors">
+                                    <Icon name="trash-2" className="w-4 h-4" /> 格式化用戶資料
                                 </button>
                              </div>
 
@@ -576,6 +524,7 @@
                                     </div>
                                 </form>
                             </div>
+
                             <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
                                 {userHomeworks.map(h => (
                                     <div key={h.id} className={`p-4 rounded-2xl border transition-all flex justify-between items-center group animate-item-enter ${h.completed ? 'bg-slate-50/50 border-slate-100 opacity-60' : 'bg-white border-slate-100 hover:border-indigo-100 hover:shadow-md'}`}>
@@ -608,7 +557,7 @@
 
         function AdminSystemPanel({ db, systemConfig, timetableConfig, onBack, triggerIsland }) { 
             const [newEmail, setNewEmail] = useState(''); 
-            const [isSubmitting, setIsSubmitting] = useState(false);
+            const [isSubmitting, setIsSubmitting] = useState(false); 
             const [rawTimetable, setRawTimetable] = useState(JSON.stringify(timetableConfig || DEFAULT_SCHEDULE, null, 2));
             const { doc, updateDoc, arrayUnion, arrayRemove, setDoc } = window.firebaseServices; 
             const configRef = doc(db, "system_settings", "config"); 
@@ -637,6 +586,7 @@
             const updateConfig = async (key, value) => { try { await setDoc(configRef, { [key]: value }, { merge: true }); triggerIsland("設定已更新", "success"); } catch (e) { console.error(e); triggerIsland("設定更新失敗", "error"); } }; 
             const handleAddWhitelist = async (e) => { e.preventDefault(); if (!newEmail.trim()) return; setIsSubmitting(true); try { await updateDoc(configRef, { allowedEmails: arrayUnion(newEmail.trim()) }); setNewEmail(''); triggerIsland(`已加入 ${newEmail.trim()}`, "success"); } catch (e) { console.error(e); triggerIsland("新增失敗", "error"); } setIsSubmitting(false); }; 
             const handleRemoveWhitelist = async (email) => { if (window.confirm(`確定要移除 ${email} 嗎？`)) { await updateDoc(configRef, { allowedEmails: arrayRemove(email) }); triggerIsland(`已移除 ${email}`, "success"); } }; 
+            const saveTimetable = async () => { try { const parsed = JSON.parse(rawTimetable); await setDoc(timetableRef, parsed); alert("時間表已更新！"); } catch(e) { alert("JSON 格式錯誤，請檢查！"); } };
 
             return ( 
                 <div className="glass-panel rounded-3xl p-8 shadow-xl min-h-[600px] border border-white/40 page-enter"> 
@@ -671,7 +621,7 @@
             ); 
         }
 
-        function Timetable({ currentDay, subjects, onDayChange }) { 
+        function Timetable({ currentDay, subjects, onDayChange, triggerIsland }) { 
             const weekDays = ['日', '一', '二', '三', '四', '五', '六']; 
             const [showEditor, setShowEditor] = useState(false);
             const generateSchedule = (daySubjects) => { 
@@ -729,7 +679,7 @@
                             ); 
                         }) : (<div className="text-center py-20 text-slate-400 font-medium">是日休息或未設定課程</div>)}
                     </div> 
-                    {showEditor && <TimetableEditorModal onClose={() => setShowEditor(false)} timetableConfig={subjects} triggerIsland={(msg, type) => { /* Basic alert fallback if Island not passed, but App handles it */ alert(msg); }} />}
+                    {showEditor && <TimetableEditorModal onClose={() => setShowEditor(false)} timetableConfig={subjects} triggerIsland={triggerIsland} />}
                 </div> 
             ); 
         }
