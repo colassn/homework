@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>功課與默書追蹤小幫手</title>
+    <title>電子手冊</title>
     
     <!-- 引入 React 和 ReactDOM -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
@@ -38,28 +38,28 @@
     <div id="root"></div>
 
     <script type="module">
+        // --- Firebase Configuration (Provided by User) ---
         const firebaseConfig = {
-            apiKey: "AIzaSyA7C10miZnBWXLBluCDU9nezCn9StmWZ3U",
-            authDomain: "recordhw-ad1f9.firebaseapp.com",
-            projectId: "recordhw-ad1f9",
-            storageBucket: "recordhw-ad1f9.firebasestorage.app",
-            messagingSenderId: "600838574849",
-            appId: "1:600838574849:web:425fd3ede2eb6ebaae0100", 
-            measurementId: "G-8VCPLTE2QT"
+            apiKey: "AIzaSyB3gYuwnyoTUwO7PFh4Nuue-Ud8GTruuRk",
+            authDomain: "recordhwv2.firebaseapp.com",
+            projectId: "recordhwv2",
+            storageBucket: "recordhwv2.firebasestorage.app",
+            messagingSenderId: "599261009391",
+            appId: "1:599261009391:web:66cd7f932650bebc0e521a",
+            measurementId: "G-C51XDYW67W"
         };
 
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs, setDoc, arrayUnion, arrayRemove, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+        import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs, setDoc, arrayUnion, arrayRemove, getDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
         const googleProvider = new GoogleAuthProvider();
 
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-
-        window.firebaseServices = { auth, db, googleProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs, setDoc, arrayUnion, arrayRemove, getDoc, appId };
+        // Bind Firebase services to window for React access
+        window.firebaseServices = { auth, db, googleProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs, setDoc, arrayUnion, arrayRemove, getDoc };
     </script>
 
     <script type="text/babel">
@@ -67,7 +67,7 @@
 
         const ADMIN_EMAIL = 'chimhinhin@gmail.com';
         
-        const DEFAULT_SUBJECTS = [
+        const SUBJECTS = [
             { name: '中文', color: 'bg-red-100 text-red-700 border-red-200' },
             { name: '英文', color: 'bg-blue-100 text-blue-700 border-blue-200' },
             { name: '數學', color: 'bg-green-100 text-green-700 border-green-200' },
@@ -89,35 +89,15 @@
             { name: '其他', color: 'bg-gray-100 text-gray-700 border-gray-200' }
         ];
 
-        const COLOR_OPTIONS = [
-            { id: 'red', class: 'bg-red-100 text-red-700 border-red-200', bg: 'bg-red-500' },
-            { id: 'orange', class: 'bg-orange-100 text-orange-700 border-orange-200', bg: 'bg-orange-500' },
-            { id: 'amber', class: 'bg-amber-100 text-amber-800 border-amber-200', bg: 'bg-amber-500' },
-            { id: 'yellow', class: 'bg-yellow-100 text-yellow-700 border-yellow-200', bg: 'bg-yellow-400' },
-            { id: 'lime', class: 'bg-lime-100 text-lime-700 border-lime-200', bg: 'bg-lime-500' },
-            { id: 'green', class: 'bg-green-100 text-green-700 border-green-200', bg: 'bg-green-500' },
-            { id: 'emerald', class: 'bg-emerald-100 text-emerald-700 border-emerald-200', bg: 'bg-emerald-500' },
-            { id: 'teal', class: 'bg-teal-100 text-teal-700 border-teal-200', bg: 'bg-teal-500' },
-            { id: 'cyan', class: 'bg-cyan-100 text-cyan-700 border-cyan-200', bg: 'bg-cyan-500' },
-            { id: 'sky', class: 'bg-sky-100 text-sky-700 border-sky-200', bg: 'bg-sky-500' },
-            { id: 'blue', class: 'bg-blue-100 text-blue-700 border-blue-200', bg: 'bg-blue-500' },
-            { id: 'indigo', class: 'bg-indigo-100 text-indigo-700 border-indigo-200', bg: 'bg-indigo-500' },
-            { id: 'violet', class: 'bg-violet-100 text-violet-700 border-violet-200', bg: 'bg-violet-500' },
-            { id: 'purple', class: 'bg-purple-100 text-purple-700 border-purple-200', bg: 'bg-purple-500' },
-            { id: 'fuchsia', class: 'bg-fuchsia-100 text-fuchsia-700 border-fuchsia-200', bg: 'bg-fuchsia-500' },
-            { id: 'pink', class: 'bg-pink-100 text-pink-700 border-pink-200', bg: 'bg-pink-500' },
-            { id: 'rose', class: 'bg-rose-100 text-rose-700 border-rose-200', bg: 'bg-rose-500' },
-            { id: 'slate', class: 'bg-slate-100 text-slate-700 border-slate-200', bg: 'bg-slate-500' },
-            { id: 'stone', class: 'bg-stone-100 text-stone-700 border-stone-200', bg: 'bg-stone-500' },
-        ];
-
-        const CLASS_SCHEDULE = {
+        // 默認時間表 (如果資料庫是空的)
+        const DEFAULT_SCHEDULE = {
             1: ["普通電腦", "普通電腦", "英文", "英文", "中文", "中文", "普通話", "佛學", "歷史", "公民經濟與社會"],
             2: ["英文", "英文", "音樂", "地理", "物理", "物理", "中文", "中文", "數學", "數學"],
             3: ["化學", "化學", "英文", "英文", "數學", "中文", "視藝", "視藝", "公民經濟與社會", "中史"],
             4: ["STEAM", "STEAM", "數學", "歷史", "英文", "英文", "生物", "生物", "中史", "地理"],
             5: ["英文", "英文", "中文", "中文", "體育", "體育", "數學", "數學", "全方位", "全方位"]
         };
+
         const LESSON_START_TIMES = [510, 545, 595, 630, 675, 710, 815, 850, 895, 930];
 
         // --- Safe Icon Component ---
@@ -137,12 +117,13 @@
         };
 
         // --- Helpers ---
-        const getNextLesson = (subjectName, now) => {
+        const getNextLesson = (subjectName, now, currentSchedule) => {
             if (!subjectName || subjectName === '其他') return null;
+            const scheduleToUse = currentSchedule || DEFAULT_SCHEDULE;
             const currentDay = now.getDay(); const currentMinutes = now.getHours() * 60 + now.getMinutes(); const currentSeconds = now.getSeconds();
             for (let d = 0; d < 7; d++) {
                 const checkDay = (currentDay + d) % 7; if (checkDay === 0 || checkDay === 6) continue;
-                const subjects = CLASS_SCHEDULE[checkDay]; if (!subjects) continue;
+                const subjects = scheduleToUse[checkDay]; if (!subjects) continue;
                 for (let i = 0; i < subjects.length; i++) {
                     if (subjects[i].includes(subjectName) || subjectName.includes(subjects[i])) {
                         const startMin = LESSON_START_TIMES[i]; const endMin = startMin + 35;
@@ -152,7 +133,7 @@
             }
             return null;
         };
-        const formatCountdown = (ms) => { const totalSeconds = Math.max(0, Math.floor(ms / 1000)); const hours = Math.floor(totalSeconds / 3600); const minutes = Math.floor((totalSeconds % 3600) / 60); const seconds = totalSeconds % 60; return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`; };
+        const formatCountdown = (ms) => { const totalSeconds = Math.floor(ms / 1000); const hours = Math.floor(totalSeconds / 3600); const minutes = Math.floor((totalSeconds % 3600) / 60); const seconds = totalSeconds % 60; return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`; };
 
         // --- Components ---
         function BlockScreen({ type, estimatedTime, customMessage, onLogin, user }) {
@@ -198,126 +179,6 @@
             );
         }
 
-        function UserSettingsPanel({ db, user, currentSubjects, onUpdate, onBack }) {
-            const [newSubject, setNewSubject] = useState('');
-            const [selectedColor, setSelectedColor] = useState(COLOR_OPTIONS[0]);
-            const { setDoc, doc, appId } = window.firebaseServices;
-
-            const handleAddSubject = async (e) => {
-                e.preventDefault();
-                if (!newSubject.trim()) return;
-                const updatedSubjects = [...currentSubjects, { name: newSubject.trim(), color: selectedColor.class }];
-                await saveSubjects(updatedSubjects);
-                setNewSubject('');
-            };
-
-            const handleDeleteSubject = async (index) => {
-                if (window.confirm("確定要刪除這個科目嗎？")) {
-                    const updatedSubjects = currentSubjects.filter((_, i) => i !== index);
-                    await saveSubjects(updatedSubjects);
-                }
-            };
-
-            const handleReset = async () => {
-                if (window.confirm("確定要恢復預設科目嗎？自訂的科目將會消失。")) {
-                    await saveSubjects(DEFAULT_SUBJECTS);
-                }
-            };
-
-            const saveSubjects = async (newSubjects) => {
-                try {
-                    await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'settings', 'preferences'), { subjects: newSubjects }, { merge: true });
-                    onUpdate(newSubjects);
-                } catch (e) {
-                    console.error("Error saving subjects:", e);
-                    alert("儲存失敗，請檢查網絡連接");
-                }
-            };
-
-            return (
-                <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 min-h-[500px]">
-                     <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
-                        <button onClick={onBack} className="p-2 hover:bg-slate-100 rounded-full transition-colors"><Icon name="arrow-left" className="w-5 h-5 text-slate-500" /></button>
-                        <h2 className="text-xl font-bold text-slate-800">個人科目設定</h2>
-                    </div>
-
-                    <div className="mb-6">
-                        <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">新增科目</h3>
-                        <form onSubmit={handleAddSubject} className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                            <div className="flex gap-2 mb-3">
-                                <input type="text" value={newSubject} onChange={e => setNewSubject(e.target.value)} className="flex-1 px-3 py-2 rounded-lg border border-slate-200 text-sm" placeholder="科目名稱 (例如: 補習班)" required />
-                                <button type="submit" className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-indigo-700 flex items-center gap-1"><Icon name="plus" className="w-4 h-4" /> 新增</button>
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                                {COLOR_OPTIONS.map(color => (
-                                    <button type="button" key={color.id} onClick={() => setSelectedColor(color)} className={`w-6 h-6 rounded-full ${color.bg} transition-transform hover:scale-110 ${selectedColor.id === color.id ? 'ring-2 ring-offset-2 ring-indigo-500' : ''}`}></button>
-                                ))}
-                            </div>
-                        </form>
-                    </div>
-
-                    <div>
-                        <div className="flex justify-between items-center mb-3">
-                            <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider">目前科目列表</h3>
-                            <button onClick={handleReset} className="text-xs text-red-400 hover:text-red-600 underline">恢復預設值</button>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2 max-h-[300px] overflow-y-auto">
-                            {currentSubjects.map((sub, idx) => (
-                                <div key={idx} className={`flex justify-between items-center p-2 rounded-lg border ${sub.color.replace('bg-', 'bg-opacity-20 ')}`}>
-                                    <span className="font-bold text-sm truncate">{sub.name}</span>
-                                    <button onClick={() => handleDeleteSubject(idx)} className="text-slate-400 hover:text-red-500 p-1"><Icon name="x" className="w-3 h-3" /></button>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            );
-        }
-
-        // --- User Form Modal (Add/Edit) ---
-        function UserFormModal({ user, onClose, onSave, triggerAlert }) {
-            const [displayName, setDisplayName] = useState(user?.displayName || '');
-            const [email, setEmail] = useState(user?.email || '');
-            const [loading, setLoading] = useState(false);
-            
-            const handleSubmit = async (e) => {
-                e.preventDefault();
-                setLoading(true);
-                try {
-                    await onSave({ displayName, email });
-                    onClose();
-                } catch (error) {
-                    console.error(error);
-                    triggerAlert("儲存失敗");
-                } finally {
-                    setLoading(false);
-                }
-            };
-            
-            return (
-                <div className="fixed inset-0 z-[160] flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose}></div>
-                    <div className="modal-animate bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 relative z-10">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-lg font-bold text-slate-800">{user ? '修改用戶資料' : '新增用戶'}</h3>
-                            <button onClick={onClose}><Icon name="x" className="w-5 h-5 text-slate-500" /></button>
-                        </div>
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <div>
-                                <label className="block text-xs font-bold text-slate-500 mb-1">顯示名稱 (必填)</label>
-                                <input type="text" className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" value={displayName} onChange={e => setDisplayName(e.target.value)} required />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-slate-500 mb-1">電郵 (選填，用於白名單)</label>
-                                <input type="email" className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" value={email} onChange={e => setEmail(e.target.value)} />
-                            </div>
-                            <button type="submit" disabled={loading} className="w-full py-2.5 rounded-xl bg-indigo-600 text-white font-bold text-sm hover:bg-indigo-700">{loading ? '處理中...' : '儲存'}</button>
-                        </form>
-                    </div>
-                </div>
-            );
-        }
-
         function CustomDropdown({ value, onChange, options }) { 
             const [isOpen, setIsOpen] = useState(false); const dropdownRef = useRef(null); 
             useEffect(() => { const handleClickOutside = (event) => { if (dropdownRef.current && !dropdownRef.current.contains(event.target)) { setIsOpen(false); } }; document.addEventListener('mousedown', handleClickOutside); return () => document.removeEventListener('mousedown', handleClickOutside); }, []); 
@@ -332,9 +193,7 @@
             ); 
         }
 
-        function EditModal({ item, subjects, onClose, onSave, triggerAlert }) { 
-            // 如果 subjects 為空，使用預設值防止錯誤
-            const safeSubjects = subjects && subjects.length > 0 ? subjects : DEFAULT_SUBJECTS;
+        function EditModal({ item, onClose, onSave, triggerAlert }) { 
             const [description, setDescription] = useState(item.description || ''); 
             const [subject, setSubject] = useState(item.subject || '其他'); 
             const [dueDate, setDueDate] = useState(item.dueDate || ''); 
@@ -352,7 +211,7 @@
                             <div> 
                                 <label className="block text-xs font-bold text-slate-500 mb-2">科目</label> 
                                 <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide"> 
-                                    {safeSubjects.map(sub => ( <button key={sub.name} type="button" onClick={() => setSubject(sub.name)} className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${subject === sub.name ? sub.color + ' ring-2 ring-offset-1 ring-indigo-100' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}>{sub.name}</button> ))} 
+                                    {SUBJECTS.map(sub => ( <button key={sub.name} type="button" onClick={() => setSubject(sub.name)} className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${subject === sub.name ? sub.color + ' ring-2 ring-offset-1 ring-indigo-100' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}>{sub.name}</button> ))} 
                                 </div> 
                             </div> 
                             <div> 
@@ -370,41 +229,238 @@
             ); 
         }
 
-        function AuthModal({ isOpen, onClose, triggerAlert }) { const [isLogin, setIsLogin] = useState(true); const [email, setEmail] = useState(''); const [password, setPassword] = useState(''); const [displayName, setDisplayName] = useState(''); const [loading, setLoading] = useState(false); const { auth, googleProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, setDoc, doc, db, serverTimestamp, appId } = window.firebaseServices; useEffect(() => { if (isOpen) { setLoading(false); setEmail(''); setPassword(''); setDisplayName(''); setIsLogin(true); } }, [isOpen]); if (!isOpen) return null; const handleGoogleLogin = async () => { try { setLoading(true); await signInWithPopup(auth, googleProvider); onClose(); } catch (error) { console.error(error); triggerAlert("Google 登入失敗: " + error.message); setLoading(false); } }; const handleEmailAuth = async (e) => { e.preventDefault(); if(!email || !password) return; if(!isLogin && !displayName.trim()) { triggerAlert("請輸入英文短名以便識別！"); return; } try { setLoading(true); if (isLogin) { await signInWithEmailAndPassword(auth, email, password); } else { const userCredential = await createUserWithEmailAndPassword(auth, email, password); await updateProfile(userCredential.user, { displayName: displayName.trim() }); await setDoc(doc(db, 'artifacts', appId, "users_public", userCredential.user.uid), { email: email, displayName: displayName.trim(), lastSeen: serverTimestamp() }, { merge: true }); } onClose(); } catch (error) { console.error(error); triggerAlert(isLogin ? "登入失敗: " + error.message : "註冊失敗: " + error.message); setLoading(false); } }; return ( <div className="fixed inset-0 z-[200] flex items-center justify-center p-4"> <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={onClose}></div> <div className="modal-animate bg-white/90 backdrop-blur-2xl rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.3)] w-full max-w-md p-8 relative z-10 border border-white/50 overflow-hidden"> <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"><Icon name="x" className="w-6 h-6" /></button> <div className="absolute -top-10 -left-10 w-40 h-40 bg-purple-300 rounded-full mix-blend-multiply filter blur-2xl opacity-50 animate-blob pointer-events-none"></div> <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-blue-300 rounded-full mix-blend-multiply filter blur-2xl opacity-50 animate-blob animation-delay-2000 pointer-events-none"></div> <div className="text-center mb-8 relative"><h2 className="text-2xl font-black text-slate-800 tracking-tight">{isLogin ? '登入帳戶' : '立即註冊'}</h2><p className="text-slate-500 mt-1 text-sm">{isLogin ? '登入即可儲存及同步你的資料' : '只需幾秒，開始雲端記錄'} </p></div> <form onSubmit={handleEmailAuth} className="space-y-4 relative"> {!isLogin && (<div className="relative group"><div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors"><Icon name="user" className="w-5 h-5" /></div><input type="text" className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium" placeholder="英文短名 (例如: Miss Wong)" value={displayName} onChange={e => setDisplayName(e.target.value)} required /></div>)} <div className="relative group"><div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors"><Icon name="mail" className="w-5 h-5" /></div><input type="email" className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium" placeholder="電子郵件" value={email} onChange={e => setEmail(e.target.value)} required /></div> <div className="relative group"><div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors"><Icon name="lock" className="w-5 h-5" /></div><input type="password" className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium" placeholder="密碼" value={password} onChange={e => setPassword(e.target.value)} required /></div> <button type="submit" disabled={loading} className="w-full py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold text-lg shadow-lg shadow-indigo-500/30 transform transition-all active:scale-[0.98] disabled:opacity-70 flex items-center justify-center">{loading ? '處理中...' : (isLogin ? '登入' : '註冊')}</button> </form> <div className="relative my-6"><div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100"></div></div><div className="relative flex justify-center text-xs uppercase tracking-wider font-bold text-slate-400"><span className="px-3 bg-white/80 backdrop-blur">或</span></div></div> <button onClick={handleGoogleLogin} disabled={loading} className="w-full py-3 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center justify-center gap-3 shadow-sm active:scale-[0.98]"><img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />Google 登入</button> <div className="mt-6 text-center"><p className="text-slate-500 text-sm">{isLogin ? '還沒有帳號？' : '已經有帳號了？'} <button onClick={() => setIsLogin(!isLogin)} className="text-indigo-600 font-bold hover:text-indigo-700 ml-1 transition-colors">{isLogin ? '立即註冊' : '直接登入'}</button></p></div> </div> </div> ); }
+        function AuthModal({ isOpen, onClose, triggerAlert, triggerConfirm }) { // 增加 triggerConfirm
+            const [isLogin, setIsLogin] = useState(true); 
+            const [email, setEmail] = useState(''); 
+            const [password, setPassword] = useState(''); 
+            const [displayName, setDisplayName] = useState(''); 
+            const [loading, setLoading] = useState(false); 
+            const { auth, googleProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, setDoc, doc, db, serverTimestamp } = window.firebaseServices; 
+            
+            useEffect(() => { if (isOpen) { setLoading(false); setEmail(''); setPassword(''); setDisplayName(''); setIsLogin(true); } }, [isOpen]); 
+            if (!isOpen) return null; 
+            
+            const handleGoogleLogin = async () => { try { setLoading(true); await signInWithPopup(auth, googleProvider); onClose(); } catch (error) { console.error(error); triggerAlert("Google 登入失敗: " + error.message); setLoading(false); } }; 
+            
+            const handleEmailAuth = async (e) => { 
+                e.preventDefault(); 
+                if(!email || !password) return; 
+                if(!isLogin && !displayName.trim()) { triggerAlert("請輸入英文短名以便識別！"); return; } 
+                
+                try { 
+                    setLoading(true); 
+                    if (isLogin) { 
+                        await signInWithEmailAndPassword(auth, email, password); 
+                    } else { 
+                        const userCredential = await createUserWithEmailAndPassword(auth, email, password); 
+                        await updateProfile(userCredential.user, { displayName: displayName.trim() }); 
+                        await setDoc(doc(db, "users_public", userCredential.user.uid), { email: email, displayName: displayName.trim(), lastSeen: serverTimestamp() }, { merge: true }); 
+                    } 
+                    onClose(); 
+                } catch (error) { 
+                    console.error(error); 
+                    setLoading(false);
+                    
+                    // 檢測是否為「用戶不存在」錯誤
+                    if (isLogin && (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential')) {
+                        // 注意：如果 Firebase 啟用了郵件枚舉保護，可能會返回 invalid-credential 而不是 user-not-found
+                        // 這裡我們嘗試捕捉 user-not-found，如果遇到這個錯誤，詢問是否註冊
+                        if (error.code === 'auth/user-not-found') {
+                            triggerConfirm("此電郵尚未註冊。要現在建立新帳戶嗎？", () => {
+                                setIsLogin(false); // 切換到註冊模式
+                            });
+                            return;
+                        }
+                        // 如果是 invalid-credential，無法確定是密碼錯還是沒帳號，通常顯示錯誤訊息
+                    }
+                    
+                    triggerAlert(isLogin ? "登入失敗: " + error.message : "註冊失敗: " + error.message); 
+                } 
+            }; 
+            
+            return ( <div className="fixed inset-0 z-[200] flex items-center justify-center p-4"> <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={onClose}></div> <div className="modal-animate bg-white/90 backdrop-blur-2xl rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.3)] w-full max-w-md p-8 relative z-10 border border-white/50 overflow-hidden"> <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"><Icon name="x" className="w-6 h-6" /></button> <div className="absolute -top-10 -left-10 w-40 h-40 bg-purple-300 rounded-full mix-blend-multiply filter blur-2xl opacity-50 animate-blob pointer-events-none"></div> <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-blue-300 rounded-full mix-blend-multiply filter blur-2xl opacity-50 animate-blob animation-delay-2000 pointer-events-none"></div> <div className="text-center mb-8 relative"><h2 className="text-2xl font-black text-slate-800 tracking-tight">{isLogin ? '登入帳戶' : '立即註冊'}</h2><p className="text-slate-500 mt-1 text-sm">{isLogin ? '登入即可儲存及同步你的資料' : '只需幾秒，開始雲端記錄'} </p></div> <form onSubmit={handleEmailAuth} className="space-y-4 relative"> {!isLogin && (<div className="relative group"><div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors"><Icon name="user" className="w-5 h-5" /></div><input type="text" className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium" placeholder="英文短名 (例如: Miss Wong)" value={displayName} onChange={e => setDisplayName(e.target.value)} required /></div>)} <div className="relative group"><div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors"><Icon name="mail" className="w-5 h-5" /></div><input type="email" className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium" placeholder="電子郵件" value={email} onChange={e => setEmail(e.target.value)} required /></div> <div className="relative group"><div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors"><Icon name="lock" className="w-5 h-5" /></div><input type="password" className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium" placeholder="密碼" value={password} onChange={e => setPassword(e.target.value)} required /></div> <button type="submit" disabled={loading} className="w-full py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold text-lg shadow-lg shadow-indigo-500/30 transform transition-all active:scale-[0.98] disabled:opacity-70 flex items-center justify-center">{loading ? '處理中...' : (isLogin ? '登入' : '註冊')}</button> </form> <div className="relative my-6"><div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100"></div></div><div className="relative flex justify-center text-xs uppercase tracking-wider font-bold text-slate-400"><span className="px-3 bg-white/80 backdrop-blur">或</span></div></div> <button onClick={handleGoogleLogin} disabled={loading} className="w-full py-3 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center justify-center gap-3 shadow-sm active:scale-[0.98]"><img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />Google 登入</button> <div className="mt-6 text-center"><p className="text-slate-500 text-sm">{isLogin ? '還沒有帳號？' : '已經有帳號了？'} <button onClick={() => setIsLogin(!isLogin)} className="text-indigo-600 font-bold hover:text-indigo-700 ml-1 transition-colors">{isLogin ? '立即註冊' : '直接登入'}</button></p></div> </div> </div> ); }
 
         function AdminUserView({ db, onBack, systemConfig }) { 
             const [users, setUsers] = useState([]); 
             const [selectedUser, setSelectedUser] = useState(null); 
             const [userHomeworks, setUserHomeworks] = useState([]); 
-            const [isUserModalOpen, setIsUserModalOpen] = useState(false);
-            const [editingUserData, setEditingUserData] = useState(null); 
-            const { collection, getDocs, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc, addDoc, serverTimestamp, arrayUnion, appId } = window.firebaseServices; 
+            const [adminEditingItem, setAdminEditingItem] = useState(null);
+            
+            // For adding new item
+            const [newItemDesc, setNewItemDesc] = useState('');
+            const [newItemSubject, setNewItemSubject] = useState('中文');
+            const [newItemDate, setNewItemDate] = useState('');
+
+            const { collection, getDocs, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc, addDoc, arrayUnion } = window.firebaseServices; 
             const allowedEmails = systemConfig?.allowedEmails || [];
 
-            useEffect(() => { 
-                // Admin User View logic - Trying to read public user list, might fail gracefully
+            useEffect(() => { const fetchUsers = async () => { const q = query(collection(db, "users_public"), orderBy("lastSeen", "desc")); const snapshot = await getDocs(q); setUsers(snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() }))); }; fetchUsers(); }, [db]); 
+            useEffect(() => { if (!selectedUser) return; const q = query(collection(db, "users", selectedUser.uid, "items"), orderBy("dueDate", "asc")); const unsubscribe = onSnapshot(q, (snapshot) => { setUserHomeworks(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))); }); return () => unsubscribe(); }, [selectedUser, db]); 
+            
+            const handleQuickAddWhitelist = async (email) => {
+                if(!email) return;
+                const configRef = doc(db, "system_settings", "config");
                 try {
-                    // Removed users_public fetching to prevent errors
-                } catch(e) {}
-            }, [db]); 
-            
-            // Dummy users for now since we disabled fetching to prevent crashes
-            // In a real app with proper rules, we'd fetch from a readable collection
-            
+                    await updateDoc(configRef, { allowedEmails: arrayUnion(email) });
+                    alert(`已將 ${email} 加入白名單`);
+                } catch(e) { console.error(e); alert("操作失敗"); }
+            };
+
+            // Admin Actions
+            const handleAdminDelete = async (itemId) => {
+                if(!window.confirm("確定刪除此用戶的這項紀錄？")) return;
+                try {
+                    await deleteDoc(doc(db, "users", selectedUser.uid, "items", itemId));
+                } catch(e) { console.error(e); alert("刪除失敗"); }
+            };
+
+            const handleAdminUpdate = async (id, data) => {
+                try {
+                    await updateDoc(doc(db, "users", selectedUser.uid, "items", id), data);
+                    alert("更新成功");
+                } catch(e) { console.error(e); alert("更新失敗"); }
+            };
+
+            const handleAdminToggle = async (item) => {
+                try {
+                    await updateDoc(doc(db, "users", selectedUser.uid, "items", item.id), {
+                        completed: !item.completed
+                    });
+                } catch(e) { console.error(e); }
+            };
+
+            const handleAdminAdd = async (e) => {
+                e.preventDefault();
+                if (!newItemDesc || !newItemDate) return;
+                try {
+                    await addDoc(collection(db, "users", selectedUser.uid, "items"), {
+                        description: newItemDesc,
+                        subject: newItemSubject,
+                        dueDate: newItemDate,
+                        completed: false,
+                        type: 'homework', // Default to homework for admin add
+                        createdAt: new Date().toISOString()
+                    });
+                    setNewItemDesc('');
+                    alert("已為用戶新增功課");
+                } catch(e) { console.error(e); alert("新增失敗"); }
+            };
+
             return ( 
-                <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 min-h-[500px] flex items-center justify-center text-slate-400"> 
-                    <div>
-                        <Icon name="shield-off" className="w-12 h-12 mx-auto mb-2 text-slate-300" />
-                        <p>為確保系統穩定，用戶列表功能暫時停用</p>
-                        <button onClick={onBack} className="mt-4 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-lg text-sm font-bold">返回</button>
-                    </div>
+                <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 min-h-[500px]"> 
+                    <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4"> <button onClick={() => selectedUser ? setSelectedUser(null) : onBack()} className="p-2 hover:bg-slate-100 rounded-full transition-colors"><Icon name="arrow-left" className="w-5 h-5 text-slate-500" /></button> <h2 className="text-xl font-bold text-slate-800">{selectedUser ? `${selectedUser.displayName} 的紀錄` : '所有用戶管理'}</h2> </div> 
+                    {!selectedUser ? ( 
+                        <div className="space-y-3"> 
+                            {users.map(u => ( 
+                                <div key={u.uid} className="flex items-center justify-between p-4 rounded-xl border border-slate-100 hover:border-indigo-200 hover:shadow-md transition-all group bg-slate-50/50 hover:bg-white"> 
+                                    <div className="flex items-center gap-3 cursor-pointer flex-grow" onClick={() => setSelectedUser(u)}>
+                                        <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold">{u.displayName?.[0]?.toUpperCase() || 'U'}</div>
+                                        <div><div className="font-bold text-slate-800 flex items-center gap-2">{u.displayName || '未命名'} {allowedEmails.includes(u.email) && <span className="text-[10px] bg-green-100 text-green-700 px-1.5 rounded-full">白名單</span>}</div><div className="text-xs text-slate-400">{u.email}</div></div>
+                                    </div>
+                                    {!allowedEmails.includes(u.email) && <button onClick={(e) => { e.stopPropagation(); handleQuickAddWhitelist(u.email); }} className="p-2 text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="加入白名單"><Icon name="shield-check" className="w-5 h-5" /></button>}
+                                    <Icon name="chevron-right" className="w-5 h-5 text-slate-300 group-hover:text-indigo-500 ml-2" /> 
+                                </div> 
+                            ))} 
+                            {users.length === 0 && <div className="text-center text-slate-400 py-10">暫無用戶資料</div>} 
+                        </div> 
+                    ) : ( 
+                        <div className="space-y-6"> 
+                            {/* Add Item Form for Admin */}
+                            <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
+                                <h4 className="text-sm font-bold text-indigo-800 mb-2">為此用戶新增項目</h4>
+                                <form onSubmit={handleAdminAdd} className="flex flex-col gap-2">
+                                    <div className="flex gap-2">
+                                        <select className="p-2 rounded border border-indigo-200 text-sm" value={newItemSubject} onChange={e => setNewItemSubject(e.target.value)}>
+                                            {SUBJECTS.map(s => <option key={s.name} value={s.name}>{s.name}</option>)}
+                                        </select>
+                                        <input type="date" className="p-2 rounded border border-indigo-200 text-sm" value={newItemDate} onChange={e => setNewItemDate(e.target.value)} required />
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <input type="text" className="flex-grow p-2 rounded border border-indigo-200 text-sm" placeholder="內容..." value={newItemDesc} onChange={e => setNewItemDesc(e.target.value)} required />
+                                        <button type="submit" className="bg-indigo-600 text-white px-4 py-2 rounded font-bold text-sm hover:bg-indigo-700">新增</button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                                {userHomeworks.map(h => (
+                                    <div key={h.id} className={`p-3 rounded-lg border text-sm flex justify-between items-start group ${h.completed ? 'bg-slate-50 border-slate-100 opacity-60' : 'bg-white border-slate-200'}`}>
+                                        <div className="flex items-start gap-3">
+                                            <button onClick={() => handleAdminToggle(h)} className={`mt-0.5 w-5 h-5 rounded border flex items-center justify-center ${h.completed ? 'bg-green-500 border-green-500 text-white' : 'border-slate-300'}`}>
+                                                {h.completed && <Icon name="check" className="w-3 h-3" />}
+                                            </button>
+                                            <div>
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-bold ${SUBJECTS.find(s => s.name === h.subject)?.color || 'bg-gray-100'}`}>{h.subject || '其他'}</span>
+                                                    <span className="text-xs text-slate-400">{h.dueDate}</span>
+                                                </div>
+                                                <div className={h.completed ? 'line-through text-slate-400' : 'text-slate-700'}>{h.description}</div>
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button onClick={() => setAdminEditingItem(h)} className="p-1.5 text-blue-400 hover:bg-blue-50 rounded"><Icon name="pencil" className="w-4 h-4" /></button>
+                                            <button onClick={() => handleAdminDelete(h.id)} className="p-1.5 text-red-400 hover:bg-red-50 rounded"><Icon name="trash-2" className="w-4 h-4" /></button>
+                                        </div>
+                                    </div>
+                                ))}
+                                {userHomeworks.length === 0 && <div className="text-center text-slate-400 py-4">此用戶暫無紀錄</div>}
+                            </div> 
+                        </div> 
+                    )} 
+                    {adminEditingItem && (
+                        <EditModal 
+                            item={adminEditingItem} 
+                            onClose={() => setAdminEditingItem(null)} 
+                            onSave={handleAdminUpdate} 
+                            triggerAlert={(msg) => alert(msg)} 
+                        />
+                    )}
                 </div> 
             ); 
         }
 
-        function AdminSystemPanel({ db, systemConfig, onBack }) { const [newEmail, setNewEmail] = useState(''); const [isSubmitting, setIsSubmitting] = useState(false); const { doc, updateDoc, arrayUnion, arrayRemove, setDoc, appId } = window.firebaseServices; const configRef = doc(db, 'artifacts', appId, "public", "data", "system_settings", "config"); const updateConfig = async (key, value) => { try { await setDoc(configRef, { [key]: value }, { merge: true }); } catch (e) { console.error(e); alert("設定更新失敗"); } }; const handleAddWhitelist = async (e) => { e.preventDefault(); if (!newEmail.trim()) return; setIsSubmitting(true); try { await updateDoc(configRef, { allowedEmails: arrayUnion(newEmail.trim()) }); setNewEmail(''); } catch (e) { console.error(e); alert("新增失敗"); } setIsSubmitting(false); }; const handleRemoveWhitelist = async (email) => { if (window.confirm(`確定要移除 ${email} 嗎？`)) { await updateDoc(configRef, { allowedEmails: arrayRemove(email) }); } }; return ( <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 min-h-[500px]"> <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4"><button onClick={onBack} className="p-2 hover:bg-slate-100 rounded-full transition-colors"><Icon name="arrow-left" className="w-5 h-5 text-slate-500" /></button><h2 className="text-xl font-bold text-slate-800">系統控制台</h2></div> <div className="mb-8"><h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">網站狀態控制</h3><div className="bg-slate-50 rounded-xl p-4 border border-slate-200 space-y-4"><div className="grid grid-cols-3 gap-2">{['normal', 'updating', 'restructuring'].map(mode => (<button key={mode} onClick={() => updateConfig('maintenanceMode', mode)} className={`py-2 px-3 rounded-lg text-sm font-bold border transition-all ${systemConfig?.maintenanceMode === mode ? (mode === 'normal' ? 'bg-green-100 text-green-700 border-green-200' : mode === 'updating' ? 'bg-orange-100 text-orange-700 border-orange-200' : 'bg-blue-100 text-blue-700 border-blue-200') : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-100'}`}>{mode === 'normal' ? '🟢 正常運作' : mode === 'updating' ? '🟠 網站更新中' : '🔵 資料重整中'}</button>))}</div>{systemConfig?.maintenanceMode !== 'normal' && (<div className="space-y-3 pt-2 border-t border-slate-200"><div><label className="block text-xs font-bold text-slate-500 mb-1">自訂維護訊息</label><input type="text" className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" placeholder="例如：系統正在升級，請稍候..." value={systemConfig?.message || ''} onChange={(e) => updateConfig('message', e.target.value)} /></div><div><label className="block text-xs font-bold text-slate-500 mb-1">預計恢復時間</label><input type="text" className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" placeholder="例如: 下午 4:00" value={systemConfig?.estimatedTime || ''} onChange={(e) => updateConfig('estimatedTime', e.target.value)} /></div></div>)}</div></div> <div><div className="flex items-center justify-between mb-3"><h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider">白名單存取控制</h3><label className="relative inline-flex items-center cursor-pointer"><input type="checkbox" className="sr-only peer" checked={systemConfig?.whitelistEnabled || false} onChange={(e) => updateConfig('whitelistEnabled', e.target.checked)} /><div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div></label></div><div className={`bg-slate-50 rounded-xl p-4 border border-slate-200 transition-opacity ${!systemConfig?.whitelistEnabled ? 'opacity-50' : ''}`}><form onSubmit={handleAddWhitelist} className="flex gap-2 mb-4"><input type="email" className="flex-1 px-3 py-2 rounded-lg border border-slate-200 text-sm" placeholder="輸入允許的 Google 電郵" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} required /><button type="submit" disabled={isSubmitting} className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-indigo-700"><Icon name="plus" className="w-4 h-4" /></button></form><div className="space-y-2 max-h-[200px] overflow-y-auto">{(systemConfig?.allowedEmails || []).map(email => (<div key={email} className="flex items-center justify-between bg-white p-2 rounded-lg border border-slate-100 text-sm"><span className="text-slate-700">{email}</span><button onClick={() => handleRemoveWhitelist(email)} className="text-slate-400 hover:text-red-500"><Icon name="trash-2" className="w-4 h-4" /></button></div>))}{(!systemConfig?.allowedEmails || systemConfig.allowedEmails.length === 0) && <div className="text-center text-slate-400 text-xs">暫無白名單用戶</div>}</div></div></div> </div> ); }
+        function AdminSystemPanel({ db, systemConfig, timetableConfig, onBack }) { 
+            const [newEmail, setNewEmail] = useState(''); 
+            const [isSubmitting, setIsSubmitting] = useState(false); 
+            const [rawTimetable, setRawTimetable] = useState(JSON.stringify(timetableConfig || DEFAULT_SCHEDULE, null, 2));
+            const { doc, updateDoc, arrayUnion, arrayRemove, setDoc } = window.firebaseServices; 
+            
+            const configRef = doc(db, "system_settings", "config"); 
+            const timetableRef = doc(db, "system_settings", "timetable");
 
-        function Timetable({ currentDay, subjects, onDayChange, now }) { // Added now prop here
+            const updateConfig = async (key, value) => { try { await setDoc(configRef, { [key]: value }, { merge: true }); } catch (e) { console.error(e); alert("設定更新失敗"); } }; 
+            
+            const handleAddWhitelist = async (e) => { e.preventDefault(); if (!newEmail.trim()) return; setIsSubmitting(true); try { await updateDoc(configRef, { allowedEmails: arrayUnion(newEmail.trim()) }); setNewEmail(''); } catch (e) { console.error(e); alert("新增失敗"); } setIsSubmitting(false); }; 
+            const handleRemoveWhitelist = async (email) => { if (window.confirm(`確定要移除 ${email} 嗎？`)) { await updateDoc(configRef, { allowedEmails: arrayRemove(email) }); } }; 
+            
+            const saveTimetable = async () => {
+                try {
+                    const parsed = JSON.parse(rawTimetable);
+                    await setDoc(timetableRef, parsed);
+                    alert("時間表已更新！");
+                } catch(e) {
+                    alert("JSON 格式錯誤，請檢查！");
+                }
+            };
+
+            return ( 
+                <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 min-h-[500px]"> 
+                    <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4"><button onClick={onBack} className="p-2 hover:bg-slate-100 rounded-full transition-colors"><Icon name="arrow-left" className="w-5 h-5 text-slate-500" /></button><h2 className="text-xl font-bold text-slate-800">系統控制台</h2></div> 
+                    
+                    <div className="mb-8"><h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">網站狀態控制</h3><div className="bg-slate-50 rounded-xl p-4 border border-slate-200 space-y-4"><div className="grid grid-cols-3 gap-2">{['normal', 'updating', 'restructuring'].map(mode => (<button key={mode} onClick={() => updateConfig('maintenanceMode', mode)} className={`py-2 px-3 rounded-lg text-sm font-bold border transition-all ${systemConfig?.maintenanceMode === mode ? (mode === 'normal' ? 'bg-green-100 text-green-700 border-green-200' : mode === 'updating' ? 'bg-orange-100 text-orange-700 border-orange-200' : 'bg-blue-100 text-blue-700 border-blue-200') : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-100'}`}>{mode === 'normal' ? '🟢 正常運作' : mode === 'updating' ? '🟠 網站更新中' : '🔵 資料重整中'}</button>))}</div>{systemConfig?.maintenanceMode !== 'normal' && (<div className="space-y-3 pt-2 border-t border-slate-200"><div><label className="block text-xs font-bold text-slate-500 mb-1">自訂維護訊息</label><input type="text" className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" placeholder="例如：系統正在升級，請稍候..." value={systemConfig?.message || ''} onChange={(e) => updateConfig('message', e.target.value)} /></div><div><label className="block text-xs font-bold text-slate-500 mb-1">預計恢復時間</label><input type="text" className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" placeholder="例如: 下午 4:00" value={systemConfig?.estimatedTime || ''} onChange={(e) => updateConfig('estimatedTime', e.target.value)} /></div></div>)}</div></div> 
+                    
+                    <div className="mb-8">
+                        <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">自訂時間表 (JSON)</h3>
+                        <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                            <textarea className="w-full h-40 font-mono text-xs p-2 rounded border border-slate-200 mb-2" value={rawTimetable} onChange={e => setRawTimetable(e.target.value)}></textarea>
+                            <button onClick={saveTimetable} className="w-full bg-indigo-600 text-white py-2 rounded-lg font-bold text-sm hover:bg-indigo-700">儲存時間表</button>
+                            <p className="text-[10px] text-slate-400 mt-2">請保持 JSON 格式：Key 為 1-5 (星期)，Value 為課程陣列。</p>
+                        </div>
+                    </div>
+
+                    <div><div className="flex items-center justify-between mb-3"><h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider">白名單存取控制</h3><label className="relative inline-flex items-center cursor-pointer"><input type="checkbox" className="sr-only peer" checked={systemConfig?.whitelistEnabled || false} onChange={(e) => updateConfig('whitelistEnabled', e.target.checked)} /><div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div></label></div><div className={`bg-slate-50 rounded-xl p-4 border border-slate-200 transition-opacity ${!systemConfig?.whitelistEnabled ? 'opacity-50' : ''}`}><form onSubmit={handleAddWhitelist} className="flex gap-2 mb-4"><input type="email" className="flex-1 px-3 py-2 rounded-lg border border-slate-200 text-sm" placeholder="輸入允許的 Google 電郵" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} required /><button type="submit" disabled={isSubmitting} className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-indigo-700"><Icon name="plus" className="w-4 h-4" /></button></form><div className="space-y-2 max-h-[200px] overflow-y-auto">{(systemConfig?.allowedEmails || []).map(email => (<div key={email} className="flex items-center justify-between bg-white p-2 rounded-lg border border-slate-100 text-sm"><span className="text-slate-700">{email}</span><button onClick={() => handleRemoveWhitelist(email)} className="text-slate-400 hover:text-red-500"><Icon name="trash-2" className="w-4 h-4" /></button></div>))}{(!systemConfig?.allowedEmails || systemConfig.allowedEmails.length === 0) && <div className="text-center text-slate-400 text-xs">暫無白名單用戶</div>}</div></div></div> </div> ); }
+
+        function Timetable({ currentDay, subjects, onDayChange }) { 
             const weekDays = ['日', '一', '二', '三', '四', '五', '六']; 
             
             const generateSchedule = (daySubjects) => { 
@@ -413,135 +469,89 @@
                 const schedule = []; 
                 const addMinutes = (date, minutes) => new Date(date.getTime() + minutes * 60000); 
                 const formatTime = (date) => date.toLocaleTimeString('zh-HK', { hour: '2-digit', minute: '2-digit' }); 
-                
                 let currentTime = startTime; 
                 let lessonIndex = 0; 
-
-                const createSlot = (duration, type, subject = null) => {
-                    const nextTime = addMinutes(currentTime, duration);
+                
+                // 輔助函數：生成時間段物件
+                const createSlot = (duration, type, subjectOverride = null) => {
+                    const start = new Date(currentTime);
+                    const end = addMinutes(currentTime, duration);
                     const slot = {
-                        timeStr: `${formatTime(currentTime)} - ${formatTime(nextTime)}`,
-                        start: new Date(currentTime),
-                        end: new Date(nextTime),
+                        start: start,
+                        end: end,
+                        timeStr: `${formatTime(start)} - ${formatTime(end)}`,
                         type: type,
-                        subject: subject || (type === 'lesson' ? daySubjects[lessonIndex++] : type === 'break' ? '小息' : '午膳時間')
+                        subject: subjectOverride || daySubjects[lessonIndex++]
                     };
-                    currentTime = nextTime;
+                    currentTime = end;
                     return slot;
                 };
 
-                for (let i = 0; i < 2; i++) schedule.push(createSlot(35, 'lesson'));
-                schedule.push(createSlot(15, 'break'));
-                for (let i = 0; i < 2; i++) schedule.push(createSlot(35, 'lesson'));
-                schedule.push(createSlot(10, 'break'));
-                for (let i = 0; i < 2; i++) schedule.push(createSlot(35, 'lesson'));
-                schedule.push(createSlot(70, 'lunch'));
-                for (let i = 0; i < 2; i++) schedule.push(createSlot(35, 'lesson'));
-                schedule.push(createSlot(10, 'break'));
-                for (let i = 0; i < 2; i++) schedule.push(createSlot(35, 'lesson'));
+                // 排程邏輯
+                schedule.push(createSlot(35, 'lesson'));
+                schedule.push(createSlot(35, 'lesson'));
+                schedule.push(createSlot(15, 'break', '小息 (15分鐘)'));
+                schedule.push(createSlot(35, 'lesson'));
+                schedule.push(createSlot(35, 'lesson'));
+                schedule.push(createSlot(10, 'break', '小息 (10分鐘)'));
+                schedule.push(createSlot(35, 'lesson'));
+                schedule.push(createSlot(35, 'lesson'));
+                schedule.push(createSlot(70, 'lunch', '午膳時間 (1小時10分)'));
+                schedule.push(createSlot(35, 'lesson'));
+                schedule.push(createSlot(35, 'lesson'));
+                schedule.push(createSlot(10, 'break', '小息 (10分鐘)'));
+                schedule.push(createSlot(35, 'lesson'));
+                schedule.push(createSlot(35, 'lesson'));
                 
                 return schedule; 
             }; 
 
             const scheduleData = generateSchedule(subjects[currentDay]); 
-            const isToday = currentDay === now.getDay(); // Check if viewing today
-            
-            // Format time for header
-            const timeString = now.toLocaleTimeString('zh-HK', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const now = new Date();
 
             return ( 
                 <div className="space-y-4"> 
-                    <div className="flex justify-between items-center px-1">
-                        <div className="text-xs font-bold text-slate-500 flex items-center gap-1"><Icon name="clock" className="w-3 h-3" /> 現在時間: {timeString}</div>
-                        <div className="flex bg-white rounded-xl p-1 shadow-sm overflow-x-auto max-w-[70%]">
-                            {[1, 2, 3, 4, 5].map(day => (
-                                <button key={day} onClick={() => onDayChange(day)} className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${currentDay === day ? 'bg-indigo-600 text-white shadow' : 'text-slate-500 hover:bg-slate-50'}`}>週{weekDays[day]}</button>
-                            ))}
-                        </div> 
-                    </div>
-
+                    <div className="flex bg-white rounded-xl p-1 shadow-sm overflow-x-auto">{[1, 2, 3, 4, 5].map(day => (<button key={day} onClick={() => onDayChange(day)} className={`flex-1 py-2 px-3 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${currentDay === day ? 'bg-indigo-600 text-white shadow' : 'text-slate-500 hover:bg-slate-50'}`}>星期{weekDays[day]}</button>))}</div> 
                     <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4">
                         {scheduleData.length > 0 ? scheduleData.map((slot, idx) => { 
-                            // Determine status
-                            let statusText = null;
-                            let statusColor = "";
-                            let isActive = false;
-                            let isPast = false;
-                            let progress = 0;
+                            const isFinished = now > slot.end;
+                            const isActive = now >= slot.start && now <= slot.end;
+                            const isFuture = now < slot.start;
 
-                            if (isToday) {
-                                if (now >= slot.end) {
-                                    isPast = true;
-                                } else if (now >= slot.start && now < slot.end) {
-                                    isActive = true;
-                                    const totalDuration = slot.end - slot.start;
-                                    const elapsed = now - slot.start;
-                                    progress = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
-                                    
-                                    const diff = slot.end - now;
-                                    statusText = `進行中 🟢 剩 ${Math.ceil(diff / 60000)} 分鐘`;
-                                    statusColor = "text-green-600 bg-green-50 border-green-200";
-                                } else {
-                                    // Future
-                                    // Logic for "Preparation" status (Next up)
-                                    const prevSlot = scheduleData[idx - 1];
-                                    // If previous slot is finished OR this is the first slot, AND current time is past previous slot
-                                    if ((!prevSlot || now >= prevSlot.end) && !scheduleData.slice(0, idx).some(s => now >= s.start && now < s.end)) {
-                                         const diff = slot.start - now;
-                                         if (diff > 0) { // Double check
-                                            statusText = `準備中 🟡 還有 ${Math.ceil(diff / 60000)} 分鐘`;
-                                            statusColor = "text-yellow-600 bg-yellow-50 border-yellow-200";
-                                         }
-                                    }
-                                }
-                            }
+                            // Color Logic
+                            let containerClass = "border-l-2 pl-6 pb-6 last:pb-0 relative";
+                            let dotClass = "absolute -left-[9px] top-0 w-4 h-4 rounded-full border-2";
+                            let textClass = "";
+                            let bgClass = "";
 
-                            // Dynamic Styles based on user request
-                            // Default (Other days): Standard
-                            let dotClass = "bg-white border-slate-200";
-                            let borderClass = "border-slate-100";
-                            let contentClass = "opacity-100";
-                            
-                            if (isToday) {
-                                if (isPast) {
-                                    // 進行了 -> Gray
-                                    dotClass = "bg-slate-200 border-slate-300";
-                                    borderClass = "border-slate-200";
-                                    contentClass = "opacity-50 grayscale";
-                                } else if (isActive) {
-                                    // Current -> Active (Indigo)
-                                    dotClass = "bg-indigo-500 border-indigo-100 animate-pulse";
-                                    borderClass = "border-indigo-500";
-                                    contentClass = "opacity-100";
-                                } else {
-                                    // 尚未進行 -> Green
-                                    dotClass = "bg-emerald-400 border-emerald-200";
-                                    borderClass = "border-emerald-200";
-                                    contentClass = "opacity-100";
-                                }
+                            if (isFinished) {
+                                // 灰色 - 已完成
+                                containerClass += " border-slate-200";
+                                dotClass += " bg-slate-200 border-slate-100";
+                                textClass = "text-slate-400 grayscale";
+                            } else if (isActive) {
+                                // 綠色閃爍 - 進行中
+                                containerClass += " border-emerald-500";
+                                dotClass += " bg-emerald-500 border-emerald-100 animate-pulse";
+                                textClass = "text-slate-800";
+                                bgClass = "bg-emerald-50/50 -mx-2 px-2 py-1 rounded-lg";
+                            } else {
+                                // 綠色 - 未來 (尚未上課)
+                                containerClass += " border-emerald-200";
+                                dotClass += " bg-white border-emerald-400";
+                                textClass = "text-emerald-900";
                             }
 
                             return (
-                                <div key={idx} className={`relative pl-6 pb-6 last:pb-0 border-l-2 transition-colors duration-300 ${borderClass}`}>
-                                    <div className={`absolute -left-[9px] top-0 w-4 h-4 rounded-full border-2 transition-colors duration-300 ${dotClass}`}></div>
-                                    <div className={`flex flex-col gap-1 transition-all duration-300 ${contentClass}`}>
-                                        <div className="flex justify-between items-start">
-                                            <div className="flex-1">
-                                                <div className="text-xs font-mono text-slate-400 mb-0.5">{slot.timeStr}</div>
-                                                <div className={`text-base font-bold ${isActive ? 'text-indigo-700' : 'text-slate-800'}`}>{slot.subject}</div>
-                                            </div>
-                                            {statusText && (
-                                                <div className={`text-[10px] font-bold px-2 py-1 rounded-full border ${statusColor} animate-in fade-in slide-in-from-right-4 shadow-sm`}>
-                                                    {statusText}
-                                                </div>
-                                            )}
+                                <div key={idx} className={containerClass}>
+                                    <div className={dotClass}></div>
+                                    <div className={`${textClass} ${bgClass}`}>
+                                        <div className="text-xs font-mono mb-0.5 opacity-70">{slot.timeStr}</div>
+                                        <div className={`text-base font-bold ${slot.type === 'break' || slot.type === 'lunch' ? 'text-sm opacity-80' : ''}`}>
+                                            {slot.subject}
                                         </div>
-                                        {isActive && (
-                                            <div className="w-full bg-slate-100 rounded-full h-1.5 mt-2 overflow-hidden">
-                                                <div className="bg-indigo-500 h-1.5 rounded-full transition-all duration-1000 ease-linear" style={{ width: `${progress}%` }}></div>
-                                            </div>
-                                        )}
                                     </div>
+                                    {isActive && <span className="absolute right-0 top-0 text-[10px] bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded-full font-bold">進行中</span>}
                                 </div>
                             ); 
                         }) : (<div className="text-center py-10 text-slate-400">是日休息或未設定課程</div>)}
@@ -557,7 +567,7 @@
             const [authLoading, setAuthLoading] = useState(true);
             const [configLoading, setConfigLoading] = useState(true); 
             const [items, setItems] = useState([]);
-            const { auth, db, signOut, onAuthStateChanged, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs, setDoc, getDoc, arrayUnion, appId } = window.firebaseServices || {};
+            const { auth, db, signOut, onAuthStateChanged, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs, setDoc, getDoc, arrayUnion } = window.firebaseServices || {};
 
             const [inputType, setInputType] = useState('homework');
             const [subject, setSubject] = useState('中文');
@@ -570,6 +580,7 @@
             const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
             
             const [systemConfig, setSystemConfig] = useState(null);
+            const [timetableConfig, setTimetableConfig] = useState(null); // New state for custom timetable
             const [filterSubject, setFilterSubject] = useState('全部');
             const [sortOption, setSortOption] = useState('date_asc');
             const [isListVisible, setIsListVisible] = useState(true);
@@ -579,8 +590,6 @@
             const [isAdmin, setIsAdmin] = useState(false);
             const [isBroadcast, setIsBroadcast] = useState(false);
             const [notification, setNotification] = useState({ isOpen: false, type: 'alert', message: '', onConfirm: null });
-            
-            const [subjects, setSubjects] = useState(DEFAULT_SUBJECTS);
             
             const [showNameSetup, setShowNameSetup] = useState(false);
             const [nameSetupLoading, setNameSetupLoading] = useState(false);
@@ -600,35 +609,34 @@
             const handleFilterChange = (newFilter) => { if (newFilter === filterSubject) return; setIsListVisible(false); setTimeout(() => { setFilterSubject(newFilter); setIsListVisible(true); }, 200); };
             const handleSortChange = (newSort) => { if (newSort === sortOption) return; setIsListVisible(false); setTimeout(() => { setSortOption(newSort); setIsListVisible(true); }, 200); };
 
-            const guestStyle = (!user || user.isAnonymous) ? "opacity-60 grayscale" : "";
+            const guestStyle = !user ? "opacity-60 grayscale" : "";
 
             useEffect(() => { const timer = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(timer); }, []);
             
-            // Load System Config
+            // Config Effect (System Config & Timetable)
             useEffect(() => {
                 if (!db) return;
-                const unsub = onSnapshot(doc(db, 'artifacts', appId, "public", "data", "system_settings", "config"), (doc) => {
+                
+                // Fetch System Config
+                const unsubConfig = onSnapshot(doc(db, "system_settings", "config"), (doc) => {
                     setSystemConfig(doc.data());
                     setConfigLoading(false);
                 }, (error) => {
                     console.error("Config fetch error:", error);
                     setConfigLoading(false);
                 });
-                return () => unsub();
-            }, [db]);
-            
-            // Load User Preferences (Subjects)
-            useEffect(() => {
-                if(!user || !db) return;
-                const unsub = onSnapshot(doc(db, 'artifacts', appId, "users", user.uid, "settings", "preferences"), (doc) => {
-                    if (doc.exists() && doc.data().subjects) {
-                        setSubjects(doc.data().subjects);
+
+                // Fetch Timetable Config
+                const unsubTimetable = onSnapshot(doc(db, "system_settings", "timetable"), (doc) => {
+                    if (doc.exists()) {
+                        setTimetableConfig(doc.data());
                     } else {
-                        setSubjects(DEFAULT_SUBJECTS);
+                        setTimetableConfig(DEFAULT_SCHEDULE);
                     }
-                });
-                return () => unsub();
-            }, [user]);
+                }, (error) => console.error("Timetable fetch error", error));
+
+                return () => { unsubConfig(); unsubTimetable(); };
+            }, [db]);
 
             // Modified Auth Effect with Name Check
             useEffect(() => {
@@ -636,37 +644,36 @@
                 const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
                     setUser(currentUser); 
                     setAuthLoading(false);
-                    if (currentUser && !currentUser.isAnonymous) {
+                    if (currentUser) {
                         setDueDate(getNextSchoolDay()); 
                         setIsAuthModalOpen(false);
-                        const isAdm = currentUser.email === 'chimhinhin@gmail.com';
+                        const isAdm = currentUser.email === ADMIN_EMAIL;
                         setIsAdmin(isAdm);
                         
-                        // Check if user has a profile in users_public (private path now)
+                        // Check if user has a profile in users_public
                         try {
-                            // Using private path for profile to avoid permission issues
-                            await setDoc(doc(db, 'artifacts', appId, "users", currentUser.uid, "settings", "profile"), { 
-                                email: currentUser.email, 
-                                displayName: currentUser.displayName, 
-                                lastSeen: serverTimestamp() 
-                            }, { merge: true });
-                            
-                            // Check local name setup state? 
+                            const userDocRef = doc(db, "users_public", currentUser.uid);
+                            // We attempt to write to verify/create. We don't read to avoid permission error.
+                            // If user is new, they won't have a displayName in users_public, but they might in Auth.
+                            // So we rely on Auth object's displayName.
                             if (!currentUser.displayName) {
                                 setShowNameSetup(true);
+                            } else {
+                                // Just update last seen. This is a write operation, which is allowed.
+                                await setDoc(userDocRef, { 
+                                    email: currentUser.email, 
+                                    displayName: currentUser.displayName, 
+                                    lastSeen: serverTimestamp() 
+                                }, { merge: true });
                             }
                         } catch (e) { 
                             console.error("Profile update error", e); 
                         }
 
                     } else { 
-                        // Guest or Logout
                         setItems([]); 
                         setIsAdmin(false); 
-                        // Don't show name setup for anon users automatically unless we want them to set a name?
-                        // For now, only real users set names.
                         setShowNameSetup(false);
-                        setSubjects(DEFAULT_SUBJECTS);
                     }
                 });
                 return () => unsubscribe();
@@ -675,7 +682,7 @@
             // Data Effect
             useEffect(() => {
                 if (!user || !db) { setItems([]); return; }
-                const q = query(collection(db, 'artifacts', appId, "users", user.uid, "items"), orderBy("dueDate"));
+                const q = query(collection(db, "users", user.uid, "items"), orderBy("dueDate"));
                 const unsubscribe = onSnapshot(q, (snapshot) => { const newItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); setItems(newItems); }, (error) => console.error(error));
                 return () => unsubscribe();
             }, [user]);
@@ -683,26 +690,26 @@
             // Sync Effect
             useEffect(() => {
                 if (!user || !db) return;
-                const q = query(collection(db, 'artifacts', appId, "public", "data", "assignments"), orderBy("createdAt", "desc"));
+                const q = query(collection(db, "public_assignments"), orderBy("createdAt", "desc"));
                 const unsubscribe = onSnapshot(q, (snapshot) => { snapshot.docChanges().forEach(async (change) => { 
                     if (change.type === "added") { 
-                        const publicData = change.doc.data(); const publicId = change.doc.id; const userItemsRef = collection(db, 'artifacts', appId, "users", user.uid, "items"); const dupQuery = query(userItemsRef, where("publicRefId", "==", publicId)); 
+                        const publicData = change.doc.data(); const publicId = change.doc.id; const userItemsRef = collection(db, "users", user.uid, "items"); const dupQuery = query(userItemsRef, where("publicRefId", "==", publicId)); 
                         try { const dupSnapshot = await getDocs(dupQuery); if (dupSnapshot.empty) { await addDoc(userItemsRef, { ...publicData, publicRefId: publicId, completed: false, forceExpired: publicData.forceExpired || false }); triggerAlert(`收到新功課：[${publicData.subject || '其他'}] ${publicData.description}`); } } catch (e) { console.error("Auto-sync error:", e); } 
                     } 
                     if (change.type === "removed") { 
-                        const publicId = change.doc.id; const userItemsRef = collection(db, 'artifacts', appId, "users", user.uid, "items"); const dupQuery = query(userItemsRef, where("publicRefId", "==", publicId)); 
+                        const publicId = change.doc.id; const userItemsRef = collection(db, "users", user.uid, "items"); const dupQuery = query(userItemsRef, where("publicRefId", "==", publicId)); 
                         try { const dupSnapshot = await getDocs(dupQuery); for (const docSnap of dupSnapshot.docs) { await deleteDoc(docSnap.ref); } if (!dupSnapshot.empty) { triggerAlert("老師已取消了一項功課，已從列表中移除。"); } } catch (e) { console.error("Auto-delete sync error:", e); } 
                     } 
                     if (change.type === "modified") { 
-                        const publicData = change.doc.data(); const userItemsRef = collection(db, 'artifacts', appId, "users", user.uid, "items"); const dupQuery = query(userItemsRef, where("publicRefId", "==", change.doc.id)); 
+                        const publicData = change.doc.data(); const userItemsRef = collection(db, "users", user.uid, "items"); const dupQuery = query(userItemsRef, where("publicRefId", "==", change.doc.id)); 
                         try { const dupSnapshot = await getDocs(dupQuery); const newForceExpiredState = publicData.forceExpired === true; for (const docSnap of dupSnapshot.docs) { await updateDoc(docSnap.ref, { forceExpired: newForceExpiredState }); } } catch (e) { console.error("Auto-update sync error:", e); } 
                     } 
                 }); }); return () => unsubscribe(); 
             }, [user]);
 
-            const handleGuestAction = () => { if (!user || user.isAnonymous) { setIsAuthModalOpen(true); return true; } return false; };
+            const handleGuestAction = () => { if (!user) { setIsAuthModalOpen(true); return true; } return false; };
             const handleImageUpload = (e) => { if (handleGuestAction()) return; const file = e.target.files[0]; if (file) { if (file.size > 500000) { triggerAlert("圖片太大啦！請用細過 500KB 嘅圖。"); return; } const reader = new FileReader(); reader.onloadend = () => setSelectedImage(reader.result); reader.readAsDataURL(file); } };
-            const handleNameSetupSave = async (name) => { if (!user) return; setNameSetupLoading(true); try { await updateProfile(user, { displayName: name }); await setDoc(doc(db, 'artifacts', appId, "users", user.uid, "settings", "profile"), { email: user.email, displayName: name, lastSeen: serverTimestamp() }, { merge: true }); setShowNameSetup(false); triggerAlert(`歡迎, ${name}!`); } catch (e) { console.error(e); triggerAlert("設定失敗，請重試"); } finally { setNameSetupLoading(false); } };
+            const handleNameSetupSave = async (name) => { if (!user) return; setNameSetupLoading(true); try { await updateProfile(user, { displayName: name }); await setDoc(doc(db, "users_public", user.uid), { email: user.email, displayName: name, lastSeen: serverTimestamp() }, { merge: true }); setShowNameSetup(false); triggerAlert(`歡迎, ${name}!`); } catch (e) { console.error(e); triggerAlert("設定失敗，請重試"); } finally { setNameSetupLoading(false); } };
             
             const handleSubmit = async (e) => { 
                 e.preventDefault(); 
@@ -720,10 +727,10 @@
                     // 2. Add Doc Logic
                     if (isBroadcast && isAdmin) { 
                         newItem.senderName = user.displayName || '老師'; 
-                        await addDoc(collection(db, 'artifacts', appId, "public", "data", "assignments"), newItem); 
+                        await addDoc(collection(db, "public_assignments"), newItem); 
                         triggerAlert("已發放功課給全班！"); 
                     } else { 
-                        await addDoc(collection(db, 'artifacts', appId, "users", user.uid, "items"), newItem); 
+                        await addDoc(collection(db, "users", user.uid, "items"), newItem); 
                     } 
                     
                     // 3. Reset Form
@@ -739,24 +746,24 @@
                 } 
             };
 
-            const handleToggle = async (id, currentCompletedStatus) => { if (handleGuestAction()) return; if (!currentCompletedStatus) { setExitingIds(prev => [...prev, id]); setTimeout(async () => { try { const itemRef = doc(db, 'artifacts', appId, "users", user.uid, "items", id); await updateDoc(itemRef, { completed: true }); } catch (e) { console.error(e); } setExitingIds(prev => prev.filter(eid => eid !== id)); }, 1000); } else { try { const itemRef = doc(db, 'artifacts', appId, "users", user.uid, "items", id); await updateDoc(itemRef, { completed: false }); } catch (e) { console.error(e); } } };
-            const handleUpdateItem = async (id, updatedData) => { if (handleGuestAction()) return; try { const itemRef = doc(db, 'artifacts', appId, "users", user.uid, "items", id); await updateDoc(itemRef, updatedData); triggerAlert("更新成功！"); } catch (e) { console.error(e); triggerAlert("更新失敗"); throw e; } };
-            const handleForceExpire = (publicId, currentStatus) => { if (handleGuestAction()) return; const action = currentStatus ? "取消過期" : "標記為過期"; triggerConfirm(`確定要將此功課${action}？(全班都會更新)`, async () => { try { await updateDoc(doc(db, 'artifacts', appId, "public", "data", "assignments", publicId), { forceExpired: !currentStatus }); triggerAlert(`已${action}`); } catch (e) { console.error(e); triggerAlert("操作失敗"); } }); };
-            const deleteItem = (id) => { if (handleGuestAction()) return; triggerConfirm('確定要刪除這項紀錄？', async () => { try { await deleteDoc(doc(db, 'artifacts', appId, "users", user.uid, "items", id)); } catch (e) { console.error(e); triggerAlert("刪除失敗"); } }); };
-            const deletePublicItem = (publicId, privateId) => { if (handleGuestAction()) return; triggerConfirm('⚠️ 確定要刪除全班的這份功課？(這將同時移除所有同學的紀錄)', async () => { try { await deleteDoc(doc(db, 'artifacts', appId, "public", "data", "assignments", publicId)); if (privateId) { await deleteDoc(doc(db, 'artifacts', appId, "users", user.uid, "items", privateId)); } triggerAlert("已從公共資料庫及您的清單刪除"); } catch (e) { console.error(e); triggerAlert("刪除失敗"); } }); };
+            const handleToggle = async (id, currentCompletedStatus) => { if (handleGuestAction()) return; if (!currentCompletedStatus) { setExitingIds(prev => [...prev, id]); setTimeout(async () => { try { const itemRef = doc(db, "users", user.uid, "items", id); await updateDoc(itemRef, { completed: true }); } catch (e) { console.error(e); } setExitingIds(prev => prev.filter(eid => eid !== id)); }, 1000); } else { try { const itemRef = doc(db, "users", user.uid, "items", id); await updateDoc(itemRef, { completed: false }); } catch (e) { console.error(e); } } };
+            const handleUpdateItem = async (id, updatedData) => { if (handleGuestAction()) return; try { const itemRef = doc(db, "users", user.uid, "items", id); await updateDoc(itemRef, updatedData); triggerAlert("更新成功！"); } catch (e) { console.error(e); triggerAlert("更新失敗"); throw e; } };
+            const handleForceExpire = (publicId, currentStatus) => { if (handleGuestAction()) return; const action = currentStatus ? "取消過期" : "標記為過期"; triggerConfirm(`確定要將此功課${action}？(全班都會更新)`, async () => { try { await updateDoc(doc(db, "public_assignments", publicId), { forceExpired: !currentStatus }); triggerAlert(`已${action}`); } catch (e) { console.error(e); triggerAlert("操作失敗"); } }); };
+            const deleteItem = (id) => { if (handleGuestAction()) return; triggerConfirm('確定要刪除這項紀錄？', async () => { try { await deleteDoc(doc(db, "users", user.uid, "items", id)); } catch (e) { console.error(e); triggerAlert("刪除失敗"); } }); };
+            const deletePublicItem = (publicId, privateId) => { if (handleGuestAction()) return; triggerConfirm('⚠️ 確定要刪除全班的這份功課？(這將同時移除所有同學的紀錄)', async () => { try { await deleteDoc(doc(db, "public_assignments", publicId)); if (privateId) { await deleteDoc(doc(db, "users", user.uid, "items", privateId)); } triggerAlert("已從公共資料庫及您的清單刪除"); } catch (e) { console.error(e); triggerAlert("刪除失敗"); } }); };
             const handleSignOut = () => { triggerConfirm('確定要登出？', async () => { try { await signOut(auth); setActiveModal(null); setIsAdmin(false); setViewMode('current'); } catch(e) { console.error(e); } }); };
-            const handleDashboardClick = (modalType) => { if (!user || user.isAnonymous) { setIsAuthModalOpen(true); } else { setActiveModal(modalType); } };
+            const handleDashboardClick = (modalType) => { if (!user) { setIsAuthModalOpen(true); } else { setActiveModal(modalType); } };
 
             const maintenanceMode = systemConfig?.maintenanceMode || 'normal';
             const whitelistEnabled = systemConfig?.whitelistEnabled || false;
             const allowedEmails = systemConfig?.allowedEmails || [];
             
-            // Re-added isWhitelisted definition
             const isWhitelisted = user && allowedEmails.includes(user.email);
 
             if (authLoading || configLoading) return <div className="min-h-screen flex items-center justify-center bg-slate-50"><div className="animate-pulse flex flex-col items-center"><div className="w-12 h-12 bg-indigo-200 rounded-full mb-4"></div><div className="h-4 w-32 bg-slate-200 rounded"></div></div></div>;
 
             // --- SYSTEM GUARD LOGIC ---
+            // 1. Maintenance Mode: Block everyone except Admin AND Whitelisted (regardless of whitelist toggle)
             if (maintenanceMode !== 'normal' && !isAdmin && !isWhitelisted) { 
                 return (
                     <div className="min-h-screen bg-slate-50 relative">
@@ -767,12 +774,15 @@
                 );
             }
 
+            // 2. Access Control: Only block if Whitelist is ENABLED
             if (whitelistEnabled && !isAdmin && !isWhitelisted) {
+                // If user is null (Guest), show Access Denied screen to prompt login
+                // If logged in but not in list
                 return (
-                     <div className="min-h-screen bg-slate-50 relative">
+                      <div className="min-h-screen bg-slate-50 relative">
                         <BlockScreen type="access_denied" onLogin={() => setIsAuthModalOpen(true)} user={user} />
                         <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} triggerAlert={triggerAlert} />
-                     </div>
+                      </div>
                 );
             }
 
@@ -843,10 +853,15 @@
                             if (getTypePriority(b) - getTypePriority(a) !== 0) return getTypePriority(b) - getTypePriority(a);
                             if (dateA - dateB !== 0) return dateA - dateB;
                             break;
-                        case 'type_hw': // Homework First (Modified: Newest Created First)
+                        case 'type_hw': 
+                             // 1. Priority: Homework first (0 vs 1)
                              if (getTypePriority(a) - getTypePriority(b) !== 0) return getTypePriority(a) - getTypePriority(b);
-                             // Secondary sort: Newest created first (LIFO)
-                             return createdB - createdA; 
+                             
+                             // 2. Due Date: Earliest first
+                             if (dateA - dateB !== 0) return dateA - dateB;
+
+                             // 3. Created Date: Newest first (tie-breaker)
+                             return createdB - createdA;
                              break;
                         default:
                              if (dateA - dateB !== 0) return dateA - dateB;
@@ -857,10 +872,11 @@
 
             const renderItemCard = (item, index) => {
                 const daysLeft = getDaysRemaining(item.dueDate); const isExiting = exitingIds.includes(item.id); const isVisuallyCompleted = item.completed || isExiting; const status = getStatusBadge(item); const isTest = item.type !== 'homework';
-                const subjectStyle = subjects.find(s => s.name === item.subject)?.color || 'bg-gray-100 text-gray-700';
+                const subjectStyle = SUBJECTS.find(s => s.name === item.subject)?.color || 'bg-gray-100 text-gray-700';
                 
                 // Lesson Countdown
-                const nextLesson = getNextLesson(item.subject, now);
+                // Use custom timetable if available
+                const nextLesson = getNextLesson(item.subject, now, timetableConfig);
                 let countdownElem = null;
                 
                 if (nextLesson && viewMode === 'current' && !isVisuallyCompleted && !item.forceExpired && item.subject) {
@@ -922,7 +938,7 @@
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
                             <div>
                                 <h1 className="text-xl sm:text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center gap-2">
-                                    {viewMode === 'current' ? (<><Icon name="graduation-cap" className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-600" />學生小幫手</>) : viewMode === 'system_admin' ? (<><Icon name="settings" className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600" />系統設定</>) : viewMode === 'admin_users' ? (<><Icon name="users" className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600" />用戶管理</>) : viewMode === 'history' ? (<><Icon name="history" className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600" />完成紀錄</>) : viewMode === 'user_settings' ? (<><Icon name="settings" className="w-6 h-6 sm:w-8 sm:h-8 text-gray-600" />科目設定</>) : (<><Icon name="calendar-days" className="w-6 h-6 sm:w-8 sm:h-8 text-orange-600" />上課時間表</>)}
+                                    {viewMode === 'current' ? (<><Icon name="graduation-cap" className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-600" />電子手冊</>) : viewMode === 'system_admin' ? (<><Icon name="settings" className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600" />系統設定</>) : viewMode === 'admin_users' ? (<><Icon name="users" className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600" />用戶管理</>) : viewMode === 'history' ? (<><Icon name="history" className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600" />完成紀錄</>) : (<><Icon name="calendar-days" className="w-6 h-6 sm:w-8 sm:h-8 text-orange-600" />上課時間表</>)}
                                 </h1>
                                 <p className="text-slate-500 text-sm mt-1 ml-1 font-medium">{getTodayDateString()}</p>
                             </div>
@@ -935,19 +951,15 @@
                                         <button onClick={() => setViewMode('system_admin')} className={`group justify-center relative flex items-center gap-2 px-3 py-2.5 rounded-full font-bold text-sm transition-all duration-300 shadow-md hover:shadow-xl transform hover:-translate-y-1 ${viewMode === 'system_admin' ? 'bg-slate-700 text-white' : 'bg-white text-slate-700 border-2 border-slate-100 hover:border-slate-300'}`}><Icon name="settings" className="w-4 h-4" />設定</button>
                                     </>
                                 )}
-                                
-                                {user && (
-                                    <button onClick={() => setViewMode('user_settings')} className={`group justify-center relative flex items-center gap-2 px-3 py-2.5 rounded-full font-bold text-sm transition-all duration-300 shadow-md hover:shadow-xl transform hover:-translate-y-1 ${viewMode === 'user_settings' ? 'bg-gray-700 text-white' : 'bg-white text-slate-700 border-2 border-slate-100 hover:border-gray-300'}`}><Icon name="settings" className="w-4 h-4" />設定</button>
-                                )}
 
                                 <button onClick={() => !user ? setIsAuthModalOpen(true) : setViewMode(viewMode === 'current' ? 'history' : 'current')} className={`group justify-center relative flex items-center gap-2 px-3 py-2.5 rounded-full font-bold text-sm transition-all duration-300 shadow-md hover:shadow-xl transform hover:-translate-y-1 ${viewMode === 'current' ? 'bg-white text-slate-700 border-2 border-slate-100 hover:border-indigo-200' : (viewMode === 'history' ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-transparent' : 'bg-white text-slate-700 border-2 border-slate-100 hover:border-indigo-200')} ${guestStyle}`}>
-                                    {viewMode === 'history' || viewMode === 'admin_users' || viewMode === 'system_admin' || viewMode === 'user_settings' ? (<><Icon name="arrow-left" className="w-4 h-4" />返主頁</>) : (<><Icon name="history" className="w-4 h-4" />睇紀錄</>)}
+                                    {viewMode === 'history' || viewMode === 'admin_users' || viewMode === 'system_admin' ? (<><Icon name="arrow-left" className="w-4 h-4" />返主頁</>) : (<><Icon name="history" className="w-4 h-4" />睇紀錄</>)}
                                 </button>
                                 {user ? (<button onClick={handleSignOut} className="group justify-center relative flex items-center gap-2 px-3 py-2.5 rounded-full font-bold text-sm bg-slate-200 text-slate-600 hover:bg-slate-300 transition-all shadow-sm"><Icon name="log-out" className="w-4 h-4" /></button>) : (<button onClick={() => setIsAuthModalOpen(true)} className="group justify-center relative flex items-center gap-2 px-4 py-2.5 rounded-full font-bold text-sm bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-md shadow-indigo-200"><Icon name="log-in" className="w-4 h-4" />登入</button>)}
                             </div>
                         </div>
 
-                        {viewMode === 'system_admin' ? ( <AdminSystemPanel db={db} systemConfig={systemConfig} onBack={() => setViewMode('current')} /> ) : viewMode === 'admin_users' ? ( <AdminUserView db={db} onBack={() => setViewMode('current')} systemConfig={systemConfig} /> ) : viewMode === 'user_settings' ? ( <UserSettingsPanel db={db} user={user} currentSubjects={subjects} onUpdate={setSubjects} onBack={() => setViewMode('current')} /> ) : viewMode === 'timetable' ? ( <Timetable currentDay={currentTimetableDay} subjects={CLASS_SCHEDULE} onDayChange={setCurrentTimetableDay} now={now} /> ) : (
+                        {viewMode === 'system_admin' ? ( <AdminSystemPanel db={db} systemConfig={systemConfig} timetableConfig={timetableConfig} onBack={() => setViewMode('current')} /> ) : viewMode === 'admin_users' ? ( <AdminUserView db={db} onBack={() => setViewMode('current')} systemConfig={systemConfig} /> ) : viewMode === 'timetable' ? ( <Timetable currentDay={currentTimetableDay} subjects={timetableConfig || DEFAULT_SCHEDULE} onDayChange={setCurrentTimetableDay} /> ) : (
                             <>
                                 {viewMode === 'current' && (
                                     <div className={`grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8 ${guestStyle}`}>
@@ -967,7 +979,7 @@
                                                 <button onClick={() => setInputType('assessment')} className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-bold transition-all ${inputType === 'assessment' ? 'bg-white text-purple-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}><Icon name="file-question" className="w-4 h-4" /> 溫默書/測驗</button>
                                             </div>
                                             <form onSubmit={handleSubmit} className="flex flex-col gap-3 sm:gap-4">
-                                                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">{subjects.map(sub => (<button key={sub.name} type="button" onClick={() => setSubject(sub.name)} className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${subject === sub.name ? sub.color + ' ring-1 ring-offset-1 ring-indigo-100' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}>{sub.name}</button>))}</div>
+                                                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">{SUBJECTS.map(sub => (<button key={sub.name} type="button" onClick={() => setSubject(sub.name)} className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${subject === sub.name ? sub.color + ' ring-1 ring-offset-1 ring-indigo-100' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}>{sub.name}</button>))}</div>
                                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
                                                     <div className="md:col-span-2 space-y-3">
                                                         <textarea placeholder={inputType === 'homework' ? "打返功課內容..." : "輸入範圍 (例如: 第3課 / P.20-25)"} value={description} onChange={(e) => setDescription(e.target.value)} rows="2" className="w-full min-h-[80px] rounded-xl sm:rounded-2xl border-slate-200 bg-slate-50/50 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all p-3 sm:p-4 border text-slate-700 placeholder:text-slate-400 resize-none text-sm sm:text-base" />
@@ -986,7 +998,7 @@
                                                 <div className={`flex items-center gap-2 w-full sm:w-auto overflow-x-auto scrollbar-hide pb-1 transition-opacity duration-300 ${!isListVisible ? 'opacity-50' : 'opacity-100'}`}>
                                                     <span className="text-slate-400 text-xs font-bold whitespace-nowrap flex items-center gap-1"><Icon name="filter" className="w-3 h-3" />篩選:</span>
                                                     <button onClick={() => handleFilterChange('全部')} className={`flex-shrink-0 px-2.5 py-1 rounded text-[10px] font-bold border transition-all ${filterSubject === '全部' ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}>全部</button>
-                                                    {subjects.map(sub => (
+                                                    {SUBJECTS.map(sub => (
                                                         <button key={sub.name} onClick={() => handleFilterChange(sub.name)} className={`flex-shrink-0 px-2.5 py-1 rounded text-[10px] font-bold border transition-all ${filterSubject === sub.name ? sub.color + ' ring-1 ring-offset-1 ring-indigo-100' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}>{sub.name}</button>
                                                     ))}
                                                 </div>
@@ -1008,9 +1020,9 @@
 
                     <div className="fixed bottom-3 right-3 text-slate-300/50 text-xs font-mono pointer-events-none select-none z-0">Made by @colasonyt1123</div>
                     {activeModal && (<div className="fixed inset-0 z-50 flex items-center justify-center px-4"><div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setActiveModal(null)}></div><div className="modal-animate relative bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[80vh] flex flex-col overflow-hidden"><div className="p-5 border-b border-slate-100 flex items-center justify-between bg-white z-10"><h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">{activeModal === 'today' && <Icon name="flame" className="w-6 h-6 text-red-500" />}{activeModal === 'tomorrow' && <Icon name="sun" className="w-6 h-6 text-orange-500" />}{activeModal === 'future' && <Icon name="calendar-range" className="w-6 h-6 text-sky-500" />}{activeModal === 'revision' && <Icon name="brain-circuit" className="w-6 h-6 text-purple-500" />}{getModalTitle()}</h3><button onClick={() => setActiveModal(null)} className="p-2 bg-slate-100 rounded-full hover:bg-slate-200 transition-colors"><Icon name="x" className="w-5 h-5 text-slate-500" /></button></div><div className="p-4 overflow-y-auto space-y-3 bg-slate-50 flex-1">{getModalItems().length === 0 ? (<div className="text-center py-10 text-slate-400">暫時沒有相關項目</div>) : (getModalItems().map(item => renderItemCard(item)))}</div></div></div>)}
-                    <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} triggerAlert={triggerAlert} />
+                    <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} triggerAlert={triggerAlert} triggerConfirm={triggerConfirm} /> 
                     {showNameSetup && <NameSetupModal onSave={handleNameSetupSave} loading={nameSetupLoading} triggerAlert={triggerAlert} />}
-                    {editingItem && <EditModal item={editingItem} subjects={subjects} onClose={() => setEditingItem(null)} onSave={handleUpdateItem} triggerAlert={triggerAlert} />}
+                    {editingItem && <EditModal item={editingItem} onClose={() => setEditingItem(null)} onSave={handleUpdateItem} triggerAlert={triggerAlert} />}
                     {notification.isOpen && (<div className="fixed inset-0 z-[200] flex items-center justify-center px-4"><div className="absolute inset-0 bg-black/30 backdrop-blur-[2px]"></div><div className="notification-animate relative bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center transform scale-100"><div className={`mx-auto w-12 h-12 rounded-full flex items-center justify-center mb-4 ${notification.type === 'confirm' ? 'bg-red-100 text-red-500' : 'bg-indigo-100 text-indigo-500'}`}>{notification.type === 'confirm' ? <Icon name="alert-triangle" className="w-6 h-6" /> : <Icon name="info" className="w-6 h-6" />}</div><h3 className="text-lg font-bold text-slate-800 mb-2">{notification.type === 'confirm' ? '確認操作' : '提示'}</h3><p className="text-slate-600 mb-6 leading-relaxed">{notification.message}</p><div className="flex gap-3 justify-center">{notification.type === 'confirm' ? (<><button onClick={closeNotification} className="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 text-slate-600 font-medium hover:bg-slate-50 transition-colors">取消</button><button onClick={handleNotificationConfirm} className="flex-1 py-2.5 px-4 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 shadow-lg shadow-red-200 transition-all active:scale-95">確認</button></>) : (<button onClick={closeNotification} className="w-full py-2.5 px-4 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all active:scale-95">知道了</button>)}</div></div></div>)}
                 </div>
             );
