@@ -112,8 +112,6 @@
         }
 
         /* === 進場與退場動畫 === */
-        
-        /* 頁面切換動畫 */
         @keyframes pageIn {
             from { opacity: 0; transform: translateY(10px) scale(0.98); }
             to { opacity: 1; transform: translateY(0) scale(1); }
@@ -121,8 +119,6 @@
         .page-enter {
             animation: pageIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
         }
-
-        /* 列表項目進場 - 帶有延遲的交錯效果 (Stagger) */
         @keyframes slideUpStagger {
             from { opacity: 0; transform: translateY(30px); }
             to { opacity: 1; transform: translateY(0); }
@@ -131,8 +127,6 @@
             opacity: 0; /* 初始隱藏 */
             animation: slideUpStagger 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
         }
-
-        /* 項目退場動畫 (完成/刪除) */
         @keyframes shrinkOut {
             0% { opacity: 1; transform: scale(1); max-height: 200px; margin-bottom: 12px; }
             50% { opacity: 0; transform: scale(0.9); max-height: 200px; margin-bottom: 12px; }
@@ -143,22 +137,18 @@
             pointer-events: none; /* 防止動畫中被點擊 */
             overflow: hidden;
         }
-
-        /* 彈窗動畫 */
         .modal-animate { animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
         @keyframes modalPop { 
             from { opacity: 0; transform: scale(0.9) translateY(20px); } 
             to { opacity: 1; transform: scale(1) translateY(0); } 
         }
-
-        /* 骨架屏載入動畫 (Skeleton Loading) */
-        .skeleton-shimmer {
-            background: linear-gradient(90deg, #f0f0f0 25%, #f8f8f8 50%, #f0f0f0 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite linear;
-            border-radius: 8px;
+        /* 靈動島動畫 */
+        @keyframes islandPop {
+            0% { transform: scaleX(0.5) scaleY(0.5) translateY(-20px); opacity: 0; }
+            40% { transform: scaleX(1.1) scaleY(1.1) translateY(5px); opacity: 1; }
+            100% { transform: scaleX(1) scaleY(1) translateY(0); opacity: 1; }
         }
-        @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+        .dynamic-island-enter { animation: islandPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
 
         /* 完成時的慶祝光暈 */
         @keyframes successPulse {
@@ -168,10 +158,8 @@
         }
         .success-pulse { animation: successPulse 0.6s ease-out; }
 
-        /* 滾動條隱藏 */
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        
         input[type="file"]::file-selector-button { display: none; }
     </style>
 </head>
@@ -180,7 +168,6 @@
     <div id="root"></div>
 
     <script type="module">
-        // --- Firebase Configuration (Provided by User) ---
         const firebaseConfig = {
             apiKey: "AIzaSyB3gYuwnyoTUwO7PFh4Nuue-Ud8GTruuRk",
             authDomain: "recordhwv2.firebaseapp.com",
@@ -190,114 +177,66 @@
             appId: "1:599261009391:web:66cd7f932650bebc0e521a",
             measurementId: "G-C51XDYW67W"
         };
-
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
         import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs, setDoc, arrayUnion, arrayRemove, getDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
-
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
         const googleProvider = new GoogleAuthProvider();
-
-        // Bind Firebase services to window for React access
         window.firebaseServices = { auth, db, googleProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs, setDoc, arrayUnion, arrayRemove, getDoc };
     </script>
 
     <script type="text/babel">
         const { useState, useEffect, useRef, useMemo } = React;
-
         const ADMIN_EMAIL = 'chimhinhin@gmail.com';
-        
-        const SUBJECTS = [
-            { name: '中文', color: 'bg-rose-50 text-rose-600 border-rose-100 ring-rose-100' },
-            { name: '英文', color: 'bg-indigo-50 text-indigo-600 border-indigo-100 ring-indigo-100' },
-            { name: '數學', color: 'bg-emerald-50 text-emerald-600 border-emerald-100 ring-emerald-100' },
-            { name: '公社', color: 'bg-orange-50 text-orange-600 border-orange-100 ring-orange-100' },
-            { name: '佛學', color: 'bg-amber-50 text-amber-600 border-amber-100 ring-amber-100' },
-            { name: '生物', color: 'bg-teal-50 text-teal-600 border-teal-100 ring-teal-100' },
-            { name: '物理', color: 'bg-sky-50 text-sky-600 border-sky-100 ring-sky-100' },
-            { name: '化學', color: 'bg-purple-50 text-purple-600 border-purple-100 ring-purple-100' },
-            { name: '地理', color: 'bg-cyan-50 text-cyan-600 border-cyan-100 ring-cyan-100' },
-            { name: '歷史', color: 'bg-stone-50 text-stone-600 border-stone-200 ring-stone-100' },
-            { name: '中史', color: 'bg-yellow-50 text-yellow-700 border-yellow-100 ring-yellow-100' },
-            { name: '體育', color: 'bg-lime-50 text-lime-600 border-lime-100 ring-lime-100' },
-            { name: '電腦', color: 'bg-blue-50 text-blue-600 border-blue-100 ring-blue-100' },
-            { name: 'STEAM', color: 'bg-violet-50 text-violet-600 border-violet-100 ring-violet-100' },
-            { name: '普通話', color: 'bg-pink-50 text-pink-600 border-pink-100 ring-pink-100' },
-            { name: '視藝', color: 'bg-fuchsia-50 text-fuchsia-600 border-fuchsia-100 ring-fuchsia-100' },
-            { name: '全方位', color: 'bg-red-50 text-red-600 border-red-100 ring-red-100' },
-            { name: '音樂', color: 'bg-cyan-50 text-cyan-600 border-cyan-100 ring-cyan-100' },
-            { name: '其他', color: 'bg-slate-50 text-slate-600 border-slate-200 ring-slate-100' }
-        ];
-
-        const DEFAULT_SCHEDULE = {
-            1: ["普通電腦", "普通電腦", "英文", "英文", "中文", "中文", "普通話", "佛學", "歷史", "公民經濟與社會"],
-            2: ["英文", "英文", "音樂", "地理", "物理", "物理", "中文", "中文", "數學", "數學"],
-            3: ["化學", "化學", "英文", "英文", "數學", "中文", "視藝", "視藝", "公民經濟與社會", "中史"],
-            4: ["STEAM", "STEAM", "數學", "歷史", "英文", "英文", "生物", "生物", "中史", "地理"],
-            5: ["英文", "英文", "中文", "中文", "體育", "體育", "數學", "數學", "全方位", "全方位"]
-        };
-
+        const SUBJECTS = [{ name: '中文', color: 'bg-rose-50 text-rose-600 border-rose-100 ring-rose-100' }, { name: '英文', color: 'bg-indigo-50 text-indigo-600 border-indigo-100 ring-indigo-100' }, { name: '數學', color: 'bg-emerald-50 text-emerald-600 border-emerald-100 ring-emerald-100' }, { name: '公社', color: 'bg-orange-50 text-orange-600 border-orange-100 ring-orange-100' }, { name: '佛學', color: 'bg-amber-50 text-amber-600 border-amber-100 ring-amber-100' }, { name: '生物', color: 'bg-teal-50 text-teal-600 border-teal-100 ring-teal-100' }, { name: '物理', color: 'bg-sky-50 text-sky-600 border-sky-100 ring-sky-100' }, { name: '化學', color: 'bg-purple-50 text-purple-600 border-purple-100 ring-purple-100' }, { name: '地理', color: 'bg-cyan-50 text-cyan-600 border-cyan-100 ring-cyan-100' }, { name: '歷史', color: 'bg-stone-50 text-stone-600 border-stone-200 ring-stone-100' }, { name: '中史', color: 'bg-yellow-50 text-yellow-700 border-yellow-100 ring-yellow-100' }, { name: '體育', color: 'bg-lime-50 text-lime-600 border-lime-100 ring-lime-100' }, { name: '電腦', color: 'bg-blue-50 text-blue-600 border-blue-100 ring-blue-100' }, { name: 'STEAM', color: 'bg-violet-50 text-violet-600 border-violet-100 ring-violet-100' }, { name: '普通話', color: 'bg-pink-50 text-pink-600 border-pink-100 ring-pink-100' }, { name: '視藝', color: 'bg-fuchsia-50 text-fuchsia-600 border-fuchsia-100 ring-fuchsia-100' }, { name: '全方位', color: 'bg-red-50 text-red-600 border-red-100 ring-red-100' }, { name: '音樂', color: 'bg-cyan-50 text-cyan-600 border-cyan-100 ring-cyan-100' }, { name: '其他', color: 'bg-slate-50 text-slate-600 border-slate-200 ring-slate-100' }];
+        const DEFAULT_SCHEDULE = { 1: ["普通電腦", "普通電腦", "英文", "英文", "中文", "中文", "普通話", "佛學", "歷史", "公民經濟與社會"], 2: ["英文", "英文", "音樂", "地理", "物理", "物理", "中文", "中文", "數學", "數學"], 3: ["化學", "化學", "英文", "英文", "數學", "中文", "視藝", "視藝", "公民經濟與社會", "中史"], 4: ["STEAM", "STEAM", "數學", "歷史", "英文", "英文", "生物", "生物", "中史", "地理"], 5: ["英文", "英文", "中文", "中文", "體育", "體育", "數學", "數學", "全方位", "全方位"] };
         const LESSON_START_TIMES = [510, 545, 595, 630, 675, 710, 815, 850, 895, 930];
 
-        // --- Safe Icon Component ---
-        const Icon = ({ name, className }) => {
-            const ref = useRef(null);
-            useEffect(() => {
-                if (window.lucide && ref.current) {
-                    ref.current.innerHTML = '';
-                    const i = document.createElement('i');
-                    i.setAttribute('data-lucide', name);
-                    if (className) i.setAttribute('class', className);
-                    ref.current.appendChild(i);
-                    try { window.lucide.createIcons({ root: ref.current, nameAttr: 'data-lucide' }); } catch(e) {}
-                }
-            }, [name, className]);
-            return <span ref={ref} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}></span>;
-        };
-
-        // --- Helpers ---
-        const getNextLesson = (subjectName, now, currentSchedule) => {
-            if (!subjectName || subjectName === '其他') return null;
-            const scheduleToUse = currentSchedule || DEFAULT_SCHEDULE;
-            const currentDay = now.getDay(); const currentMinutes = now.getHours() * 60 + now.getMinutes(); const currentSeconds = now.getSeconds();
-            for (let d = 0; d < 7; d++) {
-                const checkDay = (currentDay + d) % 7; if (checkDay === 0 || checkDay === 6) continue;
-                const subjects = scheduleToUse[checkDay]; if (!subjects) continue;
-                for (let i = 0; i < subjects.length; i++) {
-                    if (subjects[i].includes(subjectName) || subjectName.includes(subjects[i])) {
-                        const startMin = LESSON_START_TIMES[i]; const endMin = startMin + 35;
-                        if (d === 0) { if (currentMinutes >= startMin && currentMinutes < endMin) { return { type: 'now', diff: 0 }; } if (currentMinutes < startMin) { const diffMs = ((startMin * 60) - (currentMinutes * 60 + currentSeconds)) * 1000; return { type: 'future', diff: diffMs, date: new Date(now.getTime() + diffMs) }; } } else { const dayDiff = d; const targetTimeMs = startMin * 60 * 1000; const currentTimeMs = (currentMinutes * 60 + currentSeconds) * 1000; const msInDay = 24 * 60 * 60 * 1000; const diffMs = (dayDiff * msInDay) - currentTimeMs + targetTimeMs; return { type: 'future', diff: diffMs }; }
-                    }
-                }
-            }
-            return null;
-        };
+        const Icon = ({ name, className }) => { const ref = useRef(null); useEffect(() => { if (window.lucide && ref.current) { ref.current.innerHTML = ''; const i = document.createElement('i'); i.setAttribute('data-lucide', name); if (className) i.setAttribute('class', className); ref.current.appendChild(i); try { window.lucide.createIcons({ root: ref.current, nameAttr: 'data-lucide' }); } catch(e) {} } }, [name, className]); return <span ref={ref} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}></span>; };
+        const getNextLesson = (subjectName, now, currentSchedule) => { if (!subjectName || subjectName === '其他') return null; const scheduleToUse = currentSchedule || DEFAULT_SCHEDULE; const currentDay = now.getDay(); const currentMinutes = now.getHours() * 60 + now.getMinutes(); const currentSeconds = now.getSeconds(); for (let d = 0; d < 7; d++) { const checkDay = (currentDay + d) % 7; if (checkDay === 0 || checkDay === 6) continue; const subjects = scheduleToUse[checkDay]; if (!subjects) continue; for (let i = 0; i < subjects.length; i++) { if (subjects[i].includes(subjectName) || subjectName.includes(subjects[i])) { const startMin = LESSON_START_TIMES[i]; const endMin = startMin + 35; if (d === 0) { if (currentMinutes >= startMin && currentMinutes < endMin) { return { type: 'now', diff: 0 }; } if (currentMinutes < startMin) { const diffMs = ((startMin * 60) - (currentMinutes * 60 + currentSeconds)) * 1000; return { type: 'future', diff: diffMs, date: new Date(now.getTime() + diffMs) }; } } else { const dayDiff = d; const targetTimeMs = startMin * 60 * 1000; const currentTimeMs = (currentMinutes * 60 + currentSeconds) * 1000; const msInDay = 24 * 60 * 60 * 1000; const diffMs = (dayDiff * msInDay) - currentTimeMs + targetTimeMs; return { type: 'future', diff: diffMs }; } } } } return null; };
         const formatCountdown = (ms) => { const totalSeconds = Math.floor(ms / 1000); const hours = Math.floor(totalSeconds / 3600); const minutes = Math.floor((totalSeconds % 3600) / 60); const seconds = totalSeconds % 60; return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`; };
 
-        // --- Skeleton Component ---
-        const Skeleton = ({ className }) => <div className={`skeleton-shimmer ${className}`}></div>;
+        // --- Dynamic Island Notification ---
+        function DynamicIsland({ message, type, isVisible }) {
+            if (!isVisible) return null;
+            const iconColor = type === 'error' ? 'text-red-500' : 'text-green-500';
+            const icon = type === 'error' ? 'alert-circle' : 'check-circle-2';
+            return (
+                <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[300] dynamic-island-enter">
+                    <div className="bg-black/90 backdrop-blur-xl text-white px-5 py-3 rounded-full flex items-center gap-3 shadow-2xl min-w-[200px] justify-center">
+                        <Icon name={icon} className={`w-5 h-5 ${iconColor}`} />
+                        <span className="text-sm font-bold tracking-wide">{message}</span>
+                    </div>
+                </div>
+            );
+        }
 
         // --- Components ---
-        function BlockScreen({ type, estimatedTime, customMessage, onLogin, user }) {
-            let title = '存取被拒';
-            let message = customMessage || '抱歉，此網站目前僅限白名單用戶訪問。\n請聯絡管理員 (chimhinhin) 開通權限。';
+        function BlockScreen({ type, estimatedTime, customMessage, systemConfig, onLogin, user }) {
+            // Priority: Config Title > Default Title
+            let title = systemConfig?.title_access_denied || '存取被拒';
+            let message = customMessage || '抱歉，此網站目前僅限白名單用戶訪問。\n請聯絡管理員開通權限。';
             let icon = 'lock';
             let iconColor = 'text-red-500';
 
             if (type === 'updating') {
-                title = '系統更新中';
+                title = systemConfig?.title_updating || '系統更新中';
                 icon = 'hammer';
                 iconColor = 'text-orange-500';
-                message = customMessage || '為了提供更優質的服務，我們正在進行系統更新。\n請稍後再回來。';
             } else if (type === 'restructuring') {
-                title = '資料維護中';
+                title = systemConfig?.title_restructuring || '資料維護中';
                 icon = 'database';
                 iconColor = 'text-blue-500';
-                message = customMessage || '資料庫正在進行重整優化，期間暫停服務。\n感謝您的耐心等待。';
+            } else if (type === 'closed') { // New Type for when Whitelist Enabled = False
+                title = systemConfig?.title_site_closed || '系統暫停服務';
+                icon = 'power-off';
+                iconColor = 'text-slate-500';
+                message = customMessage || '管理員已暫時關閉系統訪問。\n請稍後再試。';
             } else if (type === 'access_denied') {
-                title = '限制測試階段';
+                // Keep default or use config
+                title = systemConfig?.title_access_denied || '限制測試階段';
                 icon = 'shield-alert';
                 iconColor = 'text-indigo-500';
                 message = '感謝您造訪電子手冊。\n\n為確保服務品質與穩定性，本平台目前僅對受邀的白名單用戶開放。\n\n如果您已獲授權，請使用註冊的電子郵件登入。如需申請測試資格，請聯繫系統管理員。';
@@ -431,9 +370,9 @@
                 } 
             }; 
             
-            return ( <div className="fixed inset-0 z-[200] flex items-center justify-center p-4"> <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md transition-opacity duration-300" onClick={onClose}></div> <div className="modal-animate glass-panel w-full max-w-md p-8 rounded-3xl relative z-10 overflow-hidden shadow-2xl"> <button onClick={onClose} className="absolute top-5 right-5 p-2 rounded-full hover:bg-white/50 text-slate-400 hover:text-slate-600 transition-colors"><Icon name="x" className="w-6 h-6" /></button> <div className="text-center mb-8"><h2 className="text-3xl font-black text-slate-800 tracking-tight mb-2">{isLogin ? '歡迎回來' : '建立帳戶'}</h2><p className="text-slate-500 font-medium">{isLogin ? '登入即可同步你的資料' : '只需幾秒，開始雲端記錄'} </p></div> <form onSubmit={handleEmailAuth} className="space-y-4"> <div className="relative group"><div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors"><Icon name="mail" className="w-5 h-5" /></div><input type="email" className="w-full pl-12 pr-4 py-4 rounded-2xl modern-input text-slate-800 placeholder:text-slate-400 focus:outline-none font-medium" placeholder="電子郵件" value={email} onChange={e => setEmail(e.target.value)} required /></div> <div className="relative group"><div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors"><Icon name="lock" className="w-5 h-5" /></div><input type="password" className="w-full pl-12 pr-4 py-4 rounded-2xl modern-input text-slate-800 placeholder:text-slate-400 focus:outline-none font-medium" placeholder="密碼" value={password} onChange={e => setPassword(e.target.value)} required /></div> <button type="submit" disabled={loading} className="w-full py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-lg shadow-lg shadow-indigo-200 transform transition-all active:scale-[0.98] disabled:opacity-70 flex items-center justify-center hover:translate-y-[-2px]">{loading ? '處理中...' : (isLogin ? '登入' : '註冊')}</button> </form> <div className="relative my-8"><div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200/60"></div></div><div className="relative flex justify-center text-xs uppercase tracking-wider font-bold text-slate-400"><span className="px-4 bg-white/30 backdrop-blur-sm rounded-full">或</span></div></div> <button onClick={handleGoogleLogin} disabled={loading} className="w-full py-3.5 rounded-2xl bg-white border border-slate-100 text-slate-700 font-bold hover:bg-slate-50 transition-all flex items-center justify-center gap-3 shadow-sm hover:shadow-md active:scale-[0.98] hover:translate-y-[-1px]"><img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />Google 登入</button> <div className="mt-8 text-center"><p className="text-slate-500 text-sm font-medium">{isLogin ? '還沒有帳號？' : '已經有帳號了？'} <button onClick={() => setIsLogin(!isLogin)} className="text-indigo-600 font-bold hover:text-indigo-700 ml-1 transition-colors underline decoration-2 underline-offset-4">{isLogin ? '立即註冊' : '直接登入'}</button></p></div> </div> </div> ); }
+            return ( <div className="fixed inset-0 z-[200] flex items-center justify-center p-4"> <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md transition-opacity duration-300" onClick={onClose}></div> <div className="modal-animate glass-panel w-full max-w-md p-8 rounded-3xl relative z-10 overflow-hidden shadow-2xl"> <button onClick={onClose} className="absolute top-5 right-5 p-2 rounded-full hover:bg-white/50 text-slate-400 hover:text-slate-600 transition-colors"><Icon name="x" className="w-6 h-6" /></button> <div className="text-center mb-8"><h2 className="text-3xl font-black text-slate-800 tracking-tight mb-2">{isLogin ? '歡迎回來' : '建立帳戶'}</h2><p className="text-slate-500 font-medium">{isLogin ? '登入即可同步你的資料' : '只需幾秒，開始雲端記錄'} </p></div> <form onSubmit={handleEmailAuth} className="space-y-4"> <div className="relative group"><div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors"><Icon name="mail" className="w-5 h-5" /></div><input type="email" className="w-full pl-12 pr-4 py-4 rounded-2xl modern-input text-slate-800 placeholder:text-slate-400 focus:outline-none font-medium" placeholder="電子郵件" value={email} onChange={e => setEmail(e.target.value)} required /></div> <div className="relative group"><div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors"><Icon name="lock" className="w-5 h-5" /></div><input type="password" className="w-full pl-12 pr-4 py-4 rounded-2xl modern-input text-slate-800 placeholder:text-slate-400 focus:outline-none font-medium" placeholder="密碼" value={password} onChange={e => setPassword(e.target.value)} required /></div> <button type="submit" disabled={loading} className="w-full py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-lg shadow-lg shadow-indigo-200 transform transition-all active:scale-[0.98] disabled:opacity-70 flex items-center justify-center">{loading ? '處理中...' : (isLogin ? '登入' : '註冊')}</button> </form> <div className="relative my-8"><div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200/60"></div></div><div className="relative flex justify-center text-xs uppercase tracking-wider font-bold text-slate-400"><span className="px-4 bg-white/30 backdrop-blur-sm rounded-full">或</span></div></div> <button onClick={handleGoogleLogin} disabled={loading} className="w-full py-3.5 rounded-2xl bg-white border border-slate-100 text-slate-700 font-bold hover:bg-slate-50 transition-all flex items-center justify-center gap-3 shadow-sm hover:shadow-md active:scale-[0.98] hover:translate-y-[-1px]"><img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />Google 登入</button> <div className="mt-8 text-center"><p className="text-slate-500 text-sm font-medium">{isLogin ? '還沒有帳號？' : '已經有帳號了？'} <button onClick={() => setIsLogin(!isLogin)} className="text-indigo-600 font-bold hover:text-indigo-700 ml-1 transition-colors underline decoration-2 underline-offset-4">{isLogin ? '立即註冊' : '直接登入'}</button></p></div> </div> </div> ); }
 
-        function AdminUserView({ db, onBack, systemConfig }) { 
+        function AdminUserView({ db, onBack, systemConfig, triggerIsland }) { 
             const [users, setUsers] = useState([]); 
             const [selectedUser, setSelectedUser] = useState(null); 
             const [userHomeworks, setUserHomeworks] = useState([]); 
@@ -441,35 +380,52 @@
             const [newItemDesc, setNewItemDesc] = useState('');
             const [newItemSubject, setNewItemSubject] = useState('中文');
             const [newItemDate, setNewItemDate] = useState('');
-            const { collection, getDocs, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc, addDoc, arrayUnion } = window.firebaseServices; 
+            const { collection, getDocs, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc, addDoc, arrayUnion, arrayRemove } = window.firebaseServices; 
             const allowedEmails = systemConfig?.allowedEmails || [];
 
             useEffect(() => { const fetchUsers = async () => { const q = query(collection(db, "users_public"), orderBy("lastSeen", "desc")); const snapshot = await getDocs(q); setUsers(snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() }))); }; fetchUsers(); }, [db]); 
             useEffect(() => { if (!selectedUser) return; const q = query(collection(db, "users", selectedUser.uid, "items"), orderBy("dueDate", "asc")); const unsubscribe = onSnapshot(q, (snapshot) => { setUserHomeworks(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))); }); return () => unsubscribe(); }, [selectedUser, db]); 
             
-            const handleQuickAddWhitelist = async (email) => { if(!email) return; const configRef = doc(db, "system_settings", "config"); try { await updateDoc(configRef, { allowedEmails: arrayUnion(email) }); alert(`已將 ${email} 加入白名單`); } catch(e) { console.error(e); alert("操作失敗"); } };
-            const handleAdminDelete = async (itemId) => { if(!window.confirm("確定刪除此用戶的這項紀錄？")) return; try { await deleteDoc(doc(db, "users", selectedUser.uid, "items", itemId)); } catch(e) { console.error(e); alert("刪除失敗"); } };
-            const handleAdminUpdate = async (id, data) => { try { await updateDoc(doc(db, "users", selectedUser.uid, "items", id), data); alert("更新成功"); } catch(e) { console.error(e); alert("更新失敗"); } };
+            const handleToggleWhitelist = async (email, isRemoving) => {
+                if(!email) return;
+                const configRef = doc(db, "system_settings", "config");
+                try {
+                    await updateDoc(configRef, { allowedEmails: isRemoving ? arrayRemove(email) : arrayUnion(email) });
+                    triggerIsland(isRemoving ? `已撤回 ${email} 權限` : `已授權 ${email}`, 'success');
+                } catch(e) { console.error(e); triggerIsland("操作失敗", "error"); }
+            };
+
+            const handleAdminDelete = async (itemId) => { if(!window.confirm("確定刪除此用戶的這項紀錄？")) return; try { await deleteDoc(doc(db, "users", selectedUser.uid, "items", itemId)); triggerIsland("已刪除紀錄", "success"); } catch(e) { console.error(e); triggerIsland("刪除失敗", "error"); } };
+            const handleAdminUpdate = async (id, data) => { try { await updateDoc(doc(db, "users", selectedUser.uid, "items", id), data); triggerIsland("更新成功", "success"); } catch(e) { console.error(e); triggerIsland("更新失敗", "error"); } };
             const handleAdminToggle = async (item) => { try { await updateDoc(doc(db, "users", selectedUser.uid, "items", item.id), { completed: !item.completed }); } catch(e) { console.error(e); } };
-            const handleAdminAdd = async (e) => { e.preventDefault(); if (!newItemDesc || !newItemDate) return; try { await addDoc(collection(db, "users", selectedUser.uid, "items"), { description: newItemDesc, subject: newItemSubject, dueDate: newItemDate, completed: false, type: 'homework', createdAt: new Date().toISOString() }); setNewItemDesc(''); alert("已為用戶新增功課"); } catch(e) { console.error(e); alert("新增失敗"); } };
+            const handleAdminAdd = async (e) => { e.preventDefault(); if (!newItemDesc || !newItemDate) return; try { await addDoc(collection(db, "users", selectedUser.uid, "items"), { description: newItemDesc, subject: newItemSubject, dueDate: newItemDate, completed: false, type: 'homework', createdAt: new Date().toISOString() }); setNewItemDesc(''); triggerIsland("已新增功課", "success"); } catch(e) { console.error(e); triggerIsland("新增失敗", "error"); } };
 
             return ( 
                 <div className="glass-panel rounded-3xl p-8 shadow-xl min-h-[600px] border border-white/40 page-enter"> 
                     <div className="flex items-center gap-4 mb-8 border-b border-slate-200/50 pb-6"> <button onClick={() => selectedUser ? setSelectedUser(null) : onBack()} className="p-3 bg-white/50 hover:bg-white rounded-xl transition-colors shadow-sm"><Icon name="arrow-left" className="w-5 h-5 text-slate-600" /></button> <h2 className="text-2xl font-black text-slate-800">{selectedUser ? `${selectedUser.displayName} 的紀錄` : '所有用戶管理'}</h2> </div> 
                     {!selectedUser ? ( 
                         <div className="space-y-4"> 
-                            {users.map(u => ( 
-                                <div key={u.uid} className="flex items-center justify-between p-5 rounded-2xl bg-white/60 hover:bg-white border border-white/50 hover:shadow-lg transition-all group cursor-pointer animate-item-enter" onClick={() => setSelectedUser(u)}> 
-                                    <div className="flex items-center gap-4 flex-grow">
-                                        <div className="w-12 h-12 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-black text-lg shadow-inner">{u.displayName?.[0]?.toUpperCase() || 'U'}</div>
-                                        <div><div className="font-bold text-slate-800 text-lg flex items-center gap-2">{u.displayName || '未命名'} {allowedEmails.includes(u.email) && <span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full border border-green-200">白名單</span>}</div><div className="text-sm text-slate-500 font-medium">{u.email}</div></div>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        {!allowedEmails.includes(u.email) && <button onClick={(e) => { e.stopPropagation(); handleQuickAddWhitelist(u.email); }} className="p-2 text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors" title="加入白名單"><Icon name="shield-check" className="w-5 h-5" /></button>}
-                                        <Icon name="chevron-right" className="w-5 h-5 text-slate-300 group-hover:text-indigo-500" /> 
-                                    </div>
-                                </div> 
-                            ))} 
+                            {users.map(u => {
+                                const isWhitelisted = allowedEmails.includes(u.email);
+                                return ( 
+                                    <div key={u.uid} className="flex items-center justify-between p-5 rounded-2xl bg-white/60 hover:bg-white border border-white/50 hover:shadow-lg transition-all group cursor-pointer" onClick={() => setSelectedUser(u)}> 
+                                        <div className="flex items-center gap-4 flex-grow">
+                                            <div className="w-12 h-12 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-black text-lg shadow-inner">{u.displayName?.[0]?.toUpperCase() || 'U'}</div>
+                                            <div><div className="font-bold text-slate-800 text-lg flex items-center gap-2">{u.displayName || '未命名'} {isWhitelisted && <span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full border border-green-200">白名單</span>}</div><div className="text-sm text-slate-500 font-medium">{u.email}</div></div>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <button 
+                                                onClick={(e) => { e.stopPropagation(); handleToggleWhitelist(u.email, isWhitelisted); }} 
+                                                className={`p-2.5 rounded-xl transition-colors shadow-sm ${isWhitelisted ? 'bg-red-50 text-red-500 hover:bg-red-100' : 'bg-indigo-50 text-indigo-500 hover:bg-indigo-100'}`} 
+                                                title={isWhitelisted ? "撤回權限" : "加入白名單"}
+                                            >
+                                                <Icon name={isWhitelisted ? "user-minus" : "shield-check"} className="w-5 h-5" />
+                                            </button>
+                                            <Icon name="chevron-right" className="w-5 h-5 text-slate-300 group-hover:text-indigo-500" /> 
+                                        </div>
+                                    </div> 
+                                );
+                            })} 
                             {users.length === 0 && <div className="text-center text-slate-400 py-20 font-medium">暫無用戶資料</div>} 
                         </div> 
                     ) : ( 
@@ -489,7 +445,6 @@
                                     </div>
                                 </form>
                             </div>
-
                             <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
                                 {userHomeworks.map(h => (
                                     <div key={h.id} className={`p-4 rounded-2xl border transition-all flex justify-between items-center group animate-item-enter ${h.completed ? 'bg-slate-50/50 border-slate-100 opacity-60' : 'bg-white border-slate-100 hover:border-indigo-100 hover:shadow-md'}`}>
@@ -515,29 +470,78 @@
                             </div> 
                         </div> 
                     )} 
-                    {adminEditingItem && <EditModal item={adminEditingItem} onClose={() => setAdminEditingItem(null)} onSave={handleAdminUpdate} triggerAlert={(msg) => alert(msg)} />}
+                    {adminEditingItem && <EditModal item={adminEditingItem} onClose={() => setAdminEditingItem(null)} onSave={handleAdminUpdate} triggerAlert={(msg) => triggerIsland(msg, "success")} />}
                 </div> 
             ); 
         }
 
-        function AdminSystemPanel({ db, systemConfig, timetableConfig, onBack }) { 
+        function AdminSystemPanel({ db, systemConfig, timetableConfig, onBack, triggerIsland }) { 
             const [newEmail, setNewEmail] = useState(''); 
-            const [isSubmitting, setIsSubmitting] = useState(false); 
-            const [rawTimetable, setRawTimetable] = useState(JSON.stringify(timetableConfig || DEFAULT_SCHEDULE, null, 2));
+            const [isSubmitting, setIsSubmitting] = useState(false);
+            const [activeTab, setActiveTab] = useState(1); // 1-5 for Mon-Fri
+            const [localTimetable, setLocalTimetable] = useState(timetableConfig || DEFAULT_SCHEDULE);
+            
             const { doc, updateDoc, arrayUnion, arrayRemove, setDoc } = window.firebaseServices; 
             const configRef = doc(db, "system_settings", "config"); 
             const timetableRef = doc(db, "system_settings", "timetable");
-            const updateConfig = async (key, value) => { try { await setDoc(configRef, { [key]: value }, { merge: true }); } catch (e) { console.error(e); alert("設定更新失敗"); } }; 
-            const handleAddWhitelist = async (e) => { e.preventDefault(); if (!newEmail.trim()) return; setIsSubmitting(true); try { await updateDoc(configRef, { allowedEmails: arrayUnion(newEmail.trim()) }); setNewEmail(''); } catch (e) { console.error(e); alert("新增失敗"); } setIsSubmitting(false); }; 
-            const handleRemoveWhitelist = async (email) => { if (window.confirm(`確定要移除 ${email} 嗎？`)) { await updateDoc(configRef, { allowedEmails: arrayRemove(email) }); } }; 
-            const saveTimetable = async () => { try { const parsed = JSON.parse(rawTimetable); await setDoc(timetableRef, parsed); alert("時間表已更新！"); } catch(e) { alert("JSON 格式錯誤，請檢查！"); } };
+
+            const updateConfig = async (key, value) => { try { await setDoc(configRef, { [key]: value }, { merge: true }); triggerIsland("設定已更新", "success"); } catch (e) { console.error(e); triggerIsland("設定更新失敗", "error"); } }; 
+            
+            const handleAddWhitelist = async (e) => { e.preventDefault(); if (!newEmail.trim()) return; setIsSubmitting(true); try { await updateDoc(configRef, { allowedEmails: arrayUnion(newEmail.trim()) }); setNewEmail(''); triggerIsland(`已加入 ${newEmail.trim()}`, "success"); } catch (e) { console.error(e); triggerIsland("新增失敗", "error"); } setIsSubmitting(false); }; 
+            const handleRemoveWhitelist = async (email) => { if (window.confirm(`確定要移除 ${email} 嗎？`)) { await updateDoc(configRef, { allowedEmails: arrayRemove(email) }); triggerIsland(`已移除 ${email}`, "success"); } }; 
+            
+            // New Timetable Logic
+            const handleTimetableChange = (day, index, value) => {
+                const newSchedule = { ...localTimetable };
+                newSchedule[day] = [...newSchedule[day]];
+                newSchedule[day][index] = value;
+                setLocalTimetable(newSchedule);
+            };
+
+            const saveTimetable = async () => { 
+                try { 
+                    await setDoc(timetableRef, localTimetable); 
+                    triggerIsland("時間表已儲存！", "success");
+                } catch(e) { 
+                    triggerIsland("儲存失敗", "error"); 
+                } 
+            };
+
+            const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
 
             return ( 
                 <div className="glass-panel rounded-3xl p-8 shadow-xl min-h-[600px] border border-white/40 page-enter"> 
                     <div className="flex items-center gap-4 mb-8 border-b border-slate-200/50 pb-6"><button onClick={onBack} className="p-3 bg-white/50 hover:bg-white rounded-xl transition-colors shadow-sm"><Icon name="arrow-left" className="w-5 h-5 text-slate-600" /></button><h2 className="text-2xl font-black text-slate-800">系統控制台</h2></div> 
-                    <div className="mb-10"><h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 pl-1">網站狀態控制</h3><div className="bg-white/50 rounded-2xl p-6 border border-white/50 shadow-sm"><div className="grid grid-cols-3 gap-3 mb-4">{['normal', 'updating', 'restructuring'].map(mode => (<button key={mode} onClick={() => updateConfig('maintenanceMode', mode)} className={`py-3 px-4 rounded-xl text-sm font-bold border transition-all shadow-sm ${systemConfig?.maintenanceMode === mode ? (mode === 'normal' ? 'bg-green-100/80 text-green-700 border-green-200' : mode === 'updating' ? 'bg-orange-100/80 text-orange-700 border-orange-200' : 'bg-blue-100/80 text-blue-700 border-blue-200') : 'bg-white text-slate-500 border-slate-100 hover:bg-slate-50'}`}>{mode === 'normal' ? '🟢 正常運作' : mode === 'updating' ? '🟠 網站更新中' : '🔵 資料重整中'}</button>))}</div>{systemConfig?.maintenanceMode !== 'normal' && (<div className="space-y-4 pt-4 border-t border-slate-200/50"><div><label className="block text-xs font-bold text-slate-500 mb-2">自訂維護訊息</label><input type="text" className="w-full px-4 py-3 rounded-xl modern-input text-sm font-medium" placeholder="例如：系統正在升級，請稍候..." value={systemConfig?.message || ''} onChange={(e) => updateConfig('message', e.target.value)} /></div><div><label className="block text-xs font-bold text-slate-500 mb-2">預計恢復時間</label><input type="text" className="w-full px-4 py-3 rounded-xl modern-input text-sm font-medium" placeholder="例如: 下午 4:00" value={systemConfig?.estimatedTime || ''} onChange={(e) => updateConfig('estimatedTime', e.target.value)} /></div></div>)}</div></div> 
-                    <div className="mb-10"><h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 pl-1">自訂時間表 (JSON)</h3><div className="bg-white/50 rounded-2xl p-6 border border-white/50 shadow-sm"><textarea className="w-full h-48 font-mono text-xs p-4 rounded-xl modern-input text-slate-600 mb-4" value={rawTimetable} onChange={e => setRawTimetable(e.target.value)}></textarea><button onClick={saveTimetable} className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold text-sm hover:bg-indigo-700 shadow-md active:scale-95 transition-all">儲存時間表</button><p className="text-[10px] text-slate-400 mt-3 text-center">請保持 JSON 格式：Key 為 1-5 (星期)，Value 為課程陣列。</p></div></div>
-                    <div><div className="flex items-center justify-between mb-4 px-1"><h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">白名單存取控制</h3><label className="relative inline-flex items-center cursor-pointer"><input type="checkbox" className="sr-only peer" checked={systemConfig?.whitelistEnabled || false} onChange={(e) => updateConfig('whitelistEnabled', e.target.checked)} /><div className="w-12 h-7 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div></label></div><div className={`bg-white/50 rounded-2xl p-6 border border-white/50 shadow-sm transition-all duration-300 ${!systemConfig?.whitelistEnabled ? 'opacity-50 grayscale' : ''}`}><form onSubmit={handleAddWhitelist} className="flex gap-3 mb-4"><input type="email" className="flex-1 px-4 py-3 rounded-xl modern-input text-sm font-medium" placeholder="輸入允許的 Google 電郵" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} required /><button type="submit" disabled={isSubmitting} className="bg-indigo-600 text-white px-5 py-2 rounded-xl font-bold text-sm hover:bg-indigo-700 shadow-md active:scale-95 transition-all"><Icon name="plus" className="w-5 h-5" /></button></form><div className="space-y-2 max-h-[200px] overflow-y-auto custom-scrollbar">{(systemConfig?.allowedEmails || []).map(email => (<div key={email} className="flex items-center justify-between bg-white/80 p-3 rounded-xl border border-slate-100 text-sm"><span className="text-slate-700 font-bold">{email}</span><button onClick={() => handleRemoveWhitelist(email)} className="text-slate-400 hover:text-red-500 transition-colors"><Icon name="trash-2" className="w-4 h-4" /></button></div>))}{(!systemConfig?.allowedEmails || systemConfig.allowedEmails.length === 0) && <div className="text-center text-slate-400 text-xs py-4">暫無白名單用戶</div>}</div></div></div> </div> ); }
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                             <div className="mb-8"><h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 pl-1">網站狀態控制</h3><div className="bg-white/50 rounded-2xl p-6 border border-white/50 shadow-sm"><div className="grid grid-cols-3 gap-3 mb-4">{['normal', 'updating', 'restructuring'].map(mode => (<button key={mode} onClick={() => updateConfig('maintenanceMode', mode)} className={`py-3 px-2 rounded-xl text-xs font-bold border transition-all shadow-sm ${systemConfig?.maintenanceMode === mode ? (mode === 'normal' ? 'bg-green-100/80 text-green-700 border-green-200' : mode === 'updating' ? 'bg-orange-100/80 text-orange-700 border-orange-200' : 'bg-blue-100/80 text-blue-700 border-blue-200') : 'bg-white text-slate-500 border-slate-100 hover:bg-slate-50'}`}>{mode === 'normal' ? '🟢 正常運作' : mode === 'updating' ? '🟠 更新中' : '🔵 維護中'}</button>))}</div><div className="space-y-4 pt-4 border-t border-slate-200/50"><div><label className="block text-xs font-bold text-slate-500 mb-2">更新/維護 標題</label><div className="flex gap-2 mb-2"><input type="text" className="w-full px-4 py-2 rounded-xl modern-input text-sm" placeholder="更新標題..." value={systemConfig?.title_updating || ''} onChange={(e) => updateConfig('title_updating', e.target.value)} /><input type="text" className="w-full px-4 py-2 rounded-xl modern-input text-sm" placeholder="維護標題..." value={systemConfig?.title_restructuring || ''} onChange={(e) => updateConfig('title_restructuring', e.target.value)} /></div><label className="block text-xs font-bold text-slate-500 mb-2">更新/維護 訊息</label><input type="text" className="w-full px-4 py-3 rounded-xl modern-input text-sm font-medium" placeholder="自訂訊息..." value={systemConfig?.message || ''} onChange={(e) => updateConfig('message', e.target.value)} /></div><div><label className="block text-xs font-bold text-slate-500 mb-2">預計恢復時間</label><input type="text" className="w-full px-4 py-3 rounded-xl modern-input text-sm font-medium" placeholder="例如: 下午 4:00" value={systemConfig?.estimatedTime || ''} onChange={(e) => updateConfig('estimatedTime', e.target.value)} /></div></div></div></div> 
+                             <div><div className="flex items-center justify-between mb-4 px-1"><h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">白名單存取控制</h3><label className="relative inline-flex items-center cursor-pointer"><input type="checkbox" className="sr-only peer" checked={systemConfig?.whitelistEnabled || false} onChange={(e) => updateConfig('whitelistEnabled', e.target.checked)} /><div className={`w-14 h-8 rounded-full peer peer-focus:outline-none transition-colors ${systemConfig?.whitelistEnabled ? 'bg-indigo-600' : 'bg-slate-300'}`}></div><div className={`absolute top-1 left-1 bg-white border-gray-300 border rounded-full h-6 w-6 transition-transform ${systemConfig?.whitelistEnabled ? 'translate-x-full border-white' : ''}`}></div></label></div><div className={`bg-white/50 rounded-2xl p-6 border border-white/50 shadow-sm transition-all duration-300 ${!systemConfig?.whitelistEnabled ? 'opacity-75 grayscale' : ''}`}><div className="mb-4 text-xs font-bold text-slate-500"> {systemConfig?.whitelistEnabled ? '🟢 模式開啟：僅白名單用戶可進入' : '🔴 模式關閉：網站已關閉，所有人(除管理員)不可進入'} </div><div className="mb-4"> <label className="block text-xs font-bold text-slate-500 mb-2">阻擋畫面標題 (白名單開啟時)</label> <input type="text" className="w-full px-4 py-2 rounded-xl modern-input text-sm mb-2" placeholder="預設：限制測試階段" value={systemConfig?.title_access_denied || ''} onChange={(e) => updateConfig('title_access_denied', e.target.value)} /> <label className="block text-xs font-bold text-slate-500 mb-2">關站畫面標題 (白名單關閉時)</label> <input type="text" className="w-full px-4 py-2 rounded-xl modern-input text-sm" placeholder="預設：系統暫停服務" value={systemConfig?.title_site_closed || ''} onChange={(e) => updateConfig('title_site_closed', e.target.value)} /> </div><form onSubmit={handleAddWhitelist} className="flex gap-3 mb-4"><input type="email" className="flex-1 px-4 py-3 rounded-xl modern-input text-sm font-medium" placeholder="新增 Email..." value={newEmail} onChange={(e) => setNewEmail(e.target.value)} required /><button type="submit" disabled={isSubmitting} className="bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold text-sm hover:bg-indigo-700 shadow-md active:scale-95 transition-all"><Icon name="plus" className="w-5 h-5" /></button></form><div className="space-y-2 max-h-[150px] overflow-y-auto custom-scrollbar">{(systemConfig?.allowedEmails || []).map(email => (<div key={email} className="flex items-center justify-between bg-white/80 p-3 rounded-xl border border-slate-100 text-sm"><span className="text-slate-700 font-bold">{email}</span><button onClick={() => handleRemoveWhitelist(email)} className="text-slate-400 hover:text-red-500 transition-colors"><Icon name="trash-2" className="w-4 h-4" /></button></div>))}{(!systemConfig?.allowedEmails || systemConfig.allowedEmails.length === 0) && <div className="text-center text-slate-400 text-xs py-4">暫無白名單用戶</div>}</div></div></div>
+                        </div>
+
+                        <div className="mt-8 col-span-1 md:col-span-2">
+                            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 pl-1">簡易時間表編輯</h3>
+                            <div className="bg-white/50 rounded-2xl p-6 border border-white/50 shadow-sm">
+                                <div className="flex gap-2 mb-6 overflow-x-auto scrollbar-hide">
+                                    {[1, 2, 3, 4, 5].map(day => (
+                                        <button key={day} onClick={() => setActiveTab(day)} className={`px-5 py-2 rounded-xl font-bold text-sm transition-all whitespace-nowrap ${activeTab === day ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-white text-slate-500 hover:bg-indigo-50'}`}>星期{weekDays[day]}</button>
+                                    ))}
+                                </div>
+                                <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+                                    {localTimetable[activeTab]?.map((subject, index) => (
+                                        <div key={index} className="flex flex-col gap-1">
+                                            <label className="text-[10px] font-bold text-slate-400 pl-1">第 {index + 1} 節</label>
+                                            <input type="text" className="w-full px-3 py-2 rounded-lg modern-input text-sm font-bold text-slate-700 text-center" value={subject} onChange={(e) => handleTimetableChange(activeTab, index, e.target.value)} />
+                                        </div>
+                                    ))}
+                                </div>
+                                <button onClick={saveTimetable} className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold text-sm hover:bg-indigo-700 shadow-md active:scale-95 transition-all flex items-center justify-center gap-2"><Icon name="save" className="w-4 h-4" /> 儲存變更</button>
+                            </div>
+                        </div>
+                    </div> 
+                </div> 
+            ); 
+        }
 
         function Timetable({ currentDay, subjects, onDayChange }) { 
             const weekDays = ['日', '一', '二', '三', '四', '五', '六']; 
@@ -656,6 +660,8 @@
             
             const [showNameSetup, setShowNameSetup] = useState(false);
             const [nameSetupLoading, setNameSetupLoading] = useState(false);
+            // Dynamic Island State
+            const [island, setIsland] = useState({ message: '', type: 'success', isVisible: false });
 
             const fileInputRef = useRef(null);
             const [currentTimetableDay, setCurrentTimetableDay] = useState(new Date().getDay() || 1); 
@@ -668,6 +674,11 @@
             const triggerConfirm = (message, onConfirmAction) => setNotification({ isOpen: true, type: 'confirm', message, onConfirm: onConfirmAction });
             const closeNotification = () => setNotification(prev => ({ ...prev, isOpen: false }));
             const handleNotificationConfirm = () => { if (notification.onConfirm) notification.onConfirm(); closeNotification(); };
+            
+            const triggerIsland = (message, type = 'success') => {
+                setIsland({ message, type, isVisible: true });
+                setTimeout(() => setIsland(prev => ({ ...prev, isVisible: false })), 3000);
+            };
 
             const handleFilterChange = (newFilter) => { if (newFilter === filterSubject) return; setIsListVisible(false); setTimeout(() => { setFilterSubject(newFilter); setIsListVisible(true); }, 200); };
             const handleSortChange = (newSort) => { if (newSort === sortOption) return; setIsListVisible(false); setTimeout(() => { setSortOption(newSort); setIsListVisible(true); }, 200); };
@@ -721,11 +732,11 @@
                 const unsubscribe = onSnapshot(q, (snapshot) => { snapshot.docChanges().forEach(async (change) => { 
                     if (change.type === "added") { 
                         const publicData = change.doc.data(); const publicId = change.doc.id; const userItemsRef = collection(db, "users", user.uid, "items"); const dupQuery = query(userItemsRef, where("publicRefId", "==", publicId)); 
-                        try { const dupSnapshot = await getDocs(dupQuery); if (dupSnapshot.empty) { await addDoc(userItemsRef, { ...publicData, publicRefId: publicId, completed: false, forceExpired: publicData.forceExpired || false }); triggerAlert(`收到新功課：[${publicData.subject || '其他'}] ${publicData.description}`); } } catch (e) { console.error("Auto-sync error:", e); } 
+                        try { const dupSnapshot = await getDocs(dupQuery); if (dupSnapshot.empty) { await addDoc(userItemsRef, { ...publicData, publicRefId: publicId, completed: false, forceExpired: publicData.forceExpired || false }); triggerIsland(`收到新功課：${publicData.subject}`, "success"); } } catch (e) { console.error("Auto-sync error:", e); } 
                     } 
                     if (change.type === "removed") { 
                         const publicId = change.doc.id; const userItemsRef = collection(db, "users", user.uid, "items"); const dupQuery = query(userItemsRef, where("publicRefId", "==", publicId)); 
-                        try { const dupSnapshot = await getDocs(dupQuery); for (const docSnap of dupSnapshot.docs) { await deleteDoc(docSnap.ref); } if (!dupSnapshot.empty) { triggerAlert("管理員已取消了一項功課，已從列表中移除。"); } } catch (e) { console.error("Auto-delete sync error:", e); } 
+                        try { const dupSnapshot = await getDocs(dupQuery); for (const docSnap of dupSnapshot.docs) { await deleteDoc(docSnap.ref); } if (!dupSnapshot.empty) { triggerIsland("管理員移除了一項功課", "success"); } } catch (e) { console.error("Auto-delete sync error:", e); } 
                     } 
                     if (change.type === "modified") { 
                         const publicData = change.doc.data(); const userItemsRef = collection(db, "users", user.uid, "items"); const dupQuery = query(userItemsRef, where("publicRefId", "==", change.doc.id)); 
@@ -752,7 +763,7 @@
                 if ((!description.trim() && !selectedImage) || !dueDate) { triggerAlert("請輸入功課內容或選擇圖片，並設定日期！"); return; }
                 const newItem = { type: inputType, subject, description: description.trim(), image: selectedImage, dueDate, completed: false, createdAt: new Date().toISOString() }; 
                 try { 
-                    if (isBroadcast && isAdmin) { newItem.senderName = user.displayName || '管理員'; await addDoc(collection(db, "public_assignments"), newItem); triggerAlert("已發放功課給全班！"); } 
+                    if (isBroadcast && isAdmin) { newItem.senderName = user.displayName || '管理員'; await addDoc(collection(db, "public_assignments"), newItem); triggerIsland("已發放功課給全班！", "success"); } 
                     else { await addDoc(collection(db, "users", user.uid, "items"), newItem); } 
                     setDescription(''); setSelectedImage(null); if (fileInputRef.current) fileInputRef.current.value = ""; setDueDate(getNextSchoolDay()); setViewMode('current'); setIsBroadcast(false); 
                 } catch (error) { console.error(error); triggerAlert("新增失敗，請稍後再試"); } 
@@ -766,6 +777,7 @@
                         try { 
                             const itemRef = doc(db, "users", user.uid, "items", id); 
                             await updateDoc(itemRef, { completed: true }); 
+                            triggerIsland("完成！", "success");
                         } catch (e) { console.error(e); } 
                         setExitingIds(prev => prev.filter(eid => eid !== id)); 
                     }, 500); // Wait for animation
@@ -776,8 +788,8 @@
                     } catch (e) { console.error(e); } 
                 } 
             };
-            const handleUpdateItem = async (id, updatedData) => { if (handleGuestAction()) return; try { const itemRef = doc(db, "users", user.uid, "items", id); await updateDoc(itemRef, updatedData); triggerAlert("更新成功！"); } catch (e) { console.error(e); triggerAlert("更新失敗"); throw e; } };
-            const handleForceExpire = (publicId, currentStatus) => { if (handleGuestAction()) return; const action = currentStatus ? "取消過期" : "標記為過期"; triggerConfirm(`確定要將此功課${action}？(全班都會更新)`, async () => { try { await updateDoc(doc(db, "public_assignments", publicId), { forceExpired: !currentStatus }); triggerAlert(`已${action}`); } catch (e) { console.error(e); triggerAlert("操作失敗"); } }); };
+            const handleUpdateItem = async (id, updatedData) => { if (handleGuestAction()) return; try { const itemRef = doc(db, "users", user.uid, "items", id); await updateDoc(itemRef, updatedData); triggerIsland("更新成功！", "success"); } catch (e) { console.error(e); triggerAlert("更新失敗"); throw e; } };
+            const handleForceExpire = (publicId, currentStatus) => { if (handleGuestAction()) return; const action = currentStatus ? "取消過期" : "標記為過期"; triggerConfirm(`確定要將此功課${action}？(全班都會更新)`, async () => { try { await updateDoc(doc(db, "public_assignments", publicId), { forceExpired: !currentStatus }); triggerIsland(`已${action}`, "success"); } catch (e) { console.error(e); triggerAlert("操作失敗"); } }); };
             const deleteItem = (id) => { 
                 if (handleGuestAction()) return; 
                 triggerConfirm('確定要刪除這項紀錄？', async () => { 
@@ -788,7 +800,7 @@
                     }, 500);
                 }); 
             };
-            const deletePublicItem = (publicId, privateId) => { if (handleGuestAction()) return; triggerConfirm('⚠️ 確定要刪除全班的這份功課？(這將同時移除所有同學的紀錄)', async () => { try { await deleteDoc(doc(db, "public_assignments", publicId)); if (privateId) { await deleteDoc(doc(db, "users", user.uid, "items", privateId)); } triggerAlert("已從公共資料庫及您的清單刪除"); } catch (e) { console.error(e); triggerAlert("刪除失敗"); } }); };
+            const deletePublicItem = (publicId, privateId) => { if (handleGuestAction()) return; triggerConfirm('⚠️ 確定要刪除全班的這份功課？(這將同時移除所有同學的紀錄)', async () => { try { await deleteDoc(doc(db, "public_assignments", publicId)); if (privateId) { await deleteDoc(doc(db, "users", user.uid, "items", privateId)); } triggerIsland("已刪除全班功課", "success"); } catch (e) { console.error(e); triggerAlert("刪除失敗"); } }); };
             const handleSignOut = () => { triggerConfirm('確定要登出？', async () => { try { await signOut(auth); setActiveModal(null); setIsAdmin(false); setViewMode('current'); } catch(e) { console.error(e); } }); };
             const handleDashboardClick = (modalType) => { if (!user) { setIsAuthModalOpen(true); } else { setActiveModal(modalType); } };
 
@@ -799,9 +811,26 @@
 
             if (authLoading || configLoading) return <div className="min-h-screen flex items-center justify-center"><div className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin"></div></div>;
 
-            if (maintenanceMode !== 'normal' && !isAdmin && !isWhitelisted) { return (<div className="min-h-screen relative"><BlockScreen type={maintenanceMode} estimatedTime={systemConfig?.estimatedTime} customMessage={systemConfig?.message} onLogin={() => setIsAuthModalOpen(true)} user={user} /><AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} triggerAlert={triggerAlert} triggerConfirm={triggerConfirm} /></div>); }
-            if (whitelistEnabled && !isAdmin && !isWhitelisted) { return (<div className="min-h-screen relative"><BlockScreen type="access_denied" onLogin={() => setIsAuthModalOpen(true)} user={user} /><AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} triggerAlert={triggerAlert} triggerConfirm={triggerConfirm} /></div>); }
+            // Updated Logic for BlockScreen
+            // If maintenanceMode is NOT normal, block everyone except Admin + Whitelisted (assuming maintenance allows testers) -> Actually usually only Admin.
+            // Let's stick to: Maintenance blocks everyone except Admin.
+            if (maintenanceMode !== 'normal' && !isAdmin) { 
+                return (<div className="min-h-screen relative"><BlockScreen type={maintenanceMode} estimatedTime={systemConfig?.estimatedTime} customMessage={systemConfig?.message} systemConfig={systemConfig} onLogin={() => setIsAuthModalOpen(true)} user={user} /><AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} triggerAlert={triggerAlert} triggerConfirm={triggerConfirm} /></div>); 
+            }
 
+            // Whitelist Logic:
+            // If Whitelist Enabled (TRUE) -> Block if not Admin AND not Whitelisted (Access Denied).
+            // If Whitelist Disabled (FALSE) -> Block EVERYONE except Admin (Site Closed).
+            if (!isAdmin) {
+                if (!whitelistEnabled) {
+                    // Site is CLOSED
+                    return (<div className="min-h-screen relative"><BlockScreen type="closed" systemConfig={systemConfig} onLogin={() => setIsAuthModalOpen(true)} user={user} /><AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} triggerAlert={triggerAlert} triggerConfirm={triggerConfirm} /></div>);
+                } else if (!isWhitelisted) {
+                    // Site is OPEN but restricted to Whitelist
+                    return (<div className="min-h-screen relative"><BlockScreen type="access_denied" systemConfig={systemConfig} onLogin={() => setIsAuthModalOpen(true)} user={user} /><AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} triggerAlert={triggerAlert} triggerConfirm={triggerConfirm} /></div>);
+                }
+            }
+            
             // Define renderItemCard here
             const renderItemCard = (item, index) => {
                 const daysLeft = getDaysRemaining(item.dueDate); 
@@ -934,6 +963,7 @@
 
             return (
                 <div className="min-h-screen p-4 sm:p-6 md:p-8 font-sans text-slate-800 relative overflow-x-hidden">
+                    <DynamicIsland message={island.message} type={island.type} isVisible={island.isVisible} />
                     <div className="max-w-3xl mx-auto relative z-10">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4 page-enter">
                             <div>
@@ -957,7 +987,7 @@
                             </div>
                         </div>
 
-                        {viewMode === 'system_admin' ? ( <AdminSystemPanel db={db} systemConfig={systemConfig} timetableConfig={timetableConfig} onBack={() => setViewMode('current')} /> ) : viewMode === 'admin_users' ? ( <AdminUserView db={db} onBack={() => setViewMode('current')} systemConfig={systemConfig} /> ) : viewMode === 'timetable' ? ( <Timetable currentDay={currentTimetableDay} subjects={timetableConfig || DEFAULT_SCHEDULE} onDayChange={setCurrentTimetableDay} /> ) : (
+                        {viewMode === 'system_admin' ? ( <AdminSystemPanel db={db} systemConfig={systemConfig} timetableConfig={timetableConfig} onBack={() => setViewMode('current')} triggerIsland={triggerIsland} /> ) : viewMode === 'admin_users' ? ( <AdminUserView db={db} onBack={() => setViewMode('current')} systemConfig={systemConfig} triggerIsland={triggerIsland} /> ) : viewMode === 'timetable' ? ( <Timetable currentDay={currentTimetableDay} subjects={timetableConfig || DEFAULT_SCHEDULE} onDayChange={setCurrentTimetableDay} /> ) : (
                             <>
                                 {viewMode === 'current' && (
                                     <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 ${guestStyle}`}>
