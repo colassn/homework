@@ -222,7 +222,6 @@
 
         // --- Components ---
         function BlockScreen({ type, estimatedTime, customMessage, systemConfig, onLogin, user }) {
-            // Logic priority: Custom Message passed > Config Message > Default
             let title = systemConfig?.title_access_denied || '限制測試階段';
             let message = customMessage || '感謝您造訪電子手冊。\n\n為確保服務品質與穩定性，本平台目前僅對受邀的白名單用戶開放。';
             let icon = 'shield-alert';
@@ -238,16 +237,11 @@
                 icon = 'database';
                 iconColor = 'text-blue-500';
                 message = customMessage || '資料庫正在進行重整優化，期間暫停服務。\n感謝您的耐心等待。';
-            } else if (type === 'closed') { 
-                title = systemConfig?.title_site_closed || '暫停服務';
-                icon = 'power-off';
-                iconColor = 'text-slate-400';
-                message = customMessage || '管理員已暫時關閉系統訪問。\n請稍後再試。';
-            } else if (type === 'access_denied') {
-                 // Already set defaults above, but ensuring override works
-                 title = systemConfig?.title_access_denied || '限制測試階段';
-            }
-
+            } 
+            
+            // "Public Operation" means everyone can use. BlockScreen is NOT shown for Public.
+            // But if user requested "whitelist OFF" -> "Closed", I use maintenance mode.
+            
             return (
                 <div className="fixed inset-0 z-40 flex flex-col items-center justify-center p-6 text-center overflow-hidden">
                     <div className="absolute inset-0 bg-white/70 backdrop-blur-3xl z-0"></div>
@@ -284,6 +278,60 @@
                             <input type="text" className="w-full px-4 py-4 rounded-2xl modern-input text-center font-bold text-xl text-slate-800 placeholder-slate-300 focus:outline-none" placeholder="輸入名字..." value={name} onChange={e => setName(e.target.value)} autoFocus required />
                             <button type="submit" disabled={loading} className="w-full py-4 rounded-2xl bg-indigo-600 text-white font-bold text-lg hover:bg-indigo-700 transition-all shadow-lg hover:shadow-indigo-200 active:scale-95 disabled:opacity-70 hover:translate-y-[-2px]">{loading ? '設定中...' : '開始使用'}</button>
                         </form>
+                    </div>
+                </div>
+            );
+        }
+
+        function TimetableEditorModal({ onClose, timetableConfig, triggerIsland }) {
+            const [activeTab, setActiveTab] = useState(1);
+            const [localTimetable, setLocalTimetable] = useState(timetableConfig || DEFAULT_SCHEDULE);
+            const { doc, setDoc, db } = window.firebaseServices;
+            const timetableRef = doc(db, "system_settings", "timetable");
+
+            const handleTimetableChange = (day, index, value) => {
+                const newSchedule = { ...localTimetable };
+                newSchedule[day] = [...newSchedule[day]];
+                newSchedule[day][index] = value;
+                setLocalTimetable(newSchedule);
+            };
+
+            const saveTimetable = async () => { 
+                try { 
+                    await setDoc(timetableRef, localTimetable); 
+                    triggerIsland("時間表已儲存！", "success");
+                    onClose();
+                } catch(e) { 
+                    triggerIsland("儲存失敗", "error"); 
+                } 
+            };
+            
+            const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
+
+            return (
+                <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md transition-opacity" onClick={onClose}></div>
+                    <div className="modal-animate glass-panel w-full max-w-2xl p-0 relative z-10 overflow-hidden shadow-2xl rounded-3xl">
+                        <div className="p-6 border-b border-white/20 flex justify-between items-center bg-white/30 backdrop-blur-md"> 
+                            <h3 className="text-xl font-black text-slate-800 flex items-center gap-2"><Icon name="calendar-days" className="w-6 h-6 text-indigo-600" /> 編輯時間表</h3> 
+                            <button onClick={onClose} className="p-2 hover:bg-white/50 rounded-full transition-colors"><Icon name="x" className="w-6 h-6 text-slate-500" /></button> 
+                        </div>
+                        <div className="p-6 bg-white/50">
+                             <div className="flex gap-2 mb-6 overflow-x-auto scrollbar-hide pb-2">
+                                {[1, 2, 3, 4, 5].map(day => (
+                                    <button key={day} onClick={() => setActiveTab(day)} className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap shadow-sm ${activeTab === day ? 'bg-indigo-600 text-white shadow-indigo-200' : 'bg-white text-slate-500 hover:bg-indigo-50'}`}>星期{weekDays[day]}</button>
+                                ))}
+                            </div>
+                            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6 max-h-[50vh] overflow-y-auto custom-scrollbar pr-2">
+                                {localTimetable[activeTab]?.map((subject, index) => (
+                                    <div key={index} className="flex flex-col gap-1">
+                                        <label className="text-[10px] font-bold text-slate-400 pl-1">第 {index + 1} 節</label>
+                                        <input type="text" className="w-full px-3 py-2 rounded-lg modern-input text-sm font-bold text-slate-700 text-center" value={subject} onChange={(e) => handleTimetableChange(activeTab, index, e.target.value)} />
+                                    </div>
+                                ))}
+                            </div>
+                            <button onClick={saveTimetable} className="w-full bg-indigo-600 text-white py-3.5 rounded-xl font-bold text-sm hover:bg-indigo-700 shadow-md active:scale-95 transition-all flex items-center justify-center gap-2"><Icon name="save" className="w-4 h-4" /> 儲存變更</button>
+                        </div>
                     </div>
                 </div>
             );
@@ -386,7 +434,13 @@
             const [newItemDesc, setNewItemDesc] = useState('');
             const [newItemSubject, setNewItemSubject] = useState('中文');
             const [newItemDate, setNewItemDate] = useState('');
-            const { collection, getDocs, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc, addDoc, arrayUnion, arrayRemove } = window.firebaseServices; 
+            
+            // New state for adding user
+            const [showAddUserForm, setShowAddUserForm] = useState(false);
+            const [newUserEmail, setNewUserEmail] = useState('');
+            const [newUserPassword, setNewUserPassword] = useState('');
+            
+            const { collection, getDocs, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc, addDoc, arrayUnion, arrayRemove, createUserWithEmailAndPassword } = window.firebaseServices; 
             const allowedEmails = systemConfig?.allowedEmails || [];
 
             useEffect(() => { const fetchUsers = async () => { const q = query(collection(db, "users_public"), orderBy("lastSeen", "desc")); const snapshot = await getDocs(q); setUsers(snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() }))); }; fetchUsers(); }, [db]); 
@@ -406,11 +460,75 @@
             const handleAdminToggle = async (item) => { try { await updateDoc(doc(db, "users", selectedUser.uid, "items", item.id), { completed: !item.completed }); } catch(e) { console.error(e); } };
             const handleAdminAdd = async (e) => { e.preventDefault(); if (!newItemDesc || !newItemDate) return; try { await addDoc(collection(db, "users", selectedUser.uid, "items"), { description: newItemDesc, subject: newItemSubject, dueDate: newItemDate, completed: false, type: 'homework', createdAt: new Date().toISOString() }); setNewItemDesc(''); triggerIsland("已新增功課", "success"); } catch(e) { console.error(e); triggerIsland("新增失敗", "error"); } };
 
+            // DELETE ALL USER DATA logic
+            const handleDeleteUserFull = async (targetUser) => {
+                const confirmDelete = window.confirm(`⚠️ 危險操作！\n\n確定要刪除 ${targetUser.email} 的所有資料嗎？\n這將清除該用戶的所有功課紀錄和個人資料。\n\n(注意：這不會刪除他們的登入帳號，但會清空他們的所有內容)`);
+                if (!confirmDelete) return;
+
+                triggerIsland("正在刪除用戶資料...", "success");
+                try {
+                    // 1. Delete all items in subcollection
+                    const itemsRef = collection(db, "users", targetUser.uid, "items");
+                    const itemsSnapshot = await getDocs(itemsRef);
+                    const deletePromises = itemsSnapshot.docs.map(doc => deleteDoc(doc.ref));
+                    await Promise.all(deletePromises);
+
+                    // 2. Delete public profile
+                    await deleteDoc(doc(db, "users_public", targetUser.uid));
+                    
+                    // 3. Remove from whitelist if present
+                    const configRef = doc(db, "system_settings", "config");
+                    await updateDoc(configRef, { allowedEmails: arrayRemove(targetUser.email) });
+
+                    triggerIsland("用戶資料已清空", "success");
+                    setSelectedUser(null); // Go back to list
+                } catch (e) {
+                    console.error(e);
+                    triggerIsland("刪除部分失敗，請檢查權限", "error");
+                }
+            };
+            
+            // Create User Logic
+            const handleCreateUser = async (e) => {
+                e.preventDefault();
+                const confirmCreate = window.confirm(`⚠️ 注意：建立新用戶會自動將您登出，並登入新帳號。\n\n您確定要繼續嗎？請確保您知道管理員帳號密碼以便稍後登回。`);
+                if (!confirmCreate) return;
+
+                try {
+                    await createUserWithEmailAndPassword(auth, newUserEmail, newUserPassword);
+                    // Auth state change will handle the rest (user will be logged in as new user)
+                } catch (error) {
+                    console.error(error);
+                    triggerIsland("建立失敗: " + error.message, "error");
+                }
+            };
+
             return ( 
                 <div className="glass-panel rounded-3xl p-8 shadow-xl min-h-[600px] border border-white/40 page-enter"> 
                     <div className="flex items-center gap-4 mb-8 border-b border-slate-200/50 pb-6"> <button onClick={() => selectedUser ? setSelectedUser(null) : onBack()} className="p-3 bg-white/50 hover:bg-white rounded-xl transition-colors shadow-sm"><Icon name="arrow-left" className="w-5 h-5 text-slate-600" /></button> <h2 className="text-2xl font-black text-slate-800">{selectedUser ? `${selectedUser.displayName} 的紀錄` : '所有用戶管理'}</h2> </div> 
                     {!selectedUser ? ( 
-                        <div className="space-y-4"> 
+                        <div className="space-y-4">
+                            {/* Create User Button/Form Toggle */}
+                            <div className="mb-6">
+                                {!showAddUserForm ? (
+                                    <button onClick={() => setShowAddUserForm(true)} className="w-full py-3 rounded-xl border-2 border-dashed border-indigo-200 text-indigo-500 font-bold hover:bg-indigo-50 hover:border-indigo-300 transition-all flex items-center justify-center gap-2">
+                                        <Icon name="user-plus" className="w-5 h-5" /> 建立新用戶 (登入帳號)
+                                    </button>
+                                ) : (
+                                    <div className="bg-indigo-50 p-4 rounded-2xl border border-indigo-100 animate-item-enter">
+                                        <div className="flex justify-between items-center mb-3">
+                                            <h4 className="font-bold text-indigo-800">建立新帳號</h4>
+                                            <button onClick={() => setShowAddUserForm(false)} className="text-slate-400 hover:text-slate-600"><Icon name="x" className="w-4 h-4" /></button>
+                                        </div>
+                                        <form onSubmit={handleCreateUser} className="space-y-3">
+                                            <input type="email" placeholder="Email" className="w-full p-2 rounded-lg border border-indigo-200 text-sm" value={newUserEmail} onChange={e => setNewUserEmail(e.target.value)} required />
+                                            <input type="password" placeholder="密碼" className="w-full p-2 rounded-lg border border-indigo-200 text-sm" value={newUserPassword} onChange={e => setNewUserPassword(e.target.value)} required />
+                                            <button type="submit" className="w-full py-2 bg-indigo-600 text-white rounded-lg font-bold text-sm hover:bg-indigo-700">建立並登入</button>
+                                        </form>
+                                    </div>
+                                )}
+                            </div>
+
                             {users.map(u => {
                                 const isWhitelisted = allowedEmails.includes(u.email);
                                 return ( 
@@ -425,7 +543,7 @@
                                                 className={`p-3 rounded-xl transition-colors shadow-sm ${isWhitelisted ? 'bg-red-50 text-red-500 hover:bg-red-100' : 'bg-indigo-50 text-indigo-500 hover:bg-indigo-100'}`} 
                                                 title={isWhitelisted ? "撤回權限" : "加入白名單"}
                                             >
-                                                <Icon name={isWhitelisted ? "trash-2" : "shield-check"} className="w-5 h-5" />
+                                                <Icon name={isWhitelisted ? "shield-off" : "shield-check"} className="w-5 h-5" />
                                             </button>
                                             <Icon name="chevron-right" className="w-5 h-5 text-slate-300 group-hover:text-indigo-500" /> 
                                         </div>
@@ -436,6 +554,13 @@
                         </div> 
                     ) : ( 
                         <div className="space-y-8 page-enter"> 
+                             {/* Delete User Section */}
+                             <div className="flex justify-end">
+                                <button onClick={() => handleDeleteUserFull(selectedUser)} className="text-red-500 hover:text-red-700 font-bold text-xs flex items-center gap-1 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors">
+                                    <Icon name="trash-2" className="w-4 h-4" /> 刪除此帳戶資料
+                                </button>
+                             </div>
+
                             <div className="bg-indigo-50/50 p-6 rounded-2xl border border-indigo-100/50 backdrop-blur-sm">
                                 <h4 className="text-sm font-bold text-indigo-800 uppercase tracking-wider mb-4 flex items-center gap-2"><Icon name="plus-circle" className="w-4 h-4" /> 為此用戶新增項目</h4>
                                 <form onSubmit={handleAdminAdd} className="flex flex-col gap-3">
@@ -484,163 +609,71 @@
         function AdminSystemPanel({ db, systemConfig, timetableConfig, onBack, triggerIsland }) { 
             const [newEmail, setNewEmail] = useState(''); 
             const [isSubmitting, setIsSubmitting] = useState(false);
-            const [activeTab, setActiveTab] = useState(1);
-            const [localTimetable, setLocalTimetable] = useState(timetableConfig || DEFAULT_SCHEDULE);
-            
-            // Determine current mode for UI state
-            const currentMode = systemConfig?.maintenanceMode !== 'normal' 
-                ? 'maintenance' 
-                : (systemConfig?.whitelistEnabled ? 'private' : 'public');
-
+            const [rawTimetable, setRawTimetable] = useState(JSON.stringify(timetableConfig || DEFAULT_SCHEDULE, null, 2));
             const { doc, updateDoc, arrayUnion, arrayRemove, setDoc } = window.firebaseServices; 
             const configRef = doc(db, "system_settings", "config"); 
             const timetableRef = doc(db, "system_settings", "timetable");
 
-            // Simplified Mode Switcher
+            const currentMode = systemConfig?.maintenanceMode !== 'normal' 
+                ? 'maintenance' 
+                : (systemConfig?.whitelistEnabled ? 'private' : 'public');
+
             const changeSystemMode = async (mode) => {
                 let updates = {};
                 let message = "";
                 if (mode === 'public') {
                     updates = { maintenanceMode: 'normal', whitelistEnabled: false };
-                    message = "已切換至 公開模式";
+                    message = "已切換至 公開營運";
                 } else if (mode === 'private') {
                     updates = { maintenanceMode: 'normal', whitelistEnabled: true };
-                    message = "已切換至 限制測試模式";
+                    message = "已切換至 限制測試";
                 } else if (mode === 'maintenance') {
-                    updates = { maintenanceMode: 'updating', whitelistEnabled: true }; // Enforce whitelist in background for safety
-                    message = "已切換至 系統維護模式";
+                    updates = { maintenanceMode: 'updating', whitelistEnabled: true };
+                    message = "已切換至 系統維護";
                 }
-                
-                try { 
-                    await setDoc(configRef, updates, { merge: true }); 
-                    triggerIsland(message, "success"); 
-                } catch (e) { 
-                    console.error(e); 
-                    triggerIsland("模式切換失敗", "error"); 
-                }
+                try { await setDoc(configRef, updates, { merge: true }); triggerIsland(message, "success"); } catch (e) { console.error(e); triggerIsland("模式切換失敗", "error"); }
             };
             
             const updateConfig = async (key, value) => { try { await setDoc(configRef, { [key]: value }, { merge: true }); triggerIsland("設定已更新", "success"); } catch (e) { console.error(e); triggerIsland("設定更新失敗", "error"); } }; 
-            
             const handleAddWhitelist = async (e) => { e.preventDefault(); if (!newEmail.trim()) return; setIsSubmitting(true); try { await updateDoc(configRef, { allowedEmails: arrayUnion(newEmail.trim()) }); setNewEmail(''); triggerIsland(`已加入 ${newEmail.trim()}`, "success"); } catch (e) { console.error(e); triggerIsland("新增失敗", "error"); } setIsSubmitting(false); }; 
             const handleRemoveWhitelist = async (email) => { if (window.confirm(`確定要移除 ${email} 嗎？`)) { await updateDoc(configRef, { allowedEmails: arrayRemove(email) }); triggerIsland(`已移除 ${email}`, "success"); } }; 
-            
-            const handleTimetableChange = (day, index, value) => {
-                const newSchedule = { ...localTimetable };
-                newSchedule[day] = [...newSchedule[day]];
-                newSchedule[day][index] = value;
-                setLocalTimetable(newSchedule);
-            };
-
-            const saveTimetable = async () => { 
-                try { 
-                    await setDoc(timetableRef, localTimetable); 
-                    triggerIsland("時間表已儲存！", "success");
-                } catch(e) { 
-                    triggerIsland("儲存失敗", "error"); 
-                } 
-            };
-
-            const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
 
             return ( 
                 <div className="glass-panel rounded-3xl p-8 shadow-xl min-h-[600px] border border-white/40 page-enter"> 
                     <div className="flex items-center gap-4 mb-8 border-b border-slate-200/50 pb-6"><button onClick={onBack} className="p-3 bg-white/50 hover:bg-white rounded-xl transition-colors shadow-sm"><Icon name="arrow-left" className="w-5 h-5 text-slate-600" /></button><h2 className="text-2xl font-black text-slate-800">系統控制台</h2></div> 
+                    <div className="mb-10"><h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 pl-1">系統營運模式</h3><div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">{['public', 'private', 'maintenance'].map(mode => { const labels = {public: {t: '公開營運', d: '所有人皆可訪問', i: 'globe', c: 'green'}, private: {t: '限制測試', d: '僅白名單可訪問', i: 'shield-check', c: 'indigo'}, maintenance: {t: '系統維護', d: '暫停服務', i: 'hammer', c: 'orange'}}; const info = labels[mode]; return (<button key={mode} onClick={() => changeSystemMode(mode)} className={`p-5 rounded-2xl border-2 text-left transition-all relative overflow-hidden group ${currentMode === mode ? `border-${info.c}-500 bg-${info.c}-50` : 'border-slate-100 bg-white hover:border-slate-300'}`}><div className="flex items-center gap-4 relative z-10"><div className={`p-3 rounded-full ${currentMode === mode ? `bg-${info.c}-500 text-white` : 'bg-slate-100 text-slate-400'}`}><Icon name={info.i} className="w-6 h-6" /></div><div><div className={`font-black text-lg ${currentMode === mode ? `text-${info.c}-700` : 'text-slate-700'}`}>{info.t}</div><div className="text-xs text-slate-500 font-bold mt-1">{info.d}</div></div>{currentMode === mode && <div className={`ml-auto text-${info.c}-600`}><Icon name="check-circle-2" className="w-6 h-6" /></div>}</div></button>);})}</div>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div>
-                             <div className="mb-8">
-                                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 pl-1">系統營運模式</h3>
-                                <div className="grid grid-cols-1 gap-3">
-                                    <button onClick={() => changeSystemMode('public')} className={`p-4 rounded-2xl border-2 text-left transition-all relative overflow-hidden group ${currentMode === 'public' ? 'border-green-500 bg-green-50' : 'border-slate-100 bg-white hover:border-slate-300'}`}>
-                                        <div className="flex items-center gap-4 relative z-10">
-                                            <div className={`p-3 rounded-full ${currentMode === 'public' ? 'bg-green-500 text-white' : 'bg-slate-100 text-slate-400'}`}><Icon name="globe" className="w-6 h-6" /></div>
-                                            <div><div className={`font-black text-lg ${currentMode === 'public' ? 'text-green-700' : 'text-slate-700'}`}>公開營運</div><div className="text-xs text-slate-500 font-bold mt-1">所有人皆可訪問網站</div></div>
-                                            {currentMode === 'public' && <div className="ml-auto text-green-600"><Icon name="check-circle-2" className="w-6 h-6" /></div>}
-                                        </div>
-                                    </button>
-
-                                    <button onClick={() => changeSystemMode('private')} className={`p-4 rounded-2xl border-2 text-left transition-all relative overflow-hidden group ${currentMode === 'private' ? 'border-indigo-500 bg-indigo-50' : 'border-slate-100 bg-white hover:border-slate-300'}`}>
-                                        <div className="flex items-center gap-4 relative z-10">
-                                            <div className={`p-3 rounded-full ${currentMode === 'private' ? 'bg-indigo-500 text-white' : 'bg-slate-100 text-slate-400'}`}><Icon name="shield-check" className="w-6 h-6" /></div>
-                                            <div><div className={`font-black text-lg ${currentMode === 'private' ? 'text-indigo-700' : 'text-slate-700'}`}>限制測試</div><div className="text-xs text-slate-500 font-bold mt-1">僅授權白名單用戶訪問</div></div>
-                                            {currentMode === 'private' && <div className="ml-auto text-indigo-600"><Icon name="check-circle-2" className="w-6 h-6" /></div>}
-                                        </div>
-                                    </button>
-
-                                    <button onClick={() => changeSystemMode('maintenance')} className={`p-4 rounded-2xl border-2 text-left transition-all relative overflow-hidden group ${currentMode === 'maintenance' ? 'border-orange-500 bg-orange-50' : 'border-slate-100 bg-white hover:border-slate-300'}`}>
-                                        <div className="flex items-center gap-4 relative z-10">
-                                            <div className={`p-3 rounded-full ${currentMode === 'maintenance' ? 'bg-orange-500 text-white' : 'bg-slate-100 text-slate-400'}`}><Icon name="hammer" className="w-6 h-6" /></div>
-                                            <div><div className={`font-black text-lg ${currentMode === 'maintenance' ? 'text-orange-700' : 'text-slate-700'}`}>系統維護</div><div className="text-xs text-slate-500 font-bold mt-1">暫停服務，僅管理員可見</div></div>
-                                            {currentMode === 'maintenance' && <div className="ml-auto text-orange-600"><Icon name="check-circle-2" className="w-6 h-6" /></div>}
-                                        </div>
-                                    </button>
-                                </div>
-                             </div>
-                             
-                             {/* Contextual Settings */}
-                             {currentMode === 'private' && (
-                                <div className="animate-item-enter bg-white/60 rounded-2xl p-6 border border-indigo-100 shadow-sm">
-                                    <h3 className="text-xs font-bold text-indigo-500 uppercase tracking-widest mb-4 pl-1">限制測試設定</h3>
-                                    <label className="block text-xs font-bold text-slate-500 mb-2">阻擋畫面標題</label>
-                                    <input type="text" className="w-full px-4 py-3 rounded-xl modern-input text-sm font-bold text-slate-700 mb-4" placeholder="預設：限制測試階段" value={systemConfig?.title_access_denied || ''} onChange={(e) => updateConfig('title_access_denied', e.target.value)} />
-                                    <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
-                                        <div className="text-xs font-bold text-indigo-600 mb-3 uppercase tracking-wide">新增授權用戶</div>
-                                        <form onSubmit={handleAddWhitelist} className="flex gap-2">
-                                            <input type="email" className="flex-1 px-3 py-2 rounded-lg border border-indigo-200 text-sm font-bold" placeholder="Email..." value={newEmail} onChange={(e) => setNewEmail(e.target.value)} required />
-                                            <button type="submit" disabled={isSubmitting} className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-indigo-700 shadow-md"><Icon name="plus" className="w-4 h-4" /></button>
-                                        </form>
-                                    </div>
-                                </div>
-                             )}
-
-                             {currentMode === 'maintenance' && (
-                                <div className="animate-item-enter bg-white/60 rounded-2xl p-6 border border-orange-100 shadow-sm">
-                                    <h3 className="text-xs font-bold text-orange-500 uppercase tracking-widest mb-4 pl-1">維護訊息設定</h3>
-                                    <div className="space-y-4">
-                                        <div><label className="block text-xs font-bold text-slate-500 mb-2">維護畫面標題</label><input type="text" className="w-full px-4 py-3 rounded-xl modern-input text-sm font-bold text-slate-700" placeholder="更新標題..." value={systemConfig?.title_updating || ''} onChange={(e) => updateConfig('title_updating', e.target.value)} /></div>
-                                        <div><label className="block text-xs font-bold text-slate-500 mb-2">維護說明訊息</label><input type="text" className="w-full px-4 py-3 rounded-xl modern-input text-sm font-medium" placeholder="自訂訊息..." value={systemConfig?.message || ''} onChange={(e) => updateConfig('message', e.target.value)} /></div>
-                                        <div><label className="block text-xs font-bold text-slate-500 mb-2">預計恢復時間</label><input type="text" className="w-full px-4 py-3 rounded-xl modern-input text-sm font-medium" placeholder="例如: 下午 4:00" value={systemConfig?.estimatedTime || ''} onChange={(e) => updateConfig('estimatedTime', e.target.value)} /></div>
-                                    </div>
-                                </div>
-                             )}
-
-                             {currentMode === 'public' && (
-                                <div className="animate-item-enter bg-green-50/50 p-6 rounded-2xl border border-green-100 flex items-center justify-center text-center">
-                                    <div>
-                                        <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3 text-green-600"><Icon name="check" className="w-6 h-6" /></div>
-                                        <p className="text-sm font-bold text-green-800">系統目前對外開放中</p>
-                                    </div>
-                                </div>
-                             )}
-                        </div>
-
-                        <div className="mt-0">
-                            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 pl-1">簡易時間表編輯</h3>
-                            <div className="bg-white/50 rounded-2xl p-6 border border-white/50 shadow-sm">
-                                <div className="flex gap-2 mb-6 overflow-x-auto scrollbar-hide pb-2">
-                                    {[1, 2, 3, 4, 5].map(day => (
-                                        <button key={day} onClick={() => setActiveTab(day)} className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap shadow-sm ${activeTab === day ? 'bg-indigo-600 text-white shadow-indigo-200' : 'bg-white text-slate-500 hover:bg-indigo-50'}`}>星期{weekDays[day]}</button>
-                                    ))}
-                                </div>
-                                <div className="space-y-3 mb-6 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
-                                    {localTimetable[activeTab]?.map((subject, index) => (
-                                        <div key={index} className="flex items-center gap-3">
-                                            <span className="text-xs font-bold text-slate-400 w-12 flex-shrink-0">第 {index + 1} 節</span>
-                                            <input type="text" className="flex-grow px-4 py-2.5 rounded-xl modern-input text-sm font-bold text-slate-700" value={subject} onChange={(e) => handleTimetableChange(activeTab, index, e.target.value)} />
-                                        </div>
-                                    ))}
-                                </div>
-                                <button onClick={saveTimetable} className="w-full bg-indigo-600 text-white py-3.5 rounded-xl font-bold text-sm hover:bg-indigo-700 shadow-md active:scale-95 transition-all flex items-center justify-center gap-2"><Icon name="save" className="w-4 h-4" /> 儲存變更</button>
+                    {currentMode === 'private' && (
+                        <div className="animate-item-enter bg-white/60 rounded-2xl p-6 border border-indigo-100 shadow-sm mb-6">
+                            <h3 className="text-xs font-bold text-indigo-500 uppercase tracking-widest mb-4 pl-1">白名單設定</h3>
+                            <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100 mb-4">
+                                <form onSubmit={handleAddWhitelist} className="flex gap-2">
+                                    <input type="email" className="flex-1 px-4 py-2 rounded-lg border border-indigo-200 text-sm font-bold" placeholder="輸入 Email 加入白名單..." value={newEmail} onChange={(e) => setNewEmail(e.target.value)} required />
+                                    <button type="submit" disabled={isSubmitting} className="bg-indigo-600 text-white px-5 py-2 rounded-lg font-bold text-sm hover:bg-indigo-700 shadow-md"><Icon name="plus" className="w-4 h-4" /></button>
+                                </form>
                             </div>
+                            <div className="space-y-2 max-h-[200px] overflow-y-auto custom-scrollbar">{(systemConfig?.allowedEmails || []).map(email => (<div key={email} className="flex items-center justify-between bg-white/80 p-3 rounded-xl border border-slate-100 text-sm"><span className="text-slate-700 font-bold">{email}</span><button onClick={() => handleRemoveWhitelist(email)} className="text-slate-400 hover:text-red-500 transition-colors"><Icon name="trash-2" className="w-4 h-4" /></button></div>))}</div>
                         </div>
-                    </div> 
+                    )}
+
+                    {(currentMode === 'maintenance' || currentMode === 'private') && (
+                        <div className="animate-item-enter bg-white/60 rounded-2xl p-6 border border-slate-200 shadow-sm">
+                             <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 pl-1">畫面顯示設定</h3>
+                             <div className="space-y-4">
+                                <div><label className="block text-xs font-bold text-slate-500 mb-2">畫面大標題</label><input type="text" className="w-full px-4 py-3 rounded-xl modern-input text-sm font-bold text-slate-700" placeholder="例如：系統維護中..." value={currentMode === 'maintenance' ? (systemConfig?.title_updating || '') : (systemConfig?.title_access_denied || '')} onChange={(e) => updateConfig(currentMode === 'maintenance' ? 'title_updating' : 'title_access_denied', e.target.value)} /></div>
+                                <div><label className="block text-xs font-bold text-slate-500 mb-2">說明訊息</label><input type="text" className="w-full px-4 py-3 rounded-xl modern-input text-sm font-medium" placeholder="自訂顯示給用戶的訊息..." value={systemConfig?.message || ''} onChange={(e) => updateConfig('message', e.target.value)} /></div>
+                                {currentMode === 'maintenance' && <div><label className="block text-xs font-bold text-slate-500 mb-2">預計恢復時間</label><input type="text" className="w-full px-4 py-3 rounded-xl modern-input text-sm font-medium" placeholder="例如: 下午 4:00" value={systemConfig?.estimatedTime || ''} onChange={(e) => updateConfig('estimatedTime', e.target.value)} /></div>}
+                             </div>
+                        </div>
+                    )}
+                    </div>
                 </div> 
             ); 
         }
 
         function Timetable({ currentDay, subjects, onDayChange }) { 
             const weekDays = ['日', '一', '二', '三', '四', '五', '六']; 
+            const [showEditor, setShowEditor] = useState(false);
             const generateSchedule = (daySubjects) => { 
                 if (!daySubjects) return []; 
                 const startTime = new Date(); startTime.setHours(8, 30, 0, 0); 
@@ -656,28 +689,19 @@
                     currentTime = end; 
                     return slot; 
                 }; 
-                schedule.push(createSlot(35, 'lesson')); 
-                schedule.push(createSlot(35, 'lesson')); 
-                schedule.push(createSlot(15, 'break', '小息 (15分鐘)')); 
-                schedule.push(createSlot(35, 'lesson')); 
-                schedule.push(createSlot(35, 'lesson')); 
-                schedule.push(createSlot(10, 'break', '小息 (10分鐘)')); 
-                schedule.push(createSlot(35, 'lesson')); 
-                schedule.push(createSlot(35, 'lesson')); 
-                schedule.push(createSlot(70, 'lunch', '午膳時間 (1小時10分)')); 
-                schedule.push(createSlot(35, 'lesson')); 
-                schedule.push(createSlot(35, 'lesson')); 
-                schedule.push(createSlot(10, 'break', '小息 (10分鐘)')); 
-                schedule.push(createSlot(35, 'lesson')); 
-                schedule.push(createSlot(35, 'lesson')); 
+                schedule.push(createSlot(35, 'lesson')); schedule.push(createSlot(35, 'lesson')); schedule.push(createSlot(15, 'break', '小息 (15分鐘)')); schedule.push(createSlot(35, 'lesson')); schedule.push(createSlot(35, 'lesson')); schedule.push(createSlot(10, 'break', '小息 (10分鐘)')); schedule.push(createSlot(35, 'lesson')); schedule.push(createSlot(35, 'lesson')); schedule.push(createSlot(70, 'lunch', '午膳時間 (1小時10分)')); schedule.push(createSlot(35, 'lesson')); schedule.push(createSlot(35, 'lesson')); schedule.push(createSlot(10, 'break', '小息 (10分鐘)')); schedule.push(createSlot(35, 'lesson')); schedule.push(createSlot(35, 'lesson')); 
                 return schedule; 
             }; 
             const scheduleData = generateSchedule(subjects[currentDay]); 
             const now = new Date();
 
             return ( 
-                <div className="space-y-6 page-enter"> 
-                    <div className="flex bg-white/40 backdrop-blur-md rounded-2xl p-1.5 shadow-sm overflow-x-auto scrollbar-hide border border-white/40">{[1, 2, 3, 4, 5].map(day => (<button key={day} onClick={() => onDayChange(day)} className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${currentDay === day ? 'bg-white text-indigo-600 shadow-md scale-[1.02]' : 'text-slate-500 hover:bg-white/50'}`}>星期{weekDays[day]}</button>))}</div> 
+                <div className="space-y-6 page-enter relative"> 
+                     <div className="flex justify-between items-center mb-2">
+                        <div className="flex bg-white/40 backdrop-blur-md rounded-2xl p-1.5 shadow-sm overflow-x-auto scrollbar-hide border border-white/40 flex-grow mr-4">{[1, 2, 3, 4, 5].map(day => (<button key={day} onClick={() => onDayChange(day)} className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${currentDay === day ? 'bg-white text-indigo-600 shadow-md scale-[1.02]' : 'text-slate-500 hover:bg-white/50'}`}>星期{weekDays[day]}</button>))}</div>
+                        <button onClick={() => setShowEditor(true)} className="p-3 bg-white hover:bg-indigo-50 rounded-2xl shadow-sm border border-slate-100 text-indigo-600 transition-all flex-shrink-0" title="編輯時間表"><Icon name="edit-3" className="w-5 h-5" /></button>
+                     </div>
+                    
                     <div className="glass-panel rounded-3xl p-6 relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-200/20 rounded-full blur-3xl -mr-20 -mt-20"></div>
                         {scheduleData.length > 0 ? scheduleData.map((slot, idx) => { 
@@ -689,35 +713,23 @@
                             let textClass = "transition-all duration-500";
                             let bgClass = "transition-all duration-500";
 
-                            if (isFinished) {
-                                containerClass += " border-slate-200/60";
-                                dotClass += " bg-slate-200 border-white";
-                                textClass = "text-slate-400 grayscale opacity-70";
-                            } else if (isActive) {
-                                containerClass += " border-emerald-400";
-                                dotClass += " bg-emerald-500 border-white ring-4 ring-emerald-100";
-                                textClass = "text-slate-800 scale-[1.02] origin-left";
-                                bgClass = "bg-white/60 backdrop-blur-md -mx-4 px-4 py-3 rounded-xl shadow-lg border border-white/60";
-                            } else {
-                                containerClass += " border-indigo-200";
-                                dotClass += " bg-white border-indigo-400";
-                                textClass = "text-slate-700";
-                            }
+                            if (isFinished) { containerClass += " border-slate-200/60"; dotClass += " bg-slate-200 border-white"; textClass = "text-slate-400 grayscale opacity-70";
+                            } else if (isActive) { containerClass += " border-emerald-400"; dotClass += " bg-emerald-500 border-white ring-4 ring-emerald-100"; textClass = "text-slate-800 scale-[1.02] origin-left"; bgClass = "bg-white/60 backdrop-blur-md -mx-4 px-4 py-3 rounded-xl shadow-lg border border-white/60";
+                            } else { containerClass += " border-indigo-200"; dotClass += " bg-white border-indigo-400"; textClass = "text-slate-700"; }
 
                             return (
                                 <div key={idx} className={containerClass} style={{animationDelay: `${idx * 0.05}s`}}>
                                     <div className={dotClass}></div>
                                     <div className={`${textClass} ${bgClass}`}>
                                         <div className="text-xs font-bold tracking-wide mb-1 opacity-60 font-mono">{slot.timeStr}</div>
-                                        <div className={`text-lg font-black tracking-tight ${slot.type === 'break' || slot.type === 'lunch' ? 'text-base font-bold opacity-80 italic' : ''}`}>
-                                            {slot.subject}
-                                        </div>
+                                        <div className={`text-lg font-black tracking-tight ${slot.type === 'break' || slot.type === 'lunch' ? 'text-base font-bold opacity-80 italic' : ''}`}>{slot.subject}</div>
                                     </div>
                                     {isActive && <span className="absolute right-4 top-4 text-[10px] bg-emerald-500 text-white px-2.5 py-1 rounded-full font-black tracking-wider shadow-lg shadow-emerald-200 animate-pulse">進行中</span>}
                                 </div>
                             ); 
                         }) : (<div className="text-center py-20 text-slate-400 font-medium">是日休息或未設定課程</div>)}
                     </div> 
+                    {showEditor && <TimetableEditorModal onClose={() => setShowEditor(false)} timetableConfig={subjects} triggerIsland={(msg, type) => { /* Basic alert fallback if Island not passed, but App handles it */ alert(msg); }} />}
                 </div> 
             ); 
         }
@@ -907,95 +919,14 @@
 
             if (authLoading || configLoading) return <div className="min-h-screen flex items-center justify-center"><div className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin"></div></div>;
 
-            // Updated Logic for BlockScreen
-            // If maintenanceMode is NOT normal, block everyone except Admin.
+            // BlockScreen Logic Update: Public = Open to ALL.
             if (maintenanceMode !== 'normal' && !isAdmin) { 
                 return (<div className="min-h-screen relative"><BlockScreen type={maintenanceMode} estimatedTime={systemConfig?.estimatedTime} customMessage={systemConfig?.message} systemConfig={systemConfig} onLogin={() => setIsAuthModalOpen(true)} user={user} /><AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} triggerAlert={triggerAlert} triggerConfirm={triggerConfirm} /></div>); 
             }
-
-            // Whitelist Logic:
-            // If Whitelist Disabled (FALSE) -> Site is CLOSED (Block everyone except Admin).
-            // If Whitelist Enabled (TRUE) -> Site is OPEN only to Whitelisted (Block non-whitelisted).
-            if (!isAdmin) {
-                if (!whitelistEnabled) {
-                    // Site is CLOSED
-                    return (<div className="min-h-screen relative"><BlockScreen type="closed" systemConfig={systemConfig} onLogin={() => setIsAuthModalOpen(true)} user={user} /><AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} triggerAlert={triggerAlert} triggerConfirm={triggerConfirm} /></div>);
-                } else if (!isWhitelisted) {
-                    // Site is OPEN but restricted to Whitelist (Private Mode)
-                    return (<div className="min-h-screen relative"><BlockScreen type="access_denied" systemConfig={systemConfig} onLogin={() => setIsAuthModalOpen(true)} user={user} /><AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} triggerAlert={triggerAlert} triggerConfirm={triggerConfirm} /></div>);
-                }
+            if (whitelistEnabled && !isAdmin && !isWhitelisted) {
+                 return (<div className="min-h-screen relative"><BlockScreen type="access_denied" systemConfig={systemConfig} onLogin={() => setIsAuthModalOpen(true)} user={user} /><AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} triggerAlert={triggerAlert} triggerConfirm={triggerConfirm} /></div>); 
             }
-            // Note: If Mode is Public (whitelistEnabled=false, maintenance=normal), standard user logic (everyone allowed) would apply if we flipped the logic.
-            // My previous interpretation: Public = whitelistEnabled: false.
-            // User requested: "Open whitelist -> Whitelisted can view. Close -> No one can view."
-            // This implies:
-            // Mode A (Private): whitelistEnabled: true. (Only whitelist can view)
-            // Mode B (Closed): whitelistEnabled: false. (No one can view)
-            // What about Public Mode (Everyone)?
-            // The prompt "開放了白名單帳戶可以查看網頁，關閉了則全部不能觀看" suggests only 2 states for non-admins?
-            // But usually we need a Public mode. 
-            // My implemented logic:
-            // Public Mode: maintenance='normal', whitelistEnabled=false -> Wait, based on user request "Closed -> No one", this means there is NO Public mode?
-            // Let's assume the user wants:
-            // 1. Private (Whitelist Only)
-            // 2. Closed (Maintenance/Off)
-            // 3. (Implicitly) Public?
-            
-            // Re-reading: "在管理員模式設定 白名單 網站維護 和限制測試階段 分開三個按鈕"
-            // So there ARE 3 modes.
-            // My code handles:
-            // Public: maintenance='normal', whitelistEnabled=false.
-            // But wait, the user said "關閉了則全部不能觀看" referring to the whitelist toggle?
-            // "在白名單開關按鈕，我希望開放了白名單帳戶可以查看網頁，關閉了則全部不能觀看"
-            // This sounds like the "Whitelist Toggle" controls "Private vs Closed".
-            // Then where is "Public"?
-            
-            // Let's stick to the 3-button Explicit Mode selector I built in AdminSystemPanel.
-            // 1. Public: Everyone.
-            // 2. Private: Whitelist.
-            // 3. Maintenance: Admin only.
-            
-            // Adjusting BlockScreen logic to support Public Mode:
-            // If maintenance 'normal' AND whitelistEnabled 'false' -> Actually this should be PUBLIC (Everyone).
-            // But user said "Close whitelist -> No one can view". 
-            // This conflicts with "Public".
-            // I will implement the 3-mode logic in AdminPanel which sets specific flags.
-            // And here in App, I need to interpret them.
-            
-            // Let's map flags to modes clearly:
-            // Public: maintenance='normal', whitelistEnabled=false (Let's define this as Public) -> BUT user said "whitelist off = closed".
-            // Okay, let's add a explicit 'publicAccess' flag? No, stick to existing.
-            // Let's redefine:
-            // whitelistEnabled = true -> Check Whitelist.
-            // whitelistEnabled = false -> Check if it's Public or Closed?
-            // Maybe "Public Mode" sets `whitelistEnabled = false` AND `publicAccess = true`.
-            // Given the constraints and existing DB structure, I will assume:
-            // The user wants strict control.
-            // If I set "Public" mode button -> It sets a flag (e.g. force whitelist off).
-            // Let's look at my AdminPanel logic again.
-            // changeSystemMode('public') -> whitelistEnabled: false.
-            // changeSystemMode('private') -> whitelistEnabled: true.
-            
-            // If I follow user request literally "Whitelist Off -> Closed":
-            // Then "Public" is impossible?
-            // I will assume "Public" mode is a distinct button that sets whitelistEnabled=false AND ensures access.
-            // While "Private" sets whitelistEnabled=true.
-            // "Maintenance" sets maintenanceMode='updating'.
-            
-            // BlockScreen Logic Adjustment:
-            // If maintenance != normal -> BLOCK (Maintenance).
-            // Else (normal):
-            //    If whitelistEnabled == true:
-            //       If user in whitelist -> PASS.
-            //       Else -> BLOCK (Access Denied).
-            //    Else (whitelistEnabled == false):
-            //       PASS (Public).
-            
-            // This is the standard behavior. The user's request "Close whitelist -> All blocked" might be referring to a specific toggle they envisioned.
-            // But since I built a 3-mode selector, "Public" mode (Whitelist Off) allows everyone.
-            // If they want "Closed", they use "Maintenance" mode.
-            // This covers all bases logically.
-            
+
             // Define renderItemCard here
             const renderItemCard = (item, index) => {
                 const daysLeft = getDaysRemaining(item.dueDate); 
@@ -1152,7 +1083,7 @@
                             </div>
                         </div>
 
-                        {viewMode === 'system_admin' ? ( <AdminSystemPanel db={db} systemConfig={systemConfig} timetableConfig={timetableConfig} onBack={() => setViewMode('current')} triggerIsland={triggerIsland} /> ) : viewMode === 'admin_users' ? ( <AdminUserView db={db} onBack={() => setViewMode('current')} systemConfig={systemConfig} triggerIsland={triggerIsland} /> ) : viewMode === 'timetable' ? ( <Timetable currentDay={currentTimetableDay} subjects={timetableConfig || DEFAULT_SCHEDULE} onDayChange={setCurrentTimetableDay} /> ) : (
+                        {viewMode === 'system_admin' ? ( <AdminSystemPanel db={db} systemConfig={systemConfig} timetableConfig={timetableConfig} onBack={() => setViewMode('current')} triggerIsland={triggerIsland} /> ) : viewMode === 'admin_users' ? ( <AdminUserView db={db} onBack={() => setViewMode('current')} systemConfig={systemConfig} triggerIsland={triggerIsland} /> ) : viewMode === 'timetable' ? ( <Timetable currentDay={currentTimetableDay} subjects={timetableConfig || DEFAULT_SCHEDULE} onDayChange={setCurrentTimetableDay} triggerIsland={triggerIsland} /> ) : (
                             <>
                                 {viewMode === 'current' && (
                                     <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 ${guestStyle}`}>
