@@ -52,7 +52,6 @@
 
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        // Fixed: Removed duplicate deleteDoc from import
         import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs, setDoc, arrayUnion, arrayRemove, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const app = initializeApp(firebaseConfig);
@@ -60,7 +59,7 @@
         const db = getFirestore(app);
         const googleProvider = new GoogleAuthProvider();
 
-        window.firebaseServices = { auth, db, googleProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs, setDoc, arrayUnion, arrayRemove, getDoc };
+        window.firebaseServices = { auth, db, googleProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs, setDoc, arrayUnion, arrayRemove, getDoc, deleteDoc };
     </script>
 
     <script type="text/babel">
@@ -277,9 +276,16 @@
         // --- Components ---
         function BlockScreen({ type, estimatedTime, customConfig, onLogin, user, triggerAlert }) {
             const [showRequestForm, setShowRequestForm] = useState(false);
-            const [requestEmail, setRequestEmail] = useState(user?.email || '');
+            const [requestEmail, setRequestEmail] = useState('');
             const [isSubmitting, setIsSubmitting] = useState(false);
             const { addDoc, collection, db, query, where, getDocs } = window.firebaseServices;
+
+            // Sync requestEmail with user prop
+            useEffect(() => {
+                if (user && user.email) {
+                    setRequestEmail(user.email);
+                }
+            }, [user]);
 
             // Default Messages
             const whitelistDefaultTitle = "存取權限受限";
@@ -296,7 +302,6 @@
                 if (!requestEmail.trim()) return;
                 setIsSubmitting(true);
                 try {
-                    // Check duplicate
                     const q = query(collection(db, "access_requests"), where("email", "==", requestEmail.trim()), where("status", "==", "pending"));
                     const snap = await getDocs(q);
                     if (!snap.empty) {
@@ -314,7 +319,11 @@
                     setShowRequestForm(false);
                 } catch (e) {
                     console.error(e);
-                    triggerAlert("申請提交失敗，請稍後再試。");
+                    if (e.code === 'permission-denied') {
+                        triggerAlert("申請失敗：資料庫權限不足。請聯絡管理員檢查 Firestore 規則 (access_requests)。");
+                    } else {
+                        triggerAlert("申請提交失敗，請稍後再試。");
+                    }
                 } finally {
                     setIsSubmitting(false);
                 }
@@ -364,7 +373,7 @@
                             </>
                         )}
 
-                        {!user && (<button onClick={onLogin} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-md flex items-center justify-center gap-2"><Icon name="log-in" className="w-4 h-4" /> 登入</button>)}
+                        {!user && (<button onClick={onLogin} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-md flex items-center justify-center gap-2"><Icon name="log-in" className="w-4 h-4" /> 管理員登入</button>)}
                         {user && (<div className="mt-4"><p className="text-xs text-slate-400 mb-2">當前帳號: {user.email}</p><button onClick={() => window.firebaseServices.signOut(window.firebaseServices.auth)} className="text-sm font-bold text-slate-500 hover:text-slate-700 underline">登出 / 切換帳號</button></div>)}
                     </div>
                 </div>
