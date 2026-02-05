@@ -417,6 +417,10 @@
             const [isSubmitting, setIsSubmitting] = useState(false); 
             const [activeTab, setActiveTab] = useState('settings'); // 'settings' or 'requests'
             const [requests, setRequests] = useState([]);
+            const [showCleanupModal, setShowCleanupModal] = useState(false);
+            const [expiredList, setExpiredList] = useState([]);
+            const [selectedIds, setSelectedIds] = useState(new Set());
+
             const { doc, updateDoc, arrayUnion, arrayRemove, setDoc, collection, query, where, getDocs, deleteDoc, onSnapshot } = window.firebaseServices; 
             const configRef = doc(db, "system_settings", "config"); 
             
@@ -435,7 +439,64 @@
             const handleAddWhitelist = async (e) => { e.preventDefault(); if (!newEmail.trim()) return; setIsSubmitting(true); try { await updateDoc(configRef, { allowedEmails: arrayUnion(newEmail.trim()) }); setNewEmail(''); } catch (e) { console.error(e); triggerAlert("新增失敗"); } setIsSubmitting(false); }; 
             const handleRemoveWhitelist = async (email) => { if (window.confirm(`確定要移除 ${email} 嗎？`)) { await updateDoc(configRef, { allowedEmails: arrayRemove(email) }); } }; 
             
-            const handleClearExpiredPublic = async () => { if (!window.confirm("⚠️ 警告：確定要刪除所有【過期】的公共功課嗎？\n\n這將會：\n1. 永久刪除資料庫中的過期公共紀錄\n2. 同步移除所有學生列表中的對應項目\n\n此動作無法復原。")) return; setIsSubmitting(true); try { const today = new Date(); const y = today.getFullYear(); const m = String(today.getMonth() + 1).padStart(2, '0'); const d = String(today.getDate()).padStart(2, '0'); const todayStr = `${y}-${m}-${d}`; const q = query(collection(db, "public_assignments"), where("dueDate", "<", todayStr)); const snapshot = await getDocs(q); if (snapshot.empty) { triggerAlert("目前沒有過期的公共功課。"); } else { const deletePromises = snapshot.docs.map(doc => deleteDoc(doc.ref)); await Promise.all(deletePromises); triggerAlert(`已成功清除 ${snapshot.size} 項過期功課！`); } } catch (e) { console.error(e); triggerAlert("清除失敗"); } finally { setIsSubmitting(false); } }; 
+            const handleOpenCleanup = async () => {
+                setIsSubmitting(true);
+                try {
+                    const today = new Date();
+                    const y = today.getFullYear();
+                    const m = String(today.getMonth() + 1).padStart(2, '0');
+                    const d = String(today.getDate()).padStart(2, '0');
+                    const todayStr = `${y}-${m}-${d}`;
+                    
+                    const q = query(collection(db, "public_assignments"), where("dueDate", "<", todayStr));
+                    const snapshot = await getDocs(q);
+                    
+                    if (snapshot.empty) {
+                        triggerAlert("好消息！目前沒有過期的公共功課。");
+                    } else {
+                        const list = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                        setExpiredList(list);
+                        setSelectedIds(new Set(list.map(i => i.id))); // Default select all
+                        setShowCleanupModal(true);
+                    }
+                } catch (e) {
+                    console.error(e);
+                    triggerAlert("讀取失敗");
+                } finally {
+                    setIsSubmitting(false);
+                }
+            };
+
+            const handleToggleSelect = (id) => {
+                const newSet = new Set(selectedIds);
+                if (newSet.has(id)) newSet.delete(id);
+                else newSet.add(id);
+                setSelectedIds(newSet);
+            };
+            
+            const handleToggleAll = () => {
+                if (selectedIds.size === expiredList.length) {
+                    setSelectedIds(new Set());
+                } else {
+                    setSelectedIds(new Set(expiredList.map(i => i.id)));
+                }
+            };
+
+            const confirmCleanup = async () => {
+                if (selectedIds.size === 0) return;
+                setIsSubmitting(true);
+                try {
+                    const deletePromises = Array.from(selectedIds).map(id => deleteDoc(doc(db, "public_assignments", id)));
+                    await Promise.all(deletePromises);
+                    triggerAlert(`成功刪除 ${selectedIds.size} 項過期功課。`);
+                    setShowCleanupModal(false);
+                } catch(e) {
+                    console.error(e);
+                    triggerAlert("刪除失敗");
+                } finally {
+                    setIsSubmitting(false);
+                }
+            };
 
             const handleApproveRequest = async (req) => {
                 if (!window.confirm(`批准 ${req.email} 加入白名單？`)) return;
@@ -466,7 +527,12 @@
 
                     {activeTab === 'settings' ? (
                         <>
-                            <div className="mb-8"> <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">資料庫維護</h3> <div className="bg-red-50 rounded-xl p-4 border border-red-100 flex items-center justify-between"> <div> <h4 className="text-red-800 font-bold text-sm">清除過期公共功課</h4> <p className="text-red-600/70 text-xs mt-1">移除所有繳交日期早於今天的公共功課紀錄</p> </div> <button onClick={handleClearExpiredPublic} disabled={isSubmitting} className="px-4 py-2 bg-white border border-red-200 text-red-600 rounded-lg text-xs font-bold hover:bg-red-500 hover:text-white transition-all shadow-sm active:scale-95 disabled:opacity-50 flex items-center gap-2"> {isSubmitting ? '處理中...' : <><Icon name="trash-2" className="w-3.5 h-3.5" /> 立即清除</>} </button> </div> </div> 
+                            <div className="mb-8"> <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">資料庫維護</h3> 
+                                <div className="bg-red-50 rounded-xl p-4 border border-red-100 flex items-center justify-between"> 
+                                    <div> <h4 className="text-red-800 font-bold text-sm">清除過期公共功課</h4> <p className="text-red-600/70 text-xs mt-1">檢視並移除過期的公共功課紀錄</p> </div> 
+                                    <button onClick={handleOpenCleanup} disabled={isSubmitting} className="px-4 py-2 bg-white border border-red-200 text-red-600 rounded-lg text-xs font-bold hover:bg-red-500 hover:text-white transition-all shadow-sm active:scale-95 disabled:opacity-50 flex items-center gap-2"> {isSubmitting ? '載入中...' : <><Icon name="trash-2" className="w-3.5 h-3.5" /> 檢視清除</>} </button> 
+                                </div> 
+                            </div> 
                             <div className="mb-8"><h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">網站狀態控制</h3><div className="bg-slate-50 rounded-xl p-4 border border-slate-200 space-y-4"><div className="grid grid-cols-3 gap-2">{['normal', 'updating', 'restructuring'].map(mode => (<button key={mode} onClick={() => updateConfig('maintenanceMode', mode)} className={`py-2 px-3 rounded-lg text-sm font-bold border transition-all ${systemConfig?.maintenanceMode === mode ? (mode === 'normal' ? 'bg-green-100 text-green-700 border-green-200' : mode === 'updating' ? 'bg-orange-100 text-orange-700 border-orange-200' : 'bg-blue-100 text-blue-700 border-blue-200') : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-100'}`}>{mode === 'normal' ? '🟢 正常運作' : mode === 'updating' ? '🟠 網站更新中' : '🔵 資料重整中'}</button>))}</div>
                                 <div className="pt-2 border-t border-slate-200 space-y-3">
                                     <div><label className="block text-xs font-bold text-slate-500 mb-1">自定義標題 (留空則用預設)</label><input type="text" className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" placeholder="例如：測試階段 / 系統維護" value={systemConfig?.customBlockTitle || ''} onChange={(e) => updateConfig('customBlockTitle', e.target.value)} /></div>
@@ -497,6 +563,49 @@
                                     ))
                                 }
                              </div>
+                        </div>
+                    )}
+
+                    {showCleanupModal && (
+                        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+                            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowCleanupModal(false)}></div>
+                            <div className="modal-animate bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[80vh] flex flex-col relative z-10 overflow-hidden">
+                                <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-white">
+                                    <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2"><Icon name="trash-2" className="w-5 h-5 text-red-500" /> 清除過期功課</h3>
+                                    <button onClick={() => setShowCleanupModal(false)} className="p-2 bg-slate-100 rounded-full hover:bg-slate-200"><Icon name="x" className="w-4 h-4" /></button>
+                                </div>
+                                <div className="p-4 bg-slate-50 flex-1 overflow-y-auto">
+                                    <div className="flex justify-between items-center mb-2 px-1">
+                                        <span className="text-xs font-bold text-slate-500">已選 {selectedIds.size} / {expiredList.length} 項</span>
+                                        <button onClick={handleToggleAll} className="text-xs font-bold text-indigo-600 hover:underline">{selectedIds.size === expiredList.length ? '取消全選' : '全選'}</button>
+                                    </div>
+                                    <div className="space-y-2">
+                                        {expiredList.map(item => (
+                                            <div key={item.id} onClick={() => handleToggleSelect(item.id)} className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${selectedIds.has(item.id) ? 'bg-red-50 border-red-200' : 'bg-white border-slate-200 hover:border-indigo-200'}`}>
+                                                <div className={`mt-0.5 w-5 h-5 rounded border flex items-center justify-center ${selectedIds.has(item.id) ? 'bg-red-500 border-red-500' : 'bg-white border-slate-300'}`}>
+                                                    {selectedIds.has(item.id) && <Icon name="check" className="w-3.5 h-3.5 text-white" />}
+                                                </div>
+                                                <div className="flex-1">
+                                                    <div className="flex justify-between">
+                                                        <span className="text-xs font-bold text-slate-700 bg-slate-200 px-1.5 py-0.5 rounded">{item.subject}</span>
+                                                        <span className="text-xs text-red-500 font-bold">{item.dueDate}</span>
+                                                    </div>
+                                                    <div className="text-sm text-slate-600 mt-1 line-clamp-2">{item.description}</div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="p-4 border-t border-slate-100 bg-white">
+                                    <button 
+                                        onClick={confirmCleanup} 
+                                        disabled={selectedIds.size === 0 || isSubmitting}
+                                        className="w-full py-3 rounded-xl bg-red-500 text-white font-bold shadow-lg shadow-red-200 hover:bg-red-600 disabled:opacity-50 disabled:shadow-none flex items-center justify-center gap-2"
+                                    >
+                                        {isSubmitting ? '刪除中...' : <><Icon name="trash-2" className="w-4 h-4" /> 確認刪除 ({selectedIds.size})</>}
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     )}
                 </div> 
@@ -1023,7 +1132,7 @@
             if (maintenanceMode !== 'normal' && !isAdmin && !isWhitelisted) { 
                 return (
                     <div className="min-h-screen bg-slate-50 relative">
-                        <BlockScreen type={maintenanceMode} estimatedTime={systemConfig?.estimatedTime} customConfig={systemConfig} onLogin={() => setIsAuthModalOpen(true)} user={user} triggerAlert={triggerAlert} />
+                        <BlockScreen type={maintenanceMode} estimatedTime={systemConfig?.estimatedTime} customMessage={systemConfig?.message} onLogin={() => setIsAuthModalOpen(true)} user={user} />
                         <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} triggerAlert={triggerAlert} />
                         {notification.isOpen && <div className="fixed inset-0 z-[200] flex items-center justify-center px-4"><div className="absolute inset-0 bg-black/30 backdrop-blur-[2px]"></div><div className="notification-animate relative bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center transform scale-100"><div className={`mx-auto w-12 h-12 rounded-full flex items-center justify-center mb-4 ${notification.type === 'confirm' ? 'bg-red-100 text-red-500' : 'bg-indigo-100 text-indigo-500'}`}>{notification.type === 'confirm' ? <Icon name="alert-triangle" className="w-6 h-6" /> : <Icon name="info" className="w-6 h-6" />}</div><h3 className="text-lg font-bold text-slate-800 mb-2">{notification.type === 'confirm' ? '確認操作' : '提示'}</h3><p className="text-slate-600 mb-6 leading-relaxed">{notification.message}</p><div className="flex gap-3 justify-center">{notification.type === 'confirm' ? (<><button onClick={closeNotification} className="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 text-slate-600 font-medium hover:bg-slate-50 transition-colors">取消</button><button onClick={handleNotificationConfirm} className="flex-1 py-2.5 px-4 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 shadow-lg shadow-red-200 transition-all active:scale-95">確認</button></>) : (<button onClick={closeNotification} className="w-full py-2.5 px-4 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all active:scale-95">知道了</button>)}</div></div></div>}
                     </div>
@@ -1033,9 +1142,8 @@
             if (whitelistEnabled && !isAdmin && !isWhitelisted) {
                 return (
                      <div className="min-h-screen bg-slate-50 relative">
-                        <BlockScreen type="access_denied" estimatedTime={null} customConfig={systemConfig} onLogin={() => setIsAuthModalOpen(true)} user={user} triggerAlert={triggerAlert} />
+                        <BlockScreen type="access_denied" onLogin={() => setIsAuthModalOpen(true)} user={user} />
                         <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} triggerAlert={triggerAlert} />
-                        {notification.isOpen && <div className="fixed inset-0 z-[200] flex items-center justify-center px-4"><div className="absolute inset-0 bg-black/30 backdrop-blur-[2px]"></div><div className="notification-animate relative bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center transform scale-100"><div className={`mx-auto w-12 h-12 rounded-full flex items-center justify-center mb-4 ${notification.type === 'confirm' ? 'bg-red-100 text-red-500' : 'bg-indigo-100 text-indigo-500'}`}>{notification.type === 'confirm' ? <Icon name="alert-triangle" className="w-6 h-6" /> : <Icon name="info" className="w-6 h-6" />}</div><h3 className="text-lg font-bold text-slate-800 mb-2">{notification.type === 'confirm' ? '確認操作' : '提示'}</h3><p className="text-slate-600 mb-6 leading-relaxed">{notification.message}</p><div className="flex gap-3 justify-center">{notification.type === 'confirm' ? (<><button onClick={closeNotification} className="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 text-slate-600 font-medium hover:bg-slate-50 transition-colors">取消</button><button onClick={handleNotificationConfirm} className="flex-1 py-2.5 px-4 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 shadow-lg shadow-red-200 transition-all active:scale-95">確認</button></>) : (<button onClick={closeNotification} className="w-full py-2.5 px-4 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all active:scale-95">知道了</button>)}</div></div></div>}
                      </div>
                 );
             }
