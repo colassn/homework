@@ -41,13 +41,13 @@
 
     <script type="module">
         const firebaseConfig = {
-            apiKey: "AIzaSyA7C10miZnBWXLBluCDU9nezCn9StmWZ3U",
-            authDomain: "recordhw-ad1f9.firebaseapp.com",
-            projectId: "recordhw-ad1f9",
-            storageBucket: "recordhw-ad1f9.firebasestorage.app",
-            messagingSenderId: "600838574849",
-            appId: "1:600838574849:web:425fd3ede2eb6ebaae0100", 
-            measurementId: "G-8VCPLTE2QT"
+            apiKey: "AIzaSyB3gYuwnyoTUwO7PFh4Nuue-Ud8GTruuRk",
+            authDomain: "recordhwv2.firebaseapp.com",
+            projectId: "recordhwv2",
+            storageBucket: "recordhwv2.firebasestorage.app",
+            messagingSenderId: "599261009391",
+            appId: "1:599261009391:web:66cd7f932650bebc0e521a",
+            measurementId: "G-C51XDYW67W"
         };
 
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -144,6 +144,13 @@
         };
 
         const formatCountdown = (ms) => { const totalSeconds = Math.floor(ms / 1000); const hours = Math.floor(totalSeconds / 3600); const minutes = Math.floor((totalSeconds % 3600) / 60); const seconds = totalSeconds % 60; return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`; };
+
+        const getFormattedDateWithWeekday = (dateStr) => {
+            const [y, m, d] = dateStr.split('-').map(Number);
+            const date = new Date(y, m - 1, d);
+            const days = ['日', '一', '二', '三', '四', '五', '六'];
+            return `${dateStr} (星期${days[date.getDay()]})`;
+        };
 
         // --- Components ---
         function BlockScreen({ type, estimatedTime, customMessage, onLogin, user }) {
@@ -335,72 +342,7 @@
             ); 
         }
 
-        function AdminSystemPanel({ db, systemConfig, onBack, triggerAlert }) { 
-            const [newEmail, setNewEmail] = useState(''); 
-            const [isSubmitting, setIsSubmitting] = useState(false); 
-            const { doc, updateDoc, arrayUnion, arrayRemove, setDoc, collection, query, where, getDocs, deleteDoc } = window.firebaseServices; 
-            const configRef = doc(db, "system_settings", "config"); 
-            
-            const updateConfig = async (key, value) => { try { await setDoc(configRef, { [key]: value }, { merge: true }); } catch (e) { console.error(e); triggerAlert("設定更新失敗"); } }; 
-            const handleAddWhitelist = async (e) => { e.preventDefault(); if (!newEmail.trim()) return; setIsSubmitting(true); try { await updateDoc(configRef, { allowedEmails: arrayUnion(newEmail.trim()) }); setNewEmail(''); } catch (e) { console.error(e); triggerAlert("新增失敗"); } setIsSubmitting(false); }; 
-            const handleRemoveWhitelist = async (email) => { if (window.confirm(`確定要移除 ${email} 嗎？`)) { await updateDoc(configRef, { allowedEmails: arrayRemove(email) }); } }; 
-            
-            // New Function: Clear Expired Public Homework
-            const handleClearExpiredPublic = async () => {
-                if (!window.confirm("⚠️ 警告：確定要刪除所有【過期】的公共功課嗎？\n\n這將會：\n1. 永久刪除資料庫中的過期公共紀錄\n2. 同步移除所有學生列表中的對應項目\n\n此動作無法復原。")) return;
-                
-                setIsSubmitting(true);
-                try {
-                    // Get today's date string YYYY-MM-DD
-                    const today = new Date();
-                    const y = today.getFullYear();
-                    const m = String(today.getMonth() + 1).padStart(2, '0');
-                    const d = String(today.getDate()).padStart(2, '0');
-                    const todayStr = `${y}-${m}-${d}`;
-
-                    // Query public assignments where dueDate < today
-                    // Note: String comparison works for ISO dates (YYYY-MM-DD)
-                    const q = query(collection(db, "public_assignments"), where("dueDate", "<", todayStr));
-                    const snapshot = await getDocs(q);
-                    
-                    if (snapshot.empty) {
-                        triggerAlert("目前沒有過期的公共功課。");
-                    } else {
-                        const deletePromises = snapshot.docs.map(doc => deleteDoc(doc.ref));
-                        await Promise.all(deletePromises);
-                        triggerAlert(`已成功清除 ${snapshot.size} 項過期功課！`);
-                    }
-                } catch (e) {
-                    console.error(e);
-                    triggerAlert("清除失敗 (可能是索引問題或權限不足)");
-                } finally {
-                    setIsSubmitting(false);
-                }
-            };
-
-            return ( 
-                <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 min-h-[500px]"> 
-                    <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4"><button onClick={onBack} className="p-2 hover:bg-slate-100 rounded-full transition-colors"><Icon name="arrow-left" className="w-5 h-5 text-slate-500" /></button><h2 className="text-xl font-bold text-slate-800">系統控制台</h2></div> 
-                    
-                    {/* Maintenance Section */}
-                    <div className="mb-8">
-                        <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">資料庫維護</h3>
-                        <div className="bg-red-50 rounded-xl p-4 border border-red-100 flex items-center justify-between">
-                            <div>
-                                <h4 className="text-red-800 font-bold text-sm">清除過期公共功課</h4>
-                                <p className="text-red-600/70 text-xs mt-1">移除所有繳交日期早於今天的公共功課紀錄</p>
-                            </div>
-                            <button 
-                                onClick={handleClearExpiredPublic} 
-                                disabled={isSubmitting}
-                                className="px-4 py-2 bg-white border border-red-200 text-red-600 rounded-lg text-xs font-bold hover:bg-red-500 hover:text-white transition-all shadow-sm active:scale-95 disabled:opacity-50 flex items-center gap-2"
-                            >
-                                {isSubmitting ? '處理中...' : <><Icon name="trash-2" className="w-3.5 h-3.5" /> 立即清除</>}
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="mb-8"><h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">網站狀態控制</h3><div className="bg-slate-50 rounded-xl p-4 border border-slate-200 space-y-4"><div className="grid grid-cols-3 gap-2">{['normal', 'updating', 'restructuring'].map(mode => (<button key={mode} onClick={() => updateConfig('maintenanceMode', mode)} className={`py-2 px-3 rounded-lg text-sm font-bold border transition-all ${systemConfig?.maintenanceMode === mode ? (mode === 'normal' ? 'bg-green-100 text-green-700 border-green-200' : mode === 'updating' ? 'bg-orange-100 text-orange-700 border-orange-200' : 'bg-blue-100 text-blue-700 border-blue-200') : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-100'}`}>{mode === 'normal' ? '🟢 正常運作' : mode === 'updating' ? '🟠 網站更新中' : '🔵 資料重整中'}</button>))}</div>{systemConfig?.maintenanceMode !== 'normal' && (<div className="space-y-3 pt-2 border-t border-slate-200"><div><label className="block text-xs font-bold text-slate-500 mb-1">自訂維護訊息</label><input type="text" className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" placeholder="例如：系統正在升級，請稍候..." value={systemConfig?.message || ''} onChange={(e) => updateConfig('message', e.target.value)} /></div><div><label className="block text-xs font-bold text-slate-500 mb-1">預計恢復時間</label><input type="text" className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" placeholder="例如: 下午 4:00" value={systemConfig?.estimatedTime || ''} onChange={(e) => updateConfig('estimatedTime', e.target.value)} /></div></div>)}</div></div> <div><div className="flex items-center justify-between mb-3"><h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider">白名單存取控制</h3><label className="relative inline-flex items-center cursor-pointer"><input type="checkbox" className="sr-only peer" checked={systemConfig?.whitelistEnabled || false} onChange={(e) => updateConfig('whitelistEnabled', e.target.checked)} /><div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div></label></div><div className={`bg-slate-50 rounded-xl p-4 border border-slate-200 transition-opacity ${!systemConfig?.whitelistEnabled ? 'opacity-50' : ''}`}><form onSubmit={handleAddWhitelist} className="flex gap-2 mb-4"><input type="email" className="flex-1 px-3 py-2 rounded-lg border border-slate-200 text-sm" placeholder="輸入允許的 Google 電郵" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} required /><button type="submit" disabled={isSubmitting} className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-indigo-700"><Icon name="plus" className="w-4 h-4" /></button></form><div className="space-y-2 max-h-[200px] overflow-y-auto">{(systemConfig?.allowedEmails || []).map(email => (<div key={email} className="flex items-center justify-between bg-white p-2 rounded-lg border border-slate-100 text-sm"><span className="text-slate-700">{email}</span><button onClick={() => handleRemoveWhitelist(email)} className="text-slate-400 hover:text-red-500"><Icon name="trash-2" className="w-4 h-4" /></button></div>))}{(!systemConfig?.allowedEmails || systemConfig.allowedEmails.length === 0) && <div className="text-center text-slate-400 text-xs">暫無白名單用戶</div>}</div></div></div> </div> ); }
+        function AdminSystemPanel({ db, systemConfig, onBack, triggerAlert }) { const [newEmail, setNewEmail] = useState(''); const [isSubmitting, setIsSubmitting] = useState(false); const { doc, updateDoc, arrayUnion, arrayRemove, setDoc, collection, query, where, getDocs, deleteDoc } = window.firebaseServices; const configRef = doc(db, "system_settings", "config"); const updateConfig = async (key, value) => { try { await setDoc(configRef, { [key]: value }, { merge: true }); } catch (e) { console.error(e); triggerAlert("設定更新失敗"); } }; const handleAddWhitelist = async (e) => { e.preventDefault(); if (!newEmail.trim()) return; setIsSubmitting(true); try { await updateDoc(configRef, { allowedEmails: arrayUnion(newEmail.trim()) }); setNewEmail(''); } catch (e) { console.error(e); triggerAlert("新增失敗"); } setIsSubmitting(false); }; const handleRemoveWhitelist = async (email) => { if (window.confirm(`確定要移除 ${email} 嗎？`)) { await updateDoc(configRef, { allowedEmails: arrayRemove(email) }); } }; const handleClearExpiredPublic = async () => { if (!window.confirm("⚠️ 警告：確定要刪除所有【過期】的公共功課嗎？\n\n這將會：\n1. 永久刪除資料庫中的過期公共紀錄\n2. 同步移除所有學生列表中的對應項目\n\n此動作無法復原。")) return; setIsSubmitting(true); try { const today = new Date(); const y = today.getFullYear(); const m = String(today.getMonth() + 1).padStart(2, '0'); const d = String(today.getDate()).padStart(2, '0'); const todayStr = `${y}-${m}-${d}`; const q = query(collection(db, "public_assignments"), where("dueDate", "<", todayStr)); const snapshot = await getDocs(q); if (snapshot.empty) { triggerAlert("目前沒有過期的公共功課。"); } else { const deletePromises = snapshot.docs.map(doc => deleteDoc(doc.ref)); await Promise.all(deletePromises); triggerAlert(`已成功清除 ${snapshot.size} 項過期功課！`); } } catch (e) { console.error(e); triggerAlert("清除失敗 (可能是索引問題或權限不足)"); } finally { setIsSubmitting(false); } }; return ( <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 min-h-[500px]"> <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4"><button onClick={onBack} className="p-2 hover:bg-slate-100 rounded-full transition-colors"><Icon name="arrow-left" className="w-5 h-5 text-slate-500" /></button><h2 className="text-xl font-bold text-slate-800">系統控制台</h2></div> <div className="mb-8"> <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">資料庫維護</h3> <div className="bg-red-50 rounded-xl p-4 border border-red-100 flex items-center justify-between"> <div> <h4 className="text-red-800 font-bold text-sm">清除過期公共功課</h4> <p className="text-red-600/70 text-xs mt-1">移除所有繳交日期早於今天的公共功課紀錄</p> </div> <button onClick={handleClearExpiredPublic} disabled={isSubmitting} className="px-4 py-2 bg-white border border-red-200 text-red-600 rounded-lg text-xs font-bold hover:bg-red-500 hover:text-white transition-all shadow-sm active:scale-95 disabled:opacity-50 flex items-center gap-2"> {isSubmitting ? '處理中...' : <><Icon name="trash-2" className="w-3.5 h-3.5" /> 立即清除</>} </button> </div> </div> <div className="mb-8"><h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">網站狀態控制</h3><div className="bg-slate-50 rounded-xl p-4 border border-slate-200 space-y-4"><div className="grid grid-cols-3 gap-2">{['normal', 'updating', 'restructuring'].map(mode => (<button key={mode} onClick={() => updateConfig('maintenanceMode', mode)} className={`py-2 px-3 rounded-lg text-sm font-bold border transition-all ${systemConfig?.maintenanceMode === mode ? (mode === 'normal' ? 'bg-green-100 text-green-700 border-green-200' : mode === 'updating' ? 'bg-orange-100 text-orange-700 border-orange-200' : 'bg-blue-100 text-blue-700 border-blue-200') : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-100'}`}>{mode === 'normal' ? '🟢 正常運作' : mode === 'updating' ? '🟠 網站更新中' : '🔵 資料重整中'}</button>))}</div>{systemConfig?.maintenanceMode !== 'normal' && (<div className="space-y-3 pt-2 border-t border-slate-200"><div><label className="block text-xs font-bold text-slate-500 mb-1">自訂維護訊息</label><input type="text" className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" placeholder="例如：系統正在升級，請稍候..." value={systemConfig?.message || ''} onChange={(e) => updateConfig('message', e.target.value)} /></div><div><label className="block text-xs font-bold text-slate-500 mb-1">預計恢復時間</label><input type="text" className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" placeholder="例如: 下午 4:00" value={systemConfig?.estimatedTime || ''} onChange={(e) => updateConfig('estimatedTime', e.target.value)} /></div></div>)}</div></div> <div><div className="flex items-center justify-between mb-3"><h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider">白名單存取控制</h3><label className="relative inline-flex items-center cursor-pointer"><input type="checkbox" className="sr-only peer" checked={systemConfig?.whitelistEnabled || false} onChange={(e) => updateConfig('whitelistEnabled', e.target.checked)} /><div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div></label></div><div className={`bg-slate-50 rounded-xl p-4 border border-slate-200 transition-opacity ${!systemConfig?.whitelistEnabled ? 'opacity-50' : ''}`}><form onSubmit={handleAddWhitelist} className="flex gap-2 mb-4"><input type="email" className="flex-1 px-3 py-2 rounded-lg border border-slate-200 text-sm" placeholder="輸入允許的 Google 電郵" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} required /><button type="submit" disabled={isSubmitting} className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-indigo-700"><Icon name="plus" className="w-4 h-4" /></button></form><div className="space-y-2 max-h-[200px] overflow-y-auto">{(systemConfig?.allowedEmails || []).map(email => (<div key={email} className="flex items-center justify-between bg-white p-2 rounded-lg border border-slate-100 text-sm"><span className="text-slate-700">{email}</span><button onClick={() => handleRemoveWhitelist(email)} className="text-slate-400 hover:text-red-500"><Icon name="trash-2" className="w-4 h-4" /></button></div>))}{(!systemConfig?.allowedEmails || systemConfig.allowedEmails.length === 0) && <div className="text-center text-slate-400 text-xs">暫無白名單用戶</div>}</div></div></div> </div> ); }
 
         function Timetable({ currentDay, subjects, timeConfig, durations, onDayChange, isEditing, onUpdateSchedule, onUpdateTime, onUpdateDuration, manualDay, setManualDay }) { 
             const [now, setNow] = useState(new Date());
@@ -941,44 +883,65 @@
                    }
                 }
 
+                // Date parsing with weekday
+                const [y, m, d] = item.dueDate.split('-').map(Number);
+                const dateObj = new Date(y, m - 1, d);
+                const weekDayStr = ['日', '一', '二', '三', '四', '五', '六'][dateObj.getDay()];
+
                 return (
                     <div key={item.id} style={{ animationDelay: `${index * 0.05}s` }} className={`animate-item relative group overflow-hidden bg-white rounded-xl p-4 shadow-sm border transition-all duration-300 ${isExiting ? 'scale-95 opacity-0 translate-y-4' : 'hover:shadow-md'} ${isVisuallyCompleted ? 'bg-slate-50 border-slate-100' : 'border-slate-100'} ${!isVisuallyCompleted && isTest ? 'border-l-4 border-l-purple-400' : ''}`}>
                         {!isTest && (<div className={`absolute left-0 top-0 bottom-0 w-1.5 ${daysLeft < 0 && !isVisuallyCompleted ? 'bg-red-500' : (daysLeft === 0 && !isVisuallyCompleted ? 'bg-orange-500' : 'bg-transparent')}`}></div>)}
-                        <div className="flex items-start gap-3">
+                        <div className="flex gap-3">
                             <button onClick={() => handleToggle(item.id, item.completed)} disabled={isExiting || item.forceExpired} className={`flex-shrink-0 mt-1 w-6 h-6 rounded-full border-2 transition-all duration-300 flex items-center justify-center overflow-hidden ${isVisuallyCompleted ? 'bg-green-500 border-green-500 text-white scale-110 shadow-green-200' : (!isTest ? 'border-slate-300 hover:border-indigo-500 hover:bg-indigo-50' : 'border-purple-300 hover:border-purple-500 hover:bg-purple-50')} ${item.forceExpired ? 'border-gray-200 cursor-not-allowed bg-gray-50' : ''}`}>
                                 <Icon name="check-circle" className={`w-3.5 h-3.5 transition-transform duration-300 ${isVisuallyCompleted ? 'scale-100' : 'scale-0'}`} />
                             </button>
-                            <div className="flex-grow min-w-0">
-                                <div className="flex flex-col gap-1">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${subjectStyle}`}>{item.subject || '其他'}</span>
-                                            <span className="text-xs font-bold text-slate-500">{getTypeName(item.type)}</span>
-                                            {item.publicRefId && <span className="text-[10px] bg-yellow-100 text-yellow-700 px-1.5 rounded">由 {item.senderName || '老師'} 發放</span>}
-                                        </div>
-                                        <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold shadow-sm border ${status.color} ${status.border}`}>{status.text === '⛔ 已終止' ? <Icon name="ban" className="w-3 h-3" /> : (daysLeft < 0 && <Icon name="alert-circle" className="w-3 h-3" />)}{daysLeft <= 3 && daysLeft >= 0 && status.text !== '⛔ 已終止' && <Icon name="clock" className="w-3 h-3" />}{status.text}</span>
+                            
+                            <div className="flex-grow min-w-0 flex flex-col gap-2">
+                                {/* Header: Subject & Sender (Left) - Status (Right) */}
+                                <div className="flex justify-between items-start">
+                                    <div className="flex flex-wrap gap-2 items-center">
+                                        <span className={`text-sm font-extrabold px-2.5 py-1 rounded-lg border ${subjectStyle}`}>{item.subject || '其他'}</span>
+                                        {item.publicRefId && <span className="text-[10px] bg-amber-50 text-amber-600 border border-amber-100 px-2 py-0.5 rounded-full font-bold flex items-center gap-1"><Icon name="user" className="w-3 h-3" />{item.senderName || '老師'}</span>}
                                     </div>
-                                    <div className={`text-base font-medium whitespace-pre-wrap leading-relaxed ${isVisuallyCompleted || item.forceExpired ? 'line-through text-slate-400' : 'text-slate-800'}`}>{item.description}</div>
-                                    {item.image && (<div className="mt-2 relative group/image w-fit"><img src={item.image} alt="Upload" className={`max-h-32 rounded-lg border border-slate-200 object-cover ${isVisuallyCompleted || item.forceExpired ? 'opacity-50 grayscale' : ''}`} /></div>)}
-                                    <div className="flex items-center justify-between mt-1">
-                                        <div className="flex items-center gap-1 text-xs text-slate-400"><Icon name="calendar" className="w-3 h-3" />{item.dueDate}</div>
-                                        {countdownElem}
-                                    </div>
+                                    <span className={`flex-shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold border shadow-sm ${status.color} ${status.border}`}>
+                                        {status.text === '⛔ 已終止' ? <Icon name="ban" className="w-3 h-3" /> : (daysLeft < 0 && <Icon name="alert-circle" className="w-3 h-3" />)}
+                                        {daysLeft <= 3 && daysLeft >= 0 && status.text !== '⛔ 已終止' && <Icon name="clock" className="w-3 h-3" />}
+                                        {status.text}
+                                    </span>
+                                </div>
+
+                                {/* Body */}
+                                <div className={`text-base font-bold whitespace-pre-wrap leading-relaxed ${isVisuallyCompleted || item.forceExpired ? 'line-through text-slate-400' : 'text-slate-700'}`}>
+                                    {item.description}
+                                </div>
+                                {item.image && (<div className="relative group/image w-fit"><img src={item.image} alt="Upload" className={`max-h-32 rounded-xl border border-slate-200 object-cover ${isVisuallyCompleted || item.forceExpired ? 'opacity-50 grayscale' : ''}`} /></div>)}
+
+                                {/* Footer: Type | Date | Countdown */}
+                                <div className="flex flex-wrap items-center justify-between text-xs text-slate-400 mt-2 pt-3 border-t border-slate-100">
+                                     <div className="flex items-center gap-3">
+                                        <span className="font-extrabold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">{getTypeName(item.type)}</span>
+                                        <span className="flex items-center gap-1 font-bold bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-lg border border-indigo-100">
+                                            <Icon name="calendar" className="w-3.5 h-3.5" /> 
+                                            {item.dueDate} (星期{weekDayStr})
+                                        </span>
+                                     </div>
+                                     {countdownElem}
                                 </div>
                             </div>
-                            <div className="flex flex-col gap-1">
-                                {!item.forceExpired && <button onClick={() => setEditingItem(item)} className="flex-shrink-0 p-1.5 text-slate-300 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-all" title="編輯"><Icon name="pencil" className="w-4 h-4" /></button>}
+
+                            {/* Actions Column with Divider */}
+                            <div className="flex flex-col gap-1 pl-3 border-l border-slate-100 ml-1">
+                                {!item.forceExpired && <button onClick={() => setEditingItem(item)} className="flex-shrink-0 p-2 text-slate-400 hover:text-blue-500 hover:bg-blue-50 rounded-xl transition-all" title="編輯"><Icon name="pencil" className="w-4 h-4" /></button>}
                                 {isAdmin && item.publicRefId ? (
                                     <>
-                                        <button onClick={() => deleteItem(item.id)} className="flex items-center justify-center p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all" title="刪除 (自己)"><Icon name="trash-2" className="w-4 h-4" /><span className="text-[10px] font-bold ml-0.5 hidden sm:inline">自己</span></button>
-                                        <button onClick={() => deletePublicItem(item.publicRefId, item.id)} className="flex items-center justify-center p-1.5 text-indigo-300 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all" title="刪除 (全班)"><Icon name="globe" className="w-4 h-4" /><span className="text-[10px] font-bold ml-0.5 hidden sm:inline">全班</span></button>
-                                        <button onClick={() => handleForceExpire(item.publicRefId, item.forceExpired)} className={`flex items-center justify-center p-1.5 rounded-lg transition-all ${item.forceExpired ? 'text-green-500 hover:bg-green-50' : 'text-orange-400 hover:text-orange-600 hover:bg-orange-50'}`} title={item.forceExpired ? "取消過期" : "強制過期 (全班)"}>
+                                        <button onClick={() => deleteItem(item.id)} className="flex items-center justify-center p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all" title="刪除 (自己)"><Icon name="trash-2" className="w-4 h-4" /></button>
+                                        <button onClick={() => deletePublicItem(item.publicRefId, item.id)} className="flex items-center justify-center p-2 text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all" title="刪除 (全班)"><Icon name="globe" className="w-4 h-4" /></button>
+                                        <button onClick={() => handleForceExpire(item.publicRefId, item.forceExpired)} className={`flex items-center justify-center p-2 rounded-xl transition-all ${item.forceExpired ? 'text-green-500 hover:bg-green-50' : 'text-orange-400 hover:text-orange-600 hover:bg-orange-50'}`} title={item.forceExpired ? "取消過期" : "強制過期 (全班)"}>
                                             <Icon name={item.forceExpired ? "refresh-ccw" : "ban"} className="w-4 h-4" />
-                                            <span className="text-[10px] font-bold ml-0.5 hidden sm:inline">{item.forceExpired ? "恢復" : "過期"}</span>
                                         </button>
                                     </>
                                 ) : (
-                                    <button onClick={() => deleteItem(item.id)} className="flex-shrink-0 p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"><Icon name="trash-2" className="w-4 h-4" /></button>
+                                    <button onClick={() => deleteItem(item.id)} className="flex-shrink-0 p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"><Icon name="trash-2" className="w-4 h-4" /></button>
                                 )}
                             </div>
                         </div>
