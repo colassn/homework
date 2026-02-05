@@ -277,17 +277,16 @@
         function BlockScreen({ type, estimatedTime, customConfig, onLogin, user, triggerAlert }) {
             const [showRequestForm, setShowRequestForm] = useState(false);
             const [requestEmail, setRequestEmail] = useState('');
+            const [requestName, setRequestName] = useState(''); // New State for Name
             const [isSubmitting, setIsSubmitting] = useState(false);
             const { addDoc, collection, db, query, where, getDocs } = window.firebaseServices;
 
-            // Sync requestEmail with user prop
             useEffect(() => {
                 if (user && user.email) {
                     setRequestEmail(user.email);
                 }
             }, [user]);
 
-            // Default Messages
             const whitelistDefaultTitle = "存取權限受限";
             const whitelistDefaultMsg = "本網站目前處於測試階段 (Beta)，僅開放白名單用戶先行體驗。\n如需開通權限，請提供登入電郵給可樂仔 (Colason)。";
             
@@ -299,30 +298,30 @@
 
             const handleRequestSubmit = async (e) => {
                 e.preventDefault();
-                if (!requestEmail.trim()) return;
+                if (!requestEmail.trim() || !requestName.trim()) return; // Check both
                 setIsSubmitting(true);
                 try {
-                    const q = query(collection(db, "access_requests"), where("email", "==", requestEmail.trim()), where("status", "==", "pending"));
-                    const snap = await getDocs(q);
-                    if (!snap.empty) {
-                        triggerAlert("您已經提交過申請，請耐心等待審核。");
-                        setIsSubmitting(false);
-                        return;
-                    }
-
+                    // Direct submission without reading (fixes permission issue)
                     await addDoc(collection(db, "access_requests"), {
                         email: requestEmail.trim(),
+                        displayName: requestName.trim(), // Save Name
                         status: 'pending',
                         requestTime: new Date().toISOString()
                     });
-                    triggerAlert("申請已送出！請等待管理員核准後，直接登入即可使用。");
+                    
+                    if (typeof triggerAlert === 'function') {
+                        triggerAlert("申請已送出！請等待管理員核准後，直接登入即可使用。");
+                    } else {
+                        alert("申請已送出！請等待管理員核准後，直接登入即可使用。");
+                    }
                     setShowRequestForm(false);
                 } catch (e) {
                     console.error(e);
-                    if (e.code === 'permission-denied') {
-                        triggerAlert("申請失敗：資料庫權限不足。請聯絡管理員檢查 Firestore 規則 (access_requests)。");
+                    const msg = "申請提交失敗，請稍後再試。";
+                    if (typeof triggerAlert === 'function') {
+                        triggerAlert(msg);
                     } else {
-                        triggerAlert("申請提交失敗，請稍後再試。");
+                        alert(msg);
                     }
                 } finally {
                     setIsSubmitting(false);
@@ -353,12 +352,21 @@
                                     </button>
                                 ) : (
                                     <form onSubmit={handleRequestSubmit} className="mb-4 bg-slate-50 p-4 rounded-xl border border-slate-200 text-left animate-in fade-in zoom-in-95">
+                                        <label className="block text-xs font-bold text-slate-500 mb-1">英文短名 (例如: Peter)</label>
+                                        <input 
+                                            type="text" 
+                                            value={requestName} 
+                                            onChange={(e) => setRequestName(e.target.value)} 
+                                            className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm mb-3"
+                                            placeholder="Peter Chan"
+                                            required
+                                        />
                                         <label className="block text-xs font-bold text-slate-500 mb-1">Google 電郵</label>
                                         <input 
                                             type="email" 
                                             value={requestEmail} 
                                             onChange={(e) => setRequestEmail(e.target.value)} 
-                                            className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm mb-2"
+                                            className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm mb-3"
                                             placeholder="your.email@gmail.com"
                                             required
                                         />
@@ -550,8 +558,9 @@
             const [requests, setRequests] = useState([]);
             const [showManageModal, setShowManageModal] = useState(false);
             const [assignmentList, setAssignmentList] = useState([]);
-            const [filterMode, setFilterMode] = useState('expired'); // 'expired', 'today', 'all'
+            const [filterMode, setFilterMode] = useState('expired'); 
             const [selectedManageIds, setSelectedManageIds] = useState(new Set());
+            const [showConfirmModal, setShowConfirmModal] = useState(null); // { type: 'approve'|'reject', req }
 
             const { doc, updateDoc, arrayUnion, arrayRemove, setDoc, collection, query, where, getDocs, deleteDoc, onSnapshot, orderBy } = window.firebaseServices; 
             const configRef = doc(db, "system_settings", "config"); 
@@ -573,16 +582,13 @@
             const fetchAssignments = async () => {
                 setIsSubmitting(true);
                 try {
-                    // Fetch all assignments first, then filter client-side for simplicity
                     const q = query(collection(db, "public_assignments"), orderBy("dueDate", "desc"));
                     const snapshot = await getDocs(q);
                     const list = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
                     setAssignmentList(list);
                     
-                    // Auto-select expired assignments ONLY if mode is 'expired'
                     if (filterMode === 'expired') {
                         const today = new Date();
-                        // Reset time part for accurate date comparison
                         today.setHours(0,0,0,0); 
                         const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
                         
@@ -605,7 +611,6 @@
                 }
             };
 
-            // Re-run auto-select when filter mode changes or list changes
             useEffect(() => {
                 if (showManageModal) {
                     const today = new Date();
@@ -622,7 +627,7 @@
                         setSelectedManageIds(new Set());
                     }
                 }
-            }, [filterMode, showManageModal]); // Note: assignmentList dependency omitted to avoid loop, handled in fetch
+            }, [filterMode, showManageModal]);
 
             const handleOpenManage = () => {
                 setFilterMode('expired'); 
@@ -655,12 +660,10 @@
             
             const handleToggleAll = () => {
                 if (selectedManageIds.size === filteredList.length && filteredList.length > 0) {
-                    // Deselect all visible
                     const newSet = new Set(selectedManageIds);
                     filteredList.forEach(item => newSet.delete(item.id));
                     setSelectedManageIds(newSet);
                 } else {
-                    // Select all visible
                     const newSet = new Set(selectedManageIds);
                     filteredList.forEach(item => newSet.add(item.id));
                     setSelectedManageIds(newSet);
@@ -673,7 +676,7 @@
                 try {
                     await Promise.all([...selectedManageIds].map(id => deleteDoc(doc(db, "public_assignments", id))));
                     triggerAlert("刪除成功");
-                    fetchAssignments(); // Refresh
+                    fetchAssignments(); 
                     setSelectedManageIds(new Set());
                 } catch(e) {
                     console.error(e);
@@ -683,21 +686,25 @@
                 }
             };
 
-            // ... (rest of admin functions) ...
-            const handleApproveRequest = async (req) => {
-                if (!window.confirm(`批准 ${req.email} 加入白名單？`)) return;
+            const handleConfirmAction = async () => {
+                if (!showConfirmModal) return;
+                const { type, req } = showConfirmModal;
+                setIsSubmitting(true);
                 try {
-                    await updateDoc(configRef, { allowedEmails: arrayUnion(req.email) });
-                    await updateDoc(doc(db, "access_requests", req.id), { status: 'approved' });
-                    triggerAlert("已批准並加入白名單");
-                } catch (e) { console.error(e); triggerAlert("操作失敗"); }
-            };
-
-            const handleRejectRequest = async (reqId) => {
-                if (!window.confirm("拒絕此申請？")) return;
-                try {
-                    await updateDoc(doc(db, "access_requests", reqId), { status: 'rejected' });
-                } catch (e) { console.error(e); triggerAlert("操作失敗"); }
+                    if (type === 'approve') {
+                        await updateDoc(configRef, { allowedEmails: arrayUnion(req.email) });
+                        await updateDoc(doc(db, "access_requests", req.id), { status: 'approved' });
+                        triggerAlert("已批准並加入白名單");
+                    } else {
+                        await updateDoc(doc(db, "access_requests", req.id), { status: 'rejected' });
+                    }
+                    setShowConfirmModal(null);
+                } catch(e) {
+                    console.error(e);
+                    triggerAlert("操作失敗");
+                } finally {
+                    setIsSubmitting(false);
+                }
             };
 
             const getStatus = (dueDate) => {
@@ -731,9 +738,9 @@
                             </div> 
                             <div className="mb-8"><h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">網站狀態控制</h3><div className="bg-slate-50 rounded-xl p-4 border border-slate-200 space-y-4"><div className="grid grid-cols-3 gap-2">{['normal', 'updating', 'restructuring'].map(mode => (<button key={mode} onClick={() => updateConfig('maintenanceMode', mode)} className={`py-2 px-3 rounded-lg text-sm font-bold border transition-all ${systemConfig?.maintenanceMode === mode ? (mode === 'normal' ? 'bg-green-100 text-green-700 border-green-200' : mode === 'updating' ? 'bg-orange-100 text-orange-700 border-orange-200' : 'bg-blue-100 text-blue-700 border-blue-200') : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-100'}`}>{mode === 'normal' ? '🟢 正常運作' : mode === 'updating' ? '🟠 網站更新中' : '🔵 資料重整中'}</button>))}</div>
                                 <div className="pt-2 border-t border-slate-200 space-y-3">
-                                    <div><label className="block text-xs font-bold text-slate-500 mb-1">自定義標題 (留空則用預設)</label><input type="text" className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" placeholder="例如：測試階段 / 系統維護" value={systemConfig?.customBlockTitle || ''} onChange={(e) => updateConfig('customBlockTitle', e.target.value)} /></div>
-                                    <div><label className="block text-xs font-bold text-slate-500 mb-1">自定義內文 (留空則用預設)</label><textarea rows="2" className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" placeholder="例如：我們正在更新伺服器..." value={systemConfig?.customBlockMessage || ''} onChange={(e) => updateConfig('customBlockMessage', e.target.value)} /></div>
-                                    {systemConfig?.maintenanceMode !== 'normal' && (<div><label className="block text-xs font-bold text-slate-500 mb-1">預計恢復時間</label><input type="text" className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" placeholder="例如: 下午 4:00" value={systemConfig?.estimatedTime || ''} onChange={(e) => updateConfig('estimatedTime', e.target.value)} /></div>)}
+                                    <div><label className="block text-xs font-bold text-slate-500 mb-1">自定義標題 (留空則用預設)</label><input type="text" className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" placeholder="例如：測試階段 / 系統維護" defaultValue={systemConfig?.customBlockTitle || ''} onBlur={(e) => updateConfig('customBlockTitle', e.target.value)} /></div>
+                                    <div><label className="block text-xs font-bold text-slate-500 mb-1">自定義內文 (留空則用預設)</label><textarea rows="2" className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" placeholder="例如：我們正在更新伺服器..." defaultValue={systemConfig?.customBlockMessage || ''} onBlur={(e) => updateConfig('customBlockMessage', e.target.value)} /></div>
+                                    {systemConfig?.maintenanceMode !== 'normal' && (<div><label className="block text-xs font-bold text-slate-500 mb-1">預計恢復時間</label><input type="text" className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" placeholder="例如: 下午 4:00" defaultValue={systemConfig?.estimatedTime || ''} onBlur={(e) => updateConfig('estimatedTime', e.target.value)} /></div>)}
                                 </div>
                             </div></div> 
                             <div><div className="flex items-center justify-between mb-3"><h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider">白名單存取控制</h3><label className="relative inline-flex items-center cursor-pointer"><input type="checkbox" className="sr-only peer" checked={systemConfig?.whitelistEnabled || false} onChange={(e) => updateConfig('whitelistEnabled', e.target.checked)} /><div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div></label></div><div className={`bg-slate-50 rounded-xl p-4 border border-slate-200 transition-opacity ${!systemConfig?.whitelistEnabled ? 'opacity-50' : ''}`}>
@@ -747,18 +754,46 @@
                                 {requests.length === 0 ? <div className="text-center text-slate-400 py-10 bg-slate-50 rounded-xl border border-slate-100">暫無待審核申請</div> : 
                                     requests.map(req => (
                                         <div key={req.id} className="flex items-center justify-between bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
-                                            <div>
-                                                <div className="font-bold text-slate-800 text-sm">{req.email}</div>
-                                                <div className="text-xs text-slate-400">{new Date(req.requestTime).toLocaleString()}</div>
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-lg border border-indigo-200">
+                                                    {(req.displayName || req.email)[0].toUpperCase()}
+                                                </div>
+                                                <div>
+                                                    <div className="font-bold text-slate-800 text-sm">{req.displayName || '未命名'}</div>
+                                                    <div className="text-xs text-slate-500 font-bold">{req.email}</div>
+                                                    <div className="text-[10px] text-slate-400 mt-0.5">{new Date(req.requestTime).toLocaleString()}</div>
+                                                </div>
                                             </div>
                                             <div className="flex gap-2">
-                                                <button onClick={() => handleRejectRequest(req.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="拒絕"><Icon name="x" className="w-4 h-4" /></button>
-                                                <button onClick={() => handleApproveRequest(req)} className="p-2 text-green-500 hover:bg-green-50 rounded-lg transition-colors" title="批准"><Icon name="check" className="w-4 h-4" /></button>
+                                                <button onClick={() => setShowConfirmModal({type: 'reject', req})} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="拒絕"><Icon name="x" className="w-5 h-5" /></button>
+                                                <button onClick={() => setShowConfirmModal({type: 'approve', req})} className="p-2 text-green-500 hover:bg-green-50 rounded-lg transition-colors" title="批准"><Icon name="check" className="w-5 h-5" /></button>
                                             </div>
                                         </div>
                                     ))
                                 }
                              </div>
+                        </div>
+                    )}
+
+                    {showConfirmModal && (
+                        <div className="fixed inset-0 z-[130] flex items-center justify-center p-4">
+                            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => !isSubmitting && setShowConfirmModal(null)}></div>
+                            <div className="modal-animate bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 relative z-10 text-center overflow-hidden">
+                                <div className={`mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4 ${showConfirmModal.type === 'approve' ? 'bg-green-100 text-green-500' : 'bg-red-100 text-red-500'}`}>
+                                    <Icon name={showConfirmModal.type === 'approve' ? 'check' : 'x'} className="w-8 h-8" />
+                                </div>
+                                <h3 className="text-xl font-bold text-slate-800 mb-2">{showConfirmModal.type === 'approve' ? '批准申請' : '拒絕申請'}</h3>
+                                <p className="text-slate-600 mb-6 text-sm">
+                                    確定要{showConfirmModal.type === 'approve' ? '批准' : '拒絕'} <strong>{showConfirmModal.req.displayName}</strong> ({showConfirmModal.req.email}) 的申請嗎？
+                                    {showConfirmModal.type === 'approve' && <span className="block mt-1 text-xs text-green-600">此用戶將被加入白名單並可立即使用。</span>}
+                                </p>
+                                <div className="flex gap-3">
+                                    <button onClick={() => setShowConfirmModal(null)} disabled={isSubmitting} className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-all">取消</button>
+                                    <button onClick={handleConfirmAction} disabled={isSubmitting} className={`flex-1 py-2.5 rounded-xl text-white font-bold shadow-lg transition-all active:scale-95 ${showConfirmModal.type === 'approve' ? 'bg-green-500 hover:bg-green-600 shadow-green-200' : 'bg-red-500 hover:bg-red-600 shadow-red-200'}`}>
+                                        {isSubmitting ? '處理中...' : '確認'}
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     )}
 
@@ -1341,7 +1376,8 @@
             if (maintenanceMode !== 'normal' && !isAdmin && !isWhitelisted) { 
                 return (
                     <div className="min-h-screen bg-slate-50 relative">
-                        <BlockScreen type={maintenanceMode} estimatedTime={systemConfig?.estimatedTime} customMessage={systemConfig?.message} onLogin={() => setIsAuthModalOpen(true)} user={user} />
+                        {/* Fix: Pass triggerAlert to BlockScreen in maintenance mode too */}
+                        <BlockScreen type={maintenanceMode} estimatedTime={systemConfig?.estimatedTime} customConfig={systemConfig} onLogin={() => setIsAuthModalOpen(true)} user={user} triggerAlert={triggerAlert} />
                         <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} triggerAlert={triggerAlert} />
                         {notification.isOpen && <div className="fixed inset-0 z-[200] flex items-center justify-center px-4"><div className="absolute inset-0 bg-black/30 backdrop-blur-[2px]"></div><div className="notification-animate relative bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center transform scale-100"><div className={`mx-auto w-12 h-12 rounded-full flex items-center justify-center mb-4 ${notification.type === 'confirm' ? 'bg-red-100 text-red-500' : 'bg-indigo-100 text-indigo-500'}`}>{notification.type === 'confirm' ? <Icon name="alert-triangle" className="w-6 h-6" /> : <Icon name="info" className="w-6 h-6" />}</div><h3 className="text-lg font-bold text-slate-800 mb-2">{notification.type === 'confirm' ? '確認操作' : '提示'}</h3><p className="text-slate-600 mb-6 leading-relaxed">{notification.message}</p><div className="flex gap-3 justify-center">{notification.type === 'confirm' ? (<><button onClick={closeNotification} className="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 text-slate-600 font-medium hover:bg-slate-50 transition-colors">取消</button><button onClick={handleNotificationConfirm} className="flex-1 py-2.5 px-4 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 shadow-lg shadow-red-200 transition-all active:scale-95">確認</button></>) : (<button onClick={closeNotification} className="w-full py-2.5 px-4 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all active:scale-95">知道了</button>)}</div></div></div>}
                     </div>
@@ -1351,8 +1387,10 @@
             if (whitelistEnabled && !isAdmin && !isWhitelisted) {
                 return (
                      <div className="min-h-screen bg-slate-50 relative">
-                        <BlockScreen type="access_denied" onLogin={() => setIsAuthModalOpen(true)} user={user} />
+                        {/* Fix: Pass triggerAlert to BlockScreen in whitelist mode */}
+                        <BlockScreen type="access_denied" estimatedTime={null} customConfig={systemConfig} onLogin={() => setIsAuthModalOpen(true)} user={user} triggerAlert={triggerAlert} />
                         <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} triggerAlert={triggerAlert} />
+                        {notification.isOpen && <div className="fixed inset-0 z-[200] flex items-center justify-center px-4"><div className="absolute inset-0 bg-black/30 backdrop-blur-[2px]"></div><div className="notification-animate relative bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center transform scale-100"><div className={`mx-auto w-12 h-12 rounded-full flex items-center justify-center mb-4 ${notification.type === 'confirm' ? 'bg-red-100 text-red-500' : 'bg-indigo-100 text-indigo-500'}`}>{notification.type === 'confirm' ? <Icon name="alert-triangle" className="w-6 h-6" /> : <Icon name="info" className="w-6 h-6" />}</div><h3 className="text-lg font-bold text-slate-800 mb-2">{notification.type === 'confirm' ? '確認操作' : '提示'}</h3><p className="text-slate-600 mb-6 leading-relaxed">{notification.message}</p><div className="flex gap-3 justify-center">{notification.type === 'confirm' ? (<><button onClick={closeNotification} className="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 text-slate-600 font-medium hover:bg-slate-50 transition-colors">取消</button><button onClick={handleNotificationConfirm} className="flex-1 py-2.5 px-4 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 shadow-lg shadow-red-200 transition-all active:scale-95">確認</button></>) : (<button onClick={closeNotification} className="w-full py-2.5 px-4 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all active:scale-95">知道了</button>)}</div></div></div>}
                      </div>
                 );
             }
