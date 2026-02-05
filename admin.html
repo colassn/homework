@@ -649,6 +649,60 @@
                 return () => unsub;
             }, [db]);
 
+            // --- Sync Effect (Restored) ---
+            useEffect(() => {
+                if (!user || !db) return;
+                // Listen to public assignments
+                const q = query(collection(db, "public_assignments"), orderBy("createdAt", "desc"));
+                
+                const unsubscribe = onSnapshot(q, (snapshot) => {
+                    snapshot.docChanges().forEach(async (change) => {
+                        const publicData = change.doc.data();
+                        const publicId = change.doc.id;
+                        const userItemsRef = collection(db, "users", user.uid, "items");
+                        
+                        // Check if we already have this item
+                        const dupQuery = query(userItemsRef, where("publicRefId", "==", publicId));
+                        
+                        try {
+                            if (change.type === "added") {
+                                const dupSnapshot = await getDocs(dupQuery);
+                                if (dupSnapshot.empty) {
+                                    // New assignment found that user doesn't have
+                                    await addDoc(userItemsRef, {
+                                        ...publicData,
+                                        publicRefId: publicId,
+                                        completed: false, // Default to incomplete for user
+                                        forceExpired: publicData.forceExpired || false
+                                    });
+                                    triggerAlert(`📢 新功課: ${publicData.subject} - ${publicData.description}`);
+                                }
+                            }
+                            if (change.type === "modified") {
+                                const dupSnapshot = await getDocs(dupQuery);
+                                dupSnapshot.forEach(async (doc) => {
+                                    await updateDoc(doc.ref, {
+                                        forceExpired: publicData.forceExpired || false,
+                                        description: publicData.description, // Sync content updates too
+                                        subject: publicData.subject,
+                                        dueDate: publicData.dueDate
+                                    });
+                                });
+                            }
+                            if (change.type === "removed") {
+                                const dupSnapshot = await getDocs(dupQuery);
+                                dupSnapshot.forEach(async (doc) => {
+                                    await deleteDoc(doc.ref);
+                                });
+                            }
+                        } catch (error) {
+                            console.error("Sync error:", error);
+                        }
+                    });
+                });
+                return () => unsubscribe();
+            }, [user, db]);
+
             // --- Updated getNextLesson Logic ---
             const getNextLessonDynamic = (subjectName, now, currentCycleDay) => {
                 if (!subjectName || subjectName === '其他') return null;
@@ -956,7 +1010,7 @@
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
                             <div>
                                 <h1 className="text-xl sm:text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center gap-2">
-                                    {viewMode === 'current' ? (<><Icon name="graduation-cap" className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-600" />學生小幫手</>) : viewMode === 'system_admin' ? (<><Icon name="settings" className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600" />系統設定</>) : viewMode === 'admin_users' ? (<><Icon name="users" className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600" />用戶管理</>) : viewMode === 'history' ? (<><Icon name="history" className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600" />完成紀錄</>) : (<><Icon name="calendar-days" className="w-6 h-6 sm:w-8 sm:h-8 text-orange-600" />上課時間表</>)}
+                                    {viewMode === 'current' ? (<><Icon name="graduation-cap" className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-600" />電子手冊</>) : viewMode === 'system_admin' ? (<><Icon name="settings" className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600" />系統設定</>) : viewMode === 'admin_users' ? (<><Icon name="users" className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600" />用戶管理</>) : viewMode === 'history' ? (<><Icon name="history" className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600" />完成紀錄</>) : (<><Icon name="calendar-days" className="w-6 h-6 sm:w-8 sm:h-8 text-orange-600" />上課時間表</>)}
                                 </h1>
                                 <div className="flex items-center gap-2 mt-1">
                                     <p className="text-slate-500 text-sm font-medium">{getTodayDateString()}</p>
@@ -1014,10 +1068,10 @@
                                     <>
                                         {viewMode === 'current' && (
                                             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
-                                                <div onClick={() => handleDashboardClick('today')} className="cursor-pointer bg-white/80 backdrop-blur rounded-2xl p-3 sm:p-4 shadow-sm border border-red-100 flex flex-col items-center justify-center text-center ring-1 ring-red-50 hover:scale-105 hover:shadow-md transition-all active:scale-95"><div className="text-red-500 mb-1"><Icon name="flame" className="w-5 h-5 sm:w-6 sm:h-6" /></div><div className="text-2xl sm:text-3xl font-bold text-slate-800">{todayHomeworks.length}</div><div className="text-xs sm:text-sm font-medium text-slate-500">今日要交</div></div>
-                                                <div onClick={() => handleDashboardClick('tomorrow')} className="cursor-pointer bg-white/80 backdrop-blur rounded-2xl p-3 sm:p-4 shadow-sm border border-orange-100 flex flex-col items-center justify-center text-center ring-1 ring-orange-50 hover:scale-105 hover:shadow-md transition-all active:scale-95"><div className="text-orange-500 mb-1"><Icon name="sun" className="w-5 h-5 sm:w-6 sm:h-6" /></div><div className="text-2xl sm:text-3xl font-bold text-slate-800">{tomorrowHomeworks.length}</div><div className="text-xs sm:text-sm font-medium text-slate-500">聽日要交</div></div>
-                                                <div onClick={() => handleDashboardClick('future')} className="cursor-pointer bg-white/80 backdrop-blur rounded-2xl p-3 sm:p-4 shadow-sm border border-sky-100 flex flex-col items-center justify-center text-center ring-1 ring-sky-50 hover:scale-105 hover:shadow-md transition-all active:scale-95"><div className="text-sky-500 mb-1"><Icon name="calendar-range" className="w-5 h-5 sm:w-6 sm:h-6" /></div><div className="text-2xl sm:text-3xl font-bold text-slate-800">{futureHomeworks.length}</div><div className="text-xs sm:text-sm font-medium text-slate-500">日後要交</div></div>
-                                                <div onClick={() => handleDashboardClick('revision')} className={`cursor-pointer bg-white/80 backdrop-blur rounded-2xl p-3 sm:p-4 shadow-sm border flex flex-col items-center justify-center text-center ring-1 hover:scale-105 hover:shadow-md transition-all active:scale-95 ${nextTestDays !== null && nextTestDays <= 3 ? 'border-purple-200 ring-purple-100 bg-purple-50/50' : 'border-indigo-100 ring-indigo-50'}`}><div className="text-purple-500 mb-1"><Icon name="brain-circuit" className="w-5 h-5 sm:w-6 sm:h-6" /></div><div className="text-2xl sm:text-3xl font-bold text-slate-800">{testCount}</div><div className="text-xs sm:text-sm font-medium text-slate-500">溫習考核</div>{nextTestDays !== null && (<div className="text-[10px] text-purple-600 font-bold mt-1 bg-purple-100 px-1.5 py-0.5 rounded-full">{nextTestDays <0 ? '已完' : (nextTestDays === 0 ? '今日考' : `${nextTestDays}日後`)}</div>)}</div>
+                                                <div onClick={() => handleDashboardClick('today')} className="cursor-pointer bg-white/80 backdrop-blur rounded-2xl p-3 sm:p-4 shadow-sm border border-red-100 flex flex-col items-center justify-center text-center ring-1 ring-red-50 hover:scale-105 hover:shadow-md transition-all active:scale-95"><div className="text-red-500 mb-1"><Icon name="flame" className="w-5 h-5 sm:w-6 sm:h-6" /></div><div className="text-3xl sm:text-4xl font-black text-slate-800 tracking-tight">{todayHomeworks.length}</div><div className="text-xs sm:text-sm font-bold text-slate-500">今日要交</div></div>
+                                                <div onClick={() => handleDashboardClick('tomorrow')} className="cursor-pointer bg-white/80 backdrop-blur rounded-2xl p-3 sm:p-4 shadow-sm border border-orange-100 flex flex-col items-center justify-center text-center ring-1 ring-orange-50 hover:scale-105 hover:shadow-md transition-all active:scale-95"><div className="text-orange-500 mb-1"><Icon name="sun" className="w-5 h-5 sm:w-6 sm:h-6" /></div><div className="text-3xl sm:text-4xl font-black text-slate-800 tracking-tight">{tomorrowHomeworks.length}</div><div className="text-xs sm:text-sm font-bold text-slate-500">聽日要交</div></div>
+                                                <div onClick={() => handleDashboardClick('future')} className="cursor-pointer bg-white/80 backdrop-blur rounded-2xl p-3 sm:p-4 shadow-sm border border-sky-100 flex flex-col items-center justify-center text-center ring-1 ring-sky-50 hover:scale-105 hover:shadow-md transition-all active:scale-95"><div className="text-sky-500 mb-1"><Icon name="calendar-range" className="w-5 h-5 sm:w-6 sm:h-6" /></div><div className="text-3xl sm:text-4xl font-black text-slate-800 tracking-tight">{futureHomeworks.length}</div><div className="text-xs sm:text-sm font-bold text-slate-500">日後要交</div></div>
+                                                <div onClick={() => handleDashboardClick('revision')} className={`cursor-pointer bg-white/80 backdrop-blur rounded-2xl p-3 sm:p-4 shadow-sm border flex flex-col items-center justify-center text-center ring-1 hover:scale-105 hover:shadow-md transition-all active:scale-95 ${nextTestDays !== null && nextTestDays <= 3 ? 'border-purple-200 ring-purple-100 bg-purple-50/50' : 'border-indigo-100 ring-indigo-50'}`}><div className="text-purple-500 mb-1"><Icon name="brain-circuit" className="w-5 h-5 sm:w-6 sm:h-6" /></div><div className="text-3xl sm:text-4xl font-black text-slate-800 tracking-tight">{testCount}</div><div className="text-xs sm:text-sm font-bold text-slate-500">溫習考核</div>{nextTestDays !== null && (<div className="text-[10px] text-purple-600 font-bold mt-1 bg-purple-100 px-1.5 py-0.5 rounded-full">{nextTestDays <0 ? '已完' : (nextTestDays === 0 ? '今日考' : `${nextTestDays}日後`)}</div>)}</div>
                                             </div>
                                         )}
 
@@ -1045,8 +1099,8 @@
                                                         {isAdmin && (<div className="flex items-center gap-2 mt-2 pt-2 border-t border-slate-100"><label className="relative inline-flex items-center cursor-pointer"><input type="checkbox" className="sr-only peer" checked={isBroadcast} onChange={e => setIsBroadcast(e.target.checked)} /><div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div><span className="ml-3 text-sm font-medium text-slate-600">📢 發放給全班</span></label></div>)}
                                                     </form>
 
-                                                    <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mt-6 pt-4 border-t border-slate-100 relative">
-                                                        <div className={`flex items-center gap-2 w-full sm:w-auto overflow-x-auto scrollbar-hide pb-1 transition-opacity duration-300 ${!isListVisible ? 'opacity-50' : 'opacity-100'}`}>
+                                                    <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mt-6 pt-4 border-t border-slate-100 relative z-30">
+                                                        <div className={`flex items-center gap-2 w-full sm:w-auto transition-opacity duration-300 z-40 ${!isListVisible ? 'opacity-50' : 'opacity-100'}`}>
                                                             <SubjectFilterDropdown 
                                                                 currentFilter={filterSubject}
                                                                 onSelect={handleFilterChange}
