@@ -52,6 +52,7 @@
 
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        // Fixed: Removed duplicate deleteDoc from import
         import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs, setDoc, arrayUnion, arrayRemove, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const app = initializeApp(firebaseConfig);
@@ -101,7 +102,7 @@
             { name: '空堂', color: 'bg-slate-100 text-slate-500 border-slate-200' }
         ];
 
-        // Default Data (Fallback)
+        // Default Data
         const DEFAULT_SCHEDULE = {
             1: ["普通電腦", "普通電腦", "英文", "英文", "中文", "中文", "普通話", "佛學", "歷史", "公民經濟與社會"],
             2: ["英文", "英文", "音樂", "地理", "物理", "物理", "中文", "中文", "數學", "數學"],
