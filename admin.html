@@ -59,7 +59,7 @@
         const db = getFirestore(app);
         const googleProvider = new GoogleAuthProvider();
 
-        window.firebaseServices = { auth, db, googleProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs, setDoc, arrayUnion, arrayRemove, getDoc, deleteDoc };
+        window.firebaseServices = { auth, db, googleProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs, setDoc, arrayUnion, arrayRemove, getDoc };
     </script>
 
     <script type="text/babel">
@@ -101,7 +101,7 @@
             { name: '空堂', color: 'bg-slate-100 text-slate-500 border-slate-200' }
         ];
 
-        // Default Data
+        // Default Data (Fallback)
         const DEFAULT_SCHEDULE = {
             1: ["普通電腦", "普通電腦", "英文", "英文", "中文", "中文", "普通話", "佛學", "歷史", "公民經濟與社會"],
             2: ["英文", "英文", "音樂", "地理", "物理", "物理", "中文", "中文", "數學", "數學"],
@@ -150,6 +150,127 @@
             const date = new Date(y, m - 1, d);
             const days = ['日', '一', '二', '三', '四', '五', '六'];
             return `${dateStr} (星期${days[date.getDay()]})`;
+        };
+
+        // --- New LiveLessonCard Component ---
+        const LiveLessonCard = ({ schedule, times, durations, currentDay, user }) => {
+            const [now, setNow] = useState(new Date());
+
+            useEffect(() => {
+                const timer = setInterval(() => setNow(new Date()), 1000);
+                return () => clearInterval(timer);
+            }, []);
+
+            const daySubjects = schedule[currentDay] || [];
+            const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+            let status = "放學啦 / 休息中";
+            let subStatus = "";
+            let nextInfo = "沒有下一節";
+            let iconName = "moon";
+            let colorClass = "from-slate-700 to-slate-900";
+
+            // Helper to get lesson end time
+            const getLessonEnd = (idx) => times[idx] + (durations[idx] || 35);
+
+            // Check pre-school
+            if (times.length > 0 && currentMinutes < times[0]) {
+                status = "早晨！未上堂";
+                const diff = times[0] - currentMinutes;
+                subStatus = `距離第一堂仲有 ${Math.floor(diff/60)}小時 ${diff%60}分鐘`;
+                nextInfo = `第一堂: ${daySubjects[0] || '未知'}`;
+                iconName = "sun";
+                colorClass = "from-orange-400 to-red-500";
+            } else if (times.length > 0) {
+                let found = false;
+                
+                for (let i = 0; i < 10; i++) {
+                    const start = times[i];
+                    const end = getLessonEnd(i);
+                    
+                    // Check if in lesson
+                    if (currentMinutes >= start && currentMinutes < end) {
+                        const left = end - currentMinutes;
+                        status = `上緊: ${daySubjects[i] || '空堂'}`;
+                        subStatus = `仲有 ${left} 分鐘落堂`;
+                        
+                        // Determine next
+                        if (i === 1) nextInfo = "下一節: 小息";
+                        else if (i === 3) nextInfo = "下一節: 小息";
+                        else if (i === 5) nextInfo = "下一節: 午膳";
+                        else if (i === 7) nextInfo = "下一節: 小息";
+                        else if (i === 9) nextInfo = "之後放學啦！";
+                        else nextInfo = `下一節: ${daySubjects[i+1] || '未知'}`;
+
+                        iconName = "book-open";
+                        colorClass = "from-indigo-500 to-purple-600";
+                        found = true;
+                        break;
+                    }
+
+                    // Check if in gap after this lesson (before next start)
+                    if (i < 9) {
+                        const nextStart = times[i+1];
+                        if (currentMinutes >= end && currentMinutes < nextStart) {
+                            const left = nextStart - currentMinutes;
+                            // Determine gap type (Simplified assumption based on standard structure)
+                            let gapName = "小息";
+                            if (i === 5) gapName = "午膳時間";
+                            
+                            status = `${gapName}中`;
+                            subStatus = `仲有 ${left} 分鐘上堂`;
+                            nextInfo = `下一節: ${daySubjects[i+1]}`;
+                            
+                            iconName = gapName === "午膳時間" ? "utensils" : "coffee";
+                            colorClass = gapName === "午膳時間" ? "from-emerald-400 to-teal-600" : "from-amber-400 to-orange-500";
+                            
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if (!found && currentMinutes >= getLessonEnd(9)) {
+                     status = "放學啦！";
+                     subStatus = "好好休息或者做功課啦";
+                     nextInfo = "明天見";
+                     iconName = "moon";
+                     colorClass = "from-slate-600 to-slate-800";
+                }
+            }
+
+            const dateStr = now.toLocaleDateString('zh-HK', { month: 'long', day: 'numeric', weekday: 'long' });
+            const timeStr = now.toLocaleTimeString('zh-HK', { hour: '2-digit', minute: '2-digit' });
+
+            return (
+                <div className={`relative overflow-hidden rounded-3xl p-6 text-white shadow-xl bg-gradient-to-r ${colorClass} mb-6 transition-all duration-500`}>
+                    <div className="absolute top-0 right-0 p-4 opacity-10">
+                        <Icon name={iconName} className="w-32 h-32" />
+                    </div>
+                    <div className="relative z-10">
+                        <div className="flex justify-between items-start mb-4">
+                            <div>
+                                <div className="text-xs font-medium opacity-80 flex items-center gap-1 mb-1">
+                                    <Icon name="user" className="w-3 h-3" /> {user?.displayName || '同學'}
+                                </div>
+                                <h2 className="text-2xl font-black tracking-tight">{status}</h2>
+                                <p className="text-lg font-bold opacity-90 mt-1">{subStatus}</p>
+                            </div>
+                            <div className="text-right">
+                                <div className="text-2xl font-black font-mono leading-none">{timeStr}</div>
+                                <div className="text-xs font-bold opacity-80 mt-1">{dateStr}</div>
+                                <div className="mt-2 inline-block bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold border border-white/30">
+                                    Day {currentDay}
+                                </div>
+                            </div>
+                        </div>
+                        <div className="inline-flex items-center gap-2 bg-black/20 px-4 py-2 rounded-xl text-sm font-bold backdrop-blur-sm border border-white/10">
+                            <Icon name="arrow-right-circle" className="w-4 h-4" />
+                            {nextInfo}
+                        </div>
+                    </div>
+                </div>
+            );
         };
 
         // --- Components ---
@@ -415,17 +536,16 @@
         function AdminSystemPanel({ db, systemConfig, onBack, triggerAlert }) { 
             const [newEmail, setNewEmail] = useState(''); 
             const [isSubmitting, setIsSubmitting] = useState(false); 
-            const [activeTab, setActiveTab] = useState('settings'); // 'settings' or 'requests'
+            const [activeTab, setActiveTab] = useState('settings'); 
             const [requests, setRequests] = useState([]);
             const [showManageModal, setShowManageModal] = useState(false);
             const [assignmentList, setAssignmentList] = useState([]);
-            const [filterDate, setFilterDate] = useState('');
+            const [filterMode, setFilterMode] = useState('expired'); // 'expired', 'today', 'all'
             const [selectedManageIds, setSelectedManageIds] = useState(new Set());
 
             const { doc, updateDoc, arrayUnion, arrayRemove, setDoc, collection, query, where, getDocs, deleteDoc, onSnapshot, orderBy } = window.firebaseServices; 
             const configRef = doc(db, "system_settings", "config"); 
             
-            // Listen for pending requests
             useEffect(() => {
                 if (activeTab === 'requests') {
                     const q = query(collection(db, "access_requests"), where("status", "==", "pending"));
@@ -440,25 +560,22 @@
             const handleAddWhitelist = async (e) => { e.preventDefault(); if (!newEmail.trim()) return; setIsSubmitting(true); try { await updateDoc(configRef, { allowedEmails: arrayUnion(newEmail.trim()) }); setNewEmail(''); } catch (e) { console.error(e); triggerAlert("新增失敗"); } setIsSubmitting(false); }; 
             const handleRemoveWhitelist = async (email) => { if (window.confirm(`確定要移除 ${email} 嗎？`)) { await updateDoc(configRef, { allowedEmails: arrayRemove(email) }); } }; 
             
-            const fetchAssignments = async (date = '') => {
+            const fetchAssignments = async () => {
                 setIsSubmitting(true);
                 try {
-                    let q;
-                    const colRef = collection(db, "public_assignments");
-                    if (date) {
-                        q = query(colRef, where("dueDate", "==", date));
-                    } else {
-                        // Default show all (recent first)
-                        q = query(colRef, orderBy("dueDate", "desc")); 
-                    }
+                    // Fetch all assignments first, then filter client-side for simplicity
+                    const q = query(collection(db, "public_assignments"), orderBy("dueDate", "desc"));
                     const snapshot = await getDocs(q);
                     const list = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
                     setAssignmentList(list);
                     
-                    // Auto-select expired assignments ONLY if showing all (no specific date filter yet or cleared)
-                    if (!date) {
+                    // Auto-select expired assignments ONLY if mode is 'expired'
+                    if (filterMode === 'expired') {
                         const today = new Date();
+                        // Reset time part for accurate date comparison
+                        today.setHours(0,0,0,0); 
                         const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+                        
                         const expiredIds = new Set();
                         list.forEach(item => {
                             if (item.dueDate < todayStr) {
@@ -472,23 +589,52 @@
 
                 } catch (e) {
                     console.error(e);
-                    triggerAlert("載入失敗 (可能需要建立索引)");
+                    triggerAlert("載入失敗");
                 } finally {
                     setIsSubmitting(false);
                 }
             };
 
+            // Re-run auto-select when filter mode changes or list changes
+            useEffect(() => {
+                if (showManageModal) {
+                    const today = new Date();
+                    today.setHours(0,0,0,0);
+                    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+                    if (filterMode === 'expired') {
+                        const expiredIds = new Set();
+                        assignmentList.forEach(item => {
+                            if (item.dueDate < todayStr) expiredIds.add(item.id);
+                        });
+                        setSelectedManageIds(expiredIds);
+                    } else {
+                        setSelectedManageIds(new Set());
+                    }
+                }
+            }, [filterMode, showManageModal]); // Note: assignmentList dependency omitted to avoid loop, handled in fetch
+
             const handleOpenManage = () => {
-                setFilterDate(''); // Reset filter
+                setFilterMode('expired'); 
                 fetchAssignments();
                 setShowManageModal(true);
             };
 
-            const handleFilterChange = (e) => {
-                const date = e.target.value;
-                setFilterDate(date);
-                fetchAssignments(date);
+            const getFilteredList = () => {
+                const today = new Date();
+                today.setHours(0,0,0,0);
+                const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+                if (filterMode === 'expired') {
+                    return assignmentList.filter(item => item.dueDate < todayStr);
+                } else if (filterMode === 'today') {
+                    return assignmentList.filter(item => item.dueDate === todayStr);
+                } else {
+                    return assignmentList;
+                }
             };
+
+            const filteredList = getFilteredList();
 
             const handleToggleSelect = (id) => {
                 const newSet = new Set(selectedManageIds);
@@ -498,10 +644,16 @@
             };
             
             const handleToggleAll = () => {
-                if (selectedManageIds.size === assignmentList.length) {
-                    setSelectedManageIds(new Set());
+                if (selectedManageIds.size === filteredList.length && filteredList.length > 0) {
+                    // Deselect all visible
+                    const newSet = new Set(selectedManageIds);
+                    filteredList.forEach(item => newSet.delete(item.id));
+                    setSelectedManageIds(newSet);
                 } else {
-                    setSelectedManageIds(new Set(assignmentList.map(i => i.id)));
+                    // Select all visible
+                    const newSet = new Set(selectedManageIds);
+                    filteredList.forEach(item => newSet.add(item.id));
+                    setSelectedManageIds(newSet);
                 }
             };
 
@@ -511,8 +663,8 @@
                 try {
                     await Promise.all([...selectedManageIds].map(id => deleteDoc(doc(db, "public_assignments", id))));
                     triggerAlert("刪除成功");
-                    // Refresh list
-                    fetchAssignments(filterDate);
+                    fetchAssignments(); // Refresh
+                    setSelectedManageIds(new Set());
                 } catch(e) {
                     console.error(e);
                     triggerAlert("刪除部分或全部失敗");
@@ -521,6 +673,7 @@
                 }
             };
 
+            // ... (rest of admin functions) ...
             const handleApproveRequest = async (req) => {
                 if (!window.confirm(`批准 ${req.email} 加入白名單？`)) return;
                 try {
@@ -535,6 +688,16 @@
                 try {
                     await updateDoc(doc(db, "access_requests", reqId), { status: 'rejected' });
                 } catch (e) { console.error(e); triggerAlert("操作失敗"); }
+            };
+
+            const getStatus = (dueDate) => {
+                const today = new Date();
+                today.setHours(0,0,0,0);
+                const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+                
+                if (dueDate < todayStr) return { label: '已過期', color: 'bg-red-100 text-red-600' };
+                if (dueDate === todayStr) return { label: '今日截止', color: 'bg-orange-100 text-orange-600' };
+                return { label: '未到期', color: 'bg-green-100 text-green-600' };
             };
 
             return ( 
@@ -597,35 +760,30 @@
                                     <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2"><Icon name="list-checks" className="w-5 h-5 text-indigo-600" /> 管理公共功課</h3>
                                     <button onClick={() => setShowManageModal(false)} className="p-2 bg-slate-100 rounded-full hover:bg-slate-200"><Icon name="x" className="w-4 h-4" /></button>
                                 </div>
-                                <div className="p-4 border-b border-slate-100 bg-slate-50 flex items-center gap-2">
-                                    <span className="text-xs font-bold text-slate-500">篩選日期:</span>
-                                    <input 
-                                        type="date" 
-                                        value={filterDate} 
-                                        onChange={handleFilterChange}
-                                        className="bg-white border border-slate-300 rounded-lg px-2 py-1 text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-200"
-                                    />
-                                    {filterDate && <button onClick={() => { setFilterDate(''); fetchAssignments(''); }} className="text-xs text-indigo-600 font-bold hover:underline">清除</button>}
+                                <div className="p-2 border-b border-slate-100 bg-slate-50 flex gap-2 justify-center">
+                                    <button onClick={() => setFilterMode('expired')} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${filterMode === 'expired' ? 'bg-red-500 text-white shadow-md' : 'bg-white text-slate-600 hover:bg-slate-100'}`}>已過期</button>
+                                    <button onClick={() => setFilterMode('today')} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${filterMode === 'today' ? 'bg-orange-500 text-white shadow-md' : 'bg-white text-slate-600 hover:bg-slate-100'}`}>今日要交</button>
+                                    <button onClick={() => setFilterMode('all')} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${filterMode === 'all' ? 'bg-blue-500 text-white shadow-md' : 'bg-white text-slate-600 hover:bg-slate-100'}`}>全部顯示</button>
                                 </div>
                                 <div className="p-4 bg-slate-50 flex-1 overflow-y-auto">
                                     <div className="flex justify-between items-center mb-2 px-1">
-                                        <span className="text-xs font-bold text-slate-500">已選 {selectedManageIds.size} / {assignmentList.length} 項</span>
-                                        <button onClick={handleToggleAll} className="text-xs font-bold text-indigo-600 hover:underline">{selectedManageIds.size > 0 && selectedManageIds.size === assignmentList.length ? '取消全選' : '全選'}</button>
+                                        <span className="text-xs font-bold text-slate-500">已選 {selectedManageIds.size} / {filteredList.length} 項</span>
+                                        <button onClick={handleToggleAll} className="text-xs font-bold text-indigo-600 hover:underline">{selectedManageIds.size > 0 && selectedManageIds.size === filteredList.length ? '取消全選' : '全選'}</button>
                                     </div>
                                     <div className="space-y-2">
-                                        {assignmentList.length === 0 ? <div className="text-center text-slate-400 py-6 text-sm">沒有符合的紀錄</div> :
-                                        assignmentList.map(item => {
-                                            const isExpired = new Date(item.dueDate) < new Date(new Date().setHours(0,0,0,0));
+                                        {filteredList.length === 0 ? <div className="text-center text-slate-400 py-6 text-sm">沒有符合的紀錄</div> :
+                                        filteredList.map(item => {
+                                            const status = getStatus(item.dueDate);
                                             return (
                                                 <div key={item.id} onClick={() => handleToggleSelect(item.id)} className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${selectedManageIds.has(item.id) ? 'bg-indigo-50 border-indigo-300' : 'bg-white border-slate-200 hover:border-indigo-200'}`}>
                                                     <div className={`mt-0.5 w-5 h-5 rounded border flex items-center justify-center ${selectedManageIds.has(item.id) ? 'bg-indigo-600 border-indigo-600' : 'bg-white border-slate-300'}`}>
                                                         {selectedManageIds.has(item.id) && <Icon name="check" className="w-3.5 h-3.5 text-white" />}
                                                     </div>
                                                     <div className="flex-1">
-                                                        <div className="flex justify-between">
-                                                            <div className="flex gap-2">
+                                                        <div className="flex justify-between mb-1">
+                                                            <div className="flex gap-2 items-center">
                                                                 <span className="text-xs font-bold text-slate-700 bg-slate-200 px-1.5 py-0.5 rounded">{item.subject}</span>
-                                                                {isExpired && <span className="text-[10px] font-bold text-red-600 bg-red-100 px-1.5 py-0.5 rounded">已過期</span>}
+                                                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${status.color}`}>{status.label}</span>
                                                             </div>
                                                             <span className="text-xs text-slate-500 font-bold">{item.dueDate}</span>
                                                         </div>
@@ -653,6 +811,7 @@
         }
 
         function Timetable({ currentDay, subjects, timeConfig, durations, onDayChange, isEditing, onUpdateSchedule, onUpdateTime, onUpdateDuration, manualDay, setManualDay }) { 
+            // ... existing timetable code ...
             const [now, setNow] = useState(new Date());
             const [isDaySelectorOpen, setIsDaySelectorOpen] = useState(false);
 
@@ -864,7 +1023,7 @@
 
         // --- Main App ---
         function App() {
-            // --- State ---
+            // ... (App unchanged) ...
             const [user, setUser] = useState(null);
             const [authLoading, setAuthLoading] = useState(true);
             const [items, setItems] = useState([]);
@@ -1374,12 +1533,15 @@
                                 ) : (
                                     <>
                                         {viewMode === 'current' && (
-                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
-                                                <div onClick={() => handleDashboardClick('today')} className="cursor-pointer bg-white/80 backdrop-blur rounded-2xl p-3 sm:p-4 shadow-sm border border-red-100 flex flex-col items-center justify-center text-center ring-1 ring-red-50 hover:scale-105 hover:shadow-md transition-all active:scale-95"><div className="text-red-500 mb-1"><Icon name="flame" className="w-5 h-5 sm:w-6 sm:h-6" /></div><div className="text-3xl sm:text-4xl font-black text-slate-800 tracking-tight">{todayHomeworks.length}</div><div className="text-xs sm:text-sm font-bold text-slate-500">今日要交</div></div>
-                                                <div onClick={() => handleDashboardClick('tomorrow')} className="cursor-pointer bg-white/80 backdrop-blur rounded-2xl p-3 sm:p-4 shadow-sm border border-orange-100 flex flex-col items-center justify-center text-center ring-1 ring-orange-50 hover:scale-105 hover:shadow-md transition-all active:scale-95"><div className="text-orange-500 mb-1"><Icon name="sun" className="w-5 h-5 sm:w-6 sm:h-6" /></div><div className="text-3xl sm:text-4xl font-black text-slate-800 tracking-tight">{tomorrowHomeworks.length}</div><div className="text-xs sm:text-sm font-bold text-slate-500">聽日要交</div></div>
-                                                <div onClick={() => handleDashboardClick('future')} className="cursor-pointer bg-white/80 backdrop-blur rounded-2xl p-3 sm:p-4 shadow-sm border border-sky-100 flex flex-col items-center justify-center text-center ring-1 ring-sky-50 hover:scale-105 hover:shadow-md transition-all active:scale-95"><div className="text-sky-500 mb-1"><Icon name="calendar-range" className="w-5 h-5 sm:w-6 sm:h-6" /></div><div className="text-3xl sm:text-4xl font-black text-slate-800 tracking-tight">{futureHomeworks.length}</div><div className="text-xs sm:text-sm font-bold text-slate-500">日後要交</div></div>
-                                                <div onClick={() => handleDashboardClick('revision')} className={`cursor-pointer bg-white/80 backdrop-blur rounded-2xl p-3 sm:p-4 shadow-sm border flex flex-col items-center justify-center text-center ring-1 hover:scale-105 hover:shadow-md transition-all active:scale-95 ${nextTestDays !== null && nextTestDays <= 3 ? 'border-purple-200 ring-purple-100 bg-purple-50/50' : 'border-indigo-100 ring-indigo-50'}`}><div className="text-purple-500 mb-1"><Icon name="brain-circuit" className="w-5 h-5 sm:w-6 sm:h-6" /></div><div className="text-3xl sm:text-4xl font-black text-slate-800 tracking-tight">{testCount}</div><div className="text-xs sm:text-sm font-bold text-slate-500">溫習考核</div>{nextTestDays !== null && (<div className="text-[10px] text-purple-600 font-bold mt-1 bg-purple-100 px-1.5 py-0.5 rounded-full">{nextTestDays <0 ? '已完' : (nextTestDays === 0 ? '今日考' : `${nextTestDays}日後`)}</div>)}</div>
-                                            </div>
+                                            <>
+                                                <LiveLessonCard schedule={scheduleConfig} times={timeConfig} durations={durationConfig} currentDay={currentTimetableDay} user={user} />
+                                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+                                                    <div onClick={() => handleDashboardClick('today')} className="cursor-pointer bg-white/80 backdrop-blur rounded-2xl p-3 sm:p-4 shadow-sm border border-red-100 flex flex-col items-center justify-center text-center ring-1 ring-red-50 hover:scale-105 hover:shadow-md transition-all active:scale-95"><div className="text-red-500 mb-1"><Icon name="flame" className="w-5 h-5 sm:w-6 sm:h-6" /></div><div className="text-3xl sm:text-4xl font-black text-slate-800 tracking-tight">{todayHomeworks.length}</div><div className="text-xs sm:text-sm font-bold text-slate-500">今日要交</div></div>
+                                                    <div onClick={() => handleDashboardClick('tomorrow')} className="cursor-pointer bg-white/80 backdrop-blur rounded-2xl p-3 sm:p-4 shadow-sm border border-orange-100 flex flex-col items-center justify-center text-center ring-1 ring-orange-50 hover:scale-105 hover:shadow-md transition-all active:scale-95"><div className="text-orange-500 mb-1"><Icon name="sun" className="w-5 h-5 sm:w-6 sm:h-6" /></div><div className="text-3xl sm:text-4xl font-black text-slate-800 tracking-tight">{tomorrowHomeworks.length}</div><div className="text-xs sm:text-sm font-bold text-slate-500">聽日要交</div></div>
+                                                    <div onClick={() => handleDashboardClick('future')} className="cursor-pointer bg-white/80 backdrop-blur rounded-2xl p-3 sm:p-4 shadow-sm border border-sky-100 flex flex-col items-center justify-center text-center ring-1 ring-sky-50 hover:scale-105 hover:shadow-md transition-all active:scale-95"><div className="text-sky-500 mb-1"><Icon name="calendar-range" className="w-5 h-5 sm:w-6 sm:h-6" /></div><div className="text-3xl sm:text-4xl font-black text-slate-800 tracking-tight">{futureHomeworks.length}</div><div className="text-xs sm:text-sm font-bold text-slate-500">日後要交</div></div>
+                                                    <div onClick={() => handleDashboardClick('revision')} className={`cursor-pointer bg-white/80 backdrop-blur rounded-2xl p-3 sm:p-4 shadow-sm border flex flex-col items-center justify-center text-center ring-1 hover:scale-105 hover:shadow-md transition-all active:scale-95 ${nextTestDays !== null && nextTestDays <= 3 ? 'border-purple-200 ring-purple-100 bg-purple-50/50' : 'border-indigo-100 ring-indigo-50'}`}><div className="text-purple-500 mb-1"><Icon name="brain-circuit" className="w-5 h-5 sm:w-6 sm:h-6" /></div><div className="text-3xl sm:text-4xl font-black text-slate-800 tracking-tight">{testCount}</div><div className="text-xs sm:text-sm font-bold text-slate-500">溫習考核</div>{nextTestDays !== null && (<div className="text-[10px] text-purple-600 font-bold mt-1 bg-purple-100 px-1.5 py-0.5 rounded-full">{nextTestDays <0 ? '已完' : (nextTestDays === 0 ? '今日考' : `${nextTestDays}日後`)}</div>)}</div>
+                                                </div>
+                                            </>
                                         )}
 
                                         {viewMode === 'current' && (
