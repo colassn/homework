@@ -2,7 +2,7 @@
 <html lang="zh-HK">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>電子手冊 | 學生端</title>
     
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
@@ -13,26 +13,15 @@
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Microsoft JhengHei", sans-serif; }
+        body { font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Microsoft JhengHei", sans-serif; -webkit-tap-highlight-color: transparent; }
         input[type="file"]::file-selector-button { display: none; }
         
         /* Animations */
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes popIn { 0% { opacity: 0; transform: scale(0.9); } 70% { transform: scale(1.02); } 100% { opacity: 1; transform: scale(1); } }
-        
-        /* Advanced Mesh Gradient Animation */
-        @keyframes meshFlow { 
-            0% { background-position: 0% 50%; } 
-            50% { background-position: 100% 50%; } 
-            100% { background-position: 0% 50%; } 
-        }
-        
-        @keyframes float { 
-            0% { transform: translateY(0px); } 
-            50% { transform: translateY(-15px); } 
-            100% { transform: translateY(0px); } 
-        }
+        @keyframes meshFlow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
 
         .mesh-bg {
             background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
@@ -41,26 +30,38 @@
         }
 
         .mesh-bg-soft {
-            background: linear-gradient(120deg, #e0c3fc 0%, #8ec5fc 100%);
-            background-size: 200% 200%;
-            animation: meshFlow 10s ease infinite;
+            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            min-height: 100vh;
+        }
+        
+        /* Block Screen Specific Mesh */
+        .mesh-bg-block {
+            background: linear-gradient(-45deg, #ff9a9e, #fad0c4, #fad0c4, #ffecd2);
+            background-size: 400% 400%;
+            animation: meshFlow 12s ease infinite;
         }
 
         .animate-float { animation: float 6s ease-in-out infinite; }
         .modal-animate { animation: popIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         .page-enter { animation: slideInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+        .list-item-enter { animation: slideInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
         
         /* Glassmorphism */
         .glass-card { 
-            background: rgba(255, 255, 255, 0.7); 
-            backdrop-filter: blur(20px); 
-            -webkit-backdrop-filter: blur(20px);
+            background: rgba(255, 255, 255, 0.65); 
+            backdrop-filter: blur(24px); 
+            -webkit-backdrop-filter: blur(24px);
             border: 1px solid rgba(255, 255, 255, 0.8); 
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
         }
         
+        @media (min-width: 768px) {
+            .glass-card { box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.15); }
+        }
+
         /* Scrollbar */
         ::-webkit-scrollbar { width: 0px; background: transparent; }
+        input[type="time"]::-webkit-calendar-picker-indicator { cursor: pointer; filter: invert(0.5); }
     </style>
 </head>
 <body class="bg-slate-50 overflow-x-hidden">
@@ -83,15 +84,15 @@
 
         try {
             const app = initializeApp(firebaseConfig);
-            window.fb = { 
+            window.firebaseServices = { 
                 auth: getAuth(app), 
                 db: getFirestore(app), 
-                provider: new GoogleAuthProvider(), 
+                googleProvider: new GoogleAuthProvider(), 
                 signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, 
                 collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, where, getDocs, setDoc, arrayUnion, arrayRemove, serverTimestamp,
                 isReady: true 
             };
-            window.dispatchEvent(new Event('fb-ready'));
+            window.dispatchEvent(new Event('firebase-ready'));
             console.log("Firebase initialized");
         } catch (e) {
             console.error(e);
@@ -100,7 +101,7 @@
     </script>
 
     <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
+        const { useState, useEffect, useRef, useMemo } = React;
 
         // [CONSTANTS]
         const SUBJECTS = [{ name: '中文', color: 'bg-red-100 text-red-700 border-red-200', category: '主科' }, { name: '英文', color: 'bg-blue-100 text-blue-700 border-blue-200', category: '主科' }, { name: '數學', color: 'bg-green-100 text-green-700 border-green-200', category: '主科' }, { name: '常識/公社', color: 'bg-orange-100 text-orange-700 border-orange-200', category: '主科' }, { name: '物理', color: 'bg-cyan-100 text-cyan-700 border-cyan-200', category: '副科/其他' }, { name: '化學', color: 'bg-purple-100 text-purple-700 border-purple-200', category: '副科/其他' }, { name: '生物', color: 'bg-emerald-100 text-emerald-700 border-emerald-200', category: '副科/其他' }, { name: '中史', color: 'bg-amber-100 text-amber-800 border-amber-200', category: '副科/其他' }, { name: '歷史', color: 'bg-stone-100 text-stone-700 border-stone-200', category: '副科/其他' }, { name: '地理', color: 'bg-teal-100 text-teal-700 border-teal-200', category: '副科/其他' }, { name: '經濟', color: 'bg-yellow-100 text-yellow-700 border-yellow-200', category: '副科/其他' }, { name: '企會財', color: 'bg-lime-100 text-lime-700 border-lime-200', category: '副科/其他' }, { name: '資訊科技', color: 'bg-indigo-100 text-indigo-700 border-indigo-200', category: '副科/其他' }, { name: '佛學/宗教', color: 'bg-yellow-50 text-yellow-600 border-yellow-100', category: '副科/其他' }, { name: '普通話', color: 'bg-pink-100 text-pink-700 border-pink-200', category: '副科/其他' }, { name: '視藝', color: 'bg-fuchsia-100 text-fuchsia-700 border-fuchsia-200', category: '副科/其他' }, { name: '音樂', color: 'bg-sky-100 text-sky-700 border-sky-200', category: '副科/其他' }, { name: '體育', color: 'bg-lime-50 text-lime-600 border-lime-100', category: '副科/其他' }, { name: '設計與科技', color: 'bg-zinc-100 text-zinc-700 border-zinc-200', category: '副科/其他' }, { name: '家政', color: 'bg-rose-100 text-rose-700 border-rose-200', category: '副科/其他' }, { name: '文學', color: 'bg-violet-100 text-violet-700 border-violet-200', category: '副科/其他' }, { name: 'STEAM', color: 'bg-violet-50 text-violet-600 border-violet-100', category: '副科/其他' }, { name: '全方位', color: 'bg-rose-50 text-rose-600 border-rose-100', category: '副科/其他' }, { name: '其他', color: 'bg-gray-100 text-gray-700 border-gray-200', category: '副科/其他' }, { name: '空堂', color: 'bg-slate-100 text-slate-500 border-slate-200', category: '副科/其他' }];
@@ -130,6 +131,7 @@
         const getDaysRemaining = (dateString) => { const today = normalizeDate(); const due = normalizeDate(dateString); return Math.ceil((due - today) / (1000 * 60 * 60 * 24)); };
         const minutesToTimeStr = (m) => `${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;
         const timeStrToMinutes = (s) => { const [h,m] = s.split(':').map(Number); return h*60+m; };
+        const formatCountdown = (ms) => { const totalSeconds = Math.floor(ms / 1000); const hours = Math.floor(totalSeconds / 3600); const minutes = Math.floor((totalSeconds % 3600) / 60); const seconds = totalSeconds % 60; return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`; };
         const compressImage = (file) => new Promise((resolve, reject) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = (e) => { const img = new Image(); img.src = e.target.result; img.onload = () => { const canvas = document.createElement('canvas'); const MAX_WIDTH = 1024; const scale = MAX_WIDTH / img.width; if(scale < 1) { canvas.width = MAX_WIDTH; canvas.height = img.height * scale; } else { canvas.width = img.width; canvas.height = img.height; } const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, canvas.width, canvas.height); resolve(canvas.toDataURL('image/jpeg', 0.7)); }; img.onerror = reject; }; reader.onerror = reject; });
 
         // --- COMPONENTS ---
@@ -171,14 +173,15 @@
             }
             let dayDisplay = currentDay === 0 ? "星期日" : currentDay === 6 ? "星期六" : `Day ${currentDay}`;
             const dateStr = now.toLocaleDateString('zh-HK', { month: 'long', day: 'numeric', weekday: 'long' });
+            const timeStr = now.toLocaleTimeString('zh-HK', { hour: '2-digit', minute: '2-digit' });
 
             return (
                 <div className={`relative overflow-hidden rounded-3xl p-6 text-white shadow-xl bg-gradient-to-r ${bg} mb-6 gradient-bg transition-all duration-500`}>
                     <div className="absolute top-0 right-0 p-4 opacity-10"><Icon name={icon} className="w-32 h-32" /></div>
                     <div className="relative z-10">
                         <div className="flex justify-between items-start mb-4">
-                            <div><div className="text-xs opacity-80 mb-1 flex items-center gap-1"><Icon name="user" className="w-3 h-3"/> {user?.displayName||'同學'}</div><h2 className="text-2xl font-black">{status}</h2><p className="text-lg font-bold opacity-90 mt-1">{subStatus}</p></div>
-                            <div className="text-right"><div className="text-2xl font-black font-mono">{now.toLocaleTimeString('zh-HK',{hour:'2-digit',minute:'2-digit'})}</div><div className="text-xs font-bold opacity-80 mt-1">{dateStr}</div><div className="mt-2 inline-block bg-white/20 px-3 py-1 rounded-full text-xs font-bold border border-white/30">{dayDisplay}</div></div>
+                            <div><div className="text-xs opacity-80 mb-1 flex items-center gap-1 font-bold"><Icon name="user" className="w-3 h-3"/> {user?.displayName||'同學'}</div><h2 className="text-2xl font-black">{status}</h2><p className="text-lg font-bold opacity-90 mt-1">{subStatus}</p></div>
+                            <div className="text-right"><div className="text-2xl font-black font-mono">{timeStr}</div><div className="text-xs font-bold opacity-80 mt-1">{dateStr}</div><div className="mt-2 inline-block bg-white/20 px-3 py-1 rounded-full text-xs font-bold border border-white/30">{dayDisplay}</div></div>
                         </div>
                         <div className="inline-flex items-center gap-2 bg-black/20 px-4 py-2 rounded-xl text-sm font-bold backdrop-blur-sm border border-white/10"><Icon name="arrow-right-circle" className="w-4 h-4"/> {nextInfo}</div>
                     </div>
@@ -186,6 +189,7 @@
             );
         }
 
+        // --- NEW: High-End Block Screen (Glassmorphism + Mesh) ---
         function BlockScreen({ type, estimatedTime, customConfig, onLogin, user, triggerAlert }) {
             const [showRequest, setShowRequest] = useState(false);
             const [email, setEmail] = useState(''); const [name, setName] = useState(''); const [submitting, setSubmitting] = useState(false);
@@ -193,29 +197,67 @@
             useEffect(() => { if(user) { setEmail(user.email||''); setName(user.displayName||''); } }, [user]);
 
             const title = customConfig?.customBlockTitle || (type === 'access_denied' ? "存取權限受限" : "網站維護中");
-            const msg = customConfig?.customBlockMessage || (type === 'access_denied' ? "本網站僅開放白名單用戶。\n如需開通，請提交申請。" : "系統升級中，請稍後。");
+            const msg = customConfig?.customBlockMessage || (type === 'access_denied' ? "目前僅開放白名單用戶。如需使用，請提交申請。" : "系統正在進行升級優化，請稍後回來。");
 
             const handleReq = async (e) => {
                 e.preventDefault(); if(!user) { onLogin(); return; }
                 setSubmitting(true);
                 try {
-                    await setDoc(doc(db, "access_requests", user.uid), { email, displayName: name, status: 'pending', requestTime: new Date().toISOString(), uid: user.uid });
-                    triggerAlert("申請已送出！請等待批核。"); setShowRequest(false);
-                } catch(e) { console.error(e); triggerAlert("申請失敗: " + e.message); } finally { setSubmitting(false); }
+                    // Try to update request. If it fails due to "create only" permission, catch it.
+                    await setDoc(doc(db, "access_requests", user.uid), { 
+                        email, displayName: name, status: 'pending', requestTime: new Date().toISOString(), uid: user.uid 
+                    });
+                    triggerAlert("申請已送出！請耐心等待管理員批准。"); setShowRequest(false);
+                } catch(e) { 
+                    console.error(e); 
+                    if(e.code === 'permission-denied') {
+                        // FIX: Friendly message for duplicate submission
+                        alert("✅ 系統已收到您的申請！\n\n您的申請正在審核中，無需重複提交。請耐心等待管理員開通權限。");
+                        setShowRequest(false);
+                    } else {
+                        triggerAlert("申請失敗: " + e.message); 
+                    }
+                } finally { setSubmitting(false); }
             };
 
             return (
-                <div className="fixed inset-0 z-40 flex flex-col items-center justify-center bg-slate-50 p-6 text-center">
-                    <div className="bg-white/90 backdrop-blur-xl p-8 rounded-3xl shadow-xl max-w-md w-full relative z-10 modal-animate">
-                        <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4"><Icon name={type==='access_denied'?'lock':'hammer'} className="w-8 h-8 text-slate-500"/></div>
-                        <h2 className="text-2xl font-black text-slate-800 mb-2">{title}</h2>
-                        <p className="text-slate-500 font-medium mb-6 whitespace-pre-wrap">{msg}</p>
+                <div className="fixed inset-0 z-40 flex flex-col items-center justify-center bg-slate-900 p-6 text-center mesh-bg-block relative overflow-hidden">
+                    <div className="absolute inset-0 bg-black/10 backdrop-blur-[2px]"></div>
+                    {/* Animated Blobs */}
+                    <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-purple-500/40 rounded-full blur-[120px] animate-float"></div>
+                    <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-orange-500/40 rounded-full blur-[120px] animate-float" style={{animationDelay:'-3s'}}></div>
+
+                    <div className="glass-card p-10 rounded-[2.5rem] shadow-2xl max-w-md w-full relative z-10 modal-animate border border-white/40">
+                        <div className="w-20 h-20 bg-white/50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner border border-white/50">
+                            <Icon name={type==='access_denied'?'lock':'hammer'} className="w-10 h-10 text-slate-700"/>
+                        </div>
+                        <h2 className="text-3xl font-black text-slate-800 mb-3 tracking-tight">{title}</h2>
+                        <p className="text-slate-600 font-medium mb-8 whitespace-pre-wrap leading-relaxed">{msg}</p>
+                        
                         {type === 'access_denied' && (
-                            !showRequest ? <button onClick={()=>setShowRequest(true)} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold">申請訪問權限</button> 
-                            : <form onSubmit={handleReq} className="text-left space-y-3"><input value={name} onChange={e=>setName(e.target.value)} className="w-full p-2 border rounded" placeholder="名字" required /><input value={email} onChange={e=>setEmail(e.target.value)} className="w-full p-2 border rounded" placeholder="Email" required /><button disabled={submitting} className="w-full py-2 bg-indigo-600 text-white rounded font-bold">{submitting?'送出中...':'確認申請'}</button></form>
+                            !showRequest ? (
+                                <button onClick={()=>setShowRequest(true)} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold shadow-xl hover:bg-black transition transform hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2">
+                                    <Icon name="file-pen" className="w-5 h-5"/> 申請訪問權限
+                                </button>
+                            ) : (
+                                <form onSubmit={handleReq} className="text-left space-y-4 animate-fadeIn">
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-bold text-slate-500 ml-1">顯示名稱</label>
+                                        <input value={name} onChange={e=>setName(e.target.value)} className="w-full p-3.5 bg-white/60 border border-white rounded-xl text-slate-800 font-bold outline-none focus:ring-2 focus:ring-slate-900" placeholder="例如: Peter Chan" required />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-bold text-slate-500 ml-1">Google Email</label>
+                                        <input value={email} onChange={e=>setEmail(e.target.value)} className="w-full p-3.5 bg-white/60 border border-white rounded-xl text-slate-800 font-bold outline-none focus:ring-2 focus:ring-slate-900" placeholder="your@email.com" required readOnly />
+                                    </div>
+                                    <div className="flex gap-3 pt-2">
+                                        <button type="button" onClick={()=>setShowRequest(false)} className="flex-1 py-3 bg-white border border-slate-200 text-slate-600 rounded-xl font-bold hover:bg-slate-50 transition">取消</button>
+                                        <button type="submit" disabled={submitting} className="flex-[2] py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-black transition shadow-lg">{submitting?'送出中...':'確認送出'}</button>
+                                    </div>
+                                </form>
+                            )
                         )}
-                        {!user && <button onClick={onLogin} className="mt-4 w-full py-3 border rounded-xl font-bold text-slate-600">登入</button>}
-                        {user && <div className="mt-4 text-xs text-slate-400">帳號: {user.email} <button onClick={()=>window.firebaseServices.signOut(window.firebaseServices.auth)} className="underline ml-2">登出</button></div>}
+                        {!user && <button onClick={onLogin} className="mt-6 w-full py-3 border border-slate-300 rounded-2xl font-bold text-slate-600 hover:bg-slate-50 transition">登入帳號</button>}
+                        {user && <div className="mt-8 pt-6 border-t border-slate-200/50 text-xs text-slate-500 font-medium">當前帳號: {user.email} <button onClick={()=>window.firebaseServices.signOut(window.firebaseServices.auth)} className="text-indigo-600 hover:text-indigo-800 font-bold ml-2 underline">登出</button></div>}
                     </div>
                 </div>
             );
@@ -266,7 +308,7 @@
                 const list = [];
                 if(timeConfig && subjects[currentDay]) {
                     for(let i=0; i<timeConfig.length; i++) {
-                        list.push({ time: minutesToTimeStr(timeConfig[i]), subject: subjects[currentDay][i] || '空堂' });
+                        list.push({ time: minutesToTimeStr(timeConfig[i]), subject: subjects[currentDay][i] || '空堂', type:'lesson' });
                         if(i===1 || i===3 || i===5 || i===7) list.push({ type: 'break', name: i===5?'午膳':'小息' });
                     }
                 }
@@ -366,6 +408,8 @@
             const [manualDay, setManualDay] = useState(new Date().getDay());
             const [schedule, setSchedule] = useState(DEFAULT_SCHEDULE);
             const [subjects, setSubjects] = useState(SUBJECTS);
+            const [times, setTimes] = useState(DEFAULT_START_TIMES);
+            const [durations, setDurations] = useState(DEFAULT_DURATIONS);
 
             // Inputs & Filters
             const [desc, setDesc] = useState('');
@@ -377,8 +421,8 @@
             // --- Init ---
             useEffect(() => {
                 const init = () => {
-                    if(window.fb && window.fb.isReady) {
-                        const { auth, db, onAuthStateChanged, doc, onSnapshot } = window.fb;
+                    if(window.firebaseServices && window.firebaseServices.isReady) {
+                        const { auth, db, onAuthStateChanged, doc, onSnapshot } = window.firebaseServices;
                         onAuthStateChanged(auth, u => { setUser(u); setLoading(false); if(u) setDate(new Date().toISOString().split('T')[0]); });
                         onSnapshot(doc(db, "system_settings", "config"), s => setConfig(s.data()));
                     } else { setTimeout(init, 100); }
@@ -388,15 +432,23 @@
 
             // --- Data Listeners ---
             useEffect(() => {
-                if(!user || !window.fb) return;
-                const { db, collection, doc, onSnapshot, query, orderBy, where, getDocs, addDoc } = window.fb;
+                if(!user || !window.firebaseServices) return;
+                const { db, collection, doc, onSnapshot, query, orderBy, where, getDocs, addDoc } = window.firebaseServices;
+
+                // FIX: Only query if user exists to prevent permission error
+                if(config?.whitelistEnabled && !config?.allowedEmails?.includes(user.email)) return;
 
                 const unsubItems = onSnapshot(query(collection(db, "users", user.uid, "items")), s => {
                     setItems(s.docs.map(d => ({id:d.id, ...d.data()})));
-                });
+                }, err => console.log("Items Listener Error (Expected if blocked):", err));
 
                 const unsubSettings = onSnapshot(doc(db, "users", user.uid, "settings", "timetable"), s => {
-                    if(s.exists()) setSchedule(s.data().schedule);
+                    if(s.exists()) {
+                        const d = s.data();
+                        if(d.schedule) setSchedule(d.schedule);
+                        if(d.times) setTimes(d.times);
+                        if(d.durations) setDurations(d.durations);
+                    }
                 });
 
                 const unsubSubj = onSnapshot(doc(db, "users", user.uid, "settings", "subjects"), s => {
@@ -419,13 +471,13 @@
                 });
 
                 return () => { unsubItems(); unsubSettings(); unsubSubj(); unsubPublic(); }
-            }, [user]);
+            }, [user, config]); // Added config dependency
 
             // --- Handlers ---
-            const handleGoogleLogin = () => window.fb.signInWithPopup(window.fb.auth, window.fb.provider).then(()=>setAuthModalOpen(false)).catch(e=>alert(e.message));
+            const handleGoogleLogin = () => window.firebaseServices.signInWithPopup(window.firebaseServices.auth, window.firebaseServices.googleProvider).then(()=>setAuthModalOpen(false)).catch(e=>alert(e.message));
             
             const handleEmailAuth = async (email, pwd, isReg, name) => {
-                const { auth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, db, doc, setDoc, serverTimestamp } = window.fb;
+                const { auth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, db, doc, setDoc, serverTimestamp } = window.firebaseServices;
                 try {
                     if(isReg) {
                         const cred = await createUserWithEmailAndPassword(auth, email, pwd);
@@ -441,7 +493,7 @@
             const handleAddHomework = async (e) => {
                 e.preventDefault();
                 if(!desc || !date) return;
-                const { db, addDoc, collection } = window.fb;
+                const { db, addDoc, collection } = window.firebaseServices;
                 await addDoc(collection(db, "users", user.uid, "items"), {
                     description: desc, subject: sub, dueDate: date, completed: false, type: 'homework', createdAt: new Date().toISOString()
                 });
@@ -449,19 +501,19 @@
             };
 
             const toggleItem = async (item) => {
-                const { db, doc, updateDoc } = window.fb;
+                const { db, doc, updateDoc } = window.firebaseServices;
                 await updateDoc(doc(db, "users", user.uid, "items", item.id), { completed: !item.completed });
             };
             
             const deleteItem = async (id) => {
                 if(confirm("確定刪除?")) {
-                    const { db, doc, deleteDoc } = window.fb;
+                    const { db, doc, deleteDoc } = window.firebaseServices;
                     await deleteDoc(doc(db, "users", user.uid, "items", id));
                 }
             };
 
             const saveSubjects = async (newList) => {
-                const { db, doc, setDoc } = window.fb;
+                const { db, doc, setDoc } = window.firebaseServices;
                 await setDoc(doc(db, "users", user.uid, "settings", "subjects"), { list: newList }, { merge: true });
                 setSubjects(newList); setView('home');
             };
@@ -483,6 +535,7 @@
             const todayCount = activeItems.filter(i => getDaysRemaining(i.dueDate) <= 0).length;
             const tomorrowCount = activeItems.filter(i => getDaysRemaining(i.dueDate) === 1).length;
             const futureCount = activeItems.filter(i => getDaysRemaining(i.dueDate) > 1).length;
+            const testCount = activeItems.filter(i => i.subject.includes('測驗') || i.description.includes('測驗')).length;
 
             // --- Render ---
             if(loading) return <div className="h-screen flex items-center justify-center text-slate-400 font-bold">載入中...</div>;
@@ -492,7 +545,6 @@
             }
 
             if(!user) {
-                // [NEW: High-End Login Page]
                 return (
                     <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 relative overflow-hidden mesh-bg">
                          <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-500 rounded-full blur-[150px] opacity-30 animate-float"></div>
@@ -519,8 +571,9 @@
                 );
             }
 
+            // [LOGGED IN VIEW - RESTORED ORIGINAL STYLE]
             return (
-                <div className="min-h-screen bg-slate-50/50 p-4 pb-28 md:pb-8 max-w-md mx-auto relative mesh-bg-soft">
+                <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-4 pb-28 md:pb-8 max-w-md mx-auto relative">
                     <header className="flex justify-between items-center mb-6 py-2">
                         <div className="flex flex-col">
                             <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Welcome back</span>
@@ -528,7 +581,7 @@
                         </div>
                         <div className="flex gap-2">
                             <button onClick={()=>setView(view==='settings'?'home':'settings')} className="p-3 bg-white/80 backdrop-blur rounded-2xl shadow-sm border border-white/50 text-slate-600 hover:text-indigo-600 transition hover:scale-105 active:scale-95"><Icon name="settings" className="w-5 h-5"/></button>
-                            <button onClick={()=>window.fb.signOut(window.fb.auth)} className="p-3 bg-white/80 backdrop-blur rounded-2xl shadow-sm border border-white/50 text-slate-400 hover:text-red-500 transition hover:scale-105 active:scale-95"><Icon name="log-out" className="w-5 h-5"/></button>
+                            <button onClick={()=>window.firebaseServices.signOut(window.firebaseServices.auth)} className="p-3 bg-white/80 backdrop-blur rounded-2xl shadow-sm border border-white/50 text-slate-400 hover:text-red-500 transition hover:scale-105 active:scale-95"><Icon name="log-out" className="w-5 h-5"/></button>
                         </div>
                     </header>
 
@@ -546,10 +599,12 @@
                         <div className="page-enter space-y-6">
                             <LiveLessonCard schedule={schedule} times={DEFAULT_START_TIMES} durations={DEFAULT_DURATIONS} currentDay={manualDay} user={user} />
                             
-                            <div className="grid grid-cols-3 gap-3">
+                            {/* [RESTORED DASHBOARD CARDS] */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                                 <div className="bg-white/80 backdrop-blur p-4 rounded-2xl shadow-sm border border-white flex flex-col items-center justify-center text-center group hover:scale-[1.02] transition"><div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center text-red-500 mb-2 group-hover:bg-red-500 group-hover:text-white transition-colors"><Icon name="flame" className="w-5 h-5"/></div><div className="text-2xl font-black text-slate-800">{todayCount}</div><div className="text-[10px] font-bold text-slate-400 uppercase">今日要交</div></div>
                                 <div className="bg-white/80 backdrop-blur p-4 rounded-2xl shadow-sm border border-white flex flex-col items-center justify-center text-center group hover:scale-[1.02] transition"><div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center text-orange-500 mb-2 group-hover:bg-orange-500 group-hover:text-white transition-colors"><Icon name="sun" className="w-5 h-5"/></div><div className="text-2xl font-black text-slate-800">{tomorrowCount}</div><div className="text-[10px] font-bold text-slate-400 uppercase">聽日要交</div></div>
-                                <div className="bg-white/80 backdrop-blur p-4 rounded-2xl shadow-sm border border-white flex flex-col items-center justify-center text-center group hover:scale-[1.02] transition"><div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500 mb-2 group-hover:bg-indigo-500 group-hover:text-white transition-colors"><Icon name="brain-circuit" className="w-5 h-5"/></div><div className="text-2xl font-black text-slate-800">0</div><div className="text-[10px] font-bold text-slate-400 uppercase">溫習考核</div></div>
+                                <div className="bg-white/80 backdrop-blur p-4 rounded-2xl shadow-sm border border-white flex flex-col items-center justify-center text-center group hover:scale-[1.02] transition"><div className="w-10 h-10 rounded-full bg-sky-50 flex items-center justify-center text-sky-500 mb-2 group-hover:bg-sky-500 group-hover:text-white transition-colors"><Icon name="calendar-range" className="w-5 h-5"/></div><div className="text-2xl font-black text-slate-800">{futureCount}</div><div className="text-[10px] font-bold text-slate-400 uppercase">日後要交</div></div>
+                                <div className="bg-white/80 backdrop-blur p-4 rounded-2xl shadow-sm border border-white flex flex-col items-center justify-center text-center group hover:scale-[1.02] transition"><div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500 mb-2 group-hover:bg-indigo-500 group-hover:text-white transition-colors"><Icon name="brain-circuit" className="w-5 h-5"/></div><div className="text-2xl font-black text-slate-800">{testCount}</div><div className="text-[10px] font-bold text-slate-400 uppercase">溫習考核</div></div>
                             </div>
 
                             <div className="glass-card bg-white/90 p-6 rounded-[2rem] shadow-xl relative overflow-hidden">
