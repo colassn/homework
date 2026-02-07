@@ -77,7 +77,7 @@
                 auth, db, googleProvider, 
                 signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, 
                 collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs, setDoc, arrayUnion, arrayRemove, getDoc, deleteDoc,
-                isReady: true 
+                isReady: true // Flag to tell React we are ready
             };
             
             // Dispatch event to notify React
@@ -294,9 +294,85 @@
             useEffect(() => { if (user) { setRequestEmail(user.email || ''); if (user.displayName) { setRequestName(user.displayName); } } }, [user]);
 
             const whitelistDefaultTitle = "存取權限受限"; const whitelistDefaultMsg = "本網站目前處於測試階段 (Beta)，僅開放白名單用戶先行體驗。\n如需開通權限，請提供登入電郵給可樂仔 (Colason)。"; const maintenanceDefaultTitle = type === 'updating' ? "網站更新中" : "資料重整中"; const maintenanceDefaultMsg = "管理員正在進行系統升級，請稍後再回來。"; const displayTitle = customConfig?.customBlockTitle || (type === 'access_denied' ? whitelistDefaultTitle : maintenanceDefaultTitle); const displayMsg = customConfig?.customBlockMessage || (type === 'access_denied' ? whitelistDefaultMsg : maintenanceDefaultMsg);
-            const handleRequestSubmit = async (e) => { e.preventDefault(); if (!user) { triggerAlert("請先登入 Google 帳號 (右上角或下方按鈕)，系統才能接收您的申請。"); onLogin(); return; } if (!requestEmail.trim() || !requestName.trim()) return; setIsSubmitting(true); try { if (requestName.trim() !== user.displayName) { try { await updateProfile(user, { displayName: requestName.trim() }); await setDoc(doc(db, "users_public", user.uid), { email: user.email, displayName: requestName.trim(), lastSeen: serverTimestamp() }, { merge: true }); } catch(profileErr) { console.error("Profile update failed", profileErr); } } await setDoc(doc(db, "access_requests", user.uid), { email: requestEmail.trim(), displayName: requestName.trim(), status: 'pending', requestTime: new Date().toISOString(), uid: user.uid }); triggerAlert("申請已送出！請等待管理員核准後，直接登入即可使用。"); setShowRequestForm(false); } catch (e) { console.error(e); if (e.code === 'permission-denied') { triggerAlert("提交失敗：權限不足。請確認您已登入 Google 帳號。"); } else { triggerAlert("申請提交失敗，請稍後再試。\n" + e.message); } } finally { setIsSubmitting(false); } };
+            
+            const handleRequestSubmit = async (e) => { 
+                e.preventDefault(); 
+                if (!user) { 
+                    triggerAlert("請先登入 Google 帳號 (右上角或下方按鈕)，系統才能接收您的申請。"); 
+                    onLogin(); 
+                    return; 
+                } 
+                if (!requestEmail.trim() || !requestName.trim()) return; 
+                setIsSubmitting(true); 
+                try { 
+                    if (requestName.trim() !== user.displayName) { 
+                        try { 
+                            await updateProfile(user, { displayName: requestName.trim() }); 
+                            await setDoc(doc(db, "users_public", user.uid), { email: user.email, displayName: requestName.trim(), lastSeen: serverTimestamp() }, { merge: true }); 
+                        } catch(profileErr) { console.error("Profile update failed", profileErr); } 
+                    } 
+                    
+                    // Use setDoc with user.uid as document ID to prevent duplicate requests
+                    await setDoc(doc(db, "access_requests", user.uid), { 
+                        email: requestEmail.trim(), 
+                        displayName: requestName.trim(), 
+                        status: 'pending', 
+                        requestTime: new Date().toISOString(), 
+                        uid: user.uid 
+                    }); 
+                    
+                    triggerAlert("申請已送出！請等待管理員核准後，直接登入即可使用。"); 
+                    setShowRequestForm(false); 
+                } catch (e) { 
+                    console.error(e); 
+                    if (e.code === 'permission-denied') { 
+                        triggerAlert("提交失敗：權限不足。請確認您已登入 Google 帳號。"); 
+                    } else { 
+                        triggerAlert("申請提交失敗，請稍後再試。\n" + e.message); 
+                    } 
+                } finally { 
+                    setIsSubmitting(false); 
+                } 
+            };
 
-            return ( <div className="fixed inset-0 z-40 flex flex-col items-center justify-center bg-slate-50 p-6 text-center overflow-hidden"> <div className="absolute inset-0 z-0 opacity-30"><div className="absolute top-10 left-10 w-64 h-64 bg-indigo-300 rounded-full mix-blend-multiply filter blur-3xl animate-blob"></div><div className="absolute bottom-10 right-10 w-64 h-64 bg-pink-300 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000"></div></div> <div className="bg-white/80 backdrop-blur-xl p-8 rounded-3xl shadow-xl border border-white/50 max-w-md w-full relative z-10 modal-animate"> <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6"> {type === 'access_denied' ? <Icon name="lock" className="w-10 h-10 text-red-500" /> : <Icon name="hammer" className="w-10 h-10 text-orange-500" />} </div> <h1 className="text-2xl font-black text-slate-800 mb-2">{displayTitle}</h1> <p className="text-slate-500 font-medium mb-6 whitespace-pre-wrap">{displayMsg}</p> {estimatedTime && (type === 'updating' || type === 'restructuring') && ( <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex items-center gap-3 mb-6"> <Icon name="timer" className="w-5 h-5 text-indigo-600" /><div className="text-left"><div className="text-xs font-bold text-indigo-400 uppercase">預計恢復時間</div><div className="text-sm font-bold text-indigo-700">{estimatedTime}</div></div> </div> )} {type === 'access_denied' && ( <> {!showRequestForm ? ( <button onClick={() => setShowRequestForm(true)} className="w-full mb-3 py-3 bg-indigo-50 text-indigo-600 border border-indigo-200 rounded-xl font-bold text-sm hover:bg-indigo-100 transition-all flex items-center justify-center gap-2 active:scale-95"> <Icon name="file-pen" className="w-4 h-4" /> 申請訪問權限 </button> ) : ( <form onSubmit={handleRequestSubmit} className="mb-4 bg-slate-50 p-4 rounded-xl border border-slate-200 text-left animate-in fade-in zoom-in-95"> <label className="block text-xs font-bold text-slate-500 mb-1">英文短名 (例如: Peter)</label> <input type="text" value={requestName} onChange={(e) => setRequestName(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm mb-3 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Peter Chan" required /> <label className="block text-xs font-bold text-slate-500 mb-1">Google 電郵</label> <input type="email" value={requestEmail} onChange={(e) => setRequestEmail(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm mb-3 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="your.email@gmail.com" required /> <div className="flex gap-2"> <button type="button" onClick={() => setShowRequestForm(false)} className="flex-1 py-2 bg-white border border-slate-300 text-slate-600 rounded-lg text-xs font-bold hover:bg-slate-50 transition-colors">取消</button> <button type="submit" disabled={isSubmitting} className="flex-1 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold hover:bg-indigo-700 disabled:opacity-50 transition-colors active:scale-95"> {isSubmitting ? '送出中...' : '確認申請'} </button> </div> </form> )} </> )} {!user && (<button onClick={onLogin} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-md flex items-center justify-center gap-2 active:scale-95"><Icon name="log-in" className="w-4 h-4" /> 管理員登入</button>)} {user && (<div className="mt-4"><p className="text-xs text-slate-400 mb-2">當前帳號: {user.email}</p><button onClick={() => window.firebaseServices.signOut(window.firebaseServices.auth)} className="text-sm font-bold text-slate-500 hover:text-slate-700 underline">登出 / 切換帳號</button></div>)} </div> </div> );
+            return ( 
+                <div className="fixed inset-0 z-40 flex flex-col items-center justify-center bg-slate-50 p-6 text-center overflow-hidden"> 
+                    <div className="absolute inset-0 z-0 opacity-30">
+                        <div className="absolute top-10 left-10 w-64 h-64 bg-indigo-300 rounded-full mix-blend-multiply filter blur-3xl animate-blob"></div>
+                        <div className="absolute bottom-10 right-10 w-64 h-64 bg-pink-300 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000"></div>
+                    </div> 
+                    <div className="bg-white/80 backdrop-blur-xl p-8 rounded-3xl shadow-xl border border-white/50 max-w-md w-full relative z-10 modal-animate"> 
+                        <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6"> {type === 'access_denied' ? <Icon name="lock" className="w-10 h-10 text-red-500" /> : <Icon name="hammer" className="w-10 h-10 text-orange-500" />} </div> 
+                        <h1 className="text-2xl font-black text-slate-800 mb-2">{displayTitle}</h1> 
+                        <p className="text-slate-500 font-medium mb-6 whitespace-pre-wrap">{displayMsg}</p> 
+                        {estimatedTime && (type === 'updating' || type === 'restructuring') && ( 
+                            <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex items-center gap-3 mb-6"> 
+                                <Icon name="timer" className="w-5 h-5 text-indigo-600" />
+                                <div className="text-left"><div className="text-xs font-bold text-indigo-400 uppercase">預計恢復時間</div><div className="text-sm font-bold text-indigo-700">{estimatedTime}</div></div> 
+                            </div> 
+                        )} 
+                        {type === 'access_denied' && ( 
+                            <> 
+                                {!showRequestForm ? ( 
+                                    <button onClick={() => setShowRequestForm(true)} className="w-full mb-3 py-3 bg-indigo-50 text-indigo-600 border border-indigo-200 rounded-xl font-bold text-sm hover:bg-indigo-100 transition-all flex items-center justify-center gap-2 active:scale-95"> <Icon name="file-pen" className="w-4 h-4" /> 申請訪問權限 </button> 
+                                ) : ( 
+                                    <form onSubmit={handleRequestSubmit} className="mb-4 bg-slate-50 p-4 rounded-xl border border-slate-200 text-left animate-in fade-in zoom-in-95"> 
+                                        <label className="block text-xs font-bold text-slate-500 mb-1">英文短名 (例如: Peter)</label> 
+                                        <input type="text" value={requestName} onChange={(e) => setRequestName(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm mb-3 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Peter Chan" required /> 
+                                        <label className="block text-xs font-bold text-slate-500 mb-1">Google 電郵</label> <input type="email" value={requestEmail} onChange={(e) => setRequestEmail(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm mb-3 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="your.email@gmail.com" required /> 
+                                        <div className="flex gap-2"> 
+                                            <button type="button" onClick={() => setShowRequestForm(false)} className="flex-1 py-2 bg-white border border-slate-300 text-slate-600 rounded-lg text-xs font-bold hover:bg-slate-50 transition-colors">取消</button> 
+                                            <button type="submit" disabled={isSubmitting} className="flex-1 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold hover:bg-indigo-700 disabled:opacity-50 transition-colors active:scale-95"> {isSubmitting ? '送出中...' : '確認申請'} </button> 
+                                        </div> 
+                                    </form> 
+                                )} 
+                            </> 
+                        )} 
+                        {!user && (<button onClick={onLogin} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-md flex items-center justify-center gap-2 active:scale-95"><Icon name="log-in" className="w-4 h-4" /> 管理員登入</button>)} 
+                        {user && (<div className="mt-4"><p className="text-xs text-slate-400 mb-2">當前帳號: {user.email}</p><button onClick={() => window.firebaseServices.signOut(window.firebaseServices.auth)} className="text-sm font-bold text-slate-500 hover:text-slate-700 underline">登出 / 切換帳號</button></div>)} 
+                    </div> 
+                </div> 
+            );
         }
 
         function NameSetupModal({ onSave, loading, triggerAlert }) {
@@ -385,6 +461,40 @@
                     </div>
                 </div>
             );
+        }
+
+        function EditModal({ item, onClose, onSave, triggerAlert, subjects }) { 
+            const [description, setDescription] = useState(item.description || ''); 
+            const [subject, setSubject] = useState(item.subject || '中文'); 
+            const [dueDate, setDueDate] = useState(item.dueDate || ''); 
+            const [loading, setLoading] = useState(false); 
+            const handleSave = async (e) => { e.preventDefault(); setLoading(true); try { await onSave(item.id, { description, subject, dueDate }); onClose(); } catch (error) { console.error(error); triggerAlert("更新失敗"); } finally { setLoading(false); } }; 
+            return ( 
+                <div className="fixed inset-0 z-[110] flex items-center justify-center p-4"> 
+                    <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={onClose}></div> 
+                    <div className="modal-animate bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 relative z-10 overflow-visible"> 
+                        <div className="flex justify-between items-center mb-4"> 
+                            <h3 className="text-xl font-bold text-slate-800">修改紀錄</h3> 
+                            <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors active:scale-95"><Icon name="x" className="w-5 h-5 text-slate-500" /></button> 
+                        </div> 
+                        <form onSubmit={handleSave} className="space-y-4"> 
+                            <div> 
+                                <label className="block text-xs font-bold text-slate-500 mb-2">科目</label> 
+                                <FloatingSelect value={subject} onChange={(e) => setSubject(e.target.value)} subjects={subjects} />
+                            </div> 
+                            <div> 
+                                <label className="block text-xs font-bold text-slate-500 mb-1">內容</label> 
+                                <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows="3" className="w-full rounded-xl border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all p-3 border text-slate-700 text-sm" required /> 
+                            </div> 
+                            <div> 
+                                <label className="block text-xs font-bold text-slate-500 mb-1">繳交/考試日期</label> 
+                                <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="w-full h-10 rounded-xl border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all px-3 border text-slate-600 font-medium text-sm" required /> 
+                            </div> 
+                            <button type="submit" disabled={loading} className="w-full py-3 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all active:scale-95 disabled:opacity-70 flex items-center justify-center gap-2">{loading ? '儲存中...' : <><Icon name="save" className="w-4 h-4" /> 儲存修改</>}</button> 
+                        </form> 
+                    </div> 
+                </div> 
+            ); 
         }
 
         function AdminUserView({ db, onBack, systemConfig, triggerAlert }) { 
@@ -631,7 +741,8 @@
         }
 
         // --- AuthModal Component ---
-        function AuthModal({ isOpen, onClose, triggerAlert }) { const [isLogin, setIsLogin] = useState(true); const [email, setEmail] = useState(''); const [password, setPassword] = useState(''); const [displayName, setDisplayName] = useState(''); const [loading, setLoading] = useState(false); const { auth, googleProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, setDoc, doc, db, serverTimestamp } = window.firebaseServices; useEffect(() => { if (isOpen) { setLoading(false); setEmail(''); setPassword(''); setDisplayName(''); setIsLogin(true); } }, [isOpen]); if (!isOpen) return null; const handleGoogleLogin = async () => { try { setLoading(true); await signInWithPopup(auth, googleProvider); onClose(); } catch (error) { console.error(error); triggerAlert("Google 登入失敗: " + error.message); setLoading(false); } }; const handleEmailAuth = async (e) => { e.preventDefault(); if(!email || !password) return; if(!isLogin && !displayName.trim()) { triggerAlert("請輸入英文短名以便識別！"); return; } try { setLoading(true); if (isLogin) { await signInWithEmailAndPassword(auth, email, password); } else { const userCredential = await createUserWithEmailAndPassword(auth, email, password); await updateProfile(userCredential.user, { displayName: displayName.trim() }); await setDoc(doc(db, "users_public", userCredential.user.uid), { email: email, displayName: displayName.trim(), lastSeen: serverTimestamp() }, { merge: true }); } onClose(); } catch (error) { console.error(error); triggerAlert(isLogin ? "登入失敗: " + error.message : "註冊失敗: " + error.message); setLoading(false); } }; return ( <div className="fixed inset-0 z-[200] flex items-center justify-center p-4"> <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={onClose}></div> <div className="modal-animate bg-white/90 backdrop-blur-2xl rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.3)] w-full max-w-md p-8 relative z-10 border border-white/50 overflow-hidden"> <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"><Icon name="x" className="w-6 h-6" /></button> <div className="text-center mb-8 relative"><h2 className="text-2xl font-black text-slate-800 tracking-tight">{isLogin ? '登入帳戶' : '立即註冊'}</h2><p className="text-slate-500 mt-1 text-sm">{isLogin ? '登入即可儲存及同步你的資料' : '只需幾秒，開始雲端記錄'} </p></div> <form onSubmit={handleEmailAuth} className="space-y-4 relative"> {!isLogin && (<div className="relative group"><div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors"><Icon name="user" className="w-5 h-5" /></div><input type="text" className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium" placeholder="英文短名 (例如: Miss Wong)" value={displayName} onChange={e => setDisplayName(e.target.value)} required /></div>)} <div className="relative group"><div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors"><Icon name="mail" className="w-5 h-5" /></div><input type="email" className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium" placeholder="電子郵件" value={email} onChange={e => setEmail(e.target.value)} required /></div> <div className="relative group"><div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors"><Icon name="lock" className="w-5 h-5" /></div><input type="password" className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium" placeholder="密碼" value={password} onChange={e => setPassword(e.target.value)} required /></div> <button type="submit" disabled={loading} className="w-full py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold text-lg shadow-lg shadow-indigo-500/30 transform transition-all active:scale-[0.98] disabled:opacity-70 flex items-center justify-center">{loading ? '處理中...' : (isLogin ? '登入' : '註冊')}</button> </form> <div className="relative my-6"><div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100"></div></div><div className="relative flex justify-center text-xs uppercase tracking-wider font-bold text-slate-400"><span className="px-3 bg-white/80 backdrop-blur">或</span></div></div> <button onClick={handleGoogleLogin} disabled={loading} className="w-full py-3 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center justify-center gap-3 shadow-sm active:scale-[0.98]"><img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />Google 登入</button> <div className="mt-6 text-center"><p className="text-slate-500 text-sm">{isLogin ? '還沒有帳號？' : '已經有帳號了？'} <button onClick={() => setIsLogin(!isLogin)} className="text-indigo-600 font-bold hover:text-indigo-700 ml-1 transition-colors">{isLogin ? '立即註冊' : '直接登入'}</button></p></div> </div> </div> ); }
+        function AuthModal({ isOpen, onClose, triggerAlert }) { const [isLogin, setIsLogin] = useState(true); const [email, setEmail] = useState(''); const [password, setPassword] = useState(''); const [displayName, setDisplayName] = useState(''); const [loading, setLoading] = useState(false); const { auth, googleProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, setDoc, doc, db, serverTimestamp } = window.firebaseServices; useEffect(() => { if (isOpen) { setLoading(false); setEmail(''); setPassword(''); setDisplayName(''); setIsLogin(true); } }, [isOpen]); if (!isOpen) return null; const handleGoogleLogin = async () => { try { setLoading(true); await signInWithPopup(auth, googleProvider); onClose(); } catch (error) { console.error(error); triggerAlert("Google 登入失敗: " + error.message); setLoading(false); } }; const handleEmailAuth = async (e) => { e.preventDefault(); if(!email || !password) return; if(!isLogin && !displayName.trim()) { triggerAlert("請輸入英文短名以便識別！"); return; } try { setLoading(true); if (isLogin) { await signInWithEmailAndPassword(auth, email, password); } else { const userCredential = await createUserWithEmailAndPassword(auth, email, password); await updateProfile(userCredential.user, { displayName: displayName.trim() }); await setDoc(doc(db, "users_public", userCredential.user.uid), { email: email, displayName: displayName.trim(), lastSeen: serverTimestamp() }, { merge: true }); } onClose(); } catch (error) { console.error(error); triggerAlert(isLogin ? "登入失敗: " + error.message : "註冊失敗: " + error.message); setLoading(false); } }; return ( <div className="fixed inset-0 z-[200] flex items-center justify-center p-4"> <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={onClose}></div> <div className="modal-animate bg-white/90 backdrop-blur-2xl rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.3)] w-full max-w-md p-8 relative z-10 border border-white/50 overflow-hidden"> <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"><Icon name="x" className="w-6 h-6" /></button> <div className="text-center mb-8 relative"><h2 className="text-2xl font-black text-slate-800 tracking-tight">{isLogin ? '登入帳戶' : '立即註冊'}</h2><p className="text-slate-500 mt-1 text-sm">{isLogin ? '登入即可儲存及同步你的資料' : '只需幾秒，開始雲端記錄'} </p></div> <form onSubmit={handleEmailAuth} className="space-y-4 relative"> {!isLogin && (<div className="relative group"><div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors"><Icon name="user" className="w-5 h-5" /></div><input type="text" className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium" placeholder="英文短名 (例如: Miss Wong)" value={displayName} onChange={e => setDisplayName(e.target.value)} required /></div>)} <div className="relative group"><div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors"><Icon name="mail" className="w-5 h-5" /></div><input type="email" className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium" placeholder="電子郵件" value={email} onChange={e => setEmail(e.target.value)} required /></div> <div className="relative group"><div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors"><Icon name="lock" className="w-5 h-5" /></div><input type="password" className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium" placeholder="密碼" value={password} onChange={e => setPassword(e.target.value)} required /></div> <button type="submit" disabled={loading} className="w-full py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold text-lg shadow-lg shadow-indigo-500/30 transform transition-all active:scale-[0.98] disabled:opacity-70 flex items-center justify-center">{loading ? '處理中...' : (isLogin ? '登入' : '註冊')}</button> </form> <div className="relative my-6"><div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100"></div></div><div className="relative flex justify-center text-xs uppercase tracking-wider font-bold text-slate-400"><span className="px-3 bg-white/80 backdrop-blur">或</span></div></div> <button onClick={handleGoogleLogin} disabled={loading} className="w-full py-3 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center justify-center gap-3 shadow-sm active:scale-[0.98]"><img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />Google 登入</button> <div className="mt-6 text-center"><p className="text-slate-500 text-sm">{isLogin ? '還沒有帳號？' : '已經有帳號了？'} <button onClick={() => setIsLogin(!isLogin)} className="text-indigo-600 font-bold hover:text-indigo-700 ml-1 transition-colors">{isLogin ? '立即註冊' : '直接登入'}</button></p></div> </div> </div> ); 
+        }
 
         // --- Main App ---
         function App() {
@@ -648,10 +759,11 @@
             // Timetable State
             const [scheduleConfig, setScheduleConfig] = useState(DEFAULT_SCHEDULE);
             const [timeConfig, setTimeConfig] = useState(DEFAULT_START_TIMES);
-            const [durationConfig, setDurationConfig] = useState(DEFAULT_DURATIONS); // Added durations
+            const [durationConfig, setDurationConfig] = useState(DEFAULT_DURATIONS); 
+            // MODIFIED: Initialize manualDay with ACTUAL day (0-6)
             const [manualDay, setManualDay] = useState(() => {
                 const d = new Date().getDay();
-                return (d === 0 || d === 6) ? 1 : d; // Default to Mon(1) if weekend, else today
+                return d; // Returns 0 for Sunday, 6 for Saturday directly
             });
             const [timetableEditing, setTimetableEditing] = useState(false);
 
