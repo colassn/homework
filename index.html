@@ -22,20 +22,21 @@
         @keyframes slideInRight { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: translateX(0); } }
         @keyframes popIn { 0% { opacity: 0; transform: scale(0.9); } 70% { transform: scale(1.02); } 100% { opacity: 1; transform: scale(1); } }
         @keyframes gradientFlow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-        
-        /* Background Blobs for Main App */
         @keyframes blob { 0% { transform: translate(0px, 0px) scale(1); } 33% { transform: translate(30px, -50px) scale(1.1); } 66% { transform: translate(-20px, 20px) scale(0.9); } 100% { transform: translate(0px, 0px) scale(1); } }
-        .animate-blob { animation: blob 10s infinite alternate ease-in-out; }
         
+        .animate-blob { animation: blob 10s infinite alternate ease-in-out; }
         .gradient-bg { background-size: 200% 200%; animation: gradientFlow 15s ease infinite; }
+        
         .modal-animate { animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         .page-enter { animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         .list-item-enter { animation: slideInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
         
-        /* Login Page Specific Animations */
+        /* Login Page Animations */
         @keyframes meshFlow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
         @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
         .mesh-bg { background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab); background-size: 400% 400%; animation: meshFlow 15s ease infinite; }
+        .mesh-bg-soft { background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); min-height: 100vh; }
+        .mesh-bg-block { background: linear-gradient(-45deg, #ff9a9e, #fad0c4, #fad0c4, #ffecd2); background-size: 400% 400%; animation: meshFlow 12s ease infinite; }
         .animate-float { animation: float 6s ease-in-out infinite; }
         
         /* Glassmorphism */
@@ -100,6 +101,10 @@
         const DEFAULT_START_TIMES = [510, 545, 595, 630, 675, 710, 815, 850, 895, 930]; 
         const DEFAULT_DURATIONS = [35, 35, 35, 35, 35, 35, 35, 35, 35, 35];
         const ADMIN_EMAIL = 'chimhinhin@gmail.com';
+        const SUBJECT_GROUPS = {
+            "主科": ['中文', '英文', '數學', '常識/公社'],
+            "選修/其他": ['物理', '化學', '生物', '中史', '歷史', '地理', '經濟', '企會財', '資訊科技', '佛學/宗教', '普通話', '視藝', '音樂', '體育', '設計與科技', '家政', '文學', 'STEAM', '全方位', '其他', '空堂']
+        };
 
         // --- Helpers ---
         function Icon({name, className}) {
@@ -136,11 +141,11 @@
 
             if (currentDay === 0 || currentDay === 6) {
                 status = "放假啦！"; subStatus = "好好休息，享受週末 🏖️"; nextInfo = "下週見"; icon = "coffee"; bg = "from-teal-400 to-emerald-500";
-            } else if (times.length > 0) {
+            } else {
                 const getEnd = (i) => times[i] + (durations[i]||35);
-                if (curMin < times[0]) {
+                if (times.length > 0 && curMin < times[0]) {
                     status = "早晨！未上堂"; const diff = times[0] - curMin; subStatus = `距離第一堂仲有 ${Math.floor(diff/60)}小時 ${diff%60}分鐘`; nextInfo = `第一堂: ${daySubjects[0]||'未知'}`; icon = "sun"; bg = "from-orange-400 to-red-500";
-                } else {
+                } else if (times.length > 0) {
                     let found = false;
                     for(let i=0; i<10; i++) {
                         const start = times[i]; const end = getEnd(i);
@@ -166,7 +171,7 @@
             const timeStr = now.toLocaleTimeString('zh-HK', { hour: '2-digit', minute: '2-digit' });
 
             return (
-                <div className={`relative overflow-hidden rounded-3xl p-6 text-white shadow-xl bg-gradient-to-r ${bg} mb-6 transition-all duration-500 gradient-bg`}>
+                <div className={`relative overflow-hidden rounded-3xl p-6 text-white shadow-xl bg-gradient-to-r ${bg} mb-6 gradient-bg transition-all duration-500`}>
                     <div className="absolute top-0 right-0 p-4 opacity-10"><Icon name={icon} className="w-32 h-32" /></div>
                     <div className="relative z-10">
                         <div className="flex justify-between items-start mb-4">
@@ -196,12 +201,8 @@
                     triggerAlert("申請已送出！請等待批核。"); setShowRequest(false);
                 } catch(e) { 
                     console.error(e); 
-                    if(e.code === 'permission-denied') {
-                        alert("✅ 系統已收到您的申請！\n\n您的申請正在審核中，無需重複提交。");
-                        setShowRequest(false);
-                    } else {
-                        triggerAlert("申請失敗: " + e.message); 
-                    }
+                    if(e.code === 'permission-denied') { alert("✅ 系統已收到您的申請！\n\n您的申請正在審核中，無需重複提交。"); setShowRequest(false); } 
+                    else { triggerAlert("申請失敗: " + e.message); }
                 } finally { setSubmitting(false); }
             };
 
@@ -210,19 +211,11 @@
                     <div className="absolute inset-0 bg-black/10 backdrop-blur-[2px]"></div>
                     <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-purple-500/40 rounded-full blur-[120px] animate-float"></div>
                     <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-orange-500/40 rounded-full blur-[120px] animate-float" style={{animationDelay:'-3s'}}></div>
-
                     <div className="glass-card p-10 rounded-[2.5rem] shadow-2xl max-w-md w-full relative z-10 modal-animate border border-white/40">
                         <div className="w-20 h-20 bg-white/50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner border border-white/50"><Icon name={type==='access_denied'?'lock':'hammer'} className="w-10 h-10 text-slate-700"/></div>
                         <h2 className="text-3xl font-black text-slate-800 mb-3 tracking-tight">{title}</h2>
                         <p className="text-slate-600 font-medium mb-8 whitespace-pre-wrap leading-relaxed">{msg}</p>
-                        {type === 'access_denied' && (
-                            !showRequest ? <button onClick={()=>setShowRequest(true)} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold shadow-xl hover:bg-black transition transform hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2"><Icon name="file-pen" className="w-5 h-5"/> 申請訪問權限</button> 
-                            : <form onSubmit={handleReq} className="text-left space-y-4 animate-fadeIn">
-                                <div className="space-y-1"><label className="text-xs font-bold text-slate-500 ml-1">顯示名稱</label><input value={name} onChange={e=>setName(e.target.value)} className="w-full p-3.5 bg-white/60 border border-white rounded-xl text-slate-800 font-bold outline-none focus:ring-2 focus:ring-slate-900" placeholder="例如: Peter Chan" required /></div>
-                                <div className="space-y-1"><label className="text-xs font-bold text-slate-500 ml-1">Google Email</label><input value={email} onChange={e=>setEmail(e.target.value)} className="w-full p-3.5 bg-white/60 border border-white rounded-xl text-slate-800 font-bold outline-none focus:ring-2 focus:ring-slate-900" placeholder="your@email.com" required readOnly /></div>
-                                <div className="flex gap-3 pt-2"><button type="button" onClick={()=>setShowRequest(false)} className="flex-1 py-3 bg-white border border-slate-200 text-slate-600 rounded-xl font-bold hover:bg-slate-50 transition">取消</button><button type="submit" disabled={submitting} className="flex-[2] py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-black transition shadow-lg">{submitting?'送出中...':'確認送出'}</button></div>
-                            </form>
-                        )}
+                        {type === 'access_denied' && ( !showRequest ? <button onClick={()=>setShowRequest(true)} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold shadow-xl hover:bg-black transition transform hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2"><Icon name="file-pen" className="w-5 h-5"/> 申請訪問權限</button> : <form onSubmit={handleReq} className="text-left space-y-4 animate-fadeIn"><div className="space-y-1"><label className="text-xs font-bold text-slate-500 ml-1">顯示名稱</label><input value={name} onChange={e=>setName(e.target.value)} className="w-full p-3.5 bg-white/60 border border-white rounded-xl text-slate-800 font-bold outline-none focus:ring-2 focus:ring-slate-900" placeholder="例如: Peter Chan" required /></div><div className="space-y-1"><label className="text-xs font-bold text-slate-500 ml-1">Google Email</label><input value={email} onChange={e=>setEmail(e.target.value)} className="w-full p-3.5 bg-white/60 border border-white rounded-xl text-slate-800 font-bold outline-none focus:ring-2 focus:ring-slate-900" placeholder="your@email.com" required readOnly /></div><div className="flex gap-3 pt-2"><button type="button" onClick={()=>setShowRequest(false)} className="flex-1 py-3 bg-white border border-slate-200 text-slate-600 rounded-xl font-bold hover:bg-slate-50 transition">取消</button><button type="submit" disabled={submitting} className="flex-[2] py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-black transition shadow-lg">{submitting?'送出中...':'確認送出'}</button></div></form> )}
                         {!user && <button onClick={onLogin} className="mt-6 w-full py-3 border border-slate-300 rounded-2xl font-bold text-slate-600 hover:bg-slate-50 transition">登入帳號</button>}
                         {user && <div className="mt-8 pt-6 border-t border-slate-200/50 text-xs text-slate-500 font-medium">當前帳號: {user.email} <button onClick={()=>window.firebaseServices.signOut(window.firebaseServices.auth)} className="text-indigo-600 hover:text-indigo-800 font-bold ml-2 underline">登出</button></div>}
                     </div>
@@ -248,66 +241,13 @@
             );
         }
 
-        function Timetable({ currentDay, subjects, timeConfig, durations, onDayChange, isEditing, manualDay, setManualDay }) {
-            const isWeekend = !isEditing && (manualDay === 0 || manualDay === 6);
-            
-            const renderSchedule = () => {
-                const list = [];
-                if(timeConfig && subjects[currentDay]) {
-                    for(let i=0; i<timeConfig.length; i++) {
-                        list.push({ time: minutesToTimeStr(timeConfig[i]), subject: subjects[currentDay][i] || '空堂', type:'lesson' });
-                        if(i===1 || i===3 || i===5 || i===7) list.push({ type: 'break', name: i===5?'午膳':'小息' });
-                    }
-                }
-                return list;
-            };
-            const list = renderSchedule();
-
-            return (
-                <div className="space-y-4 page-enter">
-                    <div className="flex justify-between items-center bg-white rounded-xl p-3 shadow-sm border border-slate-100">
-                        <div className="relative w-full">
-                            <select value={manualDay} onChange={(e)=>setManualDay(parseInt(e.target.value))} className="w-full p-2 bg-indigo-50 text-indigo-700 rounded-lg font-bold outline-none text-sm appearance-none cursor-pointer">
-                                <option value="1">Day 1</option><option value="2">Day 2</option><option value="3">Day 3</option><option value="4">Day 4</option><option value="5">Day 5</option>
-                                <option disabled>---</option><option value="6">星期六 (休息)</option><option value="0">星期日 (休息)</option>
-                            </select>
-                            <div className="absolute right-3 top-2.5 text-indigo-400 pointer-events-none"><Icon name="chevron-down" className="w-4 h-4"/></div>
-                        </div>
-                    </div>
-                    {isWeekend ? (
-                        <div className="bg-white rounded-2xl border border-slate-100 p-10 text-center min-h-[300px] flex flex-col items-center justify-center animate-fade-in">
-                            <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mb-4 text-green-500"><Icon name="coffee" className="w-10 h-10" /></div>
-                            <h3 className="text-xl font-black text-slate-700">週末愉快！</h3>
-                            <p className="text-slate-400 font-bold mt-2 text-sm">今天沒有課堂，好好休息吧</p>
-                        </div>
-                    ) : (
-                        <div className="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm animate-fade-in">
-                            {list.length > 0 ? list.map((item, i) => (
-                                <div key={i} className={`flex items-center gap-4 py-3 border-b border-slate-50 last:border-0 ${item.type==='break'?'bg-slate-50/50 -mx-4 px-4 py-2':''}`}>
-                                    {item.type !== 'break' ? (
-                                        <>
-                                            <div className="w-12 text-xs font-mono font-bold text-slate-400 text-right">{item.time}</div>
-                                            <div className="w-2 h-2 rounded-full bg-indigo-400"></div>
-                                            <div className="font-bold text-slate-700 text-sm">{item.subject}</div>
-                                        </>
-                                    ) : (
-                                        <div className="w-full text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">{item.name}</div>
-                                    )}
-                                </div>
-                            )) : <div className="text-center py-10 text-slate-400">暫無課堂資料</div>}
-                        </div>
-                    )}
-                </div>
-            );
-        }
-
+        // --- UserSettings (Restored V3) ---
         function UserSettings({ subjects, onSave, onBack }) {
             const [list, setList] = useState(subjects || []);
             const [newName, setNewName] = useState('');
             const [newColor, setNewColor] = useState(COLOR_PRESETS[0].value);
-
             const handleAdd = () => { if(!newName.trim()) return; setList([...list, { name: newName, color: newColor, category: '自訂' }]); setNewName(''); };
-
+            
             return (
                 <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 min-h-[500px] page-enter">
                     <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
@@ -316,19 +256,14 @@
                     </div>
                     <div className="mb-6 bg-slate-50 p-4 rounded-xl border border-slate-200">
                         <h4 className="text-xs font-bold text-slate-500 mb-2">新增科目</h4>
-                        <div className="flex gap-2 mb-3">
-                            <input value={newName} onChange={e=>setNewName(e.target.value)} className="flex-1 p-2 rounded-lg border border-slate-300 text-sm outline-none focus:ring-2 focus:ring-indigo-500" placeholder="例如: 日文" />
-                            <button onClick={handleAdd} className="bg-indigo-600 text-white px-4 rounded-lg font-bold text-sm shadow-md active:scale-95">新增</button>
-                        </div>
-                        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-                            {COLOR_PRESETS.map((c,i) => (<button key={i} onClick={()=>setNewColor(c.value)} className={`w-6 h-6 rounded-full border-2 shrink-0 ${c.value.split(' ')[0]} ${newColor===c.value ? 'ring-2 ring-indigo-400 border-white' : 'border-transparent'}`}></button>))}
-                        </div>
+                        <div className="flex gap-2 mb-3"><input value={newName} onChange={e=>setNewName(e.target.value)} className="flex-1 p-2 rounded-lg border border-slate-300 text-sm outline-none focus:ring-2 focus:ring-indigo-500" placeholder="例如: 日文" /><button onClick={handleAdd} className="bg-indigo-600 text-white px-4 rounded-lg font-bold text-sm shadow-md active:scale-95">新增</button></div>
+                        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">{COLOR_PRESETS.map((c,i) => (<button key={i} onClick={()=>setNewColor(c.value)} className={`w-6 h-6 rounded-full border-2 shrink-0 ${c.value.split(' ')[0]} ${newColor===c.value ? 'ring-2 ring-indigo-400 border-white' : 'border-transparent'}`}></button>))}</div>
                     </div>
                     <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
                         {list.map((s, i) => (
                             <div key={i} className="flex justify-between items-center p-3 bg-white border border-slate-100 rounded-xl">
                                 <div className="flex items-center gap-3"><div className={`w-3 h-3 rounded-full ${s.color?.split(' ')[0] || 'bg-gray-400'}`}></div><span className="text-sm font-bold text-slate-700">{s.name}</span></div>
-                                <button onClick={()=>{const n=[...list];n.splice(i,1);setList(n)}} className="text-slate-300 hover:text-red-500 transition"><Icon name="trash-2" className="w-4 h-4"/></button>
+                                <button onClick={()=>{if(confirm('刪除?')) { const n=[...list];n.splice(i,1);setList(n); }}} className="text-slate-300 hover:text-red-500 transition"><Icon name="trash-2" className="w-4 h-4"/></button>
                             </div>
                         ))}
                     </div>
@@ -337,11 +272,14 @@
             );
         }
 
-        // --- CUSTOM UI HELPERS ---
+        // --- Custom Dropdowns & Selects (Restored) ---
         function CustomDropdown({ value, onChange, options }) { const [isOpen, setIsOpen] = useState(false); const ref = useRef(null); useEffect(() => { const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setIsOpen(false); }; document.addEventListener('mousedown', h); return () => document.removeEventListener('mousedown', h); }, []); const label = options.find(o => o.value === value)?.label || '排序'; return ( <div className="relative" ref={ref}> <button type="button" onClick={() => setIsOpen(!isOpen)} className="flex items-center gap-2 bg-white border border-slate-200 text-slate-600 text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold hover:bg-slate-50 transition-all shadow-sm active:scale-95 min-w-[100px] justify-between"> <span>{label}</span> <Icon name="chevron-down" className={`w-3 h-3 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} /> </button> {isOpen && ( <div className="absolute right-0 mt-2 w-48 bg-white/95 backdrop-blur-xl rounded-xl shadow-xl border border-slate-100 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right">{options.map((opt, idx) => ( <button key={idx} onClick={() => { onChange(opt.value); setIsOpen(false); }} className={`w-full text-left px-4 py-3 text-xs font-bold flex items-center gap-2 transition-colors ${value === opt.value ? 'bg-indigo-50 text-indigo-600' : 'text-slate-600 hover:bg-slate-50'}`}> {opt.label} </button> ))} </div> )} </div> ); }
 
-        function SubjectFilterDropdown({ currentFilter, onSelect, subjects }) { const [isOpen, setIsOpen] = useState(false); const ref = useRef(null); useEffect(() => { const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setIsOpen(false); }; document.addEventListener('mousedown', h); return () => document.removeEventListener('mousedown', h); }, []); return ( <div className="relative" ref={ref}> <button onClick={() => setIsOpen(!isOpen)} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all min-w-[100px] justify-between ${currentFilter !== '全部' ? 'bg-indigo-50 text-indigo-600 border-indigo-200' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}> <div className="flex items-center gap-2"><Icon name="filter" className="w-3.5 h-3.5" /> {currentFilter === '全部' ? '篩選科目' : currentFilter}</div> <Icon name="chevron-down" className="w-3 h-3" /> </button> {isOpen && ( <div className="absolute left-0 mt-2 w-48 bg-white/95 backdrop-blur-xl rounded-xl shadow-xl border border-slate-100 z-50 max-h-64 overflow-y-auto animate-in fade-in zoom-in-95"> <button onClick={() => {onSelect('全部'); setIsOpen(false);}} className="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50 border-b border-slate-50">全部</button> {subjects.map((sub, idx) => ( <button key={idx} onClick={() => {onSelect(sub.name); setIsOpen(false);}} className={`w-full text-left px-4 py-2.5 text-xs font-bold hover:bg-indigo-50 transition-colors ${currentFilter === sub.name ? 'text-indigo-600 bg-indigo-50' : 'text-slate-600'}`}>{sub.name}</button> ))} </div> )} </div> ); }
+        function SubjectFilterDropdown({ currentFilter, onSelect, subjects }) { const [isOpen, setIsOpen] = useState(false); const ref = useRef(null); useEffect(() => { const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setIsOpen(false); }; document.addEventListener('mousedown', h); return () => document.removeEventListener('mousedown', h); }, []); const groups = { "主科": [], "副科/其他": [] }; const safeSubjects = Array.isArray(subjects) ? subjects : []; safeSubjects.forEach(sub => { const cat = sub.category || (SUBJECT_GROUPS["主科"].includes(sub.name) ? "主科" : "副科/其他"); if (!groups[cat]) groups[cat] = []; groups[cat].push(sub); }); return ( <div className="relative" ref={ref}> <button onClick={() => setIsOpen(!isOpen)} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all min-w-[100px] justify-between ${currentFilter !== '全部' ? 'bg-indigo-50 text-indigo-600 border-indigo-200' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}> <div className="flex items-center gap-2"><Icon name="filter" className="w-3.5 h-3.5" /> {currentFilter === '全部' ? '篩選科目' : currentFilter}</div> <Icon name="chevron-down" className="w-3 h-3" /> </button> {isOpen && ( <div className="absolute left-0 mt-2 w-48 bg-white/95 backdrop-blur-xl rounded-xl shadow-xl border border-slate-100 z-50 max-h-64 overflow-y-auto animate-in fade-in zoom-in-95"> <button onClick={() => {onSelect('全部'); setIsOpen(false);}} className="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50 border-b border-slate-50">全部</button> {Object.entries(groups).map(([group, subs]) => ( subs.length > 0 && <div key={group}><div className="px-4 py-2 text-[10px] font-bold text-slate-400 bg-slate-50 uppercase tracking-wider border-b border-slate-50">{group}</div>{subs.map((sub, idx) => ( <button key={`${sub.name}-${idx}`} onClick={() => {onSelect(sub.name); setIsOpen(false);}} className={`w-full text-left px-4 py-2.5 text-xs font-bold hover:bg-indigo-50 transition-colors ${currentFilter === sub.name ? 'text-indigo-600 bg-indigo-50' : 'text-slate-600'}`}>{sub.name}</button> ))}</div> ))} </div> )} </div> ); }
 
+        function FloatingSelect({ value, onChange, className, subjects = [] }) { const [isOpen, setIsOpen] = useState(false); const ref = useRef(null); const safeSubjects = Array.isArray(subjects) ? subjects : []; const groups = { "主科": [], "副科/其他": [] }; safeSubjects.forEach(sub => { const cat = sub.category || (SUBJECT_GROUPS["主科"].includes(sub.name) ? "主科" : "副科/其他"); if (!groups[cat]) groups[cat] = []; groups[cat].push(sub); }); const safeGroups = Object.keys(groups).length > 0 ? groups : { "所有科目": safeSubjects }; useEffect(() => { const handleClickOutside = (event) => { if (ref.current && !ref.current.contains(event.target)) { setIsOpen(false); } }; document.addEventListener('mousedown', handleClickOutside); return () => document.removeEventListener('mousedown', handleClickOutside); }, []); const handleSelect = (val) => { onChange({ target: { value: val } }); setIsOpen(false); }; return ( <div className={`relative ${className} border-0 p-0 bg-transparent`} ref={ref}> <button type="button" onClick={() => setIsOpen(!isOpen)} className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl border border-slate-300 bg-white text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 transition-all ${isOpen ? 'ring-2 ring-indigo-500 border-indigo-500' : ''}`}> <span className="truncate">{value || "選擇科目"}</span> <Icon name="chevron-down" className={`w-4 h-4 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} /> </button> {isOpen && ( <div className="absolute left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-slate-100 z-50 max-h-60 overflow-y-auto animate-in fade-in zoom-in-95 origin-top"> {Object.entries(safeGroups).map(([group, subs]) => ( subs.length > 0 && ( <div key={group}> <div className="px-4 py-2 text-[10px] font-bold text-slate-400 bg-slate-50 uppercase tracking-wider border-b border-slate-100 sticky top-0 z-10 bg-slate-50">{group}</div> <div className="p-1">{subs.map((sub, idx) => ( <button key={`${sub.name}-${idx}`} type="button" onClick={() => handleSelect(sub.name)} className={`w-full text-left px-4 py-2 text-xs font-bold rounded-lg transition-colors flex items-center justify-between ${value === sub.name ? 'bg-indigo-50 text-indigo-600' : 'text-slate-600 hover:bg-slate-50'}`}> {sub.name} {value === sub.name && <Icon name="check" className="w-3.5 h-3.5" />} </button> ))}</div> </div> ) ))} </div> )} </div> ); }
+
+        // --- APP ---
         function App() {
             const [user, setUser] = useState(null);
             const [loading, setLoading] = useState(true);
@@ -357,174 +295,69 @@
             const [times, setTimes] = useState(DEFAULT_START_TIMES);
             const [durations, setDurations] = useState(DEFAULT_DURATIONS);
 
-            // Inputs & Filters
+            // Inputs
             const [desc, setDesc] = useState('');
             const [date, setDate] = useState('');
             const [sub, setSub] = useState('中文');
             const [filterSubject, setFilterSubject] = useState('全部');
             const [sortOption, setSortOption] = useState('date_asc');
 
-            // --- Init ---
             useEffect(() => {
-                const init = () => {
-                    if(window.firebaseServices && window.firebaseServices.isReady) {
-                        const { auth, db, onAuthStateChanged, doc, onSnapshot } = window.firebaseServices;
-                        onAuthStateChanged(auth, u => { setUser(u); setLoading(false); if(u) setDate(new Date().toISOString().split('T')[0]); });
-                        onSnapshot(doc(db, "system_settings", "config"), s => setConfig(s.data()));
-                    } else { setTimeout(init, 100); }
-                };
-                init();
+                const init = () => { if(window.firebaseServices && window.firebaseServices.isReady) { const { auth, db, onAuthStateChanged, doc, onSnapshot } = window.firebaseServices; onAuthStateChanged(auth, u => { setUser(u); setLoading(false); if(u) setDate(new Date().toISOString().split('T')[0]); }); onSnapshot(doc(db, "system_settings", "config"), s => setConfig(s.data())); } else { setTimeout(init, 100); } }; init();
             }, []);
 
-            // --- Data Listeners ---
             useEffect(() => {
                 if(!user || !window.firebaseServices) return;
                 const { db, collection, doc, onSnapshot, query, orderBy, where, getDocs, addDoc } = window.firebaseServices;
-
-                // FIX: Only query if user exists to prevent permission error
                 if(config?.whitelistEnabled && !config?.allowedEmails?.includes(user.email)) return;
 
-                const unsubItems = onSnapshot(query(collection(db, "users", user.uid, "items")), s => {
-                    setItems(s.docs.map(d => ({id:d.id, ...d.data()})));
-                }, err => console.log("Items Listener Error (Expected if blocked):", err));
-
-                const unsubSettings = onSnapshot(doc(db, "users", user.uid, "settings", "timetable"), s => {
-                    if(s.exists()) {
-                        const d = s.data();
-                        if(d.schedule) setSchedule(d.schedule);
-                        if(d.times) setTimes(d.times);
-                        if(d.durations) setDurations(d.durations);
-                    }
-                });
-
-                const unsubSubj = onSnapshot(doc(db, "users", user.uid, "settings", "subjects"), s => {
-                    if(s.exists() && s.data().list) setSubjects(s.data().list);
-                });
-
+                const unsubItems = onSnapshot(query(collection(db, "users", user.uid, "items")), s => setItems(s.docs.map(d => ({id:d.id, ...d.data()}))));
+                const unsubSettings = onSnapshot(doc(db, "users", user.uid, "settings", "timetable"), s => { if(s.exists()) { const d = s.data(); if(d.schedule) setSchedule(d.schedule); if(d.times) setTimes(d.times); if(d.durations) setDurations(d.durations); } });
+                const unsubSubj = onSnapshot(doc(db, "users", user.uid, "settings", "subjects"), s => { if(s.exists() && s.data().list) setSubjects(s.data().list); });
                 const qPublic = query(collection(db, "public_assignments"), orderBy("createdAt", "desc"));
-                const unsubPublic = onSnapshot(qPublic, snapshot => {
-                    snapshot.docChanges().forEach(async (change) => {
-                        if (change.type === "added") {
-                            const publicId = change.doc.id;
-                            const qCheck = query(collection(db, "users", user.uid, "items"), where("publicRefId", "==", publicId));
-                            const checkSnap = await getDocs(qCheck);
-                            if(checkSnap.empty) {
-                                await addDoc(collection(db, "users", user.uid, "items"), { ...change.doc.data(), publicRefId: publicId, completed: false });
-                                alert(`📢 新功課: ${change.doc.data().subject}`);
-                            }
-                        }
-                    });
-                });
-
+                const unsubPublic = onSnapshot(qPublic, snapshot => { snapshot.docChanges().forEach(async (change) => { if (change.type === "added") { const publicId = change.doc.id; const checkSnap = await getDocs(query(collection(db, "users", user.uid, "items"), where("publicRefId", "==", publicId))); if(checkSnap.empty) { await addDoc(collection(db, "users", user.uid, "items"), { ...change.doc.data(), publicRefId: publicId, completed: false }); alert(`📢 新功課: ${change.doc.data().subject}`); } } }); });
                 return () => { unsubItems(); unsubSettings(); unsubSubj(); unsubPublic(); }
-            }, [user, config]); 
+            }, [user, config]);
 
-            // --- Handlers ---
             const handleGoogleLogin = () => window.firebaseServices.signInWithPopup(window.firebaseServices.auth, window.firebaseServices.googleProvider).then(()=>setAuthModalOpen(false)).catch(e=>alert(e.message));
-            
-            const handleEmailAuth = async (email, pwd, isReg, name) => {
-                const { auth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, db, doc, setDoc, serverTimestamp } = window.firebaseServices;
-                try {
-                    if(isReg) {
-                        const cred = await createUserWithEmailAndPassword(auth, email, pwd);
-                        await updateProfile(cred.user, { displayName: name });
-                        await setDoc(doc(db, "users_public", cred.user.uid), { email: email, displayName: name, lastSeen: serverTimestamp() }, { merge: true });
-                    } else {
-                        await signInWithEmailAndPassword(auth, email, pwd);
-                    }
-                    setAuthModalOpen(false);
-                } catch(e) { alert("操作失敗: " + e.message); }
-            };
+            const handleEmailAuth = async (email, pwd, isReg, name) => { const { auth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, db, doc, setDoc, serverTimestamp } = window.firebaseServices; try { if(isReg) { const cred = await createUserWithEmailAndPassword(auth, email, pwd); await updateProfile(cred.user, { displayName: name }); await setDoc(doc(db, "users_public", cred.user.uid), { email: email, displayName: name, lastSeen: serverTimestamp() }, { merge: true }); } else { await signInWithEmailAndPassword(auth, email, pwd); } setAuthModalOpen(false); } catch(e) { alert("操作失敗: " + e.message); } };
+            const handleAddHomework = async (e) => { e.preventDefault(); if(!desc || !date) return; const { db, addDoc, collection } = window.firebaseServices; await addDoc(collection(db, "users", user.uid, "items"), { description: desc, subject: sub, dueDate: date, completed: false, type: 'homework', createdAt: new Date().toISOString() }); setDesc(''); alert("已新增"); };
+            const toggleItem = async (item) => { const { db, doc, updateDoc } = window.firebaseServices; await updateDoc(doc(db, "users", user.uid, "items", item.id), { completed: !item.completed }); };
+            const deleteItem = async (id) => { if(confirm("確定刪除?")) { const { db, doc, deleteDoc } = window.firebaseServices; await deleteDoc(doc(db, "users", user.uid, "items", id)); } };
+            const saveSubjects = async (newList) => { const { db, doc, setDoc } = window.firebaseServices; await setDoc(doc(db, "users", user.uid, "settings", "subjects"), { list: newList }, { merge: true }); setSubjects(newList); setView('home'); };
 
-            const handleAddHomework = async (e) => {
-                e.preventDefault();
-                if(!desc || !date) return;
-                const { db, addDoc, collection } = window.firebaseServices;
-                await addDoc(collection(db, "users", user.uid, "items"), {
-                    description: desc, subject: sub, dueDate: date, completed: false, type: 'homework', createdAt: new Date().toISOString()
-                });
-                setDesc(''); alert("已新增");
-            };
-
-            const toggleItem = async (item) => {
-                const { db, doc, updateDoc } = window.firebaseServices;
-                await updateDoc(doc(db, "users", user.uid, "items", item.id), { completed: !item.completed });
-            };
-            
-            const deleteItem = async (id) => {
-                if(confirm("確定刪除?")) {
-                    const { db, doc, deleteDoc } = window.firebaseServices;
-                    await deleteDoc(doc(db, "users", user.uid, "items", id));
-                }
-            };
-
-            const saveSubjects = async (newList) => {
-                const { db, doc, setDoc } = window.firebaseServices;
-                await setDoc(doc(db, "users", user.uid, "settings", "subjects"), { list: newList }, { merge: true });
-                setSubjects(newList); setView('home');
-            };
-
-            // --- Filter & Sort Logic ---
             const activeItems = items.filter(i => !i.completed);
             const finishedItems = items.filter(i => i.completed);
-            
-            const getFilteredItems = () => {
-                let filtered = [...activeItems];
-                if(filterSubject !== '全部') filtered = filtered.filter(i => i.subject === filterSubject);
-                
-                if(sortOption === 'date_asc') filtered.sort((a,b) => new Date(a.dueDate) - new Date(b.dueDate));
-                else if(sortOption === 'date_desc') filtered.sort((a,b) => new Date(b.dueDate) - new Date(a.dueDate));
-                
-                return filtered;
-            };
-
+            const getFilteredItems = () => { let filtered = [...activeItems]; if(filterSubject !== '全部') filtered = filtered.filter(i => i.subject === filterSubject); if(sortOption === 'date_asc') filtered.sort((a,b) => new Date(a.dueDate) - new Date(b.dueDate)); else if(sortOption === 'date_desc') filtered.sort((a,b) => new Date(b.dueDate) - new Date(a.dueDate)); return filtered; };
             const todayCount = activeItems.filter(i => getDaysRemaining(i.dueDate) <= 0).length;
             const tomorrowCount = activeItems.filter(i => getDaysRemaining(i.dueDate) === 1).length;
             const futureCount = activeItems.filter(i => getDaysRemaining(i.dueDate) > 1).length;
             const testCount = activeItems.filter(i => i.subject.includes('測驗') || i.description.includes('測驗')).length;
 
-            // --- Render ---
             if(loading) return <div className="h-screen flex items-center justify-center text-slate-400 font-bold">載入中...</div>;
-
-            if(user && config?.whitelistEnabled && !config?.allowedEmails?.includes(user.email)) {
-                return <BlockScreen type="access_denied" user={user} onLogin={()=>{}} triggerAlert={alert} />;
-            }
+            if(user && config?.whitelistEnabled && !config?.allowedEmails?.includes(user.email)) return <BlockScreen type="access_denied" user={user} onLogin={()=>{}} triggerAlert={alert} />;
 
             if(!user) {
                 return (
                     <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 relative overflow-hidden mesh-bg">
                          <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-500 rounded-full blur-[150px] opacity-30 animate-float"></div>
                          <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-purple-500 rounded-full blur-[150px] opacity-30 animate-float" style={{animationDelay:'-3s'}}></div>
-                         
                          <div className="glass-card p-10 rounded-[2.5rem] w-full max-w-md text-center relative z-10 modal-animate border border-white/20 shadow-2xl">
-                             <div className="w-24 h-24 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-xl rotate-6 text-white transform hover:rotate-12 transition duration-500 hover:scale-105">
-                                 <Icon name="graduation-cap" className="w-12 h-12"/>
-                             </div>
+                             <div className="w-24 h-24 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-xl rotate-6 text-white transform hover:rotate-12 transition duration-500 hover:scale-105"><Icon name="graduation-cap" className="w-12 h-12"/></div>
                              <h1 className="text-4xl font-black text-slate-800 mb-3 tracking-tight">電子手冊</h1>
                              <p className="text-slate-500 mb-10 font-medium text-lg">你的智能學習助手</p>
-                             
-                             <button onClick={handleGoogleLogin} className="w-full py-4 bg-white border border-slate-100 rounded-2xl font-bold text-slate-700 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-3 group">
-                                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-6 h-6 group-hover:scale-110 transition-transform"/> 
-                                 <span className="text-base">使用 Google 帳號登入</span>
-                             </button>
-
-                             <div className="mt-6">
-                                <button onClick={()=>setAuthModalOpen(true)} className="text-sm font-bold text-slate-400 hover:text-indigo-600 transition">或使用 Email 登入/註冊</button>
-                             </div>
+                             <button onClick={handleGoogleLogin} className="w-full py-4 bg-white border border-slate-100 rounded-2xl font-bold text-slate-700 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-3 group"><img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-6 h-6 group-hover:scale-110 transition-transform"/> <span className="text-base">使用 Google 帳號登入</span></button>
+                             <div className="mt-6"><button onClick={()=>setAuthModalOpen(true)} className="text-sm font-bold text-slate-400 hover:text-indigo-600 transition">或使用 Email 登入/註冊</button></div>
                          </div>
                          {authModalOpen && <AuthModal onClose={()=>setAuthModalOpen(false)} onLogin={handleGoogleLogin} onEmailLogin={handleEmailAuth} triggerAlert={alert} />}
                     </div>
                 );
             }
 
-            // [LOGGED IN VIEW - RESTORED ORIGINAL STYLE]
             return (
-                <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-4 pb-28 md:pb-8 max-w-md mx-auto relative">
+                <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-4 pb-28 md:pb-8 max-w-md mx-auto relative mesh-bg-soft">
                     <header className="flex justify-between items-center mb-6 py-2">
-                        <div className="flex flex-col">
-                            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Welcome back</span>
-                            <h1 className="text-3xl font-black text-slate-800 tracking-tight">{user.displayName}</h1>
-                        </div>
+                        <div className="flex flex-col"><span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Welcome back</span><h1 className="text-3xl font-black text-slate-800 tracking-tight">{user.displayName}</h1></div>
                         <div className="flex gap-2">
                             <button onClick={()=>setView(view==='settings'?'home':'settings')} className="p-3 bg-white/80 backdrop-blur rounded-2xl shadow-sm border border-white/50 text-slate-600 hover:text-indigo-600 transition hover:scale-105 active:scale-95"><Icon name="settings" className="w-5 h-5"/></button>
                             <button onClick={()=>window.firebaseServices.signOut(window.firebaseServices.auth)} className="p-3 bg-white/80 backdrop-blur rounded-2xl shadow-sm border border-white/50 text-slate-400 hover:text-red-500 transition hover:scale-105 active:scale-95"><Icon name="log-out" className="w-5 h-5"/></button>
@@ -533,10 +366,7 @@
 
                     {view === 'timetable' ? (
                         <div className="glass-card bg-white/90 rounded-[2rem] p-6 shadow-xl min-h-[500px] page-enter">
-                            <div className="flex items-center gap-4 mb-6">
-                                <button onClick={()=>setView('home')} className="p-2 hover:bg-slate-100 rounded-full transition"><Icon name="arrow-left" className="w-6 h-6"/></button>
-                                <h2 className="text-2xl font-black text-slate-800">完整時間表</h2>
-                            </div>
+                            <div className="flex items-center gap-4 mb-6"><button onClick={()=>setView('home')} className="p-2 hover:bg-slate-100 rounded-full transition"><Icon name="arrow-left" className="w-6 h-6"/></button><h2 className="text-2xl font-black text-slate-800">完整時間表</h2></div>
                             <Timetable currentDay={manualDay} subjects={schedule} timeConfig={DEFAULT_START_TIMES} durations={DEFAULT_DURATIONS} manualDay={manualDay} setManualDay={setManualDay} />
                         </div>
                     ) : view === 'settings' ? (
@@ -545,7 +375,6 @@
                         <div className="page-enter space-y-6">
                             <LiveLessonCard schedule={schedule} times={DEFAULT_START_TIMES} durations={DEFAULT_DURATIONS} currentDay={manualDay} user={user} />
                             
-                            {/* [RESTORED DASHBOARD CARDS] */}
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                                 <div className="bg-white/80 backdrop-blur p-4 rounded-2xl shadow-sm border border-white flex flex-col items-center justify-center text-center group hover:scale-[1.02] transition"><div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center text-red-500 mb-2 group-hover:bg-red-500 group-hover:text-white transition-colors"><Icon name="flame" className="w-5 h-5"/></div><div className="text-2xl font-black text-slate-800">{todayCount}</div><div className="text-[10px] font-bold text-slate-400 uppercase">今日要交</div></div>
                                 <div className="bg-white/80 backdrop-blur p-4 rounded-2xl shadow-sm border border-white flex flex-col items-center justify-center text-center group hover:scale-[1.02] transition"><div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center text-orange-500 mb-2 group-hover:bg-orange-500 group-hover:text-white transition-colors"><Icon name="sun" className="w-5 h-5"/></div><div className="text-2xl font-black text-slate-800">{tomorrowCount}</div><div className="text-[10px] font-bold text-slate-400 uppercase">聽日要交</div></div>
@@ -578,22 +407,35 @@
                                 </div>
 
                                 <div className="space-y-3 pb-4">
-                                    {getFilteredItems().map((item, idx) => (
-                                        <div key={item.id} className="bg-white/80 backdrop-blur p-4 rounded-2xl shadow-sm border border-white flex gap-4 items-start group list-item-enter hover:scale-[1.01] transition-transform duration-200" style={{animationDelay: `${idx*0.05}s`}}>
-                                            <button onClick={()=>toggleItem(item)} className="mt-1 w-6 h-6 rounded-full border-2 border-slate-200 flex items-center justify-center hover:border-emerald-500 hover:bg-emerald-50 transition shrink-0 group/btn bg-white">
-                                                <Icon name="check" className="w-3.5 h-3.5 text-emerald-500 opacity-0 group-hover/btn:opacity-100 transition"/>
-                                            </button>
-                                            <div className="flex-1">
-                                                <div className="flex justify-between mb-1">
-                                                    <span className="text-[10px] font-black bg-slate-100 text-slate-500 px-2 py-0.5 rounded-md">{item.subject}</span>
-                                                    <span className={`text-[10px] font-mono font-bold ${getDaysRemaining(item.dueDate)<0?'text-red-500':'text-slate-400'}`}>{item.dueDate}</span>
+                                    {getFilteredItems().map((item, idx) => {
+                                        const daysLeft = getDaysRemaining(item.dueDate);
+                                        const subColor = SUBJECTS.find(s=>s.name===item.subject)?.color || 'bg-gray-100 text-gray-600';
+                                        
+                                        return (
+                                            <div key={item.id} className="bg-white/80 backdrop-blur p-4 rounded-2xl shadow-sm border border-white flex gap-4 items-start group list-item-enter hover:scale-[1.01] transition-transform duration-200" style={{animationDelay: `${idx*0.05}s`}}>
+                                                <div className={`w-1.5 self-stretch rounded-full mr-1 ${daysLeft<0?'bg-red-500':daysLeft===0?'bg-orange-500':'bg-transparent'}`}></div>
+                                                <button onClick={()=>toggleItem(item)} className="mt-1 w-6 h-6 rounded-full border-2 border-slate-200 flex items-center justify-center hover:border-emerald-500 hover:bg-emerald-50 transition shrink-0 group/btn bg-white">
+                                                    <Icon name="check" className="w-3.5 h-3.5 text-emerald-500 opacity-0 group-hover/btn:opacity-100 transition"/>
+                                                </button>
+                                                <div className="flex-1">
+                                                    <div className="flex justify-between mb-1">
+                                                        <div className="flex gap-2 items-center">
+                                                            <span className={`text-[10px] font-black px-2 py-0.5 rounded-md ${subColor}`}>{item.subject}</span>
+                                                            {item.senderName && <span className="text-[10px] bg-amber-50 text-amber-600 px-2 py-0.5 rounded-full font-bold flex items-center gap-1"><Icon name="user" className="w-3 h-3"/> {item.senderName}</span>}
+                                                        </div>
+                                                        <span className={`text-[10px] font-mono font-bold ${daysLeft<0?'text-red-500':'text-slate-400'}`}>{item.dueDate}</span>
+                                                    </div>
+                                                    <p className="text-sm font-bold text-slate-700 leading-relaxed">{item.description}</p>
+                                                    <div className="flex justify-between items-center mt-2">
+                                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${daysLeft<0?'bg-red-100 text-red-600':daysLeft===0?'bg-orange-100 text-orange-600':'bg-emerald-100 text-emerald-600'}`}>
+                                                            {daysLeft<0 ? `遲咗 ${Math.abs(daysLeft)} 日` : daysLeft===0 ? '今日要交！' : `仲有 ${daysLeft} 日`}
+                                                        </span>
+                                                    </div>
                                                 </div>
-                                                <p className="text-sm font-bold text-slate-700 leading-relaxed">{item.description}</p>
-                                                {item.senderName && <div className="mt-2 text-[10px] text-slate-400 flex items-center gap-1 bg-slate-50 w-fit px-2 py-0.5 rounded-full"><Icon name="rss" className="w-3 h-3"/> {item.senderName}</div>}
+                                                <button onClick={()=>deleteItem(item.id)} className="text-slate-300 hover:text-red-400 transition opacity-0 group-hover:opacity-100"><Icon name="trash-2" className="w-4 h-4"/></button>
                                             </div>
-                                            <button onClick={()=>deleteItem(item.id)} className="text-slate-300 hover:text-red-400 transition opacity-0 group-hover:opacity-100"><Icon name="trash-2" className="w-4 h-4"/></button>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                     {activeItems.length === 0 && <div className="text-center text-slate-400 py-12 flex flex-col items-center"><Icon name="coffee" className="w-12 h-12 mb-3 opacity-20"/>太棒了！暫時沒有功課</div>}
                                     
                                     {finishedItems.length > 0 && (
