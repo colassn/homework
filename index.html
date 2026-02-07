@@ -426,7 +426,12 @@
                     console.error(e);
                     const msg = "申請提交失敗，請稍後再試。";
                     if (typeof triggerAlert === 'function') {
-                        triggerAlert(msg);
+                         // Improved error handling here
+                        if (e.code === 'permission-denied') {
+                             triggerAlert("提交失敗：權限不足。\n請檢查 Firebase Console 的 Firestore Rules 是否允許 'access_requests' 的 create 權限。");
+                        } else {
+                             triggerAlert(msg + "\n" + e.message);
+                        }
                     } else {
                         alert(msg);
                     }
@@ -511,6 +516,7 @@
             );
         }
 
+        // --- NEW: Floating Custom Select Component (Replaces system <select>) ---
         function CustomDropdown({ value, onChange, options }) { 
             const [isOpen, setIsOpen] = useState(false); const dropdownRef = useRef(null); 
             useEffect(() => { const handleClickOutside = (event) => { if (dropdownRef.current && !dropdownRef.current.contains(event.target)) { setIsOpen(false); } }; document.addEventListener('mousedown', handleClickOutside); return () => document.removeEventListener('mousedown', handleClickOutside); }, []); 
@@ -1012,6 +1018,7 @@
 
         // --- Timetable Component (with FloatingSelect integration) ---
         function Timetable({ currentDay, subjects, timeConfig, durations, onDayChange, isEditing, onUpdateSchedule, onUpdateTime, onUpdateDuration, manualDay, setManualDay, availableSubjects }) { 
+            // Fix: Separate schedule data (subjects) from available dropdown options (availableSubjects)
             const [now, setNow] = useState(new Date());
             const [isDaySelectorOpen, setIsDaySelectorOpen] = useState(false);
 
@@ -1434,7 +1441,7 @@
                 try {
                     await setDoc(doc(db, "users", user.uid, "settings", "subjects"), { list: newSubjects }, { merge: true });
                     triggerAlert("科目設定已儲存！");
-                    setShowUserSubjectSettings(false);
+                    setViewMode('current'); // Return to main page after saving
                 } catch(e) { console.error("Save subjects failed", e); triggerAlert("儲存失敗"); }
             };
 
@@ -1523,6 +1530,7 @@
             const handleSignOut = () => { triggerConfirm('確定要登出？', async () => { try { await signOut(auth); setActiveModal(null); setViewMode('current'); setIsAdmin(false); } catch(e) { console.error(e); } }); };
             const handleDashboardClick = (modalType) => { if (!user) { setIsAuthModalOpen(true); } else { setActiveModal(modalType); } };
 
+            // ADDED: Maintenance Check
             const maintenanceMode = systemConfig?.maintenanceMode || 'normal';
             const whitelistEnabled = systemConfig?.whitelistEnabled || false;
             const allowedEmails = systemConfig?.allowedEmails || [];
@@ -1530,6 +1538,7 @@
 
             if (authLoading || configLoading) return <div className="min-h-screen flex items-center justify-center bg-slate-50"><div className="animate-pulse flex flex-col items-center"><div className="w-12 h-12 bg-indigo-200 rounded-full mb-4"></div><div className="h-4 w-32 bg-slate-200 rounded"></div></div></div>;
 
+            // ADDED: Block Screen Logic
             if (maintenanceMode !== 'normal' && !isAdmin && !isWhitelisted) { 
                 return (
                     <div className="min-h-screen bg-slate-50 relative">
