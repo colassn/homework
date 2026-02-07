@@ -20,10 +20,18 @@
         @keyframes popIn { 0% { opacity: 0; transform: scale(0.9); } 70% { transform: scale(1.02); } 100% { opacity: 1; transform: scale(1); } }
         @keyframes meshFlow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
         
+        /* Login Page Background */
         .admin-mesh-bg {
             background: linear-gradient(-45deg, #c4b5fd, #818cf8, #a5b4fc, #e0e7ff);
             background-size: 400% 400%;
-            animation: meshFlow 20s ease infinite;
+            animation: meshFlow 10s ease infinite;
+        }
+
+        /* Dashboard Background */
+        .dashboard-bg {
+            background-color: #f8fafc;
+            background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
+            background-size: 24px 24px;
         }
 
         .animate-enter { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
@@ -31,15 +39,15 @@
         
         /* Glassmorphism */
         .glass-card { 
-            background: rgba(255, 255, 255, 0.75); 
+            background: rgba(255, 255, 255, 0.85); 
             backdrop-filter: blur(20px); 
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.8); 
-            box-shadow: 0 4px 20px 0 rgba(31, 38, 135, 0.05);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
         }
         
         .glass-nav {
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(24px);
             border-right: 1px solid rgba(255, 255, 255, 0.6);
             box-shadow: 4px 0 24px rgba(0,0,0,0.02);
@@ -52,7 +60,7 @@
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
-<body class="bg-slate-50 h-screen overflow-hidden flex flex-col md:flex-row admin-mesh-bg relative">
+<body class="h-screen overflow-hidden flex flex-col md:flex-row relative">
     <div id="root" class="w-full h-full relative z-10 flex flex-col md:flex-row"></div>
 
     <script type="module">
@@ -158,7 +166,7 @@
             }
         }
 
-        // --- CUSTOM MODAL (Replaces Alert/Confirm) ---
+        // --- CUSTOM MODAL ---
         function CustomModal({ isOpen, type, message, onConfirm, onClose }) {
             if (!isOpen) return null;
             const isConfirm = type === 'confirm';
@@ -186,10 +194,10 @@
                             {isConfirm ? (
                                 <>
                                     <button onClick={onClose} className="flex-1 py-3.5 border border-slate-200 rounded-xl font-bold text-slate-500 hover:bg-slate-50 transition active:scale-95">取消</button>
-                                    <button onClick={() => { onConfirm(); onClose(); }} className="flex-1 py-3.5 bg-slate-900 text-white rounded-xl font-bold hover:bg-black shadow-lg transition active:scale-95">確認</button>
+                                    <button onClick={() => { onConfirm(); onClose(); }} className="flex-1 py-3.5 bg-slate-900 text-white rounded-xl font-bold hover:bg-black shadow-lg shadow-red-200 transition active:scale-95">確認</button>
                                 </>
                             ) : (
-                                <button onClick={onClose} className="w-full py-3.5 bg-slate-900 text-white rounded-xl font-bold hover:bg-black shadow-lg transition active:scale-95">知道了</button>
+                                <button onClick={onClose} className="w-full py-3.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition active:scale-95">知道了</button>
                             )}
                         </div>
                     </div>
@@ -200,7 +208,7 @@
         // --- UI Components ---
         function StatCard({ title, value, icon, color, onClick, subtext }) {
             return (
-                <div onClick={onClick} className="glass-card p-6 rounded-3xl flex items-center justify-between hover:scale-[1.03] transition-all duration-300 cursor-pointer group bg-white/60 hover:bg-white/90">
+                <div onClick={onClick} className="glass-card p-6 rounded-3xl flex items-center justify-between hover:scale-[1.03] transition-all duration-300 cursor-pointer group bg-white/80 hover:bg-white shadow-sm hover:shadow-md">
                     <div>
                         <p className="text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-1.5">{title}</p>
                         <h3 className="text-4xl font-black text-slate-800 tracking-tight">{value}</h3>
@@ -219,10 +227,10 @@
                 : "flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 w-full text-sm group";
             const activeClass = mobile
                 ? "text-indigo-600 scale-105"
-                : "bg-white text-indigo-600 shadow-lg shadow-indigo-100 scale-[1.02]";
+                : "bg-indigo-600 text-white shadow-lg shadow-indigo-200 scale-[1.02]";
             const inactiveClass = mobile
                 ? "text-slate-400 hover:text-slate-600"
-                : "text-slate-500 hover:bg-white/50 hover:text-indigo-600";
+                : "text-slate-500 hover:bg-white/50 hover:text-indigo-600 hover:shadow-sm";
 
             return (
                 <button onClick={() => onClick(id)} className={`${baseClass} ${active ? activeClass : inactiveClass}`}>
@@ -251,7 +259,7 @@
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div className="glass-card p-8 rounded-[2rem] bg-white/70">
+                        <div className="glass-card p-8 rounded-[2rem] bg-white/80">
                             <h3 className="font-bold text-lg mb-6 flex items-center gap-2 text-slate-700"><Icon name="zap" className="w-5 h-5 text-yellow-500"/> 快速捷徑</h3>
                             <div className="grid grid-cols-2 gap-4">
                                 <button onClick={() => setActiveView('broadcast')} className="p-5 bg-white border border-indigo-100 rounded-2xl hover:border-indigo-300 hover:shadow-md transition text-indigo-700 font-bold flex flex-col items-center gap-3 group">
@@ -260,6 +268,28 @@
                                 <button onClick={() => setActiveView('users')} className="p-5 bg-white border border-slate-200 rounded-2xl hover:border-slate-400 hover:shadow-md transition text-slate-700 font-bold flex flex-col items-center gap-3 group">
                                     <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center group-hover:scale-110 transition"><Icon name="search" className="w-6 h-6"/></div> 管理用戶
                                 </button>
+                            </div>
+                        </div>
+
+                        <div className="glass-card p-8 rounded-[2rem] bg-white/80">
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="font-bold text-lg flex items-center gap-2 text-slate-700"><Icon name="inbox" className="w-5 h-5 text-slate-400"/> 最新申請</h3>
+                                {pendingRequests.length > 0 && <button onClick={()=>setActiveView('requests')} className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-full hover:bg-indigo-100 transition">處理申請 ➔</button>}
+                            </div>
+                            <div className="space-y-3">
+                                {pendingRequests.slice(0, 3).map(req => (
+                                    <div key={req.id} className="flex justify-between items-center p-3 bg-white rounded-2xl border border-slate-100 shadow-sm list-item-enter">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-sm font-black text-slate-500">{(req.displayName||'?')[0]}</div>
+                                            <div>
+                                                <div className="text-sm font-bold text-slate-700">{req.displayName}</div>
+                                                <div className="text-[10px] text-slate-400 font-mono">{req.email}</div>
+                                            </div>
+                                        </div>
+                                        <span className="w-2.5 h-2.5 rounded-full bg-orange-500 animate-pulse"></span>
+                                    </div>
+                                ))}
+                                {pendingRequests.length === 0 && <div className="text-center text-slate-400 text-sm py-6 flex flex-col items-center"><Icon name="check-circle" className="w-10 h-10 mb-2 opacity-20"/>所有申請已處理完畢</div>}
                             </div>
                         </div>
                     </div>
@@ -291,7 +321,7 @@
                         {filtered.map(u => {
                             const isWL = config?.allowedEmails?.includes(u.email);
                             return (
-                                <div key={u.id} className="glass-card p-4 rounded-2xl bg-white/70 flex flex-col justify-between group hover:border-indigo-200 transition-all hover:-translate-y-1">
+                                <div key={u.id} className="glass-card p-4 rounded-2xl bg-white/70 flex flex-col justify-between group hover:border-indigo-200 transition-all hover:-translate-y-1 list-item-enter">
                                     <div className="flex items-start justify-between mb-4">
                                         <div className="flex items-center gap-4">
                                             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-100 to-white text-indigo-600 flex items-center justify-center font-black text-xl shadow-inner border border-white">
@@ -305,7 +335,7 @@
                                         {isWL ? <div className="text-emerald-500 bg-emerald-50 p-2 rounded-xl"><Icon name="shield-check" className="w-5 h-5"/></div> : <div className="text-slate-300 bg-slate-100 p-2 rounded-xl"><Icon name="lock" className="w-5 h-5"/></div>}
                                     </div>
                                     <div className="flex gap-2 pt-4 border-t border-slate-100/50">
-                                        <button onClick={()=>onToggleWL(u.email)} className={`flex-1 py-2 rounded-xl text-xs font-bold transition active:scale-95 shadow-sm ${isWL ? 'bg-white border border-red-100 text-red-500 hover:bg-red-50' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}>
+                                        <button onClick={()=>onToggleWL(u.email)} className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition active:scale-95 shadow-sm ${isWL ? 'bg-white border border-red-100 text-red-500 hover:bg-red-50' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}>
                                             {isWL ? '移除權限' : '加入白名單'}
                                         </button>
                                         <button onClick={()=>onDelete(u)} className="p-2.5 bg-white border border-slate-200 text-slate-400 hover:text-red-500 hover:border-red-200 rounded-xl transition active:scale-95" title="刪除資料">
@@ -329,7 +359,7 @@
                     <h2 className="text-3xl font-black text-slate-800 mb-6 tracking-tight">入學申請 ({pendingRequests.length})</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {pendingRequests.map(req => (
-                            <div key={req.id} className="glass-card p-8 rounded-[2rem] bg-white/80 flex flex-col items-center text-center relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
+                            <div key={req.id} className="glass-card p-8 rounded-[2rem] bg-white/80 flex flex-col items-center text-center relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300 list-item-enter">
                                 <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-orange-400 to-pink-500"></div>
                                 <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-600 font-black text-3xl mb-4 mt-2 shadow-inner border border-white">
                                     {(req.displayName||'?')[0]}
@@ -370,6 +400,7 @@
 
                             {config?.maintenanceMode !== 'normal' && (
                                 <div className="space-y-4 animate-enter">
+                                    <p className="text-xs font-bold text-slate-400 mb-2">快速訊息範本</p>
                                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                                         {MAINTENANCE_PRESETS.map(preset => (
                                             <button key={preset.id} onClick={() => { onUpdate('customBlockTitle', preset.title); onUpdate('customBlockMessage', preset.msg); }} className="p-3 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:border-orange-300 hover:text-orange-600 hover:bg-orange-50 transition active:scale-95">
@@ -377,9 +408,11 @@
                                             </button>
                                         ))}
                                     </div>
-                                    <input className="w-full p-3 rounded-xl text-sm border-2 border-slate-200 focus:border-indigo-500 outline-none" value={config?.customBlockTitle||''} onChange={e=>onUpdate('customBlockTitle',e.target.value)} placeholder="自訂標題" />
-                                    <textarea className="w-full p-3 rounded-xl text-sm border-2 border-slate-200 focus:border-indigo-500 outline-none" rows="3" value={config?.customBlockMessage||''} onChange={e=>onUpdate('customBlockMessage',e.target.value)} placeholder="自訂維護訊息內容..." />
-                                    <input className="w-full p-3 rounded-xl text-sm border-2 border-orange-100 focus:border-orange-300 outline-none text-orange-900 font-bold bg-orange-50/50" value={config?.estimatedTime||''} onChange={e=>onUpdate('estimatedTime',e.target.value)} placeholder="預計恢復時間 (例如：下午 4:00)" />
+                                    <div className="space-y-2">
+                                        <input className="w-full p-3 rounded-xl text-sm border-2 border-slate-200 focus:border-indigo-500 outline-none" value={config?.customBlockTitle||''} onChange={e=>onUpdate('customBlockTitle',e.target.value)} placeholder="自訂標題" />
+                                        <textarea className="w-full p-3 rounded-xl text-sm border-2 border-slate-200 focus:border-indigo-500 outline-none resize-none" rows="3" value={config?.customBlockMessage||''} onChange={e=>onUpdate('customBlockMessage',e.target.value)} placeholder="自訂維護訊息內容..." />
+                                        <input className="w-full p-3 rounded-xl text-sm border-2 border-orange-100 focus:border-orange-300 outline-none text-orange-900 font-bold bg-orange-50/50" value={config?.estimatedTime||''} onChange={e=>onUpdate('estimatedTime',e.target.value)} placeholder="預計恢復時間 (例如：下午 4:00)" />
+                                    </div>
                                 </div>
                             )}
                         </div>
@@ -420,9 +453,9 @@
                             <form onSubmit={handleSubmit} className="space-y-5">
                                 <div>
                                     <label className="text-xs font-bold text-slate-400 mb-2 block ml-1">選擇科目/類型</label>
-                                    <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
+                                    <div className="flex gap-2 overflow-x-auto pb-3 -mx-1 px-1 scrollbar-hide">
                                         {SUBJECTS.map(s => (
-                                            <button key={s.name} type="button" onClick={()=>setSub(s.name)} className={`whitespace-nowrap px-4 py-2 rounded-xl text-xs font-bold border-2 transition ${sub===s.name ? 'bg-slate-800 text-white border-slate-800 shadow-md' : 'bg-white text-slate-500 border-slate-100 hover:border-slate-300'}`}>{s.name}</button>
+                                            <button key={s.name} type="button" onClick={()=>setSub(s.name)} className={`whitespace-nowrap px-4 py-2 rounded-xl text-xs font-bold border-2 transition ${sub===s.name ? `${s.color.replace('border-', 'bg-').split(' ')[0]} text-white border-transparent shadow-md` : 'bg-white text-slate-500 border-slate-100 hover:border-slate-300'}`}>{s.name}</button>
                                         ))}
                                     </div>
                                 </div>
@@ -445,21 +478,30 @@
                             <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2"><Icon name="history" className="w-5 h-5 text-slate-400"/> 歷史紀錄</h3>
                         </div>
                         <div className="overflow-y-auto flex-1 p-6 space-y-4">
-                            {publicItems.map(i=>(
-                                <div key={i.id} className="bg-white p-5 rounded-2xl border border-slate-100 flex justify-between items-start group hover:border-indigo-200 transition shadow-sm list-item-enter">
-                                    <div className="flex gap-4">
-                                        <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-500 font-bold text-xs shrink-0">{i.subject[0]}</div>
-                                        <div>
-                                            <div className="flex items-center gap-3 mb-1">
-                                                <span className="text-[10px] font-bold bg-slate-100 px-2 py-0.5 rounded-full text-slate-600 uppercase tracking-wider">{i.subject}</span>
-                                                <span className="text-xs font-mono text-slate-400">{i.dueDate}</span>
+                            {publicItems.map(i => {
+                                const subColor = SUBJECTS.find(s=>s.name===i.subject)?.color || 'bg-gray-100';
+                                // Extract bg color from tailwind class string
+                                const bgClass = subColor.split(' ').find(c => c.startsWith('bg-')) || 'bg-slate-100';
+                                const textClass = subColor.split(' ').find(c => c.startsWith('text-')) || 'text-slate-600';
+                                
+                                return (
+                                    <div key={i.id} className="bg-white p-5 rounded-2xl border border-slate-100 flex justify-between items-start group hover:border-indigo-200 transition shadow-sm list-item-enter">
+                                        <div className="flex gap-4">
+                                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-xs shrink-0 ${bgClass} ${textClass.replace('text-', 'text-opacity-80 text-')}`}>
+                                                {i.subject[0]}
                                             </div>
-                                            <p className="text-sm font-bold text-slate-700 leading-relaxed max-w-sm">{i.description}</p>
+                                            <div>
+                                                <div className="flex items-center gap-3 mb-1">
+                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${bgClass} ${textClass}`}>{i.subject}</span>
+                                                    <span className="text-xs font-mono text-slate-400">{i.dueDate}</span>
+                                                </div>
+                                                <p className="text-sm font-bold text-slate-700 leading-relaxed max-w-sm">{i.description}</p>
+                                            </div>
                                         </div>
+                                        <button onClick={()=>onDelete(i.id)} className="text-slate-300 hover:text-red-500 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition p-2 bg-slate-50 rounded-xl hover:bg-red-50"><Icon name="trash-2" className="w-5 h-5"/></button>
                                     </div>
-                                    <button onClick={()=>onDelete(i.id)} className="text-slate-300 hover:text-red-500 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition p-2 bg-slate-50 rounded-xl hover:bg-red-50"><Icon name="trash-2" className="w-5 h-5"/></button>
-                                </div>
-                            ))}
+                                );
+                            })}
                             {publicItems.length===0 && <div className="text-center py-20 text-slate-400 text-xs">無紀錄</div>}
                         </div>
                     </div>
@@ -488,10 +530,10 @@
                 if(user && user.email === ADMIN_EMAIL && window.fb) {
                     const { db, collection, doc, onSnapshot, query, orderBy } = window.fb;
                     const unsubs = [
-                        onSnapshot(doc(db, "system_settings", "config"), s => setConfig(s.data())),
-                        onSnapshot(query(collection(db, "users_public"), orderBy("lastSeen", "desc")), s => setUsers(s.docs.map(d=>({id:d.id, ...d.data()})))),
-                        onSnapshot(query(collection(db, "access_requests"), orderBy("requestTime", "desc")), s => setRequests(s.docs.map(d=>({id:d.id, ...d.data()})))),
-                        onSnapshot(query(collection(db, "public_assignments"), orderBy("createdAt", "desc")), s => setPublicItems(s.docs.map(d=>({id:d.id, ...d.data()})))),
+                        onSnapshot(doc(db, "system_settings", "config"), s => setConfig(s.data()), e=>console.log(e)),
+                        onSnapshot(query(collection(db, "users_public"), orderBy("lastSeen", "desc")), s => setUsers(s.docs.map(d=>({id:d.id, ...d.data()}))), e=>console.log(e)),
+                        onSnapshot(query(collection(db, "access_requests"), orderBy("requestTime", "desc")), s => setRequests(s.docs.map(d=>({id:d.id, ...d.data()}))), e=>console.log(e)),
+                        onSnapshot(query(collection(db, "public_assignments"), orderBy("createdAt", "desc")), s => setPublicItems(s.docs.map(d=>({id:d.id, ...d.data()}))), e=>console.log(e)),
                     ];
                     return () => unsubs.forEach(u => u());
                 }
@@ -535,26 +577,22 @@
                 });
             };
 
-            // NEW: Deep Clean on Broadcast Delete
+            // Deep Clean on Broadcast Delete
             const handleDeleteBroadcast = async (publicId) => {
                 showConfirm("確定刪除此通告？\n系統將嘗試從所有用戶記錄中移除此項目。", async () => {
                     try {
-                        // 1. Delete Public Doc
                         await window.fb.deleteDoc(window.fb.doc(window.fb.db, "public_assignments", publicId));
                         
-                        // 2. Iterate users to deep clean (Client-side simulation of cloud function)
-                        // Note: Ideally this should be a Cloud Function. For now, we iterate known users.
-                        let deletedCount = 0;
+                        // Client-side simulation of cloud function clean up
                         const userDocs = await window.fb.getDocs(window.fb.collection(window.fb.db, "users_public"));
-                        
+                        let count = 0;
                         for (const uDoc of userDocs.docs) {
                             const uid = uDoc.id;
-                            const qUserItems = window.fb.query(window.fb.collection(window.fb.db, "users", uid, "items"), window.fb.where("publicRefId", "==", publicId));
-                            const snap = await window.fb.getDocs(qUserItems);
-                            snap.forEach(d => { window.fb.deleteDoc(d.ref); deletedCount++; });
+                            const q = window.fb.query(window.fb.collection(window.fb.db, "users", uid, "items"), window.fb.where("publicRefId", "==", publicId));
+                            const snap = await window.fb.getDocs(q);
+                            snap.forEach(d => { window.fb.deleteDoc(d.ref); count++; });
                         }
-                        
-                        showAlert(`✅ 已刪除通告，並清理了 ${deletedCount} 筆學生紀錄。`, 'success');
+                        showAlert(`✅ 已刪除通告，並清理了 ${count} 筆學生紀錄。`, 'success');
                     } catch(e) { showAlert("刪除部分失敗: " + e.message, 'error'); }
                 });
             };
@@ -589,7 +627,7 @@
             );
 
             return (
-                <div className="flex flex-col h-screen bg-slate-50 relative">
+                <div className="flex flex-col h-screen relative dashboard-bg">
                     <NotificationModal isOpen={notification.isOpen} type={notification.type} message={notification.message} onConfirm={notification.onConfirm} onClose={closeNotify} />
 
                     <main className="flex-1 h-full overflow-hidden flex flex-col relative z-20 pb-20 md:pb-0">
