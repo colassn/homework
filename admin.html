@@ -12,59 +12,25 @@
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Microsoft JhengHei", sans-serif; -webkit-tap-highlight-color: transparent; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Microsoft JhengHei", sans-serif; background-color: #f8fafc; -webkit-tap-highlight-color: transparent; }
         
         /* Animations */
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes popIn { 0% { opacity: 0; transform: scale(0.9); } 70% { transform: scale(1.02); } 100% { opacity: 1; transform: scale(1); } }
-        @keyframes meshFlow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
-
-        .mesh-bg {
-            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
-            background-size: 400% 400%;
-            animation: meshFlow 15s ease infinite;
-        }
-
-        .mesh-bg-soft {
-            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
-            min-height: 100vh;
-        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-enter { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         
-        .animate-enter { animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        .modal-animate { animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-
-        /* Glassmorphism */
-        .glass-card { 
-            background: rgba(255, 255, 255, 0.7); 
-            backdrop-filter: blur(20px); 
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.6); 
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
-        }
-        
-        .glass-nav {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(16px);
-            border-right: 1px solid rgba(255, 255, 255, 0.5);
-        }
-
         /* Scrollbar */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* Glass */
+        .glass-nav { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); border-top: 1px solid rgba(255,255,255,0.1); }
+        .glass-card { background: white; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
     </style>
 </head>
-<body class="bg-slate-50 h-screen overflow-hidden flex flex-col md:flex-row mesh-bg-soft relative">
-    
-    <!-- Background Decor -->
-    <div class="fixed top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-indigo-200/40 rounded-full blur-[100px] pointer-events-none z-0"></div>
-    <div class="fixed bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] bg-purple-200/40 rounded-full blur-[100px] pointer-events-none z-0"></div>
-
-    <div id="root" class="w-full h-full relative z-10 flex flex-col md:flex-row"></div>
+<body class="text-slate-800 h-screen overflow-hidden flex flex-col md:flex-row">
+    <div id="root" class="w-full h-full"></div>
 
     <script type="module">
         const firebaseConfig = {
@@ -98,10 +64,11 @@
     </script>
 
     <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
+        const { useState, useEffect, useRef, Component } = React;
         const ADMIN_EMAIL = 'chimhinhin@gmail.com';
         const STUDENT_APP_URL = 'https://colassn.github.io/homework';
 
+        // --- Helper: Icon ---
         function Icon({name, className}) {
             const ref = useRef(null);
             useEffect(() => {
@@ -117,27 +84,46 @@
             return <span ref={ref} className="flex items-center justify-center"></span>;
         }
 
-        // --- Custom Notification Component ---
+        // --- Helper: Error Boundary (Prevents White Screen) ---
+        class ErrorBoundary extends Component {
+            constructor(props) { super(props); this.state = { hasError: false, error: null }; }
+            static getDerivedStateFromError(error) { return { hasError: true, error }; }
+            componentDidCatch(error, errorInfo) { console.error("Uncaught error:", error, errorInfo); }
+            render() {
+                if (this.state.hasError) {
+                    return (
+                        <div className="p-6 bg-red-50 border border-red-200 rounded-xl m-4 text-center">
+                            <h3 className="text-red-700 font-bold mb-2">組件發生錯誤</h3>
+                            <p className="text-red-500 text-xs font-mono mb-4">{this.state.error && this.state.error.toString()}</p>
+                            <button onClick={() => window.location.reload()} className="px-4 py-2 bg-red-600 text-white rounded-lg text-xs font-bold">重新整理</button>
+                        </div>
+                    );
+                }
+                return this.props.children; 
+            }
+        }
+
+        // --- Custom Notification Modal ---
         function NotificationModal({ isOpen, type, message, onConfirm, onClose }) {
             if (!isOpen) return null;
             const isConfirm = type === 'confirm';
             return (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-opacity" onClick={!isConfirm ? onClose : undefined}></div>
-                    <div className="glass-card bg-white/90 p-6 rounded-3xl shadow-2xl w-full max-w-sm relative z-10 modal-animate text-center border-t border-white/80">
-                        <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${isConfirm ? 'bg-red-100 text-red-500' : 'bg-indigo-100 text-indigo-500'}`}>
-                            <Icon name={isConfirm ? 'alert-triangle' : 'info'} className="w-8 h-8"/>
+                    <div className="glass-card bg-white p-6 rounded-3xl shadow-2xl w-full max-w-sm relative z-10 animate-enter text-center">
+                        <div className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 ${isConfirm ? 'bg-red-100 text-red-500' : 'bg-indigo-100 text-indigo-500'}`}>
+                            <Icon name={isConfirm ? 'alert-triangle' : 'info'} className="w-6 h-6"/>
                         </div>
-                        <h3 className="text-xl font-black text-slate-800 mb-2">{isConfirm ? '確認操作' : '系統提示'}</h3>
-                        <p className="text-slate-600 font-medium mb-6 leading-relaxed whitespace-pre-wrap">{message}</p>
+                        <h3 className="text-lg font-black text-slate-800 mb-2">{isConfirm ? '確認操作' : '提示'}</h3>
+                        <p className="text-slate-600 font-medium mb-6 text-sm whitespace-pre-wrap">{message}</p>
                         <div className="flex gap-3">
                             {isConfirm ? (
                                 <>
-                                    <button onClick={onClose} className="flex-1 py-3 border border-slate-200 rounded-xl font-bold text-slate-500 hover:bg-slate-50 transition">取消</button>
-                                    <button onClick={() => { onConfirm(); onClose(); }} className="flex-1 py-3 bg-red-500 text-white rounded-xl font-bold hover:bg-red-600 shadow-lg shadow-red-200 transition active:scale-95">確認執行</button>
+                                    <button onClick={onClose} className="flex-1 py-2.5 border border-slate-200 rounded-xl font-bold text-slate-500 hover:bg-slate-50 text-sm transition">取消</button>
+                                    <button onClick={() => { onConfirm(); onClose(); }} className="flex-1 py-2.5 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 shadow-md text-sm transition active:scale-95">確認</button>
                                 </>
                             ) : (
-                                <button onClick={onClose} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition active:scale-95">知道了</button>
+                                <button onClick={onClose} className="w-full py-2.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 shadow-md text-sm transition active:scale-95">知道了</button>
                             )}
                         </div>
                     </div>
@@ -145,17 +131,20 @@
             );
         }
 
-        // --- UI Components ---
+        // --- Components ---
 
         function StatCard({ title, value, icon, color, onClick }) {
             return (
-                <div onClick={onClick} className={`glass-card p-5 rounded-3xl flex items-center justify-between hover:scale-[1.03] transition-all duration-300 cursor-pointer group bg-white/60`}>
+                <div 
+                    onClick={onClick}
+                    className={`glass-card p-5 rounded-2xl flex items-center justify-between hover:scale-[1.02] transition-transform active:scale-95 ${onClick ? 'cursor-pointer hover:border-indigo-200' : ''}`}
+                >
                     <div>
-                        <p className="text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-1">{title}</p>
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{title}</p>
                         <h3 className="text-3xl font-black text-slate-800">{value}</h3>
                     </div>
-                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-lg ${color} group-hover:rotate-6 transition-transform duration-300`}>
-                        <Icon name={icon} className="w-7 h-7" />
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-lg ${color}`}>
+                        <Icon name={icon} className="w-6 h-6" />
                     </div>
                 </div>
             );
@@ -163,21 +152,21 @@
 
         function NavButton({ id, icon, label, active, onClick, mobile }) {
             const baseClass = mobile 
-                ? "flex flex-col items-center justify-center p-2 rounded-2xl transition-all duration-300 w-full" 
-                : "flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 w-full text-sm";
+                ? "flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 w-full" 
+                : "flex items-center gap-3 px-4 py-3.5 rounded-xl font-bold transition-all duration-300 w-full text-sm";
             
             const activeClass = mobile
-                ? "text-indigo-600 scale-110"
-                : "bg-indigo-600 text-white shadow-lg shadow-indigo-200 scale-[1.02]";
+                ? "text-indigo-500 scale-110"
+                : "bg-indigo-600 text-white shadow-lg shadow-indigo-900/20";
                 
             const inactiveClass = mobile
-                ? "text-slate-400 hover:text-slate-600"
-                : "text-slate-500 hover:bg-white hover:text-indigo-600 hover:shadow-sm";
+                ? "text-slate-500 hover:text-slate-300"
+                : "text-slate-400 hover:bg-slate-800 hover:text-white";
 
             return (
                 <button onClick={() => onClick(id)} className={`${baseClass} ${active ? activeClass : inactiveClass}`}>
                     <Icon name={icon} className={mobile ? "w-6 h-6 mb-1" : "w-5 h-5"} />
-                    <span className={mobile ? "text-[10px] font-bold" : ""}>{label}</span>
+                    <span className={mobile ? "text-[10px] font-medium" : ""}>{label}</span>
                 </button>
             );
         }
@@ -186,51 +175,69 @@
 
         function Dashboard({ users, requests, config, setActiveView }) {
             return (
-                <div className="space-y-8 animate-enter pb-24 md:pb-0">
-                    <div>
-                        <h2 className="text-3xl font-black text-slate-800 mb-2">儀表板概覽</h2>
-                        <p className="text-slate-500 font-medium">歡迎回來，系統運作正常。</p>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                        <StatCard title="總用戶" value={users.length} icon="users" color="bg-gradient-to-br from-blue-500 to-indigo-600" onClick={() => setActiveView('users')} />
-                        <StatCard title="待審核" value={requests.length} icon="user-plus" color="bg-gradient-to-br from-orange-400 to-red-500" onClick={() => setActiveView('requests')} />
-                        <StatCard title="系統狀態" value={config?.maintenanceMode === 'normal' ? '正常' : '維護'} icon="activity" color={config?.maintenanceMode === 'normal' ? 'bg-gradient-to-br from-emerald-400 to-teal-600' : 'bg-gradient-to-br from-amber-400 to-orange-500'} onClick={() => setActiveView('settings')} />
-                        <StatCard title="模式" value={config?.whitelistEnabled ? '白名單' : '公開'} icon="shield" color="bg-slate-700" onClick={() => setActiveView('settings')} />
+                <div className="space-y-6 animate-enter pb-24 md:pb-0">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <StatCard 
+                            title="總用戶 (管理)" 
+                            value={users.length} 
+                            icon="users" 
+                            color="bg-blue-600" 
+                            onClick={() => setActiveView('users')} 
+                        />
+                        <StatCard 
+                            title="待審核 (查看)" 
+                            value={requests.length} 
+                            icon="user-plus" 
+                            color="bg-orange-500" 
+                            onClick={() => setActiveView('requests')}
+                        />
+                        <StatCard 
+                            title="系統狀態" 
+                            value={config?.maintenanceMode === 'normal' ? 'OK' : '維護'} 
+                            icon="activity" 
+                            color={config?.maintenanceMode === 'normal' ? 'bg-emerald-500' : 'bg-amber-500'} 
+                            onClick={() => setActiveView('settings')}
+                        />
+                        <StatCard 
+                            title="模式" 
+                            value={config?.whitelistEnabled ? '白名單' : '公開'} 
+                            icon="shield" 
+                            color="bg-slate-700" 
+                            onClick={() => setActiveView('settings')}
+                        />
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div className="glass-card p-6 rounded-3xl bg-white/70">
-                            <h3 className="font-bold text-lg mb-4 flex items-center gap-2 text-slate-700"><Icon name="zap" className="w-5 h-5 text-yellow-500"/> 快速捷徑</h3>
+                        {/* Quick Actions */}
+                        <div className="glass-card p-6 rounded-2xl">
+                            <h3 className="font-bold text-lg mb-4 flex items-center gap-2"><Icon name="zap" className="w-5 h-5 text-yellow-500"/> 快速捷徑</h3>
                             <div className="grid grid-cols-2 gap-3">
-                                <button onClick={() => setActiveView('broadcast')} className="p-4 bg-white border border-indigo-100 rounded-2xl hover:border-indigo-300 hover:shadow-md transition text-indigo-700 font-bold flex flex-col items-center gap-2 group">
-                                    <div className="w-10 h-10 bg-indigo-50 rounded-full flex items-center justify-center group-hover:scale-110 transition"><Icon name="megaphone" className="w-5 h-5"/></div> 發佈通告
+                                <button onClick={() => setActiveView('broadcast')} className="p-4 bg-indigo-50 rounded-xl hover:bg-indigo-100 transition text-indigo-700 font-bold flex flex-col items-center gap-2 border border-indigo-100 active:scale-95">
+                                    <Icon name="megaphone" className="w-6 h-6"/> 發佈通告
                                 </button>
-                                <button onClick={() => setActiveView('users')} className="p-4 bg-white border border-slate-200 rounded-2xl hover:border-slate-400 hover:shadow-md transition text-slate-700 font-bold flex flex-col items-center gap-2 group">
-                                    <div className="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center group-hover:scale-110 transition"><Icon name="search" className="w-5 h-5"/></div> 搜尋用戶
+                                <button onClick={() => setActiveView('users')} className="p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition text-slate-700 font-bold flex flex-col items-center gap-2 border border-slate-200 active:scale-95">
+                                    <Icon name="search" className="w-6 h-6"/> 管理用戶
                                 </button>
                             </div>
                         </div>
 
-                        <div className="glass-card p-6 rounded-3xl bg-white/70">
+                        {/* Recent Requests */}
+                        <div className="glass-card p-6 rounded-2xl">
                             <div className="flex justify-between items-center mb-4">
-                                <h3 className="font-bold text-lg flex items-center gap-2 text-slate-700"><Icon name="inbox" className="w-5 h-5 text-slate-400"/> 最新申請</h3>
-                                {requests.length > 0 && <button onClick={()=>setActiveView('requests')} className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-full hover:bg-indigo-100 transition">處理申請</button>}
+                                <h3 className="font-bold text-lg flex items-center gap-2"><Icon name="inbox" className="w-5 h-5 text-slate-400"/> 最新申請</h3>
+                                {requests.length > 0 && <button onClick={()=>setActiveView('requests')} className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition">處理申請 ➔</button>}
                             </div>
                             <div className="space-y-3">
                                 {requests.slice(0, 3).map(req => (
-                                    <div key={req.id} className="flex justify-between items-center p-3 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                                    <div key={req.id} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-sm font-black text-slate-500">{req.displayName[0]}</div>
-                                            <div>
-                                                <div className="text-sm font-bold text-slate-700">{req.displayName}</div>
-                                                <div className="text-[10px] text-slate-400 font-mono">{req.email}</div>
-                                            </div>
+                                            <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-xs font-bold shadow-sm">{(req.displayName || '?')[0]}</div>
+                                            <div className="text-sm font-bold text-slate-700">{req.displayName || '未知用戶'}</div>
                                         </div>
-                                        <span className="w-2 h-2 rounded-full bg-orange-500"></span>
+                                        <span className="text-[10px] bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full font-bold">待處理</span>
                                     </div>
                                 ))}
-                                {requests.length === 0 && <div className="text-center text-slate-400 text-sm py-6 flex flex-col items-center"><Icon name="check-circle" className="w-8 h-8 mb-2 opacity-20"/>所有申請已處理完畢</div>}
+                                {requests.length === 0 && <div className="text-center text-slate-400 text-sm py-4">目前沒有待處理的申請 🎉</div>}
                             </div>
                         </div>
                     </div>
@@ -240,50 +247,56 @@
 
         function UsersView({ users, config, onDelete, onToggleWL }) {
             const [q, setQ] = useState('');
-            const filtered = users.filter(u => u.displayName?.toLowerCase().includes(q.toLowerCase()) || u.email?.toLowerCase().includes(q.toLowerCase()));
+            // Fix: Safe access to u.displayName and u.email
+            const filtered = users.filter(u => 
+                (u.displayName || '').toLowerCase().includes(q.toLowerCase()) || 
+                (u.email || '').toLowerCase().includes(q.toLowerCase())
+            );
             
             return (
-                <div className="flex flex-col h-full animate-enter pb-24 md:pb-0">
-                    <div className="sticky top-0 bg-slate-50/0 z-10 pb-6 pt-2">
-                        <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-3xl font-black text-slate-800">用戶管理</h2>
-                            <span className="bg-white/80 backdrop-blur border border-white text-slate-600 px-3 py-1 rounded-full text-xs font-bold shadow-sm">{filtered.length} 人</span>
+                <div className="flex flex-col h-full animate-enter">
+                    {/* Sticky Search Header */}
+                    <div className="sticky top-0 bg-[#f8fafc] z-10 pb-4 pt-1">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-2xl font-black text-slate-800">用戶管理</h2>
+                            <span className="bg-slate-200 text-slate-600 px-2 py-1 rounded-lg text-xs font-bold">{filtered.length} 人</span>
                         </div>
                         <div className="relative">
-                            <input value={q} onChange={e=>setQ(e.target.value)} placeholder="搜尋用戶 (名稱或 Email)..." className="w-full pl-12 pr-4 py-4 bg-white/80 border border-white rounded-2xl text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm backdrop-blur transition focus:scale-[1.01]" />
-                            <div className="absolute left-4 top-4 text-slate-400"><Icon name="search" className="w-5 h-5"/></div>
+                            <input value={q} onChange={e=>setQ(e.target.value)} placeholder="搜尋用戶 (名稱或 Email)..." className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm" />
+                            <div className="absolute left-3 top-3.5 text-slate-400"><Icon name="search" className="w-4 h-4"/></div>
                         </div>
                     </div>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 overflow-y-auto pb-4 pr-1">
+                    {/* User Grid - Responsive Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 pb-24 md:pb-4 overflow-y-auto">
                         {filtered.map(u => {
                             const isWL = config?.allowedEmails?.includes(u.email);
                             return (
-                                <div key={u.id} className="glass-card p-5 rounded-3xl bg-white/70 flex flex-col justify-between group hover:border-indigo-200 transition-all hover:-translate-y-1">
-                                    <div className="flex items-start justify-between mb-4">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-100 to-white text-indigo-600 flex items-center justify-center font-black text-xl shadow-inner border border-white">
-                                                {u.displayName?.[0].toUpperCase()}
+                                <div key={u.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between group hover:border-indigo-200 transition-colors">
+                                    <div className="flex items-start justify-between mb-3">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-lg">
+                                                {(u.displayName || '?')[0].toUpperCase()}
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <div className="font-bold text-slate-800 truncate text-lg">{u.displayName}</div>
-                                                <div className="text-xs text-slate-400 font-mono break-all line-clamp-1">{u.email}</div>
+                                                <div className="font-bold text-slate-800 truncate">{u.displayName || '未知'}</div>
+                                                <div className="text-xs text-slate-400 font-mono break-all line-clamp-1" title={u.email}>{u.email}</div>
                                             </div>
                                         </div>
-                                        {isWL ? <div className="text-emerald-500 bg-emerald-50 p-1.5 rounded-lg"><Icon name="shield-check" className="w-4 h-4"/></div> : <div className="text-slate-300 bg-slate-100 p-1.5 rounded-lg"><Icon name="lock" className="w-4 h-4"/></div>}
+                                        {isWL ? <div className="text-green-500"><Icon name="shield-check" className="w-5 h-5"/></div> : <div className="text-slate-300"><Icon name="lock" className="w-4 h-4"/></div>}
                                     </div>
-                                    <div className="flex gap-2 pt-4 border-t border-slate-100/50">
-                                        <button onClick={()=>onToggleWL(u.email)} className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition active:scale-95 shadow-sm ${isWL ? 'bg-white border border-red-100 text-red-500 hover:bg-red-50' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}>
+                                    <div className="flex gap-2 mt-2 pt-3 border-t border-slate-50">
+                                        <button onClick={()=>onToggleWL(u.email)} className={`flex-1 py-2 rounded-lg text-xs font-bold transition active:scale-95 ${isWL ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'}`}>
                                             {isWL ? '移除權限' : '加入白名單'}
                                         </button>
-                                        <button onClick={()=>onDelete(u)} className="p-2.5 bg-white border border-slate-200 text-slate-400 hover:text-red-500 hover:border-red-200 rounded-xl transition active:scale-95" title="刪除資料">
+                                        <button onClick={()=>onDelete(u)} className="p-2 bg-slate-100 text-slate-500 hover:bg-red-500 hover:text-white rounded-lg transition active:scale-95" title="刪除所有資料">
                                             <Icon name="trash-2" className="w-4 h-4"/>
                                         </button>
                                     </div>
                                 </div>
                             );
                         })}
-                        {filtered.length === 0 && <div className="col-span-full text-center py-20 text-slate-400">找不到符合的用戶</div>}
+                        {filtered.length === 0 && <div className="col-span-full text-center py-10 text-slate-400">找不到符合的用戶</div>}
                     </div>
                 </div>
             );
@@ -292,29 +305,23 @@
         function RequestsView({ requests, onApprove, onReject }) {
             return (
                 <div className="animate-enter pb-24 md:pb-0">
-                    <h2 className="text-3xl font-black text-slate-800 mb-6">入學申請 ({requests.length})</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <h2 className="text-2xl font-black text-slate-800 mb-6">入學申請 ({requests.length})</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {requests.map(req => (
-                            <div key={req.id} className="glass-card p-8 rounded-3xl bg-white/80 flex flex-col items-center text-center relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
-                                <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-orange-400 to-pink-500"></div>
-                                <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-700 font-black text-3xl mb-4 mt-2 shadow-inner border border-white">
-                                    {req.displayName[0]}
+                            <div key={req.id} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center text-center relative overflow-hidden">
+                                <div className="absolute top-0 left-0 w-full h-1 bg-orange-400"></div>
+                                <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-600 font-black text-2xl mb-3 mt-2">
+                                    {(req.displayName || '?')[0]}
                                 </div>
-                                <h3 className="font-bold text-xl text-slate-800">{req.displayName}</h3>
-                                <p className="text-xs text-slate-500 font-mono mb-8 bg-slate-100 px-3 py-1 rounded-full mt-2 border border-slate-200">{req.email}</p>
-                                <div className="flex gap-3 w-full">
-                                    <button onClick={()=>onReject(req)} className="flex-1 py-3 border border-slate-200 text-slate-500 font-bold rounded-2xl hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition active:scale-95">拒絕</button>
-                                    <button onClick={()=>onApprove(req)} className="flex-1 py-3 bg-slate-900 text-white font-bold rounded-2xl hover:bg-black shadow-lg transition active:scale-95">批准</button>
+                                <h3 className="font-bold text-lg text-slate-800">{req.displayName}</h3>
+                                <p className="text-xs text-slate-400 font-mono mb-6 bg-slate-50 px-2 py-1 rounded break-all">{req.email}</p>
+                                <div className="flex gap-2 w-full">
+                                    <button onClick={()=>onReject(req)} className="flex-1 py-2.5 border border-slate-200 text-slate-500 font-bold rounded-xl hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition active:scale-95">拒絕</button>
+                                    <button onClick={()=>onApprove(req)} className="flex-1 py-2.5 bg-slate-900 text-white font-bold rounded-xl hover:bg-black shadow-md transition active:scale-95">批准</button>
                                 </div>
                             </div>
                         ))}
-                        {requests.length === 0 && (
-                            <div className="col-span-full py-32 flex flex-col items-center text-slate-400 bg-white/40 rounded-[3rem] border border-dashed border-slate-300">
-                                <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm"><Icon name="check-circle" className="w-10 h-10 text-emerald-400"/></div>
-                                <p className="font-bold text-lg">太棒了！</p>
-                                <p className="text-sm">所有申請都已處理完畢</p>
-                            </div>
-                        )}
+                        {requests.length === 0 && <div className="col-span-full py-20 flex flex-col items-center text-slate-400"><Icon name="check-circle" className="w-12 h-12 mb-3 opacity-20"/>所有申請已處理完畢</div>}
                     </div>
                 </div>
             );
@@ -323,33 +330,33 @@
         function SystemSettings({ config, onUpdate }) {
             return (
                 <div className="animate-enter pb-24 md:pb-0">
-                    <h2 className="text-3xl font-black text-slate-800 mb-8">系統設定</h2>
-                    <div className="space-y-6 max-w-3xl">
-                        <div className="glass-card p-8 rounded-3xl bg-white/80 flex items-center justify-between">
+                    <h2 className="text-2xl font-black text-slate-800 mb-6">系統設定</h2>
+                    <div className="space-y-4 max-w-2xl">
+                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
                             <div>
-                                <h3 className="font-bold text-lg text-slate-800 mb-1">維護模式 (Maintenance)</h3>
-                                <p className="text-sm text-slate-500">開啟後，除管理員外所有用戶將看到維護畫面。</p>
+                                <h3 className="font-bold text-slate-800">維護模式</h3>
+                                <p className="text-xs text-slate-400">開啟後將阻擋所有非管理員訪問</p>
                             </div>
-                            <div className="flex bg-slate-100 p-1.5 rounded-xl border border-slate-200/50">
-                                <button onClick={()=>onUpdate('maintenanceMode','normal')} className={`px-6 py-2.5 text-xs font-bold rounded-lg transition-all ${config?.maintenanceMode==='normal'?'bg-white text-emerald-600 shadow-md transform scale-105':'text-slate-400 hover:text-slate-600'}`}>正常運作</button>
-                                <button onClick={()=>onUpdate('maintenanceMode','updating')} className={`px-6 py-2.5 text-xs font-bold rounded-lg transition-all ${config?.maintenanceMode!=='normal'?'bg-white text-orange-600 shadow-md transform scale-105':'text-slate-400 hover:text-slate-600'}`}>維護中</button>
+                            <div className="flex bg-slate-100 p-1 rounded-lg">
+                                <button onClick={()=>onUpdate('maintenanceMode','normal')} className={`px-4 py-2 text-xs font-bold rounded-md transition ${config?.maintenanceMode==='normal'?'bg-white text-green-600 shadow-sm':'text-slate-400'}`}>正常</button>
+                                <button onClick={()=>onUpdate('maintenanceMode','updating')} className={`px-4 py-2 text-xs font-bold rounded-md transition ${config?.maintenanceMode!=='normal'?'bg-white text-orange-600 shadow-sm':'text-slate-400'}`}>維護</button>
                             </div>
                         </div>
                         
-                        <div className="glass-card p-8 rounded-3xl bg-white/80 flex items-center justify-between">
+                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
                             <div>
-                                <h3 className="font-bold text-lg text-slate-800 mb-1">白名單模式 (Whitelist)</h3>
-                                <p className="text-sm text-slate-500">啟用後，只有在名單內的 Email 可以登入系統。</p>
+                                <h3 className="font-bold text-slate-800">白名單模式</h3>
+                                <p className="text-xs text-slate-400">只允許特定 Email 登入</p>
                             </div>
-                            <button onClick={() => onUpdate('whitelistEnabled', !config?.whitelistEnabled)} className={`w-14 h-8 rounded-full transition-colors relative shadow-inner ${config?.whitelistEnabled ? 'bg-indigo-600' : 'bg-slate-300'}`}>
-                                <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform shadow-sm ${config?.whitelistEnabled ? 'translate-x-6' : ''}`}></div>
+                            <button onClick={() => onUpdate('whitelistEnabled', !config?.whitelistEnabled)} className={`w-12 h-6 rounded-full transition-colors relative ${config?.whitelistEnabled ? 'bg-indigo-600' : 'bg-slate-200'}`}>
+                                <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${config?.whitelistEnabled ? 'translate-x-6' : ''}`}></div>
                             </button>
                         </div>
 
                         {config?.maintenanceMode !== 'normal' && (
-                            <div className="bg-orange-50/80 border border-orange-200 p-6 rounded-3xl animate-enter backdrop-blur">
-                                <label className="text-xs font-bold text-orange-700 uppercase tracking-wider mb-2 block">預計恢復時間</label>
-                                <input className="w-full p-4 rounded-xl text-sm border-2 border-orange-100 focus:border-orange-300 focus:ring-0 text-orange-900 font-bold bg-white/80" value={config?.estimatedTime||''} onChange={e=>onUpdate('estimatedTime',e.target.value)} placeholder="例如：下午 4:00" />
+                            <div className="bg-orange-50 border border-orange-100 p-4 rounded-xl">
+                                <label className="text-xs font-bold text-orange-800 mb-1 block">預計恢復時間</label>
+                                <input className="w-full p-2 rounded-lg text-sm border-none focus:ring-2 focus:ring-orange-300" value={config?.estimatedTime||''} onChange={e=>onUpdate('estimatedTime',e.target.value)} placeholder="例如：下午 4:00" />
                             </div>
                         )}
                     </div>
@@ -370,17 +377,14 @@
             };
 
             return (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-enter pb-24 md:pb-0 h-[calc(100vh-140px)]">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-enter pb-24 md:pb-0 h-[calc(100vh-140px)]">
                     <div className="lg:col-span-1">
-                        <div className="glass-card p-8 rounded-[2.5rem] bg-white/80 border border-indigo-100 h-fit">
-                            <div className="flex items-center gap-3 mb-6">
-                                <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600"><Icon name="send" className="w-5 h-5"/></div>
-                                <h3 className="font-bold text-xl text-indigo-900">發送新通告</h3>
-                            </div>
-                            <form onSubmit={handleSubmit} className="space-y-5">
+                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 h-fit">
+                            <h3 className="font-bold text-lg mb-4 text-indigo-900 flex items-center gap-2"><Icon name="send" className="w-5 h-5"/> 發送新通告</h3>
+                            <form onSubmit={handleSubmit} className="space-y-4">
                                 <div>
-                                    <label className="text-xs font-bold text-slate-400 mb-1.5 block ml-1">分類</label>
-                                    <select value={sub} onChange={e=>setSub(e.target.value)} className="w-full p-4 bg-slate-50 border-2 border-transparent hover:border-slate-200 rounded-2xl text-sm font-bold outline-none focus:bg-white focus:border-indigo-500 transition">
+                                    <label className="text-xs font-bold text-slate-500 mb-1 block">分類</label>
+                                    <select value={sub} onChange={e=>setSub(e.target.value)} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500">
                                         <option value="通告">📢 通告</option>
                                         <option value="中文">📕 中文</option>
                                         <option value="英文">📘 英文</option>
@@ -389,40 +393,36 @@
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="text-xs font-bold text-slate-400 mb-1.5 block ml-1">內容</label>
-                                    <textarea value={desc} onChange={e=>setDesc(e.target.value)} className="w-full p-4 bg-slate-50 border-2 border-transparent hover:border-slate-200 rounded-2xl text-sm border-0 focus:bg-white focus:border-indigo-500 outline-none transition resize-none" rows="4" placeholder="輸入通告內容..." required></textarea>
+                                    <label className="text-xs font-bold text-slate-500 mb-1 block">內容</label>
+                                    <textarea value={desc} onChange={e=>setDesc(e.target.value)} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" rows="4" placeholder="輸入通告內容..." required></textarea>
                                 </div>
                                 <div>
-                                    <label className="text-xs font-bold text-slate-400 mb-1.5 block ml-1">日期</label>
-                                    <input type="date" value={date} onChange={e=>setDate(e.target.value)} className="w-full p-4 bg-slate-50 border-2 border-transparent hover:border-slate-200 rounded-2xl text-sm font-bold outline-none focus:bg-white focus:border-indigo-500 transition" required />
+                                    <label className="text-xs font-bold text-slate-500 mb-1 block">日期</label>
+                                    <input type="date" value={date} onChange={e=>setDate(e.target.value)} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500" required />
                                 </div>
-                                <button className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 shadow-xl shadow-indigo-200 active:scale-95 transition flex items-center justify-center gap-2 mt-4">
-                                    <Icon name="check" className="w-5 h-5"/> 確認發送
-                                </button>
+                                <button className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 shadow-lg active:scale-95 transition">發送</button>
                             </form>
                         </div>
                     </div>
-                    <div className="lg:col-span-2 flex flex-col overflow-hidden glass-card rounded-[2.5rem] bg-white/40 border-0">
-                        <div className="p-6 border-b border-white/50 bg-white/30 backdrop-blur">
-                            <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2"><Icon name="history" className="w-5 h-5 text-slate-400"/> 歷史紀錄</h3>
-                        </div>
-                        <div className="overflow-y-auto flex-1 p-6 space-y-4">
-                            {publicItems.map(i=>(
-                                <div key={i.id} className="bg-white p-5 rounded-2xl border border-slate-100 flex justify-between items-start group hover:border-indigo-200 transition shadow-sm">
-                                    <div className="flex gap-4">
-                                        <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-500 font-bold text-xs shrink-0">{i.subject[0]}</div>
+                    <div className="lg:col-span-2 flex flex-col overflow-hidden h-full">
+                         {/* Fix: Added explicit height to container to allow internal scroll */}
+                        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 flex flex-col h-full overflow-hidden">
+                            <div className="p-5 border-b border-slate-100 bg-slate-50/50 shrink-0">
+                                <h3 className="font-bold text-lg text-slate-800">已發布紀錄 ({publicItems.length})</h3>
+                            </div>
+                            <div className="overflow-y-auto flex-1 p-4 space-y-3">
+                                {publicItems.map(i=>(
+                                    <div key={i.id} className="bg-white p-4 rounded-xl border border-slate-100 flex justify-between items-center group hover:border-indigo-200 transition">
                                         <div>
-                                            <div className="flex items-center gap-3 mb-1">
-                                                <span className="text-[10px] font-bold bg-slate-100 px-2 py-0.5 rounded-full text-slate-600 uppercase tracking-wider">{i.subject}</span>
-                                                <span className="text-xs font-mono text-slate-400">{i.dueDate}</span>
-                                            </div>
-                                            <p className="text-sm font-bold text-slate-700 leading-relaxed max-w-lg">{i.description}</p>
+                                            <span className="text-xs bg-slate-100 px-2 py-0.5 rounded font-bold mr-2 text-slate-500">{i.subject}</span>
+                                            <span className="text-xs font-mono text-slate-400 mr-3">{i.dueDate}</span>
+                                            <span className="font-bold text-sm text-slate-700">{i.description}</span>
                                         </div>
+                                        <button onClick={()=>onDelete(i.id)} className="text-slate-300 hover:text-red-500 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition p-2"><Icon name="trash-2" className="w-4 h-4"/></button>
                                     </div>
-                                    <button onClick={()=>onDelete(i.id)} className="text-slate-300 hover:text-red-500 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition p-2 bg-slate-50 rounded-xl hover:bg-red-50"><Icon name="trash-2" className="w-5 h-5"/></button>
-                                </div>
-                            ))}
-                            {publicItems.length===0 && <div className="text-center py-20 text-slate-400 flex flex-col items-center"><Icon name="clipboard-list" className="w-12 h-12 mb-3 opacity-20"/>無發布紀錄</div>}
+                                ))}
+                                {publicItems.length===0 && <div className="text-center py-20 text-slate-400">無紀錄</div>}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -435,7 +435,6 @@
             const [loading, setLoading] = useState(true);
             const [activeView, setActiveView] = useState('dashboard');
             
-            // Notification State
             const [notification, setNotification] = useState({ isOpen: false, type: '', message: '', onConfirm: null });
 
             const [users, setUsers] = useState([]);
@@ -456,10 +455,10 @@
                 if(user && user.email === ADMIN_EMAIL && window.fb) {
                     const { db, collection, doc, onSnapshot, query, orderBy } = window.fb;
                     const unsubs = [
-                        onSnapshot(doc(db, "system_settings", "config"), s => setConfig(s.data())),
-                        onSnapshot(query(collection(db, "users_public"), orderBy("lastSeen", "desc")), s => setUsers(s.docs.map(d=>({id:d.id, ...d.data()})))),
-                        onSnapshot(query(collection(db, "access_requests"), orderBy("requestTime", "desc")), s => setRequests(s.docs.map(d=>({id:d.id, ...d.data()})))),
-                        onSnapshot(query(collection(db, "public_assignments"), orderBy("createdAt", "desc")), s => setPublicItems(s.docs.map(d=>({id:d.id, ...d.data()})))),
+                        onSnapshot(doc(db, "system_settings", "config"), s => setConfig(s.data()), e=>console.log("Config Err",e)),
+                        onSnapshot(query(collection(db, "users_public"), orderBy("lastSeen", "desc")), s => setUsers(s.docs.map(d=>({id:d.id, ...d.data()}))), e=>console.log("Users Err",e)),
+                        onSnapshot(query(collection(db, "access_requests"), orderBy("requestTime", "desc")), s => setRequests(s.docs.map(d=>({id:d.id, ...d.data()}))), e=>console.log("Reqs Err",e)),
+                        onSnapshot(query(collection(db, "public_assignments"), orderBy("createdAt", "desc")), s => setPublicItems(s.docs.map(d=>({id:d.id, ...d.data()}))), e=>console.log("Pub Err",e)),
                     ];
                     return () => unsubs.forEach(u => u());
                 }
@@ -516,17 +515,17 @@
 
             if (!user || user.email !== ADMIN_EMAIL) {
                 return (
-                    <div className="h-screen w-full flex flex-col items-center justify-center bg-slate-900 p-6 relative overflow-hidden mesh-bg">
+                    <div className="h-screen w-full flex flex-col items-center justify-center bg-slate-900 p-6 relative overflow-hidden">
                         <div className="absolute inset-0 bg-black/20"></div>
-                        <div className="glass-card bg-white/90 p-10 rounded-[2.5rem] shadow-2xl max-w-sm w-full text-center relative z-10 border border-white/50 modal-animate">
-                            <div className="w-20 h-20 bg-slate-900 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl rotate-6 border border-slate-700"><Icon name="shield-check" className="w-10 h-10 text-white"/></div>
+                        <div className="bg-white p-10 rounded-3xl shadow-xl max-w-sm w-full text-center relative z-10 border border-slate-100 modal-animate">
+                            <div className="w-20 h-20 bg-slate-900 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl rotate-3 border border-slate-700"><Icon name="shield-check" className="w-10 h-10 text-white"/></div>
                             <h1 className="text-3xl font-black text-slate-800 mb-2 tracking-tight">{user ? '權限不足' : '管理員中控台'}</h1>
                             <p className="text-slate-500 mb-10 text-sm font-medium">{user ? `帳號 ${user.email} 未獲授權` : '請使用授權帳號登入系統'}</p>
                             
                             {!user ? <button onClick={handleLogin} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold hover:bg-black transition shadow-lg transform hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2"><Icon name="log-in" className="w-5 h-5"/> Google Login</button> 
                                    : <button onClick={()=>window.fb.signOut(window.fb.auth)} className="w-full py-3 border-2 border-slate-200 text-slate-600 rounded-2xl font-bold hover:bg-slate-50 transition">登出帳號</button>}
                             
-                            <div className="mt-8 pt-6 border-t border-slate-200/60">
+                            <div className="mt-8 pt-6 border-t border-slate-100">
                                 <a href={STUDENT_APP_URL} className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center justify-center gap-1 hover:underline transition"><Icon name="arrow-left" className="w-3 h-3"/>前往學生版</a>
                             </div>
                         </div>
@@ -535,11 +534,9 @@
             }
 
             return (
-                <div className="flex h-screen bg-slate-50/50 relative">
-                    {/* Notification Modal */}
+                <div className="flex h-screen bg-slate-50 relative">
                     <NotificationModal isOpen={notification.isOpen} type={notification.type} message={notification.message} onConfirm={notification.onConfirm} onClose={closeNotify} />
 
-                    {/* Desktop Sidebar */}
                     <aside className="w-72 glass-nav flex-col justify-between p-6 hidden md:flex shrink-0 z-30">
                         <div>
                             <div className="flex items-center gap-4 mb-10 px-2">
@@ -557,27 +554,27 @@
                         <button onClick={()=>window.fb.signOut(window.fb.auth)} className="flex items-center gap-3 px-6 py-4 rounded-2xl text-slate-400 hover:text-red-500 hover:bg-red-50 font-bold transition mt-auto"><Icon name="log-out" className="w-5 h-5"/> 登出系統</button>
                     </aside>
 
-                    {/* Content */}
                     <main className="flex-1 h-full overflow-hidden flex flex-col relative z-20">
                         <header className="h-20 flex items-center justify-between px-8 shrink-0">
                             <h2 className="text-2xl font-black text-slate-800 capitalize tracking-tight">{activeView}</h2>
                             <div className="flex items-center gap-4">
-                                <span className="text-xs font-bold text-slate-400 hidden sm:block bg-white/50 px-3 py-1 rounded-full border border-white">{user.email}</span>
+                                <span className="text-xs font-bold text-slate-400 hidden sm:block bg-white px-3 py-1 rounded-full border border-slate-200">{user.email}</span>
                                 <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden border-2 border-white shadow-md cursor-pointer hover:scale-110 transition"><img src={user.photoURL} className="w-full h-full"/></div>
                             </div>
                         </header>
                         
                         <div className="flex-1 overflow-y-auto p-4 md:p-8 scrollbar-hide">
                             <div className="max-w-7xl mx-auto">
-                                {activeView === 'dashboard' && <Dashboard users={users} requests={requests} config={config} setActiveView={setActiveView} />}
-                                {activeView === 'users' && <UsersView users={users} config={config} onDelete={handleDeleteUser} onToggleWL={handleToggleWL} />}
-                                {activeView === 'broadcast' && <BroadcastView publicItems={publicItems} onCreate={handleBroadcast} onDelete={deleteBroadcast} />}
-                                {activeView === 'requests' && <RequestsView requests={requests} onApprove={r=>handleReq(r,true)} onReject={r=>handleReq(r,false)} />}
-                                {activeView === 'settings' && <SystemSettings config={config} onUpdate={updateConfig} />}
+                                <ErrorBoundary>
+                                    {activeView === 'dashboard' && <Dashboard users={users} requests={requests} config={config} setActiveView={setActiveView} />}
+                                    {activeView === 'users' && <UsersView users={users} config={config} onDelete={handleDeleteUser} onToggleWL={handleToggleWL} />}
+                                    {activeView === 'broadcast' && <BroadcastView publicItems={publicItems} onCreate={handleBroadcast} onDelete={deleteBroadcast} />}
+                                    {activeView === 'requests' && <RequestsView requests={requests} onApprove={r=>handleReq(r,true)} onReject={r=>handleReq(r,false)} />}
+                                    {activeView === 'settings' && <SystemSettings config={config} onUpdate={updateConfig} />}
+                                </ErrorBoundary>
                             </div>
                         </div>
 
-                        {/* Mobile Bottom Nav */}
                         <div className="md:hidden fixed bottom-6 left-4 right-4 glass-nav flex justify-around p-2 rounded-[2rem] shadow-2xl z-50 border border-white/50">
                             <NavButton id="dashboard" icon="layout-dashboard" label="首頁" active={activeView==='dashboard'} onClick={setActiveView} mobile />
                             <NavButton id="users" icon="users" label="用戶" active={activeView==='users'} onClick={setActiveView} mobile />
