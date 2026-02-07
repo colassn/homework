@@ -14,56 +14,44 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         body { font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Microsoft JhengHei", sans-serif; -webkit-tap-highlight-color: transparent; }
+        input[type="file"]::file-selector-button { display: none; }
         
         /* Animations */
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes popIn { 0% { opacity: 0; transform: scale(0.9); } 70% { transform: scale(1.02); } 100% { opacity: 1; transform: scale(1); } }
         @keyframes meshFlow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
+        
+        .mesh-bg-soft {
+            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            min-height: 100vh;
+        }
 
-        .mesh-bg {
-            background: linear-gradient(-45deg, #4f46e5, #ec4899, #8b5cf6, #06b6d4);
+        /* Admin Specific Gradient Theme (More Blue/Purple/Professional but soft) */
+        .admin-mesh-bg {
+            background: linear-gradient(-45deg, #e0c3fc, #8ec5fc, #90f7ec);
             background-size: 400% 400%;
             animation: meshFlow 15s ease infinite;
         }
 
-        .mesh-bg-soft {
-            background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
-            min-height: 100vh;
-        }
-        
-        .animate-enter { animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .animate-enter { animation: slideInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         .modal-animate { animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        .animate-float { animation: float 6s ease-in-out infinite; }
-
+        
         /* Glassmorphism */
         .glass-card { 
-            background: rgba(255, 255, 255, 0.7); 
-            backdrop-filter: blur(20px); 
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.6); 
+            background: rgba(255, 255, 255, 0.65); 
+            backdrop-filter: blur(16px); 
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8); 
             box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
         }
         
-        .glass-nav {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
-        }
-
         /* Scrollbar */
         ::-webkit-scrollbar { width: 0px; background: transparent; }
     </style>
 </head>
-<body class="bg-slate-50 h-screen overflow-hidden flex flex-col md:flex-row mesh-bg-soft relative">
-    
-    <!-- Background Decor -->
-    <div class="fixed top-[-10%] right-[-10%] w-[40vw] h-[40vw] bg-indigo-200/30 rounded-full blur-[120px] pointer-events-none z-0 animate-float"></div>
-    <div class="fixed bottom-[-10%] left-[-10%] w-[40vw] h-[40vw] bg-pink-200/30 rounded-full blur-[120px] pointer-events-none z-0 animate-float" style={{animationDelay:'-3s'}}></div>
-
-    <div id="root" class="w-full h-full relative z-10 flex flex-col md:flex-row"></div>
+<body class="bg-slate-50 h-screen overflow-hidden flex flex-col admin-mesh-bg relative">
+    <div id="root" class="w-full h-full relative z-10"></div>
 
     <script type="module">
         const firebaseConfig = {
@@ -82,8 +70,7 @@
 
         try {
             const app = initializeApp(firebaseConfig);
-            // Standardize variable name to match student app
-            window.firebaseServices = { 
+            window.fb = { 
                 auth: getAuth(app), 
                 db: getFirestore(app), 
                 provider: new GoogleAuthProvider(), 
@@ -123,32 +110,32 @@
             static getDerivedStateFromError(error) { return { hasError: true }; }
             componentDidCatch(error, errorInfo) { console.error(error, errorInfo); }
             render() {
-                if (this.state.hasError) return <div className="p-6 text-center text-red-500 bg-red-50 rounded-xl">介面發生錯誤，請重新整理。</div>;
+                if (this.state.hasError) return <div className="p-6 text-center text-red-500 glass-card m-4 rounded-2xl">⚠️ 介面錯誤，請刷新頁面</div>;
                 return this.props.children; 
             }
         }
 
-        // --- Custom Notification Modal (Beautiful) ---
+        // --- Notification Modal (Same as Student App style) ---
         function NotificationModal({ isOpen, type, message, onConfirm, onClose }) {
             if (!isOpen) return null;
             const isConfirm = type === 'confirm';
             return (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" onClick={!isConfirm ? onClose : undefined}></div>
-                    <div className="glass-card bg-white/95 p-8 rounded-[2rem] shadow-2xl w-full max-w-sm relative z-10 modal-animate text-center border border-white">
-                        <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5 ${isConfirm ? 'bg-red-100 text-red-500' : 'bg-indigo-100 text-indigo-500'} shadow-sm`}>
+                    <div className="absolute inset-0 bg-black/20 backdrop-blur-sm transition-opacity" onClick={!isConfirm ? onClose : undefined}></div>
+                    <div className="glass-card bg-white/90 p-6 rounded-3xl shadow-2xl w-full max-w-sm relative z-10 modal-animate text-center">
+                        <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${isConfirm ? 'bg-red-100 text-red-500' : 'bg-indigo-100 text-indigo-500'}`}>
                             <Icon name={isConfirm ? 'alert-triangle' : 'info'} className="w-8 h-8"/>
                         </div>
-                        <h3 className="text-xl font-black text-slate-800 mb-3">{isConfirm ? '確認操作' : '提示訊息'}</h3>
-                        <p className="text-slate-600 font-medium mb-8 text-sm leading-relaxed whitespace-pre-wrap">{message}</p>
+                        <h3 className="text-lg font-black text-slate-800 mb-2">{isConfirm ? '確認操作' : '提示'}</h3>
+                        <p className="text-slate-600 font-medium mb-6 text-sm leading-relaxed whitespace-pre-wrap">{message}</p>
                         <div className="flex gap-3">
                             {isConfirm ? (
                                 <>
-                                    <button onClick={onClose} className="flex-1 py-3.5 border border-slate-200 rounded-xl font-bold text-slate-500 hover:bg-slate-50 transition active:scale-95">取消</button>
-                                    <button onClick={() => { onConfirm(); onClose(); }} className="flex-1 py-3.5 bg-red-500 text-white rounded-xl font-bold hover:bg-red-600 shadow-lg shadow-red-200 transition active:scale-95">確認</button>
+                                    <button onClick={onClose} className="flex-1 py-3 border border-slate-200 rounded-xl font-bold text-slate-500 hover:bg-slate-50 transition">取消</button>
+                                    <button onClick={() => { onConfirm(); onClose(); }} className="flex-1 py-3 bg-red-500 text-white rounded-xl font-bold hover:bg-red-600 shadow-lg shadow-red-200 transition active:scale-95">確認</button>
                                 </>
                             ) : (
-                                <button onClick={onClose} className="w-full py-3.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition active:scale-95">知道了</button>
+                                <button onClick={onClose} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition active:scale-95">知道了</button>
                             )}
                         </div>
                     </div>
@@ -156,95 +143,88 @@
             );
         }
 
-        // --- UI Components ---
-        function StatCard({ title, value, icon, color, onClick }) {
+        // --- Dashboard Stat Card (Student App Style) ---
+        function StatCard({ title, value, icon, color, onClick, subtext }) {
             return (
-                <div 
-                    onClick={onClick}
-                    className="glass-card p-6 rounded-3xl flex items-center justify-between hover:scale-[1.03] transition-all duration-300 cursor-pointer group bg-white/60 hover:bg-white/90"
-                >
-                    <div>
-                        <p className="text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-1.5">{title}</p>
-                        <h3 className="text-4xl font-black text-slate-800 tracking-tight">{value}</h3>
+                <div onClick={onClick} className={`glass-card bg-white/60 p-4 rounded-2xl flex flex-col items-center justify-center text-center group hover:scale-[1.02] transition-all duration-300 cursor-pointer`}>
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 text-white shadow-md ${color} group-hover:scale-110 transition-transform`}>
+                        <Icon name={icon} className="w-6 h-6" />
                     </div>
-                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-lg ${color} group-hover:rotate-6 transition-transform duration-300`}>
-                        <Icon name={icon} className="w-7 h-7" />
-                    </div>
+                    <div className="text-3xl font-black text-slate-800">{value}</div>
+                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{title}</div>
+                    {subtext && <div className="text-[10px] text-indigo-400 mt-1 font-bold">{subtext}</div>}
                 </div>
             );
         }
 
-        function NavButton({ id, icon, label, active, onClick, mobile }) {
-            const baseClass = mobile 
-                ? "flex flex-col items-center justify-center p-2 rounded-2xl transition-all duration-300 flex-1" 
-                : "flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 w-full text-sm group";
-            
-            const activeClass = mobile
-                ? "text-indigo-600 scale-105"
-                : "bg-indigo-600 text-white shadow-lg shadow-indigo-200 scale-[1.02]";
-                
-            const inactiveClass = mobile
-                ? "text-slate-400 hover:text-slate-600"
-                : "text-slate-500 hover:bg-white hover:text-indigo-600 hover:shadow-sm";
-
-            return (
-                <button onClick={() => onClick(id)} className={`${baseClass} ${active ? activeClass : inactiveClass}`}>
-                    <Icon name={icon} className={mobile ? "w-6 h-6 mb-1" : "w-5 h-5 group-hover:scale-110 transition"} />
-                    <span className={mobile ? "text-[10px] font-bold" : ""}>{label}</span>
-                </button>
-            );
-        }
-
-        // --- Views ---
+        // --- Main Views ---
 
         function Dashboard({ users, requests, config, setActiveView }) {
             return (
-                <div className="space-y-8 animate-enter pb-24 md:pb-0">
-                    <div>
-                        <h2 className="text-3xl font-black text-slate-800 mb-2 tracking-tight">儀表板概覽</h2>
-                        <p className="text-slate-500 font-medium">歡迎回來，系統運作正常。</p>
+                <div className="space-y-6 animate-enter pb-24">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <StatCard 
+                            title="總用戶" 
+                            value={users.length} 
+                            icon="users" 
+                            color="bg-blue-500" 
+                            onClick={() => setActiveView('users')} 
+                        />
+                        <StatCard 
+                            title="待審核" 
+                            value={requests.length} 
+                            icon="user-plus" 
+                            color="bg-orange-500" 
+                            subtext={requests.length > 0 ? "需處理" : "已清空"}
+                            onClick={() => setActiveView('requests')}
+                        />
+                        <StatCard 
+                            title="系統狀態" 
+                            value={config?.maintenanceMode === 'normal' ? 'OK' : '維護'} 
+                            icon="activity" 
+                            color={config?.maintenanceMode === 'normal' ? 'bg-emerald-500' : 'bg-amber-500'} 
+                            onClick={() => setActiveView('settings')}
+                        />
+                        <StatCard 
+                            title="模式" 
+                            value={config?.whitelistEnabled ? '白名單' : '公開'} 
+                            icon="shield" 
+                            color="bg-slate-700" 
+                            onClick={() => setActiveView('settings')}
+                        />
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                        <StatCard title="總用戶" value={users.length} icon="users" color="bg-gradient-to-br from-blue-500 to-indigo-600" onClick={() => setActiveView('users')} />
-                        <StatCard title="待審核" value={requests.length} icon="user-plus" color="bg-gradient-to-br from-orange-400 to-pink-500" onClick={() => setActiveView('requests')} />
-                        <StatCard title="系統狀態" value={config?.maintenanceMode === 'normal' ? '正常' : '維護'} icon="activity" color={config?.maintenanceMode === 'normal' ? 'bg-gradient-to-br from-emerald-400 to-teal-500' : 'bg-gradient-to-br from-amber-400 to-orange-500'} onClick={() => setActiveView('settings')} />
-                        <StatCard title="模式" value={config?.whitelistEnabled ? '白名單' : '公開'} icon="shield" color="bg-slate-700" onClick={() => setActiveView('settings')} />
-                    </div>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div className="glass-card p-8 rounded-[2rem] bg-white/70">
-                            <h3 className="font-bold text-lg mb-6 flex items-center gap-2 text-slate-700"><Icon name="zap" className="w-5 h-5 text-yellow-500"/> 快速捷徑</h3>
-                            <div className="grid grid-cols-2 gap-4">
-                                <button onClick={() => setActiveView('broadcast')} className="p-5 bg-white border border-indigo-100 rounded-2xl hover:border-indigo-300 hover:shadow-md transition text-indigo-700 font-bold flex flex-col items-center gap-3 group">
-                                    <div className="w-12 h-12 bg-indigo-50 rounded-full flex items-center justify-center group-hover:scale-110 transition"><Icon name="megaphone" className="w-6 h-6"/></div> 發佈通告
-                                </button>
-                                <button onClick={() => setActiveView('users')} className="p-5 bg-white border border-slate-200 rounded-2xl hover:border-slate-400 hover:shadow-md transition text-slate-700 font-bold flex flex-col items-center gap-3 group">
-                                    <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center group-hover:scale-110 transition"><Icon name="search" className="w-6 h-6"/></div> 搜尋用戶
-                                </button>
-                            </div>
+                    <div className="glass-card p-5 rounded-3xl bg-white/80">
+                        <h3 className="font-bold text-slate-700 mb-4 flex items-center gap-2"><Icon name="zap" className="w-5 h-5 text-yellow-500"/> 快速捷徑</h3>
+                        <div className="grid grid-cols-2 gap-3">
+                            <button onClick={() => setActiveView('broadcast')} className="p-4 bg-white border border-indigo-100 rounded-2xl hover:border-indigo-300 hover:shadow-md transition text-indigo-700 font-bold flex flex-col items-center gap-2 group">
+                                <div className="w-10 h-10 bg-indigo-50 rounded-full flex items-center justify-center group-hover:scale-110 transition"><Icon name="megaphone" className="w-5 h-5"/></div> 發佈通告
+                            </button>
+                            <button onClick={() => setActiveView('users')} className="p-4 bg-white border border-slate-200 rounded-2xl hover:border-slate-400 hover:shadow-md transition text-slate-700 font-bold flex flex-col items-center gap-2 group">
+                                <div className="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center group-hover:scale-110 transition"><Icon name="search" className="w-5 h-5"/></div> 管理用戶
+                            </button>
                         </div>
+                    </div>
 
-                        <div className="glass-card p-8 rounded-[2rem] bg-white/70">
-                            <div className="flex justify-between items-center mb-6">
-                                <h3 className="font-bold text-lg flex items-center gap-2 text-slate-700"><Icon name="inbox" className="w-5 h-5 text-slate-400"/> 最新申請</h3>
-                                {requests.length > 0 && <button onClick={()=>setActiveView('requests')} className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-full hover:bg-indigo-100 transition">處理申請 ➔</button>}
-                            </div>
-                            <div className="space-y-3">
-                                {requests.slice(0, 3).map(req => (
-                                    <div key={req.id} className="flex justify-between items-center p-3 bg-white rounded-2xl border border-slate-100 shadow-sm">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-sm font-black text-slate-500">{(req.displayName||'?')[0]}</div>
-                                            <div>
-                                                <div className="text-sm font-bold text-slate-700">{req.displayName}</div>
-                                                <div className="text-[10px] text-slate-400 font-mono">{req.email}</div>
-                                            </div>
+                    <div className="glass-card p-5 rounded-3xl bg-white/80">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="font-bold text-slate-700 flex items-center gap-2"><Icon name="inbox" className="w-5 h-5 text-slate-400"/> 最新申請</h3>
+                            {requests.length > 0 && <button onClick={()=>setActiveView('requests')} className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-full hover:bg-indigo-100 transition">處理申請 ➔</button>}
+                        </div>
+                        <div className="space-y-3">
+                            {requests.slice(0, 3).map(req => (
+                                <div key={req.id} className="flex justify-between items-center p-3 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-sm font-black text-slate-500">{(req.displayName||'?')[0]}</div>
+                                        <div>
+                                            <div className="text-sm font-bold text-slate-700">{req.displayName}</div>
+                                            <div className="text-[10px] text-slate-400 font-mono">{req.email}</div>
                                         </div>
-                                        <span className="w-2.5 h-2.5 rounded-full bg-orange-500 animate-pulse"></span>
                                     </div>
-                                ))}
-                                {requests.length === 0 && <div className="text-center text-slate-400 text-sm py-6 flex flex-col items-center"><Icon name="check-circle" className="w-10 h-10 mb-2 opacity-20"/>所有申請已處理完畢</div>}
-                            </div>
+                                    <span className="w-2.5 h-2.5 rounded-full bg-orange-500 animate-pulse"></span>
+                                </div>
+                            ))}
+                            {requests.length === 0 && <div className="text-center text-slate-400 text-sm py-6 flex flex-col items-center"><Icon name="check-circle" className="w-8 h-8 mb-2 opacity-20"/>所有申請已處理完畢</div>}
                         </div>
                     </div>
                 </div>
@@ -259,47 +239,42 @@
             );
             
             return (
-                <div className="flex flex-col h-full animate-enter pb-24 md:pb-0">
-                    <div className="sticky top-0 bg-transparent z-10 pb-6 pt-2">
-                        <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-3xl font-black text-slate-800 tracking-tight">用戶管理</h2>
-                            <span className="bg-white/80 backdrop-blur border border-white text-slate-600 px-3 py-1 rounded-full text-xs font-bold shadow-sm">{filtered.length} 人</span>
-                        </div>
+                <div className="flex flex-col h-full animate-enter pb-28">
+                    <div className="mb-4 sticky top-0 bg-transparent z-10 pt-2">
                         <div className="relative">
-                            <input value={q} onChange={e=>setQ(e.target.value)} placeholder="搜尋用戶 (名稱或 Email)..." className="w-full pl-12 pr-4 py-4 bg-white/80 border border-white rounded-2xl text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm backdrop-blur transition focus:scale-[1.01]" />
-                            <div className="absolute left-4 top-4 text-slate-400"><Icon name="search" className="w-5 h-5"/></div>
+                            <input value={q} onChange={e=>setQ(e.target.value)} placeholder="搜尋用戶 (名稱或 Email)..." className="w-full pl-12 pr-4 py-3.5 glass-card rounded-2xl text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm transition" />
+                            <div className="absolute left-4 top-3.5 text-slate-400"><Icon name="search" className="w-5 h-5"/></div>
                         </div>
+                        <div className="mt-2 text-right text-xs font-bold text-slate-500">共 {filtered.length} 位用戶</div>
                     </div>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 overflow-y-auto pb-4 pr-1">
+                    <div className="space-y-3 overflow-y-auto pr-1">
                         {filtered.map(u => {
                             const isWL = config?.allowedEmails?.includes(u.email);
                             return (
-                                <div key={u.id} className="glass-card p-5 rounded-3xl bg-white/70 flex flex-col justify-between group hover:border-indigo-200 transition-all hover:-translate-y-1">
-                                    <div className="flex items-start justify-between mb-4">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-100 to-white text-indigo-600 flex items-center justify-center font-black text-xl shadow-inner border border-white">
-                                                {(u.displayName || '?')[0].toUpperCase()}
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="font-bold text-slate-800 truncate text-lg">{u.displayName}</div>
-                                                <div className="text-xs text-slate-400 font-mono break-all line-clamp-1">{u.email}</div>
-                                            </div>
+                                <div key={u.id} className="glass-card p-4 rounded-2xl bg-white/80 flex flex-col gap-3 group hover:border-indigo-200 transition-all">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-100 to-white text-indigo-600 flex items-center justify-center font-black text-lg border border-white shadow-sm">
+                                            {(u.displayName || '?')[0].toUpperCase()}
                                         </div>
-                                        {isWL ? <div className="text-emerald-500 bg-emerald-50 p-2 rounded-xl"><Icon name="shield-check" className="w-5 h-5"/></div> : <div className="text-slate-300 bg-slate-100 p-2 rounded-xl"><Icon name="lock" className="w-5 h-5"/></div>}
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-bold text-slate-800 truncate">{u.displayName || '未知'}</span>
+                                                {isWL ? <Icon name="shield-check" className="w-3 h-3 text-emerald-500"/> : <Icon name="lock" className="w-3 h-3 text-slate-300"/>}
+                                            </div>
+                                            <div className="text-xs text-slate-400 font-mono break-all line-clamp-1">{u.email}</div>
+                                        </div>
                                     </div>
-                                    <div className="flex gap-2 pt-4 border-t border-slate-100/50">
-                                        <button onClick={()=>onToggleWL(u.email)} className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition active:scale-95 shadow-sm ${isWL ? 'bg-white border border-red-100 text-red-500 hover:bg-red-50' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}>
+                                    <div className="flex gap-2 border-t border-slate-100 pt-3">
+                                        <button onClick={()=>onToggleWL(u.email)} className={`flex-1 py-2 rounded-xl text-xs font-bold transition active:scale-95 ${isWL ? 'bg-slate-100 text-slate-500' : 'bg-indigo-600 text-white'}`}>
                                             {isWL ? '移除權限' : '加入白名單'}
                                         </button>
-                                        <button onClick={()=>onDelete(u)} className="p-2.5 bg-white border border-slate-200 text-slate-400 hover:text-red-500 hover:border-red-200 rounded-xl transition active:scale-95" title="刪除資料">
-                                            <Icon name="trash-2" className="w-4 h-4"/>
-                                        </button>
+                                        <button onClick={()=>onDelete(u)} className="p-2 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition active:scale-95"><Icon name="trash-2" className="w-4 h-4"/></button>
                                     </div>
                                 </div>
                             );
                         })}
-                        {filtered.length === 0 && <div className="col-span-full text-center py-20 text-slate-400 bg-white/30 rounded-3xl border border-dashed border-slate-300">找不到符合的用戶</div>}
+                        {filtered.length === 0 && <div className="text-center py-10 text-slate-400">找不到符合的用戶</div>}
                     </div>
                 </div>
             );
@@ -307,28 +282,27 @@
 
         function RequestsView({ requests, onApprove, onReject }) {
             return (
-                <div className="animate-enter pb-24 md:pb-0">
-                    <h2 className="text-3xl font-black text-slate-800 mb-6 tracking-tight">入學申請 ({requests.length})</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="animate-enter pb-28">
+                    <h2 className="text-2xl font-black text-slate-800 mb-6">入學申請 ({requests.length})</h2>
+                    <div className="space-y-4">
                         {requests.map(req => (
-                            <div key={req.id} className="glass-card p-8 rounded-[2rem] bg-white/80 flex flex-col items-center text-center relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
-                                <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-orange-400 to-pink-500"></div>
-                                <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-600 font-black text-3xl mb-4 mt-2 shadow-inner border border-white">
+                            <div key={req.id} className="glass-card p-5 rounded-3xl bg-white/80 flex flex-col items-center text-center relative overflow-hidden group">
+                                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-400 to-pink-500"></div>
+                                <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-600 font-black text-2xl mb-2 mt-2 shadow-inner">
                                     {(req.displayName||'?')[0]}
                                 </div>
-                                <h3 className="font-bold text-xl text-slate-800">{req.displayName}</h3>
-                                <p className="text-xs text-slate-500 font-mono mb-8 bg-slate-100 px-3 py-1 rounded-full mt-2 border border-slate-200 break-all">{req.email}</p>
+                                <h3 className="font-bold text-lg text-slate-800">{req.displayName}</h3>
+                                <p className="text-xs text-slate-400 font-mono mb-4 bg-slate-100 px-2 py-1 rounded break-all">{req.email}</p>
                                 <div className="flex gap-3 w-full">
-                                    <button onClick={()=>onReject(req)} className="flex-1 py-3 border border-slate-200 text-slate-500 font-bold rounded-2xl hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition active:scale-95">拒絕</button>
-                                    <button onClick={()=>onApprove(req)} className="flex-1 py-3 bg-slate-900 text-white font-bold rounded-2xl hover:bg-black shadow-lg transition active:scale-95">批准</button>
+                                    <button onClick={()=>onReject(req)} className="flex-1 py-2.5 border border-slate-200 text-slate-500 font-bold rounded-xl hover:bg-red-50 hover:text-red-500 transition active:scale-95">拒絕</button>
+                                    <button onClick={()=>onApprove(req)} className="flex-1 py-2.5 bg-slate-900 text-white font-bold rounded-xl hover:bg-black shadow-md transition active:scale-95">批准</button>
                                 </div>
                             </div>
                         ))}
                         {requests.length === 0 && (
-                            <div className="col-span-full py-32 flex flex-col items-center text-slate-400 bg-white/40 rounded-[3rem] border border-dashed border-slate-300">
-                                <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm"><Icon name="check-circle" className="w-10 h-10 text-emerald-400"/></div>
-                                <p className="font-bold text-lg">太棒了！</p>
-                                <p className="text-sm">所有申請都已處理完畢</p>
+                            <div className="py-20 flex flex-col items-center text-slate-400 bg-white/40 rounded-[2rem] border border-dashed border-slate-300">
+                                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-3 shadow-sm"><Icon name="check-circle" className="w-8 h-8 text-emerald-400"/></div>
+                                <p className="font-bold text-sm">全部處理完畢</p>
                             </div>
                         )}
                     </div>
@@ -338,34 +312,34 @@
 
         function SystemSettings({ config, onUpdate }) {
             return (
-                <div className="animate-enter pb-24 md:pb-0">
-                    <h2 className="text-3xl font-black text-slate-800 mb-8 tracking-tight">系統設定</h2>
-                    <div className="space-y-6 max-w-3xl">
-                        <div className="glass-card p-8 rounded-[2rem] bg-white/80 flex items-center justify-between">
+                <div className="animate-enter pb-28">
+                    <h2 className="text-2xl font-black text-slate-800 mb-6">系統設定</h2>
+                    <div className="space-y-4">
+                        <div className="glass-card p-6 rounded-3xl bg-white/80 flex items-center justify-between">
                             <div>
-                                <h3 className="font-bold text-lg text-slate-800 mb-1">維護模式 (Maintenance)</h3>
-                                <p className="text-sm text-slate-500">開啟後，除管理員外所有用戶將看到維護畫面。</p>
+                                <h3 className="font-bold text-slate-800 mb-0.5">維護模式</h3>
+                                <p className="text-xs text-slate-500">阻擋非管理員訪問</p>
                             </div>
-                            <div className="flex bg-slate-100 p-1.5 rounded-xl border border-slate-200/50">
-                                <button onClick={()=>onUpdate('maintenanceMode','normal')} className={`px-6 py-2.5 text-xs font-bold rounded-lg transition-all ${config?.maintenanceMode==='normal'?'bg-white text-emerald-600 shadow-md transform scale-105':'text-slate-400 hover:text-slate-600'}`}>正常運作</button>
-                                <button onClick={()=>onUpdate('maintenanceMode','updating')} className={`px-6 py-2.5 text-xs font-bold rounded-lg transition-all ${config?.maintenanceMode!=='normal'?'bg-white text-orange-600 shadow-md transform scale-105':'text-slate-400 hover:text-slate-600'}`}>維護中</button>
+                            <div className="flex bg-slate-100 p-1 rounded-xl">
+                                <button onClick={()=>onUpdate('maintenanceMode','normal')} className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${config?.maintenanceMode==='normal'?'bg-white text-emerald-600 shadow-sm transform scale-105':'text-slate-400'}`}>正常</button>
+                                <button onClick={()=>onUpdate('maintenanceMode','updating')} className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${config?.maintenanceMode!=='normal'?'bg-white text-orange-600 shadow-sm transform scale-105':'text-slate-400'}`}>維護</button>
                             </div>
                         </div>
                         
-                        <div className="glass-card p-8 rounded-[2rem] bg-white/80 flex items-center justify-between">
+                        <div className="glass-card p-6 rounded-3xl bg-white/80 flex items-center justify-between">
                             <div>
-                                <h3 className="font-bold text-lg text-slate-800 mb-1">白名單模式 (Whitelist)</h3>
-                                <p className="text-sm text-slate-500">啟用後，只有在名單內的 Email 可以登入系統。</p>
+                                <h3 className="font-bold text-slate-800 mb-0.5">白名單模式</h3>
+                                <p className="text-xs text-slate-500">僅限特定 Email 登入</p>
                             </div>
-                            <button onClick={() => onUpdate('whitelistEnabled', !config?.whitelistEnabled)} className={`w-14 h-8 rounded-full transition-colors relative shadow-inner ${config?.whitelistEnabled ? 'bg-indigo-600' : 'bg-slate-300'}`}>
-                                <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform shadow-sm ${config?.whitelistEnabled ? 'translate-x-6' : ''}`}></div>
+                            <button onClick={() => onUpdate('whitelistEnabled', !config?.whitelistEnabled)} className={`w-12 h-7 rounded-full transition-colors relative shadow-inner ${config?.whitelistEnabled ? 'bg-indigo-600' : 'bg-slate-300'}`}>
+                                <div className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform shadow-sm ${config?.whitelistEnabled ? 'translate-x-5' : ''}`}></div>
                             </button>
                         </div>
 
                         {config?.maintenanceMode !== 'normal' && (
-                            <div className="bg-orange-50/80 border border-orange-200 p-6 rounded-3xl animate-enter backdrop-blur">
+                            <div className="bg-orange-50/80 border border-orange-200 p-5 rounded-3xl animate-enter backdrop-blur">
                                 <label className="text-xs font-bold text-orange-700 uppercase tracking-wider mb-2 block">預計恢復時間</label>
-                                <input className="w-full p-4 rounded-xl text-sm border-2 border-orange-100 focus:border-orange-300 focus:ring-0 text-orange-900 font-bold bg-white/80" value={config?.estimatedTime||''} onChange={e=>onUpdate('estimatedTime',e.target.value)} placeholder="例如：下午 4:00" />
+                                <input className="w-full p-3 rounded-xl text-sm border-2 border-orange-100 focus:border-orange-300 focus:ring-0 text-orange-900 font-bold bg-white/80" value={config?.estimatedTime||''} onChange={e=>onUpdate('estimatedTime',e.target.value)} placeholder="例如：下午 4:00" />
                             </div>
                         )}
                     </div>
@@ -379,66 +353,45 @@
             const [sub, setSub] = useState('通告');
 
             const handleSubmit = (e) => {
-                e.preventDefault();
-                if(!desc || !date) return;
-                onCreate({ description: desc, dueDate: date, subject: sub, createdAt: new Date().toISOString(), senderName: '學校/管理員', forceExpired: false, type: 'broadcast' });
+                e.preventDefault(); if(!desc || !date) return;
+                onCreate({ description: desc, dueDate: date, subject: sub, createdAt: new Date().toISOString(), senderName: '學校', forceExpired: false, type: 'broadcast' });
                 setDesc(''); setDate('');
             };
 
             return (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-enter pb-24 md:pb-0 h-[calc(100vh-140px)]">
-                    <div className="lg:col-span-1">
-                        <div className="glass-card p-8 rounded-[2.5rem] bg-white/80 border border-indigo-100 h-fit">
-                            <div className="flex items-center gap-3 mb-6">
-                                <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600"><Icon name="send" className="w-5 h-5"/></div>
-                                <h3 className="font-bold text-xl text-indigo-900">發送新通告</h3>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-enter pb-28">
+                    <div className="glass-card p-6 rounded-[2rem] bg-white/80 border border-indigo-100">
+                        <h3 className="font-bold text-lg mb-4 text-indigo-900 flex items-center gap-2"><Icon name="send" className="w-5 h-5"/> 發送新通告</h3>
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div>
+                                <label className="text-xs font-bold text-slate-400 mb-1 block ml-1">分類</label>
+                                <select value={sub} onChange={e=>setSub(e.target.value)} className="w-full p-3 bg-slate-50 border-2 border-transparent rounded-xl text-sm font-bold outline-none focus:bg-white focus:border-indigo-500 transition">
+                                    <option value="通告">📢 通告</option><option value="中文">📕 中文</option><option value="英文">📘 英文</option><option value="數學">📗 數學</option><option value="其他">📌 其他</option>
+                                </select>
                             </div>
-                            <form onSubmit={handleSubmit} className="space-y-5">
-                                <div>
-                                    <label className="text-xs font-bold text-slate-400 mb-1.5 block ml-1">分類</label>
-                                    <select value={sub} onChange={e=>setSub(e.target.value)} className="w-full p-4 bg-slate-50 border-2 border-transparent hover:border-slate-200 rounded-2xl text-sm font-bold outline-none focus:bg-white focus:border-indigo-500 transition">
-                                        <option value="通告">📢 通告</option>
-                                        <option value="中文">📕 中文</option>
-                                        <option value="英文">📘 英文</option>
-                                        <option value="數學">📗 數學</option>
-                                        <option value="其他">📌 其他</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="text-xs font-bold text-slate-400 mb-1.5 block ml-1">內容</label>
-                                    <textarea value={desc} onChange={e=>setDesc(e.target.value)} className="w-full p-4 bg-slate-50 border-2 border-transparent hover:border-slate-200 rounded-2xl text-sm border-0 focus:bg-white focus:border-indigo-500 outline-none transition resize-none" rows="4" placeholder="輸入通告內容..." required></textarea>
-                                </div>
-                                <div>
-                                    <label className="text-xs font-bold text-slate-400 mb-1.5 block ml-1">日期</label>
-                                    <input type="date" value={date} onChange={e=>setDate(e.target.value)} className="w-full p-4 bg-slate-50 border-2 border-transparent hover:border-slate-200 rounded-2xl text-sm font-bold outline-none focus:bg-white focus:border-indigo-500 transition" required />
-                                </div>
-                                <button className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 shadow-xl shadow-indigo-200 active:scale-95 transition flex items-center justify-center gap-2 mt-4">
-                                    <Icon name="check" className="w-5 h-5"/> 確認發送
-                                </button>
-                            </form>
-                        </div>
+                            <div>
+                                <label className="text-xs font-bold text-slate-400 mb-1 block ml-1">內容</label>
+                                <textarea value={desc} onChange={e=>setDesc(e.target.value)} className="w-full p-3 bg-slate-50 border-2 border-transparent rounded-xl text-sm border-0 focus:bg-white focus:border-indigo-500 outline-none transition resize-none" rows="3" placeholder="輸入內容..." required></textarea>
+                            </div>
+                            <div className="flex gap-3">
+                                <input type="date" value={date} onChange={e=>setDate(e.target.value)} className="flex-1 p-3 bg-slate-50 border-2 border-transparent rounded-xl text-sm font-bold outline-none focus:bg-white focus:border-indigo-500 transition" required />
+                                <button className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 shadow-lg active:scale-95 transition">發送</button>
+                            </div>
+                        </form>
                     </div>
-                    <div className="lg:col-span-2 flex flex-col overflow-hidden glass-card rounded-[2.5rem] bg-white/40 border-0">
-                        <div className="p-6 border-b border-white/50 bg-white/30 backdrop-blur shrink-0">
-                            <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2"><Icon name="history" className="w-5 h-5 text-slate-400"/> 歷史紀錄</h3>
-                        </div>
-                        <div className="overflow-y-auto flex-1 p-6 space-y-4">
+                    <div className="glass-card p-6 rounded-[2rem] bg-white/50 border-0 flex flex-col h-[500px]">
+                        <h3 className="font-bold text-slate-500 text-sm uppercase mb-4 px-2">歷史紀錄</h3>
+                        <div className="overflow-y-auto flex-1 space-y-3 pr-2 scrollbar-hide">
                             {publicItems.map(i=>(
-                                <div key={i.id} className="bg-white p-5 rounded-2xl border border-slate-100 flex justify-between items-start group hover:border-indigo-200 transition shadow-sm">
-                                    <div className="flex gap-4">
-                                        <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-500 font-bold text-xs shrink-0">{i.subject[0]}</div>
-                                        <div>
-                                            <div className="flex items-center gap-3 mb-1">
-                                                <span className="text-[10px] font-bold bg-slate-100 px-2 py-0.5 rounded-full text-slate-600 uppercase tracking-wider">{i.subject}</span>
-                                                <span className="text-xs font-mono text-slate-400">{i.dueDate}</span>
-                                            </div>
-                                            <p className="text-sm font-bold text-slate-700 leading-relaxed max-w-lg">{i.description}</p>
-                                        </div>
+                                <div key={i.id} className="bg-white p-4 rounded-xl border border-slate-100 flex justify-between items-center group shadow-sm">
+                                    <div>
+                                        <div className="flex items-center gap-2 mb-1"><span className="text-[10px] font-bold bg-slate-100 px-2 py-0.5 rounded text-slate-600">{i.subject}</span><span className="text-[10px] font-mono text-slate-400">{i.dueDate}</span></div>
+                                        <p className="text-xs font-bold text-slate-700 line-clamp-2">{i.description}</p>
                                     </div>
-                                    <button onClick={()=>onDelete(i.id)} className="text-slate-300 hover:text-red-500 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition p-2 bg-slate-50 rounded-xl hover:bg-red-50"><Icon name="trash-2" className="w-5 h-5"/></button>
+                                    <button onClick={()=>onDelete(i.id)} className="text-slate-300 hover:text-red-500 p-2"><Icon name="trash-2" className="w-4 h-4"/></button>
                                 </div>
                             ))}
-                            {publicItems.length===0 && <div className="text-center py-20 text-slate-400 flex flex-col items-center"><Icon name="clipboard-list" className="w-12 h-12 mb-3 opacity-20"/>無發布紀錄</div>}
+                            {publicItems.length===0 && <div className="text-center py-20 text-slate-400 text-xs">無紀錄</div>}
                         </div>
                     </div>
                 </div>
@@ -450,31 +403,26 @@
             const [user, setUser] = useState(null);
             const [loading, setLoading] = useState(true);
             const [activeView, setActiveView] = useState('dashboard');
-            
             const [notification, setNotification] = useState({ isOpen: false, type: '', message: '', onConfirm: null });
-
+            
             const [users, setUsers] = useState([]);
             const [requests, setRequests] = useState([]);
             const [publicItems, setPublicItems] = useState([]);
             const [config, setConfig] = useState(null);
 
             useEffect(() => {
-                const init = () => {
-                    if(window.firebaseServices && window.firebaseServices.isReady) {
-                        window.firebaseServices.onAuthStateChanged(window.firebaseServices.auth, u => { setUser(u); setLoading(false); });
-                    } else { setTimeout(init, 100); }
-                };
+                const init = () => { if(window.fb && window.fb.isReady) { window.fb.onAuthStateChanged(window.fb.auth, u => { setUser(u); setLoading(false); }); } else { setTimeout(init, 100); } };
                 init();
             }, []);
 
             useEffect(() => {
-                if(user && user.email === ADMIN_EMAIL && window.firebaseServices) {
-                    const { db, collection, doc, onSnapshot, query, orderBy } = window.firebaseServices;
+                if(user && user.email === ADMIN_EMAIL && window.fb) {
+                    const { db, collection, doc, onSnapshot, query, orderBy } = window.fb;
                     const unsubs = [
-                        onSnapshot(doc(db, "system_settings", "config"), s => setConfig(s.data()), e=>console.log("Config Err",e)),
-                        onSnapshot(query(collection(db, "users_public"), orderBy("lastSeen", "desc")), s => setUsers(s.docs.map(d=>({id:d.id, ...d.data()}))), e=>console.log("Users Err",e)),
-                        onSnapshot(query(collection(db, "access_requests"), orderBy("requestTime", "desc")), s => setRequests(s.docs.map(d=>({id:d.id, ...d.data()}))), e=>console.log("Reqs Err",e)),
-                        onSnapshot(query(collection(db, "public_assignments"), orderBy("createdAt", "desc")), s => setPublicItems(s.docs.map(d=>({id:d.id, ...d.data()}))), e=>console.log("Pub Err",e)),
+                        onSnapshot(doc(db, "system_settings", "config"), s => setConfig(s.data()), e=>console.log(e)),
+                        onSnapshot(query(collection(db, "users_public"), orderBy("lastSeen", "desc")), s => setUsers(s.docs.map(d=>({id:d.id, ...d.data()}))), e=>console.log(e)),
+                        onSnapshot(query(collection(db, "access_requests"), orderBy("requestTime", "desc")), s => setRequests(s.docs.map(d=>({id:d.id, ...d.data()}))), e=>console.log(e)),
+                        onSnapshot(query(collection(db, "public_assignments"), orderBy("createdAt", "desc")), s => setPublicItems(s.docs.map(d=>({id:d.id, ...d.data()}))), e=>console.log(e)),
                     ];
                     return () => unsubs.forEach(u => u());
                 }
@@ -483,106 +431,85 @@
             const showAlert = (msg) => setNotification({ isOpen: true, type: 'info', message: msg });
             const showConfirm = (msg, action) => setNotification({ isOpen: true, type: 'confirm', message: msg, onConfirm: action });
             const closeNotify = () => setNotification({ isOpen: false, type: '', message: '', onConfirm: null });
-
-            const handleLogin = () => window.firebaseServices.signInWithPopup(window.firebaseServices.auth, window.firebaseServices.googleProvider).catch(e=>showAlert(e.message));
+            const handleLogin = () => window.fb.signInWithPopup(window.fb.auth, window.fb.provider).catch(e=>showAlert(e.message));
             
             const handleDeleteUser = async (u) => {
-                showConfirm(`⚠️ 嚴重警告！\n\n確定要刪除用戶 ${u.displayName} 嗎？\n這將清除該用戶的所有資料，且無法復原。`, async () => {
+                showConfirm(`⚠️ 警告！\n確定要刪除 ${u.displayName} 的所有資料嗎？\n此操作無法復原。`, async () => {
                     try {
-                        const { db, doc, deleteDoc, updateDoc, arrayRemove, collection, getDocs } = window.firebaseServices;
+                        const { db, doc, deleteDoc, updateDoc, arrayRemove, collection, getDocs } = window.fb;
                         if(config?.allowedEmails?.includes(u.email)) await updateDoc(doc(db,"system_settings","config"), {allowedEmails: arrayRemove(u.email)});
                         const items = await getDocs(collection(db,"users",u.id,"items")); items.forEach(i=>deleteDoc(i.ref));
-                        await deleteDoc(doc(db,"users",u.id,"settings","timetable"));
-                        await deleteDoc(doc(db,"users",u.id,"settings","subjects"));
-                        await deleteDoc(doc(db,"users_public",u.id));
-                        showAlert("✅ 用戶資料已清除。");
+                        await deleteDoc(doc(db,"users",u.id,"settings","timetable")); await deleteDoc(doc(db,"users",u.id,"settings","subjects")); await deleteDoc(doc(db,"users_public",u.id));
+                        showAlert("✅ 用戶資料已清除");
                     } catch(e) { showAlert("❌ 刪除失敗: "+e.message); }
                 });
             };
 
             const handleToggleWL = async (email) => {
-                const { db, doc, updateDoc, arrayUnion, arrayRemove } = window.firebaseServices;
+                const { db, doc, updateDoc, arrayUnion, arrayRemove } = window.fb;
                 const isWL = config?.allowedEmails?.includes(email);
                 await updateDoc(doc(db,"system_settings","config"), {allowedEmails: isWL ? arrayRemove(email) : arrayUnion(email)});
             };
 
             const handleReq = async (req, approve) => {
-                const { db, doc, updateDoc, deleteDoc, arrayUnion } = window.firebaseServices;
+                const { db, doc, updateDoc, deleteDoc, arrayUnion } = window.fb;
                 try {
                     if(approve) await updateDoc(doc(db,"system_settings","config"), {allowedEmails: arrayUnion(req.email)});
                     await deleteDoc(doc(db,"access_requests",req.id));
-                    showAlert(approve ? "✅ 已批准申請" : "🚫 已拒絕申請");
+                    showAlert(approve ? "✅ 已批准" : "🚫 已拒絕");
                 } catch(e) { showAlert("Error: "+e.message); }
             };
 
             const handleBroadcast = async (data) => {
-                showConfirm("確定要發送這則通告給全校學生嗎？", async () => {
-                    try { await window.firebaseServices.addDoc(window.firebaseServices.collection(window.firebaseServices.db,"public_assignments"), data); showAlert("✅ 發送成功"); } catch(e) { showAlert("發送失敗"); }
+                showConfirm("確定要發送這則通告嗎？", async () => {
+                    try { await window.fb.addDoc(window.fb.collection(window.fb.db,"public_assignments"), data); showAlert("✅ 發送成功"); } catch(e) { showAlert("發送失敗"); }
                 });
             };
 
-            const deleteBroadcast = async (id) => { 
-                showConfirm("確定刪除此通告紀錄？", () => window.firebaseServices.deleteDoc(window.firebaseServices.doc(window.firebaseServices.db,"public_assignments",id))); 
-            };
-            const updateConfig = (k,v) => window.firebaseServices.updateDoc(window.firebaseServices.doc(window.firebaseServices.db,"system_settings","config"), {[k]:v});
+            const deleteBroadcast = async (id) => { showConfirm("確定刪除此通告？", () => window.fb.deleteDoc(window.fb.doc(window.fb.db,"public_assignments",id))); };
+            const updateConfig = (k,v) => window.fb.updateDoc(window.fb.doc(window.fb.db,"system_settings","config"), {[k]:v});
 
             // --- Render ---
-            if (loading) return <div className="h-screen flex flex-col items-center justify-center text-slate-400 font-bold bg-slate-50"><div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>系統載入中...</div>;
+            if (loading) return <div className="h-screen flex items-center justify-center text-slate-400 font-bold">Loading...</div>;
 
             if (!user || user.email !== ADMIN_EMAIL) {
                 return (
                     <div className="h-screen w-full flex flex-col items-center justify-center bg-slate-900 p-6 relative overflow-hidden mesh-bg">
-                        <div className="absolute inset-0 bg-black/20"></div>
-                        <div className="glass-card bg-white/90 p-10 rounded-[2.5rem] shadow-2xl max-w-sm w-full text-center relative z-10 border border-white/50 modal-animate">
-                            <div className="w-20 h-20 bg-slate-900 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl rotate-3 border border-slate-700"><Icon name="shield-check" className="w-10 h-10 text-white"/></div>
-                            <h1 className="text-3xl font-black text-slate-800 mb-2 tracking-tight">{user ? '權限不足' : '管理員中控台'}</h1>
-                            <p className="text-slate-500 mb-10 text-sm font-medium">{user ? `帳號 ${user.email} 未獲授權` : '請使用授權帳號登入系統'}</p>
-                            
-                            {!user ? <button onClick={handleLogin} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold hover:bg-black transition shadow-lg transform hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2"><Icon name="log-in" className="w-5 h-5"/> Google Login</button> 
-                                   : <button onClick={()=>window.firebaseServices.signOut(window.firebaseServices.auth)} className="w-full py-3 border-2 border-slate-200 text-slate-600 rounded-2xl font-bold hover:bg-slate-50 transition">登出帳號</button>}
-                            
-                            <div className="mt-8 pt-6 border-t border-slate-200/60">
-                                <a href={STUDENT_APP_URL} className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center justify-center gap-1 hover:underline transition"><Icon name="arrow-left" className="w-3 h-3"/>前往學生版</a>
-                            </div>
+                        <div className="glass-card bg-white/90 p-10 rounded-[2.5rem] shadow-2xl max-w-sm w-full text-center relative z-10 modal-animate">
+                            <div className="w-20 h-20 bg-slate-900 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl rotate-3"><Icon name="shield-check" className="w-10 h-10 text-white"/></div>
+                            <h1 className="text-3xl font-black text-slate-800 mb-2">{user ? '權限不足' : '管理員中控台'}</h1>
+                            <p className="text-slate-500 mb-8 text-sm">{user ? `帳號 ${user.email} 未獲授權` : '請使用管理員帳號登入系統'}</p>
+                            {!user ? <button onClick={handleLogin} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold hover:bg-black transition shadow-lg active:scale-95 flex items-center justify-center gap-2"><Icon name="log-in" className="w-5 h-5"/> Google Login</button> 
+                                   : <button onClick={()=>window.fb.signOut(window.fb.auth)} className="w-full py-3 border-2 border-slate-200 text-slate-600 rounded-2xl font-bold hover:bg-slate-50 transition">登出帳號</button>}
+                            <div className="mt-8 pt-6 border-t border-slate-200/60"><a href={STUDENT_APP_URL} className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center justify-center gap-1 hover:underline"><Icon name="arrow-left" className="w-3 h-3"/>前往學生版</a></div>
                         </div>
                     </div>
                 );
             }
 
+            // Bottom Nav Button Component (Internal)
+            const NavBtn = ({id, icon, label}) => (
+                <button onClick={()=>setActiveView(id)} className={`flex flex-col items-center justify-center p-2 rounded-2xl transition-all duration-300 ${activeView===id ? 'text-indigo-600 scale-110' : 'text-slate-400 hover:text-slate-600'}`}>
+                    <Icon name={icon} className="w-6 h-6 mb-1"/>
+                    <span className="text-[10px] font-bold">{label}</span>
+                </button>
+            );
+
             return (
                 <div className="flex h-screen bg-slate-50 relative">
                     <NotificationModal isOpen={notification.isOpen} type={notification.type} message={notification.message} onConfirm={notification.onConfirm} onClose={closeNotify} />
 
-                    {/* Desktop Sidebar */}
-                    <aside className="w-72 glass-nav flex-col justify-between p-6 hidden md:flex shrink-0 z-30">
-                        <div>
-                            <div className="flex items-center gap-4 mb-10 px-2">
-                                <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-200"><Icon name="command" className="w-6 h-6"/></div>
-                                <span className="font-black text-xl tracking-tight text-slate-800">AdminPanel</span>
-                            </div>
-                            <nav className="space-y-2">
-                                <NavButton id="dashboard" icon="layout-dashboard" label="儀表板概覽" active={activeView==='dashboard'} onClick={setActiveView} />
-                                <NavButton id="users" icon="users" label="用戶資料庫" active={activeView==='users'} onClick={setActiveView} />
-                                <NavButton id="broadcast" icon="radio" label="廣播系統" active={activeView==='broadcast'} onClick={setActiveView} />
-                                <NavButton id="requests" icon="inbox" label="入學申請審核" active={activeView==='requests'} onClick={setActiveView} />
-                                <NavButton id="settings" icon="settings" label="系統設定" active={activeView==='settings'} onClick={setActiveView} />
-                            </nav>
-                        </div>
-                        <button onClick={()=>window.firebaseServices.signOut(window.firebaseServices.auth)} className="flex items-center gap-3 px-6 py-4 rounded-2xl text-slate-400 hover:text-red-500 hover:bg-red-50 font-bold transition mt-auto"><Icon name="log-out" className="w-5 h-5"/> 登出系統</button>
-                    </aside>
-
-                    {/* Content */}
                     <main className="flex-1 h-full overflow-hidden flex flex-col relative z-20">
-                        <header className="h-20 flex items-center justify-between px-8 shrink-0">
-                            <h2 className="text-2xl font-black text-slate-800 capitalize tracking-tight">{activeView}</h2>
+                        <header className="h-20 flex items-center justify-between px-6 shrink-0 md:px-10">
+                            <div><div className="text-xs font-bold text-slate-400 uppercase tracking-widest">Admin Console</div><h2 className="text-2xl font-black text-slate-800 capitalize tracking-tight">{activeView}</h2></div>
                             <div className="flex items-center gap-4">
-                                <span className="text-xs font-bold text-slate-400 hidden sm:block bg-white/50 px-3 py-1 rounded-full border border-white">{user.email}</span>
-                                <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden border-2 border-white shadow-md cursor-pointer hover:scale-110 transition"><img src={user.photoURL} className="w-full h-full"/></div>
+                                <span className="text-xs font-bold text-slate-400 hidden sm:block bg-white px-3 py-1 rounded-full border border-slate-200">{user.email}</span>
+                                <div onClick={()=>window.fb.signOut(window.fb.auth)} className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden border-2 border-white shadow-md cursor-pointer hover:scale-110 transition"><img src={user.photoURL} className="w-full h-full"/></div>
                             </div>
                         </header>
                         
-                        <div className="flex-1 overflow-y-auto p-4 md:p-8 scrollbar-hide">
-                            <div className="max-w-7xl mx-auto">
+                        <div className="flex-1 overflow-y-auto p-4 md:p-10 scrollbar-hide">
+                            <div className="max-w-4xl mx-auto">
                                 <ErrorBoundary>
                                     {activeView === 'dashboard' && <Dashboard users={users} requests={requests} config={config} setActiveView={setActiveView} />}
                                     {activeView === 'users' && <UsersView users={users} config={config} onDelete={handleDeleteUser} onToggleWL={handleToggleWL} />}
@@ -593,12 +520,13 @@
                             </div>
                         </div>
 
-                        {/* Mobile Bottom Nav */}
-                        <div className="md:hidden fixed bottom-6 left-4 right-4 glass-nav flex justify-around p-2 rounded-[2rem] shadow-2xl z-50 border border-white/50">
-                            <NavButton id="dashboard" icon="layout-dashboard" label="首頁" active={activeView==='dashboard'} onClick={setActiveView} mobile />
-                            <NavButton id="users" icon="users" label="用戶" active={activeView==='users'} onClick={setActiveView} mobile />
-                            <NavButton id="broadcast" icon="megaphone" label="廣播" active={activeView==='broadcast'} onClick={setActiveView} mobile />
-                            <NavButton id="requests" icon="inbox" label="審核" active={activeView==='requests'} onClick={setActiveView} mobile />
+                        {/* Glass Bottom Nav (Mobile & Desktop) - Keeping it unified for simplicity and consistency with user request */}
+                        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 glass-nav flex justify-between p-2 rounded-[2rem] shadow-2xl z-50 border border-white/50 w-[90%] max-w-md">
+                            <NavBtn id="dashboard" icon="layout-dashboard" label="首頁" />
+                            <NavBtn id="users" icon="users" label="用戶" />
+                            <NavBtn id="broadcast" icon="megaphone" label="廣播" />
+                            <NavBtn id="requests" icon="inbox" label="審核" />
+                            <NavBtn id="settings" icon="settings" label="設定" />
                         </div>
                     </main>
                 </div>
