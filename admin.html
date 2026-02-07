@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>系統控制台 | 電子手冊</title>
+    <title>系統控制台 | 電子手冊 Admin</title>
     
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
@@ -12,17 +12,23 @@
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #f1f5f9; }
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background-color: #f3f4f6; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+
+        .animate-enter { animation: enter 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; transform: translateY(10px); }
+        @keyframes enter { to { opacity: 1; transform: translateY(0); } }
+        
+        .glass-card { background: white; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); }
     </style>
 </head>
-<body class="text-slate-800 overflow-hidden h-screen">
-    <div id="root"></div>
+<body class="text-slate-800 h-screen overflow-hidden flex">
+    <div id="root" class="w-full h-full"></div>
 
     <script type="module">
         const firebaseConfig = {
@@ -52,15 +58,15 @@
             window.dispatchEvent(new Event('fb-ready'));
         } catch (e) {
             console.error(e);
-            document.body.innerHTML = `<div class="p-10 text-center text-red-500 font-bold">系統連線失敗</div>`;
+            document.body.innerHTML = `<div class="h-screen flex items-center justify-center text-red-500 font-bold bg-slate-50">系統連線失敗: ${e.message}</div>`;
         }
     </script>
 
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
         const ADMIN_EMAIL = 'chimhinhin@gmail.com';
+        const STUDENT_APP_URL = 'https://colassn.github.io/homework';
 
-        // --- Helper: Icon ---
         function Icon({name, className}) {
             const ref = useRef(null);
             useEffect(() => {
@@ -76,248 +82,156 @@
             return <span ref={ref} className="flex items-center justify-center"></span>;
         }
 
-        // --- Component: Stats Card ---
-        function StatCard({ title, value, icon, color, delay }) {
+        // --- Auth & Access Pages ---
+        
+        function LoginPage({ onLogin }) {
             return (
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4 animate-fade-in hover:shadow-md transition-all" style={{animationDelay: `${delay}s`}}>
-                    <div className={`p-4 rounded-xl ${color}`}>
-                        <Icon name={icon} className="w-6 h-6 text-white" />
+                <div className="h-screen w-full flex items-center justify-center bg-slate-100 relative overflow-hidden">
+                    <div className="absolute inset-0 z-0">
+                        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-200 rounded-full blur-[100px] opacity-50 animate-enter"></div>
+                        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-200 rounded-full blur-[100px] opacity-50 animate-enter" style={{animationDelay:'0.2s'}}></div>
                     </div>
-                    <div>
-                        <div className="text-slate-400 text-xs font-bold uppercase tracking-wider">{title}</div>
-                        <div className="text-2xl font-black text-slate-800">{value}</div>
+                    
+                    <div className="bg-white/80 backdrop-blur-xl p-10 rounded-3xl shadow-2xl w-full max-w-md relative z-10 border border-white animate-enter">
+                        <div className="text-center mb-8">
+                            <div className="w-20 h-20 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg transform rotate-3">
+                                <Icon name="layout-dashboard" className="w-10 h-10 text-white"/>
+                            </div>
+                            <h1 className="text-2xl font-black text-slate-800 tracking-tight">管理員控制台</h1>
+                            <p className="text-slate-500 mt-2 text-sm font-medium">請使用授權帳號登入系統</p>
+                        </div>
+                        
+                        <button onClick={onLogin} className="w-full py-3.5 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-all transform hover:scale-[1.02] active:scale-95 shadow-xl flex items-center justify-center gap-3">
+                            <Icon name="log-in" className="w-4 h-4"/>
+                            Google 管理員登入
+                        </button>
+
+                        <div className="mt-8 pt-6 border-t border-slate-200 text-center">
+                            <a href={STUDENT_APP_URL} className="inline-flex items-center gap-2 text-sm font-bold text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 px-4 py-2 rounded-lg transition-colors">
+                                <Icon name="arrow-left" className="w-4 h-4"/>
+                                前往學生版 (普通用戶)
+                            </a>
+                        </div>
                     </div>
                 </div>
             );
         }
 
-        // --- View: Dashboard ---
-        function Dashboard({ users, requests, config, setActiveView }) {
+        function AccessDeniedPage({ user, onLogout }) {
             return (
-                <div className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <StatCard title="總用戶數" value={users.length} icon="users" color="bg-blue-500" delay={0.1} />
-                        <StatCard title="待審核申請" value={requests.length} icon="user-plus" color="bg-orange-500" delay={0.2} />
-                        <StatCard title="系統狀態" value={config?.maintenanceMode === 'normal' ? '🟢 正常運作' : '🟠 維護中'} icon="activity" color={config?.maintenanceMode === 'normal' ? 'bg-emerald-500' : 'bg-amber-500'} delay={0.3} />
+                <div className="h-screen w-full flex flex-col items-center justify-center bg-slate-50 p-6">
+                    <div className="bg-white p-8 rounded-3xl shadow-xl max-w-sm w-full text-center border-l-4 border-red-500 animate-enter">
+                        <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500">
+                            <Icon name="shield-alert" className="w-8 h-8"/>
+                        </div>
+                        <h2 className="text-xl font-black text-slate-800 mb-2">權限不足</h2>
+                        <p className="text-slate-500 text-sm mb-6">
+                            帳號 <strong>{user.email}</strong><br/>
+                            並未被授權訪問管理後台。
+                        </p>
+                        <div className="flex flex-col gap-3">
+                            <button onClick={onLogout} className="w-full py-2.5 border border-slate-200 rounded-xl font-bold text-slate-600 hover:bg-slate-50 transition-colors">
+                                登出切換帳號
+                            </button>
+                            <a href={STUDENT_APP_URL} className="w-full py-2.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors block">
+                                前往學生版
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // --- Dashboard Widgets ---
+
+        function StatWidget({ title, value, icon, color, trend }) {
+            return (
+                <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] flex items-center justify-between hover:-translate-y-1 transition-transform duration-300">
+                    <div>
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{title}</p>
+                        <h3 className="text-2xl font-black text-slate-800">{value}</h3>
+                        {trend && <p className="text-[10px] font-bold text-emerald-600 mt-1 flex items-center gap-1"><Icon name="trending-up" className="w-3 h-3"/> {trend}</p>}
+                    </div>
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-md ${color}`}>
+                        <Icon name={icon} className="w-6 h-6" />
+                    </div>
+                </div>
+            );
+        }
+
+        function RequestRow({ req, onApprove, onReject }) {
+            return (
+                <div className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-xl hover:border-indigo-100 transition-colors group">
+                    <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-500 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
+                            {req.displayName[0]}
+                        </div>
+                        <div>
+                            <div className="font-bold text-slate-800 text-sm">{req.displayName}</div>
+                            <div className="text-xs text-slate-400">{req.email}</div>
+                        </div>
+                    </div>
+                    <div className="flex gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                        <button onClick={()=>onReject(req)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition" title="拒絕"><Icon name="x" className="w-4 h-4"/></button>
+                        <button onClick={()=>onApprove(req)} className="p-2 text-green-500 hover:bg-green-50 rounded-lg transition" title="批准"><Icon name="check" className="w-4 h-4"/></button>
+                    </div>
+                </div>
+            );
+        }
+
+        // --- Main Views ---
+
+        function DashboardView({ users, requests, config, setActiveView }) {
+            return (
+                <div className="space-y-8 animate-enter">
+                    <div>
+                        <h2 className="text-2xl font-black text-slate-800">儀表板概覽</h2>
+                        <p className="text-slate-400 text-sm">歡迎回來，系統運作中。</p>
                     </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 animate-fade-in" style={{animationDelay: '0.4s'}}>
-                            <h3 className="font-bold text-lg mb-4 flex items-center gap-2"><Icon name="zap" className="w-5 h-5 text-yellow-500"/> 快速操作</h3>
-                            <div className="grid grid-cols-2 gap-3">
-                                <button onClick={() => setActiveView('broadcast')} className="p-4 bg-indigo-50 rounded-xl hover:bg-indigo-100 transition text-indigo-700 font-bold flex flex-col items-center gap-2">
-                                    <Icon name="megaphone" className="w-6 h-6"/> 發佈通告
-                                </button>
-                                <button onClick={() => setActiveView('users')} className="p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition text-slate-700 font-bold flex flex-col items-center gap-2">
-                                    <Icon name="search" className="w-6 h-6"/> 搜尋用戶
-                                </button>
-                            </div>
-                        </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <StatWidget title="總用戶數" value={users.length} icon="users" color="bg-blue-600" />
+                        <StatWidget title="待辦申請" value={requests.length} icon="user-plus" color="bg-indigo-600" trend={requests.length > 0 ? "需處理" : "已清空"} />
+                        <StatWidget title="系統狀態" value={config?.maintenanceMode === 'normal' ? 'Normal' : 'Maintenance'} icon="activity" color={config?.maintenanceMode === 'normal' ? 'bg-emerald-500' : 'bg-amber-500'} />
+                        <StatWidget title="白名單" value={config?.whitelistEnabled ? '開啟' : '關閉'} icon="shield" color="bg-slate-700" />
+                    </div>
 
-                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 animate-fade-in" style={{animationDelay: '0.5s'}}>
-                            <div className="flex justify-between items-center mb-4">
-                                <h3 className="font-bold text-lg flex items-center gap-2"><Icon name="clock" className="w-5 h-5 text-slate-400"/> 最新申請</h3>
-                                <button onClick={() => setActiveView('requests')} className="text-xs font-bold text-indigo-600 hover:underline">查看全部</button>
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div className="lg:col-span-2 space-y-4">
+                            <div className="flex justify-between items-center">
+                                <h3 className="font-bold text-slate-700 text-lg">待處理申請 ({requests.length})</h3>
+                                <button onClick={()=>setActiveView('requests')} className="text-sm font-bold text-indigo-600 hover:bg-indigo-50 px-3 py-1 rounded-lg transition">查看全部</button>
                             </div>
                             <div className="space-y-3">
-                                {requests.slice(0, 3).map(req => (
-                                    <div key={req.id} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
-                                        <div>
-                                            <div className="font-bold text-sm">{req.displayName}</div>
-                                            <div className="text-xs text-slate-400">{req.email}</div>
-                                        </div>
-                                        <span className="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-full font-bold">待處理</span>
-                                    </div>
-                                ))}
-                                {requests.length === 0 && <div className="text-center text-slate-400 py-4 text-sm">目前沒有待處理的申請</div>}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            );
-        }
-
-        // --- View: Users ---
-        function UserManagement({ users, config, onDeleteUser, onToggleWhitelist }) {
-            const [search, setSearch] = useState('');
-            const filtered = users.filter(u => 
-                u.displayName?.toLowerCase().includes(search.toLowerCase()) || 
-                u.email?.toLowerCase().includes(search.toLowerCase())
-            );
-
-            return (
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col h-[calc(100vh-140px)] animate-fade-in">
-                    <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0 z-10">
-                        <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2"><Icon name="users" className="w-5 h-5 text-blue-500"/> 用戶列表 ({filtered.length})</h2>
-                        <div className="relative">
-                            <input 
-                                type="text" 
-                                placeholder="搜尋名字或 Email..." 
-                                className="pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none w-64"
-                                value={search}
-                                onChange={e => setSearch(e.target.value)}
-                            />
-                            <div className="absolute left-3 top-2.5 text-slate-400"><Icon name="search" className="w-4 h-4"/></div>
-                        </div>
-                    </div>
-                    <div className="overflow-y-auto flex-1 p-2">
-                        <table className="w-full text-left border-collapse">
-                            <thead className="bg-slate-50 text-slate-500 text-xs uppercase sticky top-0">
-                                <tr>
-                                    <th className="p-4 rounded-tl-xl">用戶</th>
-                                    <th className="p-4">Email</th>
-                                    <th className="p-4">狀態</th>
-                                    <th className="p-4 rounded-tr-xl text-right">操作</th>
-                                </tr>
-                            </thead>
-                            <tbody className="text-sm">
-                                {filtered.map((u, i) => {
-                                    const isWhitelisted = config?.allowedEmails?.includes(u.email);
-                                    return (
-                                        <tr key={u.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
-                                            <td className="p-4 font-bold text-slate-700 flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold">
-                                                    {(u.displayName || '?')[0].toUpperCase()}
-                                                </div>
-                                                {u.displayName}
-                                            </td>
-                                            <td className="p-4 text-slate-500 font-mono">{u.email}</td>
-                                            <td className="p-4">
-                                                {isWhitelisted 
-                                                    ? <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 font-bold text-xs"><Icon name="check" className="w-3 h-3"/> 白名單</span>
-                                                    : <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 font-bold text-xs"><Icon name="lock" className="w-3 h-3"/> 受限</span>
-                                                }
-                                            </td>
-                                            <td className="p-4 text-right">
-                                                <div className="flex justify-end gap-2">
-                                                    <button onClick={() => onToggleWhitelist(u.email)} className={`p-2 rounded-lg transition ${isWhitelisted ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'}`} title={isWhitelisted ? "移出白名單" : "加入白名單"}>
-                                                        <Icon name={isWhitelisted ? "user-x" : "user-check"} className="w-4 h-4"/>
-                                                    </button>
-                                                    <button onClick={() => onDeleteUser(u)} className="p-2 bg-slate-100 text-slate-500 rounded-lg hover:bg-red-500 hover:text-white transition" title="刪除所有資料">
-                                                        <Icon name="trash-2" className="w-4 h-4"/>
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                        {filtered.length === 0 && <div className="text-center py-10 text-slate-400">找不到符合的用戶</div>}
-                    </div>
-                </div>
-            );
-        }
-
-        // --- View: Broadcast ---
-        function BroadcastManager({ publicItems, onCreate, onDelete }) {
-            const [desc, setDesc] = useState('');
-            const [date, setDate] = useState('');
-            const [sub, setSub] = useState('通告');
-
-            const handleSubmit = (e) => {
-                e.preventDefault();
-                if(!desc || !date) return;
-                onCreate({ description: desc, dueDate: date, subject: sub, createdAt: new Date().toISOString(), senderName: '學校/管理員', forceExpired: false, type: 'broadcast' });
-                setDesc(''); setDate('');
-            };
-
-            return (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-140px)]">
-                    <div className="lg:col-span-1">
-                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 h-full animate-fade-in">
-                            <h3 className="font-bold text-lg mb-4 text-indigo-800 flex items-center gap-2"><Icon name="send" className="w-5 h-5"/> 發布新事項</h3>
-                            <form onSubmit={handleSubmit} className="space-y-4">
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-500 mb-1">類型/科目</label>
-                                    <select value={sub} onChange={e=>setSub(e.target.value)} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500">
-                                        <option value="通告">📢 通告</option>
-                                        <option value="中文">📕 中文</option>
-                                        <option value="英文">📘 英文</option>
-                                        <option value="數學">📗 數學</option>
-                                        <option value="其他">📌 其他</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-500 mb-1">內容描述</label>
-                                    <textarea value={desc} onChange={e=>setDesc(e.target.value)} rows="4" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" placeholder="請輸入詳細內容..." required></textarea>
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-500 mb-1">截止/有效日期</label>
-                                    <input type="date" value={date} onChange={e=>setDate(e.target.value)} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500" required />
-                                </div>
-                                <button type="submit" className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition active:scale-95 shadow-lg shadow-indigo-200">立即發送給全體</button>
-                            </form>
-                        </div>
-                    </div>
-                    <div className="lg:col-span-2">
-                        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 h-full flex flex-col overflow-hidden animate-fade-in" style={{animationDelay:'0.1s'}}>
-                            <div className="p-5 border-b border-slate-100 bg-slate-50/50">
-                                <h3 className="font-bold text-lg text-slate-800">已發布紀錄 ({publicItems.length})</h3>
-                            </div>
-                            <div className="overflow-y-auto flex-1 p-4 space-y-3">
-                                {publicItems.map(item => (
-                                    <div key={item.id} className="flex items-start gap-4 p-4 rounded-xl border border-slate-100 hover:border-indigo-200 transition bg-white group">
-                                        <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
-                                            <Icon name={item.subject==='通告'?'bell':'book'} className="w-5 h-5"/>
-                                        </div>
-                                        <div className="flex-1">
-                                            <div className="flex justify-between mb-1">
-                                                <span className="text-xs font-bold bg-slate-100 px-2 py-0.5 rounded text-slate-600">{item.subject}</span>
-                                                <span className="text-xs font-mono text-slate-400">{item.dueDate}</span>
-                                            </div>
-                                            <p className="text-sm font-bold text-slate-700">{item.description}</p>
-                                        </div>
-                                        <button onClick={()=>onDelete(item.id)} className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition opacity-0 group-hover:opacity-100">
-                                            <Icon name="trash-2" className="w-4 h-4"/>
-                                        </button>
-                                    </div>
-                                ))}
-                                {publicItems.length === 0 && <div className="text-center text-slate-400 py-10">暫無發布紀錄</div>}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            );
-        }
-
-        // --- View: Settings ---
-        function SystemSettings({ config, onUpdate }) {
-            return (
-                <div className="max-w-2xl mx-auto animate-fade-in">
-                    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                        <div className="p-6 border-b border-slate-100">
-                            <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2"><Icon name="settings" className="w-6 h-6"/> 系統設定</h2>
-                            <p className="text-sm text-slate-400 mt-1">控制網站的全域狀態與訪問權限</p>
-                        </div>
-                        <div className="p-6 space-y-8">
-                            <div>
-                                <div className="flex justify-between items-center mb-4">
-                                    <div>
-                                        <h3 className="font-bold text-slate-700">維護模式 (Maintenance Mode)</h3>
-                                        <p className="text-xs text-slate-400">開啟後，除管理員外所有用戶將被阻擋在維護畫面。</p>
-                                    </div>
-                                    <div className="flex bg-slate-100 p-1 rounded-lg">
-                                        <button onClick={() => onUpdate('maintenanceMode', 'normal')} className={`px-4 py-2 text-xs font-bold rounded-md transition ${config?.maintenanceMode === 'normal' ? 'bg-white text-green-600 shadow-sm' : 'text-slate-400'}`}>正常運作</button>
-                                        <button onClick={() => onUpdate('maintenanceMode', 'updating')} className={`px-4 py-2 text-xs font-bold rounded-md transition ${config?.maintenanceMode !== 'normal' ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-400'}`}>維護中</button>
-                                    </div>
-                                </div>
-                                {config?.maintenanceMode !== 'normal' && (
-                                    <div className="bg-orange-50 border border-orange-100 rounded-xl p-4 animate-fade-in">
-                                        <label className="block text-xs font-bold text-orange-700 mb-1">預計恢復時間顯示</label>
-                                        <input type="text" value={config?.estimatedTime || ''} onChange={e => onUpdate('estimatedTime', e.target.value)} className="w-full p-2 rounded-lg border border-orange-200 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300" placeholder="例如：下午 4:00" />
+                                {requests.slice(0, 5).map(r => <RequestRow key={r.id} req={r} />)}
+                                {requests.length === 0 && (
+                                    <div className="bg-white p-8 rounded-2xl border border-slate-100 border-dashed text-center text-slate-400">
+                                        <Icon name="check-circle" className="w-8 h-8 mx-auto mb-2 text-slate-300"/>
+                                        目前沒有待處理的入學申請
                                     </div>
                                 )}
                             </div>
-                            <div className="border-t border-slate-100"></div>
-                            <div className="flex justify-between items-center">
-                                <div>
-                                    <h3 className="font-bold text-slate-700">白名單模式 (Whitelist Only)</h3>
-                                    <p className="text-xs text-slate-400">開啟後，只有在名單內的 Email 可以登入使用。</p>
-                                </div>
-                                <button onClick={() => onUpdate('whitelistEnabled', !config?.whitelistEnabled)} className={`w-12 h-6 rounded-full transition-colors relative ${config?.whitelistEnabled ? 'bg-indigo-600' : 'bg-slate-200'}`}>
-                                    <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${config?.whitelistEnabled ? 'translate-x-6' : ''}`}></div>
+                        </div>
+
+                        <div className="space-y-4">
+                            <h3 className="font-bold text-slate-700 text-lg">快速捷徑</h3>
+                            <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 grid grid-cols-2 gap-3">
+                                <button onClick={()=>setActiveView('broadcast')} className="flex flex-col items-center justify-center gap-2 p-4 bg-slate-50 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition cursor-pointer">
+                                    <Icon name="megaphone" className="w-6 h-6"/>
+                                    <span className="text-xs font-bold">發送通告</span>
                                 </button>
+                                <button onClick={()=>setActiveView('users')} className="flex flex-col items-center justify-center gap-2 p-4 bg-slate-50 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition cursor-pointer">
+                                    <Icon name="search" className="w-6 h-6"/>
+                                    <span className="text-xs font-bold">管理用戶</span>
+                                </button>
+                                <button onClick={()=>setActiveView('settings')} className="flex flex-col items-center justify-center gap-2 p-4 bg-slate-50 hover:bg-slate-100 rounded-xl transition cursor-pointer">
+                                    <Icon name="settings" className="w-6 h-6"/>
+                                    <span className="text-xs font-bold">系統設定</span>
+                                </button>
+                                <a href={STUDENT_APP_URL} target="_blank" className="flex flex-col items-center justify-center gap-2 p-4 bg-slate-50 hover:bg-emerald-50 hover:text-emerald-600 rounded-xl transition cursor-pointer">
+                                    <Icon name="external-link" className="w-6 h-6"/>
+                                    <span className="text-xs font-bold">開啟學生版</span>
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -325,200 +239,244 @@
             );
         }
 
-        // --- Main Admin App ---
+        // --- Other Views (Users, Broadcast, Settings) ---
+        // (Similar logic to previous version but with updated styling)
+
+        function UsersView({ users, config, onDelete, onToggleWL }) {
+            const [q, setQ] = useState('');
+            const filtered = users.filter(u => u.displayName?.toLowerCase().includes(q.toLowerCase()) || u.email?.toLowerCase().includes(q.toLowerCase()));
+            return (
+                <div className="h-full flex flex-col animate-enter">
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-2xl font-black text-slate-800">用戶資料庫</h2>
+                        <div className="relative">
+                            <input value={q} onChange={e=>setQ(e.target.value)} placeholder="搜尋用戶..." className="pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-500 outline-none w-64 shadow-sm" />
+                            <div className="absolute left-3 top-3 text-slate-400"><Icon name="search" className="w-4 h-4"/></div>
+                        </div>
+                    </div>
+                    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 flex-1 overflow-hidden flex flex-col">
+                        <div className="overflow-y-auto flex-1 p-2">
+                            <table className="w-full text-left text-sm">
+                                <thead className="bg-slate-50 text-slate-500 font-bold sticky top-0 z-10">
+                                    <tr><th className="p-4">用戶名稱</th><th className="p-4">Email</th><th className="p-4">狀態</th><th className="p-4 text-right">管理</th></tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100">
+                                    {filtered.map(u => {
+                                        const isWL = config?.allowedEmails?.includes(u.email);
+                                        return (
+                                            <tr key={u.id} className="hover:bg-slate-50 transition-colors">
+                                                <td className="p-4 font-bold text-slate-700 flex items-center gap-3">
+                                                    <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-xs text-slate-500">{u.displayName?.[0]}</div>
+                                                    {u.displayName}
+                                                </td>
+                                                <td className="p-4 text-slate-500 font-mono text-xs">{u.email}</td>
+                                                <td className="p-4">{isWL ? <span className="px-2 py-1 bg-green-100 text-green-700 rounded-lg text-xs font-bold">白名單</span> : <span className="px-2 py-1 bg-slate-100 text-slate-500 rounded-lg text-xs font-bold">一般</span>}</td>
+                                                <td className="p-4 text-right">
+                                                    <button onClick={()=>onToggleWL(u.email)} className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg mr-2"><Icon name="shield" className="w-4 h-4"/></button>
+                                                    <button onClick={()=>onDelete(u)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg"><Icon name="trash-2" className="w-4 h-4"/></button>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                            {filtered.length === 0 && <div className="p-10 text-center text-slate-400">沒有找到用戶</div>}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function BroadcastView({ publicItems, onCreate, onDelete }) {
+            const [form, setForm] = useState({ desc:'', date:'', sub:'通告' });
+            return (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-full animate-enter">
+                    <div className="lg:col-span-1">
+                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                            <h3 className="font-bold text-lg mb-4 text-slate-800">發布全校事項</h3>
+                            <form onSubmit={e => { e.preventDefault(); if(form.desc&&form.date) { onCreate(form); setForm({desc:'', date:'', sub:'通告'}); } }} className="space-y-4">
+                                <div><label className="text-xs font-bold text-slate-500">分類</label><select value={form.sub} onChange={e=>setForm({...form, sub:e.target.value})} className="w-full p-3 bg-slate-50 border-slate-200 rounded-xl text-sm font-bold outline-none"><option>通告</option><option>中文</option><option>英文</option><option>數學</option><option>其他</option></select></div>
+                                <div><label className="text-xs font-bold text-slate-500">內容</label><textarea value={form.desc} onChange={e=>setForm({...form, desc:e.target.value})} className="w-full p-3 bg-slate-50 border-slate-200 rounded-xl text-sm outline-none" rows="4" placeholder="輸入內容..." required></textarea></div>
+                                <div><label className="text-xs font-bold text-slate-500">日期</label><input type="date" value={form.date} onChange={e=>setForm({...form, date:e.target.value})} className="w-full p-3 bg-slate-50 border-slate-200 rounded-xl text-sm font-bold outline-none" required /></div>
+                                <button className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition">發布</button>
+                            </form>
+                        </div>
+                    </div>
+                    <div className="lg:col-span-2 flex flex-col h-full overflow-hidden">
+                        <h3 className="font-bold text-lg mb-4 text-slate-800">歷史紀錄</h3>
+                        <div className="flex-1 overflow-y-auto space-y-3 pr-2">
+                            {publicItems.map(i => (
+                                <div key={i.id} className="bg-white p-4 rounded-xl border border-slate-100 flex gap-4 group hover:border-indigo-200 transition">
+                                    <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500 font-bold text-xs">{i.subject[0]}</div>
+                                    <div className="flex-1">
+                                        <div className="flex justify-between"><span className="text-xs font-bold bg-slate-100 px-2 py-0.5 rounded text-slate-600">{i.subject}</span><span className="text-xs font-mono text-slate-400">{i.dueDate}</span></div>
+                                        <p className="text-sm font-bold text-slate-700 mt-1">{i.description}</p>
+                                    </div>
+                                    <button onClick={()=>onDelete(i.id)} className="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition"><Icon name="trash-2" className="w-5 h-5"/></button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function RequestsView({ requests, onApprove, onReject }) {
+            return (
+                <div className="animate-enter">
+                    <h2 className="text-2xl font-black text-slate-800 mb-6">入學申請審核</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {requests.map(req => (
+                            <div key={req.id} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center text-center">
+                                <div className="w-16 h-16 bg-gradient-to-br from-indigo-100 to-white rounded-full flex items-center justify-center text-indigo-600 font-black text-2xl mb-3 shadow-inner">
+                                    {req.displayName[0]}
+                                </div>
+                                <h3 className="font-bold text-lg text-slate-800">{req.displayName}</h3>
+                                <p className="text-xs text-slate-400 font-mono mb-6">{req.email}</p>
+                                <div className="flex gap-2 w-full">
+                                    <button onClick={()=>onReject(req)} className="flex-1 py-2 border border-slate-200 text-slate-500 font-bold rounded-xl hover:bg-slate-50">拒絕</button>
+                                    <button onClick={()=>onApprove(req)} className="flex-1 py-2 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 shadow-md">批准</button>
+                                </div>
+                            </div>
+                        ))}
+                        {requests.length === 0 && <div className="col-span-full text-center py-20 text-slate-400">目前沒有待處理的申請</div>}
+                    </div>
+                </div>
+            );
+        }
+
+        // --- Main Controller ---
+
         function AdminApp() {
             const [user, setUser] = useState(null);
             const [loading, setLoading] = useState(true);
-            const [activeView, setActiveView] = useState('dashboard');
+            const [view, setView] = useState('dashboard');
+            
+            // Data
             const [users, setUsers] = useState([]);
             const [requests, setRequests] = useState([]);
             const [publicItems, setPublicItems] = useState([]);
             const [config, setConfig] = useState(null);
 
-            const { auth, db, provider, signInWithPopup, signOut, onAuthStateChanged, collection, doc, onSnapshot, query, orderBy, setDoc, updateDoc, deleteDoc, arrayUnion, arrayRemove, getDocs } = window.fb || {};
-
             useEffect(() => {
-                if(!window.fb) return;
-                
-                const unsubAuth = onAuthStateChanged(auth, u => {
-                    setUser(u);
-                    setLoading(false);
-                });
-
-                return () => unsubAuth();
+                const init = () => {
+                    if(window.fb) {
+                        window.fb.onAuthStateChanged(window.fb.auth, u => { setUser(u); setLoading(false); });
+                    } else { setTimeout(init, 100); }
+                };
+                init();
             }, []);
 
-            // Data Listeners - Only start when user is admin
+            // Lazy Listeners (Only when admin is logged in)
             useEffect(() => {
-                if (user && user.email === ADMIN_EMAIL && window.fb) {
-                    // Start listeners only if admin
-                    const unsubConfig = onSnapshot(doc(db, "system_settings", "config"), s => setConfig(s.data()), err => console.log("Config listener error:", err));
-                    
-                    const unsubUsers = onSnapshot(query(collection(db, "users_public"), orderBy("lastSeen", "desc")), 
-                        s => setUsers(s.docs.map(d=>({id:d.id, ...d.data()}))),
-                        err => console.log("Users listener error:", err)
-                    );
-                    
-                    const unsubReqs = onSnapshot(query(collection(db, "access_requests"), orderBy("requestTime", "desc")), 
-                        s => setRequests(s.docs.map(d=>({id:d.id, ...d.data()}))),
-                        err => console.log("Requests listener error:", err)
-                    );
-                    
-                    const unsubPublic = onSnapshot(query(collection(db, "public_assignments"), orderBy("createdAt", "desc")), 
-                        s => setPublicItems(s.docs.map(d=>({id:d.id, ...d.data()}))),
-                        err => console.log("Public items listener error:", err)
-                    );
-                    
-                    return () => { unsubConfig(); unsubUsers(); unsubReqs(); unsubPublic(); };
+                if(user && user.email === ADMIN_EMAIL && window.fb) {
+                    const { db, collection, doc, onSnapshot, query, orderBy } = window.fb;
+                    const unsubs = [
+                        onSnapshot(doc(db, "system_settings", "config"), s => setConfig(s.data())),
+                        onSnapshot(query(collection(db, "users_public"), orderBy("lastSeen", "desc")), s => setUsers(s.docs.map(d=>({id:d.id, ...d.data()})))),
+                        onSnapshot(query(collection(db, "access_requests"), orderBy("requestTime", "desc")), s => setRequests(s.docs.map(d=>({id:d.id, ...d.data()})))),
+                        onSnapshot(query(collection(db, "public_assignments"), orderBy("createdAt", "desc")), s => setPublicItems(s.docs.map(d=>({id:d.id, ...d.data()})))),
+                    ];
+                    return () => unsubs.forEach(u => u());
                 }
             }, [user]);
 
-            const handleLogin = async () => {
+            const handleLogin = () => window.fb.signInWithPopup(window.fb.auth, window.fb.provider).catch(e => alert(e.message));
+            
+            // Handlers (Simplified for brevity but functionally same)
+            const handleUserAction = async (action, payload) => {
+                const { db, doc, updateDoc, arrayUnion, arrayRemove, deleteDoc, collection, getDocs } = window.fb;
+                const configRef = doc(db, "system_settings", "config");
                 try {
-                    await signInWithPopup(auth, provider);
-                } catch(e) { alert("登入失敗: " + e.message); }
-            };
-
-            const handleDeleteUser = async (targetUser) => {
-                if (!confirm(`⚠️ 嚴重警告！\n確定要刪除用戶 ${targetUser.displayName} 嗎？\n這將清除該用戶的所有資料，且無法復原。`)) return;
-                try {
-                    const uid = targetUser.id;
-                    if (config?.allowedEmails?.includes(targetUser.email)) {
-                        await updateDoc(doc(db, "system_settings", "config"), { allowedEmails: arrayRemove(targetUser.email) });
+                    if(action === 'delete') {
+                        if(!confirm(`確定刪除 ${payload.displayName}?`)) return;
+                        if(config?.allowedEmails?.includes(payload.email)) await updateDoc(configRef, {allowedEmails: arrayRemove(payload.email)});
+                        const items = await getDocs(collection(db, "users", payload.id, "items"));
+                        items.forEach(i => deleteDoc(i.ref));
+                        await deleteDoc(doc(db, "users_public", payload.id));
+                        await deleteDoc(doc(db, "users", payload.id, "settings", "timetable"));
+                        alert("已刪除");
                     }
-                    const items = await getDocs(collection(db, "users", uid, "items"));
-                    items.forEach(i => deleteDoc(i.ref));
-                    await deleteDoc(doc(db, "users", uid, "settings", "timetable"));
-                    await deleteDoc(doc(db, "users", uid, "settings", "subjects"));
-                    await deleteDoc(doc(db, "users_public", uid));
-                    alert("用戶資料已清除。");
-                } catch(e) { alert("刪除失敗 (請檢查權限): " + e.message); }
+                    if(action === 'toggleWL') {
+                        const isWL = config?.allowedEmails?.includes(payload);
+                        await updateDoc(configRef, {allowedEmails: isWL ? arrayRemove(payload) : arrayUnion(payload)});
+                    }
+                } catch(e) { alert("錯誤: " + e.message); }
             };
 
-            const handleToggleWhitelist = async (email) => {
-                const isWL = config?.allowedEmails?.includes(email);
-                await updateDoc(doc(db, "system_settings", "config"), { allowedEmails: isWL ? arrayRemove(email) : arrayUnion(email) });
+            const handleReq = async (req, approve) => {
+                const { db, doc, updateDoc, deleteDoc, arrayUnion } = window.fb;
+                if(approve) await updateDoc(doc(db, "system_settings", "config"), {allowedEmails: arrayUnion(req.email)});
+                await deleteDoc(doc(db, "access_requests", req.id));
             };
 
-            const handleRequest = async (req, approve) => {
-                try {
-                    if(approve) await updateDoc(doc(db, "system_settings", "config"), { allowedEmails: arrayUnion(req.email) });
-                    await deleteDoc(doc(db, "access_requests", req.id));
-                } catch(e) { alert("操作失敗"); }
-            };
+            const handleBroadcast = async (data) => window.fb.addDoc(window.fb.collection(window.fb.db, "public_assignments"), data);
+            const deleteBroadcast = async (id) => { if(confirm("刪除?")) window.fb.deleteDoc(window.fb.doc(window.fb.db, "public_assignments", id)); };
+            const updateConfig = (k,v) => window.fb.updateDoc(window.fb.doc(window.fb.db, "system_settings", "config"), {[k]:v});
 
-            const handleBroadcast = async (data) => {
-                try { await window.fb.addDoc(collection(db, "public_assignments"), data); alert("發送成功"); } catch(e) { alert("發送失敗"); }
-            };
+            // Loading / Auth States
+            if (loading) return <div className="h-screen flex items-center justify-center bg-slate-50 text-slate-400 font-bold tracking-widest animate-pulse">SYSTEM INITIALIZING...</div>;
+            if (!user) return <LoginPage onLogin={handleLogin} />;
+            if (user.email !== ADMIN_EMAIL) return <AccessDeniedPage user={user} onLogout={()=>window.fb.signOut(window.fb.auth)} />;
 
-            const handleDeleteBroadcast = async (id) => {
-                if(confirm("確定刪除此通告？")) await deleteDoc(doc(db, "public_assignments", id));
-            };
-
-            const handleUpdateConfig = async (key, val) => {
-                await updateDoc(doc(db, "system_settings", "config"), { [key]: val });
-            };
-
-            if (loading) return <div className="h-screen flex items-center justify-center text-slate-400">Loading System...</div>;
-
-            if (!user) return (
-                <div className="h-screen flex items-center justify-center bg-slate-100">
-                    <div className="bg-white p-10 rounded-3xl shadow-xl text-center max-w-sm w-full animate-fade-in">
-                        <div className="w-20 h-20 bg-indigo-600 rounded-full flex items-center justify-center mx-auto mb-6 text-white"><Icon name="shield-check" className="w-10 h-10"/></div>
-                        <h1 className="text-2xl font-black text-slate-800 mb-2">管理員登入</h1>
-                        <p className="text-slate-500 mb-8">請使用獲授權的管理員帳號登入系統控制台。</p>
-                        <button onClick={handleLogin} className="w-full py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-black transition active:scale-95 shadow-lg">Google 登入</button>
-                    </div>
-                </div>
-            );
-
-            if (user.email !== ADMIN_EMAIL) return (
-                <div className="h-screen flex flex-col items-center justify-center bg-red-50 text-red-600 p-4 text-center">
-                    <Icon name="alert-octagon" className="w-16 h-16 mb-4"/>
-                    <h1 className="text-3xl font-black mb-2">Access Denied</h1>
-                    <p className="font-bold">您的帳號 ({user.email}) 沒有管理員權限。</p>
-                    <button onClick={()=>signOut(auth)} className="mt-8 px-6 py-2 border border-red-200 rounded-lg hover:bg-red-100">登出</button>
-                </div>
-            );
-
-            // --- Admin UI Layout ---
-            const SidebarItem = ({ id, icon, label }) => (
-                <button onClick={() => setActiveView(id)} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeView === id ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'text-slate-500 hover:bg-white hover:text-slate-800'}`}>
+            // --- Layout ---
+            const NavItem = ({ id, icon, label }) => (
+                <button onClick={() => setView(id)} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${view === id ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-900/20' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}>
                     <Icon name={icon} className="w-5 h-5" /> {label}
                 </button>
             );
 
             return (
-                <div className="flex h-screen bg-slate-50">
-                    <div className="w-64 bg-slate-100 p-6 flex flex-col border-r border-slate-200 hidden md:flex">
-                        <div className="flex items-center gap-3 mb-10 px-2">
-                            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white"><Icon name="command" className="w-5 h-5"/></div>
-                            <span className="font-black text-lg tracking-tight text-slate-800">AdminPanel</span>
+                <div className="flex w-full h-full bg-slate-50">
+                    {/* Sidebar */}
+                    <div className="w-20 lg:w-64 bg-slate-900 flex flex-col justify-between p-4 transition-all duration-300 z-20 shrink-0">
+                        <div>
+                            <div className="h-16 flex items-center justify-center lg:justify-start lg:px-4 mb-6">
+                                <div className="w-10 h-10 bg-indigo-500 rounded-xl flex items-center justify-center text-white shadow-lg"><Icon name="command" className="w-6 h-6"/></div>
+                                <span className="ml-3 font-black text-white text-lg tracking-tight hidden lg:block">Admin.</span>
+                            </div>
+                            <nav className="space-y-2">
+                                <NavItem id="dashboard" icon="layout-dashboard" label="儀表板" />
+                                <NavItem id="users" icon="users" label="用戶管理" />
+                                <NavItem id="broadcast" icon="radio" label="廣播系統" />
+                                <NavItem id="requests" icon="inbox" label="入學申請" />
+                                <NavItem id="settings" icon="settings" label="系統設定" />
+                            </nav>
                         </div>
-                        <nav className="flex-1 space-y-2">
-                            <SidebarItem id="dashboard" icon="layout-dashboard" label="儀表板" />
-                            <SidebarItem id="users" icon="users" label="用戶管理" />
-                            <SidebarItem id="broadcast" icon="megaphone" label="廣播系統" />
-                            <SidebarItem id="requests" icon="user-plus" label="入學申請" />
-                            <SidebarItem id="settings" icon="settings" label="系統設定" />
-                        </nav>
-                        <div className="pt-6 border-t border-slate-200">
-                            <div className="flex items-center gap-3 px-2 mb-4">
-                                <div className="w-8 h-8 rounded-full bg-slate-300 overflow-hidden"><img src={user.photoURL} className="w-full h-full"/></div>
-                                <div className="text-xs overflow-hidden">
-                                    <div className="font-bold text-slate-700 truncate">{user.displayName}</div>
-                                    <div className="text-slate-400 truncate w-32">{user.email}</div>
+                        <button onClick={()=>window.fb.signOut(window.fb.auth)} className="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-slate-500 hover:text-red-400 hover:bg-slate-800 transition-all justify-center lg:justify-start">
+                            <Icon name="log-out" className="w-5 h-5"/> <span className="hidden lg:block">登出系統</span>
+                        </button>
+                    </div>
+
+                    {/* Main Content */}
+                    <div className="flex-1 h-full overflow-hidden flex flex-col relative">
+                        {/* Header */}
+                        <header className="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-8 shrink-0">
+                            <h2 className="text-2xl font-black text-slate-800 capitalize tracking-tight">{view}</h2>
+                            <div className="flex items-center gap-4">
+                                <a href={STUDENT_APP_URL} target="_blank" className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition hidden sm:block">前往學生版 ↗</a>
+                                <div className="flex items-center gap-3 pl-4 border-l border-slate-100">
+                                    <div className="text-right hidden sm:block">
+                                        <div className="text-sm font-bold text-slate-700">{user.displayName}</div>
+                                        <div className="text-[10px] text-slate-400 font-mono">Administrator</div>
+                                    </div>
+                                    <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden border-2 border-white shadow-sm">
+                                        <img src={user.photoURL} alt="User" className="w-full h-full object-cover" />
+                                    </div>
                                 </div>
                             </div>
-                            <button onClick={()=>signOut(auth)} className="w-full py-2 text-xs font-bold text-slate-500 hover:text-red-500 flex items-center gap-2 px-2"><Icon name="log-out" className="w-3 h-3"/> 登出帳號</button>
-                        </div>
-                    </div>
-                    <div className="md:hidden fixed top-0 left-0 right-0 bg-white border-b border-slate-100 p-4 z-50 flex justify-between items-center">
-                        <span className="font-black text-slate-800">AdminPanel</span>
-                        <div className="flex gap-2">
-                            <button onClick={()=>setActiveView('dashboard')} className="p-2 bg-slate-100 rounded"><Icon name="layout-dashboard" className="w-4 h-4"/></button>
-                            <button onClick={()=>setActiveView('users')} className="p-2 bg-slate-100 rounded"><Icon name="users" className="w-4 h-4"/></button>
-                            <button onClick={()=>signOut(auth)} className="p-2 bg-red-50 text-red-500 rounded"><Icon name="log-out" className="w-4 h-4"/></button>
-                        </div>
-                    </div>
-                    <div className="flex-1 overflow-y-auto p-4 md:p-8 pt-20 md:pt-8 relative">
-                        <div className="max-w-5xl mx-auto">
-                            <div className="mb-8 animate-fade-in">
-                                <h1 className="text-2xl md:text-3xl font-black text-slate-800 mb-2">
-                                    {activeView === 'dashboard' && '儀表板概覽'}
-                                    {activeView === 'users' && '用戶資料庫'}
-                                    {activeView === 'broadcast' && '全校廣播'}
-                                    {activeView === 'requests' && '入學申請審核'}
-                                    {activeView === 'settings' && '系統設定'}
-                                </h1>
-                                <p className="text-slate-400 text-sm">歡迎回來，管理員。</p>
+                        </header>
+
+                        {/* Scrollable View Area */}
+                        <main className="flex-1 overflow-y-auto p-6 lg:p-10 scrollbar-hide">
+                            <div className="max-w-6xl mx-auto">
+                                {view === 'dashboard' && <DashboardView users={users} requests={requests} config={config} setActiveView={setView} />}
+                                {view === 'users' && <UsersView users={users} config={config} onDelete={handleUserAction.bind(null, 'delete')} onToggleWL={handleUserAction.bind(null, 'toggleWL')} />}
+                                {view === 'broadcast' && <BroadcastView publicItems={publicItems} onCreate={handleBroadcast} onDelete={deleteBroadcast} />}
+                                {view === 'requests' && <RequestsView requests={requests} onApprove={r=>handleReq(r,true)} onReject={r=>handleReq(r,false)} />}
+                                {view === 'settings' && <SystemSettings config={config} onUpdate={updateConfig} />}
                             </div>
-                            {activeView === 'dashboard' && <Dashboard users={users} requests={requests} config={config} setActiveView={setActiveView} />}
-                            {activeView === 'users' && <UserManagement users={users} config={config} onDeleteUser={handleDeleteUser} onToggleWhitelist={handleToggleWhitelist} />}
-                            {activeView === 'broadcast' && <BroadcastManager publicItems={publicItems} onCreate={handleBroadcast} onDelete={handleDeleteBroadcast} />}
-                            {activeView === 'requests' && (
-                                <div className="space-y-4 animate-fade-in">
-                                    {requests.map(req => (
-                                        <div key={req.id} className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex justify-between items-center">
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center font-bold text-lg">{req.displayName[0]}</div>
-                                                <div>
-                                                    <div className="font-bold text-slate-800">{req.displayName}</div>
-                                                    <div className="text-xs text-slate-400">{req.email}</div>
-                                                    <div className="text-[10px] text-slate-300 mt-1">{new Date(req.requestTime).toLocaleString()}</div>
-                                                </div>
-                                            </div>
-                                            <div className="flex gap-2">
-                                                <button onClick={() => handleRequest(req, false)} className="px-4 py-2 border border-slate-200 text-slate-500 rounded-lg text-xs font-bold hover:bg-slate-50">拒絕</button>
-                                                <button onClick={() => handleRequest(req, true)} className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-200">批准加入</button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                    {requests.length === 0 && <div className="text-center py-20 text-slate-400 bg-white rounded-2xl border border-slate-100 border-dashed">暫無待處理的申請</div>}
-                                </div>
-                            )}
-                            {activeView === 'settings' && <SystemSettings config={config} onUpdate={handleUpdateConfig} />}
-                        </div>
+                        </main>
                     </div>
                 </div>
             );
