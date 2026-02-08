@@ -3,17 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>班級電子手冊 | Homework Tracker</title>
+    <title>電子手冊</title>
     
+    <!-- React & ReactDOM -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     
+    <!-- Babel for JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
+    <!-- Lucide Icons (CDN) -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -24,18 +29,22 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: '#3b82f6',
-                        secondary: '#10b981',
-                        danger: '#ef4444',
-                        dark: '#1f2937'
+                        school: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                        }
                     },
                     animation: {
                         marquee: 'marquee 25s linear infinite',
-                        'fade-in-up': 'fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
-                        'fade-in': 'fadeIn 0.5s ease-out',
-                        'blob': 'blob 10s infinite',
-                        'float': 'float 6s ease-in-out infinite',
-                        'glow': 'glow 2s ease-in-out infinite alternate',
+                        'fade-in-up': 'fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1)',
+                        'float': 'float 4s ease-in-out infinite',
+                        'blob': 'blob 8s infinite',
+                        'bounce-subtle': 'bounceSubtle 2s infinite',
                     },
                     keyframes: {
                         marquee: {
@@ -43,26 +52,22 @@
                             '100%': { transform: 'translateX(-100%)' },
                         },
                         fadeInUp: {
-                            '0%': { opacity: '0', transform: 'translateY(20px)' },
-                            '100%': { opacity: '1', transform: 'translateY(0)' },
-                        },
-                        fadeIn: {
-                            '0%': { opacity: '0' },
-                            '100%': { opacity: '1' },
-                        },
-                        blob: {
-                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
-                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
-                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
-                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '0%': { opacity: '0', transform: 'translateY(30px) scale(0.95)' },
+                            '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
                         },
                         float: {
                             '0%, 100%': { transform: 'translateY(0)' },
-                            '50%': { transform: 'translateY(-10px)' },
+                            '50%': { transform: 'translateY(-12px)' },
                         },
-                        glow: {
-                            'from': { boxShadow: '0 0 10px -10px #4f46e5' },
-                            'to': { boxShadow: '0 0 20px 5px #4f46e5' },
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(40px, -40px) scale(1.15)' },
+                            '66%': { transform: 'translate(-30px, 30px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        },
+                        bounceSubtle: {
+                            '0%, 100%': { transform: 'translateY(-3%)' },
+                            '50%': { transform: 'translateY(0)' },
                         }
                     }
                 }
@@ -70,28 +75,22 @@
         }
     </script>
     <style>
-        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background-color: #0f172a; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans TC", "Microsoft JhengHei", sans-serif; background-color: #ffffff; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         input, textarea, select, button { touch-action: manipulation; }
         
-        /* Glassmorphism Utilities */
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        /* Cute Input Styles */
+        .cute-input {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid transparent;
+            background-color: #f3f4f6;
         }
-        .glass-input {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: white;
-            transition: all 0.3s ease;
-        }
-        .glass-input:focus {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(99, 102, 241, 0.5);
-            box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+        .cute-input:focus {
+            background-color: #fff;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+            transform: scale(1.01);
         }
     </style>
 </head>
@@ -121,11 +120,12 @@
         // Admin Email
         const ADMIN_EMAIL = "chimhinhin@gmail.com";
 
+        // 香港中學科目 (全中文)
         const HK_SUBJECTS = [
-            "中文", "英文", "數學", "公社科", 
-            "物理", "化學", "生物", "中史", "歷史", 
-            "地理", "經濟", "BAFS", "ICT", "M1/M2", 
-            "視藝", "音樂", "體育", "週會", "其他"
+            "中國語文", "英國語文", "數學", "公民與社會發展", 
+            "物理", "化學", "生物", "中國歷史", "歷史", 
+            "地理", "經濟", "企業會計與財務概論", "資訊及通訊科技(ICT)", "數學延伸(M1/M2)", 
+            "視覺藝術", "音樂", "體育", "班主任課", "其他"
         ];
 
         const { useState, useEffect, useMemo } = React;
@@ -148,6 +148,7 @@
             );
         };
 
+        // Icons
         const BookOpen = (p) => <Icon name="BookOpen" {...p} />;
         const Check = (p) => <Icon name="Check" {...p} />;
         const Trash2 = (p) => <Icon name="Trash2" {...p} />;
@@ -171,19 +172,21 @@
         const Eye = (p) => <Icon name="Eye" {...p} />;
         const ArrowRight = (p) => <Icon name="ArrowRight" {...p} />;
         const Sparkles = (p) => <Icon name="Sparkles" {...p} />;
+        const GraduationCap = (p) => <Icon name="GraduationCap" {...p} />;
+        const Smile = (p) => <Icon name="Smile" {...p} />;
 
         // ==========================================
         // 3. 主應用程式
         // ==========================================
         const App = () => {
             const [user, setUser] = useState(null);
-            const [userData, setUserData] = useState(null); // Stores Firestore user data (shortName)
+            const [userData, setUserData] = useState(null); 
             const [homeworks, setHomeworks] = useState([]);
-            const [usersList, setUsersList] = useState([]); // Admin view
+            const [usersList, setUsersList] = useState([]); 
             const [broadcast, setBroadcast] = useState({ message: "", active: false });
             
             // Auth UI State
-            const [authMode, setAuthMode] = useState('login'); // 'login' or 'register'
+            const [authMode, setAuthMode] = useState('login'); 
             const [authEmail, setAuthEmail] = useState('');
             const [authPassword, setAuthPassword] = useState('');
             
@@ -194,7 +197,7 @@
             // UI States
             const [loading, setLoading] = useState(true);
             const [errorMsg, setErrorMsg] = useState(null);
-            const [filterSubject, setFilterSubject] = useState("All");
+            const [filterSubject, setFilterSubject] = useState("全部");
             const [sortBy, setSortBy] = useState("deadline");
             const [showTimetable, setShowTimetable] = useState(false);
             const [showHistory, setShowHistory] = useState(false);
@@ -213,7 +216,6 @@
                     setUser(currentUser);
                     if (currentUser) {
                         try {
-                            // Fetch user profile from Firestore
                             const userDocRef = db.collection('users').doc(currentUser.uid);
                             const docSnap = await userDocRef.get();
                             
@@ -300,7 +302,7 @@
             const handleSaveShortName = async (e) => {
                 e.preventDefault();
                 if (!inputShortName.trim().match(/^[A-Za-z0-9\s]+$/)) {
-                    return alert("請輸入有效的英文短名 (僅限英文字母與數字)");
+                    return alert("請輸入有效的英文/數字名稱");
                 }
                 try {
                     await db.collection('users').doc(user.uid).update({
@@ -315,7 +317,7 @@
 
             const handleLogout = () => auth.signOut();
             
-            // ... (Other CRUD & Helper functions remain unchanged) ...
+            // CRUD
             const saveHomework = async (task) => {
                 try {
                     const payload = {
@@ -345,8 +347,8 @@
                 await db.collection('homeworks').doc(task.id).update({ completedBy: newCompletedBy });
             };
 
-            const deleteTask = async (id) => { if(confirm("確定刪除？")) await db.collection('homeworks').doc(id).delete(); };
-            const adminResetCompletions = async (taskId) => { if(confirm("重置完成狀態？")) await db.collection('homeworks').doc(taskId).update({ completedBy: [] }); };
+            const deleteTask = async (id) => { if(confirm("確定刪除此紀錄？")) await db.collection('homeworks').doc(id).delete(); };
+            const adminResetCompletions = async (taskId) => { if(confirm("重置此家課的完成狀態？")) await db.collection('homeworks').doc(taskId).update({ completedBy: [] }); };
             const saveBroadcast = async (msg, active) => {
                 await db.collection('settings').doc('broadcast').set({ message: msg, active, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
                 setIsBroadcastModalOpen(false);
@@ -355,7 +357,7 @@
             const filteredHomeworks = useMemo(() => {
                 let list = homeworks;
                 if (!isAdmin) list = list.filter(h => h.type === 'global' || h.createdBy === user?.uid);
-                if (filterSubject !== "All") list = list.filter(h => h.subject === filterSubject);
+                if (filterSubject !== "全部") list = list.filter(h => h.subject === filterSubject);
                 return list.sort((a, b) => {
                     if (sortBy === 'deadline') {
                         const dateA = a.deadline ? new Date(a.deadline) : new Date('9999-12-31');
@@ -366,200 +368,207 @@
                 });
             }, [homeworks, filterSubject, sortBy, user, isAdmin]);
 
-            if (loading) return <div className="min-h-screen flex items-center justify-center bg-[#0f172a] text-blue-400">
+            if (loading) return <div className="min-h-screen flex items-center justify-center bg-white text-blue-400">
                 <div className="flex flex-col items-center gap-4">
-                    <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                    <span className="animate-pulse">SYSTEM LOADING...</span>
+                    <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin"></div>
+                    <span className="animate-pulse tracking-widest text-xs font-bold text-blue-300">SYSTEM LOADING...</span>
                 </div>
             </div>;
 
             // ==========================================
-            // FUTURISTIC AUTH PAGE
+            // 登入介面 (可愛動感白)
             // ==========================================
             if (!user) {
                 return (
-                    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-[#0f172a]">
-                        {/* Dynamic Background */}
+                    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-white">
+                        {/* 柔和動態背景 */}
                         <div className="absolute inset-0 z-0">
-                            <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-purple-600/30 rounded-full mix-blend-screen filter blur-[100px] animate-blob"></div>
-                            <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-blue-600/30 rounded-full mix-blend-screen filter blur-[100px] animate-blob animation-delay-2000"></div>
-                            <div className="absolute top-[40%] left-[40%] w-[300px] h-[300px] bg-cyan-500/20 rounded-full mix-blend-screen filter blur-[80px] animate-blob animation-delay-4000"></div>
+                            {/* 藍色泡泡 */}
+                            <div className="absolute top-[5%] left-[10%] w-[400px] h-[400px] bg-blue-100/60 rounded-full mix-blend-multiply filter blur-[60px] animate-blob"></div>
+                            {/* 粉色泡泡 */}
+                            <div className="absolute bottom-[10%] right-[5%] w-[350px] h-[350px] bg-pink-100/60 rounded-full mix-blend-multiply filter blur-[60px] animate-blob animation-delay-2000"></div>
+                            {/* 黃色泡泡 */}
+                            <div className="absolute top-[40%] left-[30%] w-[300px] h-[300px] bg-yellow-100/50 rounded-full mix-blend-multiply filter blur-[50px] animate-blob animation-delay-4000"></div>
                         </div>
 
-                        {/* Glass Login Card */}
-                        <div className="glass-panel w-full max-w-sm rounded-3xl p-8 relative z-10 shadow-2xl animate-fade-in-up mx-4">
+                        {/* 登入卡片 */}
+                        <div className="bg-white/80 backdrop-blur-xl w-full max-w-[360px] rounded-[32px] p-8 relative z-10 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] border border-white/50 animate-fade-in-up mx-6">
                             
-                            {/* Glowing Header */}
-                            <div className="text-center mb-8 relative">
-                                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-[0_0_20px_rgba(59,130,246,0.5)] mb-4 animate-float">
-                                    <BookOpen size={32} className="text-white" />
+                            {/* 可愛標題區 */}
+                            <div className="text-center mb-8">
+                                <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-tr from-blue-400 to-indigo-400 shadow-lg shadow-blue-200 mb-4 animate-float">
+                                    <BookOpen size={40} className="text-white drop-shadow-md" strokeWidth={2.5} />
                                 </div>
-                                <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-200 via-cyan-200 to-white tracking-tight">
-                                    {authMode === 'login' ? 'WELCOME BACK' : 'JOIN THE FUTURE'}
+                                <h1 className="text-2xl font-black text-gray-800 tracking-tight flex items-center justify-center gap-2">
+                                    {authMode === 'login' ? '歡迎回來' : '加入我們'} <span className="animate-bounce-subtle">✨</span>
                                 </h1>
-                                <p className="text-blue-200/60 text-xs tracking-widest mt-2 uppercase font-semibold">
-                                    Class Homework Tracker v2.0
+                                <p className="text-gray-400 text-sm mt-1 font-medium">
+                                    電子手冊登入系統
                                 </p>
                             </div>
 
-                            {/* Form */}
-                            <form onSubmit={handleEmailAuth} className="space-y-5">
+                            {/* 表單 */}
+                            <form onSubmit={handleEmailAuth} className="space-y-4">
                                 <div className="relative group">
-                                    <Mail size={18} className="absolute left-4 top-3.5 text-blue-300/50 group-focus-within:text-blue-400 transition-colors" />
+                                    <div className="absolute left-4 top-3.5 text-blue-300 group-focus-within:text-blue-500 transition-colors">
+                                        <Mail size={20} strokeWidth={2.5} />
+                                    </div>
                                     <input 
                                         type="email" 
                                         required 
                                         value={authEmail} 
                                         onChange={e=>setAuthEmail(e.target.value)} 
-                                        placeholder="Email Address" 
-                                        className="glass-input w-full pl-12 pr-4 py-3 rounded-xl outline-none text-sm placeholder-blue-200/30" 
+                                        placeholder="輸入電子郵件" 
+                                        className="cute-input w-full pl-12 pr-4 py-3.5 rounded-2xl text-sm text-gray-700 placeholder-gray-400 outline-none" 
                                     />
                                 </div>
                                 <div className="relative group">
-                                    <Lock size={18} className="absolute left-4 top-3.5 text-blue-300/50 group-focus-within:text-blue-400 transition-colors" />
+                                    <div className="absolute left-4 top-3.5 text-blue-300 group-focus-within:text-blue-500 transition-colors">
+                                        <Lock size={20} strokeWidth={2.5} />
+                                    </div>
                                     <input 
                                         type="password" 
                                         required 
                                         value={authPassword} 
                                         onChange={e=>setAuthPassword(e.target.value)} 
-                                        placeholder="Password" 
-                                        className="glass-input w-full pl-12 pr-4 py-3 rounded-xl outline-none text-sm placeholder-blue-200/30" 
+                                        placeholder="輸入密碼" 
+                                        className="cute-input w-full pl-12 pr-4 py-3.5 rounded-2xl text-sm text-gray-700 placeholder-gray-400 outline-none" 
                                     />
                                 </div>
                                 
                                 <button 
                                     type="submit" 
-                                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3.5 rounded-xl font-bold uppercase tracking-wider text-xs shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 border border-white/10"
+                                    className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white py-3.5 rounded-2xl font-bold text-sm shadow-lg shadow-blue-200 hover:shadow-blue-300 transform transition-all duration-200 active:scale-95"
                                 >
-                                    {authMode === 'login' ? 'Initiate Login' : 'Create Account'}
+                                    {authMode === 'login' ? '立即登入' : '註冊新帳戶'}
                                 </button>
                             </form>
 
-                            {/* Divider */}
+                            {/* 分隔線 */}
                             <div className="relative my-6">
-                                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/10"></div></div>
-                                <div className="relative flex justify-center text-[10px] tracking-widest text-blue-200/40 uppercase bg-transparent"><span className="px-2 bg-[#0f172a]/0 backdrop-blur-md">Or Connect With</span></div>
+                                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-100"></div></div>
+                                <div className="relative flex justify-center text-[10px] text-gray-400 bg-transparent"><span className="px-3 bg-white/50 backdrop-blur-sm rounded-full">或</span></div>
                             </div>
 
-                            {/* Google Button */}
+                            {/* Google 登入 */}
                             <button 
                                 onClick={handleGoogleLogin} 
-                                className="w-full bg-white text-gray-900 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-gray-100 transition-colors"
+                                className="w-full bg-white border-2 border-gray-50 text-gray-600 py-3 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-gray-50 hover:border-gray-100 transition-all active:scale-95"
                             >
-                                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-4 h-4" />
-                                Google Access
+                                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" />
+                                Google 登入
                             </button>
 
-                            {/* Subtle Register Toggle (Bottom Left) */}
-                            <div className="absolute -bottom-12 left-0">
+                            {/* 隱藏式註冊切換 (左下角) */}
+                            <div className="absolute -bottom-10 left-0 w-full text-center sm:text-left sm:w-auto">
                                 <button 
                                     onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}
-                                    className="text-xs text-blue-400/60 hover:text-cyan-400 transition-colors flex items-center gap-1.5 px-2 py-1"
+                                    className="text-xs text-gray-400 hover:text-blue-500 transition-colors flex items-center gap-1.5 px-3 py-2 bg-white/50 rounded-full backdrop-blur-sm mx-auto sm:mx-0"
                                 >
                                     {authMode === 'login' ? (
                                         <>
-                                            <Sparkles size={12} />
-                                            <span>New User Registration</span>
+                                            <Sparkles size={14} className="text-yellow-400" fill="currentColor" />
+                                            <span className="font-bold">新用戶註冊</span>
                                         </>
                                     ) : (
                                         <>
-                                            <ArrowRight size={12} className="rotate-180" />
-                                            <span>Return to Login</span>
+                                            <ArrowRight size={14} className="rotate-180" />
+                                            <span className="font-bold">返回登入</span>
                                         </>
                                     )}
                                 </button>
                             </div>
                         </div>
                         
-                        {/* Footer decorative text */}
-                        <div className="absolute bottom-4 text-[10px] text-white/10 tracking-[0.2em] pointer-events-none">
-                            SECURE SYSTEM • HONG KONG EDU
+                        {/* 底部裝飾 */}
+                        <div className="absolute bottom-6 text-[10px] text-gray-300 tracking-widest pointer-events-none font-bold">
+                            HONG KONG EDUCATION SYSTEM
                         </div>
                     </div>
                 );
             }
 
             // ==========================================
-            // LOGGED IN VIEW (Original Light Theme)
+            // 已登入介面 (主程式)
             // ==========================================
             return (
-                <div className="min-h-screen pb-24 relative bg-[#f3f4f6]">
+                <div className="min-h-screen pb-24 relative bg-gray-50">
                     <BroadcastBanner message={broadcast.message} active={broadcast.active} />
 
-                    {/* NAVBAR */}
+                    {/* 頂部導航 */}
                     <nav className="bg-white border-b border-gray-200 sticky top-0 z-30 px-4 py-3 flex justify-between items-center shadow-sm w-full">
                         <div className="flex items-center gap-3 overflow-hidden">
-                            <div className="bg-blue-600 p-2 rounded-lg shadow-blue-200 shadow-sm shrink-0">
+                            <div className="bg-school-800 p-2 rounded-lg shadow-sm shrink-0">
                                 <BookOpen size={20} className="text-white" />
                             </div>
                             <div className="overflow-hidden">
                                 <h1 className="font-bold text-gray-800 leading-tight truncate">電子手冊</h1>
-                                <p className="text-xs text-gray-500 truncate font-medium text-blue-600">
+                                <p className="text-xs text-gray-500 truncate font-medium text-school-600">
                                     {userData?.shortName || user.displayName || user.email}
                                 </p>
                             </div>
                         </div>
                         <div className="flex gap-2 shrink-0">
-                            <button onClick={() => setShowTimetable(!showTimetable)} className={`p-2 rounded-lg ${showTimetable ? 'bg-blue-100 text-blue-600' : 'bg-gray-100'}`}><Calendar size={20} /></button>
-                            <button onClick={() => setShowHistory(!showHistory)} className={`p-2 rounded-lg ${showHistory ? 'bg-amber-100 text-amber-600' : 'bg-gray-100'}`}><Clock size={20} /></button>
-                            <button onClick={handleLogout} className="p-2 bg-gray-100 rounded-lg hover:bg-red-50 text-red-500"><LogOut size={20} /></button>
+                            <button onClick={() => setShowTimetable(!showTimetable)} title="時間表" className={`p-2 rounded-lg ${showTimetable ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'}`}><Calendar size={20} /></button>
+                            <button onClick={() => setShowHistory(!showHistory)} title="歷史紀錄" className={`p-2 rounded-lg ${showHistory ? 'bg-amber-100 text-amber-600' : 'bg-gray-100 text-gray-600'}`}><Clock size={20} /></button>
+                            <button onClick={handleLogout} title="登出" className="p-2 bg-gray-100 rounded-lg hover:bg-red-50 text-red-500"><LogOut size={20} /></button>
                         </div>
                     </nav>
 
                     {errorMsg && <div className="bg-red-50 p-4 border-b border-red-200 flex gap-2 items-center text-red-600 text-sm"><AlertCircle size={16} /> {errorMsg}</div>}
 
-                    {/* ADMIN BAR */}
+                    {/* 管理員列 */}
                     {isAdmin && (
-                        <div className="bg-gray-800 text-gray-200 px-4 py-2 text-xs flex justify-between items-center overflow-x-auto whitespace-nowrap">
+                        <div className="bg-school-900 text-white px-4 py-2 text-xs flex justify-between items-center overflow-x-auto whitespace-nowrap">
                             <div className="flex items-center gap-3">
-                                <span className="bg-red-500 text-white px-2 py-0.5 rounded font-bold">ADMIN</span>
-                                <button onClick={() => setIsAdminUsersModalOpen(true)} className="flex items-center gap-1 hover:text-white hover:bg-gray-700 px-2 py-1 rounded transition-colors">
-                                    <Eye size={12}/> 查看學生 ({usersList.length})
+                                <span className="bg-red-600 text-white px-2 py-0.5 rounded font-bold">管理員</span>
+                                <button onClick={() => setIsAdminUsersModalOpen(true)} className="flex items-center gap-1 hover:text-white hover:bg-white/20 px-2 py-1 rounded transition-colors">
+                                    <Eye size={12}/> 學生名單 ({usersList.length})
                                 </button>
                             </div>
-                            <button onClick={() => setIsBroadcastModalOpen(true)} className="flex items-center gap-1 hover:text-white px-2 py-1 rounded hover:bg-gray-700"><Volume2 size={12}/> 設定廣播</button>
+                            <button onClick={() => setIsBroadcastModalOpen(true)} className="flex items-center gap-1 hover:text-white px-2 py-1 rounded hover:bg-white/20"><Volume2 size={12}/> 發布通告</button>
                         </div>
                     )}
 
-                    {/* FILTER BAR */}
+                    {/* 篩選列 */}
                     <div className="px-4 py-3 flex gap-2 overflow-x-auto scrollbar-hide bg-white border-b border-gray-200 shadow-sm sticky top-[60px] z-20">
-                        <button onClick={() => setSortBy(sortBy === 'deadline' ? 'created' : 'deadline')} className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-3 py-1.5 rounded-full text-xs font-medium text-gray-700 shrink-0"><ArrowUpDown size={12} /> {sortBy === 'deadline' ? '截止' : '發布'}</button>
+                        <button onClick={() => setSortBy(sortBy === 'deadline' ? 'created' : 'deadline')} className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-3 py-1.5 rounded-full text-xs font-medium text-gray-700 shrink-0"><ArrowUpDown size={12} /> {sortBy === 'deadline' ? '按繳交日期' : '按發布日期'}</button>
                         <div className="h-6 w-px bg-gray-200 mx-1 self-center"></div>
-                        <button onClick={() => setFilterSubject("All")} className={`px-3 py-1.5 rounded-full text-xs font-medium shrink-0 ${filterSubject === "All" ? 'bg-gray-800 text-white' : 'bg-white border border-gray-200'}`}>全部</button>
+                        <button onClick={() => setFilterSubject("全部")} className={`px-3 py-1.5 rounded-full text-xs font-medium shrink-0 ${filterSubject === "全部" ? 'bg-school-800 text-white' : 'bg-white border border-gray-200 text-gray-600'}`}>全部</button>
                         {HK_SUBJECTS.map(sub => (
-                            <button key={sub} onClick={() => setFilterSubject(sub)} className={`px-3 py-1.5 rounded-full text-xs font-medium shrink-0 ${filterSubject === sub ? 'bg-blue-600 text-white' : 'bg-white border border-gray-200'}`}>{sub}</button>
+                            <button key={sub} onClick={() => setFilterSubject(sub)} className={`px-3 py-1.5 rounded-full text-xs font-medium shrink-0 ${filterSubject === sub ? 'bg-school-600 text-white' : 'bg-white border border-gray-200 text-gray-600'}`}>{sub}</button>
                         ))}
                     </div>
 
-                    {/* HOMEWORK LIST */}
+                    {/* 家課列表 */}
                     <main className="p-4 space-y-4 max-w-3xl mx-auto w-full">
-                        {showTimetable && <div className="bg-white rounded-xl shadow-sm p-8 border border-blue-100 mb-4 text-center"><Calendar size={24} className="mx-auto text-blue-500 mb-2"/><p className="text-gray-400 text-sm">時間表功能開發中</p></div>}
+                        {showTimetable && <div className="bg-white rounded-xl shadow-sm p-8 border border-blue-100 mb-4 text-center"><Calendar size={24} className="mx-auto text-blue-500 mb-2"/><p className="text-gray-400 text-sm">時間表功能建構中</p></div>}
 
                         {filteredHomeworks.length === 0 ? (
-                            <div className="text-center py-16 text-gray-400"><div className="bg-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm"><Check size={32} className="text-gray-300" /></div><p>暫無功課記錄</p></div>
+                            <div className="text-center py-16 text-gray-400"><div className="bg-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm border border-gray-100"><Check size={32} className="text-gray-300" /></div><p>暫無家課紀錄</p></div>
                         ) : (
                             filteredHomeworks.map(hw => {
                                 const isDone = hw.completedBy?.includes(user.uid);
                                 if (!showHistory && isDone) return null;
                                 return (
-                                    <div key={hw.id} className={`bg-white rounded-xl p-4 shadow-sm border transition-all flex items-start gap-3 relative ${isDone ? 'opacity-60 bg-gray-50 border-gray-100' : 'border-gray-100 hover:border-blue-200'}`}>
+                                    <div key={hw.id} className={`bg-white rounded-xl p-4 shadow-sm border transition-all flex items-start gap-3 relative ${isDone ? 'opacity-60 bg-gray-50 border-gray-100' : 'border-gray-200 hover:border-school-300'}`}>
                                         <div className="mt-1 shrink-0">
-                                            <button onClick={() => toggleComplete(hw)} className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${isDone ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300'}`}><Check size={14} strokeWidth={4} /></button>
+                                            <button onClick={() => toggleComplete(hw)} className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${isDone ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 hover:border-school-400'}`}><Check size={14} strokeWidth={4} /></button>
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md text-white ${getSubjectColor(hw.subject)}`}>{hw.subject}</span>
-                                                <span className={`text-[10px] px-1.5 py-0.5 rounded border font-medium ${hw.type==='global'?'bg-indigo-50 text-indigo-600 border-indigo-100':'bg-gray-100 text-gray-500 border-gray-200'}`}>{hw.type==='global'?'全班':'個人'}</span>
-                                                {isAdmin && hw.type === 'global' && <span className="text-[10px] text-gray-400 ml-auto">完成: {hw.completedBy?.length||0}人</span>}
+                                            <div className="flex items-center gap-2 mb-2 flex-wrap">
+                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded text-white ${getSubjectColor(hw.subject)}`}>{hw.subject}</span>
+                                                <span className={`text-[10px] px-1.5 py-0.5 rounded border font-medium ${hw.type==='global'?'bg-school-50 text-school-700 border-school-100':'bg-gray-100 text-gray-600 border-gray-200'}`}>{hw.type==='global'?'全班家課':'個人備忘'}</span>
+                                                {isAdmin && hw.type === 'global' && <span className="text-[10px] text-gray-400 ml-auto">已完成: {hw.completedBy?.length||0}人</span>}
                                             </div>
                                             <p className={`text-gray-800 text-sm leading-relaxed whitespace-pre-wrap font-medium ${isDone ? 'line-through text-gray-400' : ''}`}>{hw.content}</p>
-                                            <div className="mt-2.5 flex items-center gap-3 text-xs text-gray-400">{hw.deadline && <span className={`flex items-center gap-1 ${getDeadlineColor(hw.deadline, isDone)}`}><Clock size={12} /> {hw.deadline}</span>}</div>
+                                            <div className="mt-3 flex items-center gap-3 text-xs text-gray-400">{hw.deadline && <span className={`flex items-center gap-1 ${getDeadlineColor(hw.deadline, isDone)}`}><Clock size={12} /> {hw.deadline}</span>}</div>
                                         </div>
                                         <div className="flex flex-col gap-1 ml-1 shrink-0">
                                             {(isAdmin || hw.createdBy === user.uid) && (
-                                                <><button onClick={() => { setEditingTask(hw); setIsModalOpen(true); }} className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg"><Edit2 size={16} /></button><button onClick={() => deleteTask(hw.id)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg"><Trash2 size={16} /></button></>
+                                                <><button onClick={() => { setEditingTask(hw); setIsModalOpen(true); }} className="p-1.5 text-gray-400 hover:text-school-600 hover:bg-blue-50 rounded-lg"><Edit2 size={16} /></button><button onClick={() => deleteTask(hw.id)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg"><Trash2 size={16} /></button></>
                                             )}
-                                            {isAdmin && hw.type === 'global' && <button onClick={() => adminResetCompletions(hw.id)} className="p-1.5 text-gray-300 hover:text-orange-500 hover:bg-orange-50 rounded-lg"><RefreshCw size={16} /></button>}
+                                            {isAdmin && hw.type === 'global' && <button onClick={() => adminResetCompletions(hw.id)} title="重置" className="p-1.5 text-gray-300 hover:text-orange-500 hover:bg-orange-50 rounded-lg"><RefreshCw size={16} /></button>}
                                         </div>
                                     </div>
                                 );
@@ -568,38 +577,38 @@
                         <div className="h-16"></div>
                     </main>
 
-                    <button onClick={() => { setEditingTask(null); setIsModalOpen(true); }} className="fixed bottom-6 right-6 bg-blue-600 text-white p-4 rounded-2xl shadow-lg hover:bg-blue-700 active:scale-95 transition-all z-20"><Plus size={28} /></button>
+                    <button onClick={() => { setEditingTask(null); setIsModalOpen(true); }} className="fixed bottom-6 right-6 bg-school-600 text-white p-4 rounded-2xl shadow-lg hover:bg-school-700 active:scale-95 transition-all z-20"><Plus size={28} /></button>
 
-                    {/* MODALS */}
-                    {isModalOpen && <Modal onClose={() => setIsModalOpen(false)} title={editingTask ? "編輯功課" : "新增功課"}><HomeworkForm initialData={editingTask} onSave={saveHomework} isAdmin={isAdmin} onClose={() => setIsModalOpen(false)} /></Modal>}
-                    {isBroadcastModalOpen && <Modal onClose={() => setIsBroadcastModalOpen(false)} title="設定校園廣播"><BroadcastForm initialData={broadcast} onSave={saveBroadcast} /></Modal>}
+                    {/* 彈出視窗 */}
+                    {isModalOpen && <Modal onClose={() => setIsModalOpen(false)} title={editingTask ? "編輯家課" : "新增家課"}><HomeworkForm initialData={editingTask} onSave={saveHomework} isAdmin={isAdmin} onClose={() => setIsModalOpen(false)} /></Modal>}
+                    {isBroadcastModalOpen && <Modal onClose={() => setIsBroadcastModalOpen(false)} title="發布手冊通告"><BroadcastForm initialData={broadcast} onSave={saveBroadcast} /></Modal>}
                     
-                    {/* SHORT NAME MODAL (Forced) */}
+                    {/* 強制設定名稱視窗 */}
                     {showShortNameModal && (
                         <div className="fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-4 backdrop-blur-sm">
                             <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-fade-in-up text-center">
-                                <div className="bg-indigo-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"><UserCircle size={32} className="text-indigo-600" /></div>
+                                <div className="bg-school-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"><UserCircle size={32} className="text-school-600" /></div>
                                 <h2 className="text-xl font-bold text-gray-800 mb-2">歡迎使用！</h2>
-                                <p className="text-gray-500 text-sm mb-6">為了方便老師識別，請設定一個<br/><strong>英文短名 (English Short Name)</strong></p>
+                                <p className="text-gray-500 text-sm mb-6">為方便管理員識別，請設定您的<br/><strong>顯示名稱 (例如: Peter Chan)</strong></p>
                                 <form onSubmit={handleSaveShortName} className="space-y-4">
-                                    <input type="text" autoFocus value={inputShortName} onChange={e => setInputShortName(e.target.value)} placeholder="例如：Peter Chan, Mary" className="w-full p-3 border-2 border-indigo-100 rounded-xl focus:border-indigo-500 outline-none text-center font-bold text-lg" required />
-                                    <button type="submit" className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-200">確認並開始使用</button>
+                                    <input type="text" autoFocus value={inputShortName} onChange={e => setInputShortName(e.target.value)} placeholder="輸入名稱" className="w-full p-3 border-2 border-school-100 rounded-xl focus:border-school-500 outline-none text-center font-bold text-lg" required />
+                                    <button type="submit" className="w-full bg-school-600 text-white py-3 rounded-xl font-bold hover:bg-school-700 shadow-lg">確認並開始使用</button>
                                 </form>
                             </div>
                         </div>
                     )}
 
-                    {/* ADMIN USERS LIST MODAL */}
+                    {/* 管理員學生名單 */}
                     {isAdminUsersModalOpen && (
                         <Modal onClose={() => setIsAdminUsersModalOpen(false)} title="學生名單管理">
                             <div className="space-y-2">
-                                <div className="bg-blue-50 p-3 rounded-lg text-xs text-blue-700 mb-2">最強管理模式：即時監控學生最後上線時間</div>
+                                <div className="bg-blue-50 p-3 rounded-lg text-xs text-blue-700 mb-2">管理模式：監控學生最後上線時間</div>
                                 {usersList.map(u => (
                                     <div key={u.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
                                         <div>
                                             <div className="font-bold text-gray-800 flex items-center gap-2">
                                                 {u.shortName || "未設定"}
-                                                {u.shortName ? <span className="px-1.5 py-0.5 bg-green-100 text-green-700 text-[10px] rounded">OK</span> : <span className="px-1.5 py-0.5 bg-red-100 text-red-700 text-[10px] rounded">缺</span>}
+                                                {u.shortName ? <span className="px-1.5 py-0.5 bg-green-100 text-green-700 text-[10px] rounded">正常</span> : <span className="px-1.5 py-0.5 bg-red-100 text-red-700 text-[10px] rounded">未設定</span>}
                                             </div>
                                             <div className="text-xs text-gray-400">{u.email}</div>
                                         </div>
@@ -620,7 +629,7 @@
 
         const BroadcastBanner = ({ message, active }) => {
             if (!active || !message) return null;
-            return <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2 overflow-hidden shadow-md relative z-40 border-b border-blue-800"><div className="flex items-center absolute left-0 top-0 bottom-0 bg-blue-700 px-3 z-10 shadow-lg"><Volume2 size={16} className="mr-2 animate-pulse" /><span className="text-xs font-bold uppercase tracking-wider">校園廣播</span></div><div className="whitespace-nowrap animate-marquee pl-32 text-sm font-medium flex items-center h-full">{message}</div></div>;
+            return <div className="bg-school-900 text-white py-2 overflow-hidden shadow-md relative z-40 border-b border-school-700"><div className="flex items-center absolute left-0 top-0 bottom-0 bg-school-800 px-3 z-10 shadow-lg"><Volume2 size={16} className="mr-2 animate-pulse" /><span className="text-xs font-bold uppercase tracking-wider">電子手冊通告</span></div><div className="whitespace-nowrap animate-marquee pl-32 text-sm font-medium flex items-center h-full">{message}</div></div>;
         };
 
         const Modal = ({ children, onClose, title }) => (
@@ -633,17 +642,17 @@
         );
 
         const HomeworkForm = ({ initialData, onSave, isAdmin, onClose }) => {
-            const [subject, setSubject] = useState(initialData?.subject || '中文');
+            const [subject, setSubject] = useState(initialData?.subject || '中國語文');
             const [content, setContent] = useState(initialData?.content || '');
             const [deadline, setDeadline] = useState(initialData?.deadline || '');
             const [type, setType] = useState(initialData?.type || (isAdmin ? 'global' : 'personal'));
             const handleSubmit = (e) => { e.preventDefault(); if (!content.trim()) return alert("請輸入內容"); onSave({ subject, content, deadline, type }); };
             return (
                 <form onSubmit={handleSubmit} className="space-y-5">
-                    <div><label className="block text-xs font-bold text-gray-500 mb-2 uppercase">科目分類</label><div className="grid grid-cols-4 gap-2">{HK_SUBJECTS.map(sub => (<button key={sub} type="button" onClick={() => setSubject(sub)} className={`text-xs py-2 rounded-lg border font-medium ${subject === sub ? 'bg-blue-600 text-white border-blue-600 ring-2 ring-blue-100' : 'bg-white text-gray-600 border-gray-200'}`}>{sub}</button>))}</div></div>
-                    <div><label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase">功課內容</label><textarea value={content} onChange={e => setContent(e.target.value)} className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm min-h-[100px] resize-none" placeholder="請輸入功課詳情..." /></div>
-                    <div className="grid grid-cols-2 gap-4"><div><label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase">截止日期</label><input type="date" value={deadline} onChange={e => setDeadline(e.target.value)} className="w-full p-2.5 border border-gray-300 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500" /></div>{isAdmin && (<div><label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase">發布對象</label><select value={type} onChange={e => setType(e.target.value)} className="w-full p-2.5 border border-gray-300 rounded-xl text-sm bg-white outline-none focus:ring-2 focus:ring-blue-500"><option value="global">全班作業</option><option value="personal">私人備忘</option></select></div>)}</div>
-                    <div className="pt-2 flex gap-3"><button type="button" onClick={onClose} className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-200">取消</button><button type="submit" className="flex-1 py-3 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 shadow-lg flex justify-center items-center gap-2"><Save size={18} /> 儲存</button></div>
+                    <div><label className="block text-xs font-bold text-gray-500 mb-2">科目分類</label><div className="grid grid-cols-3 gap-2">{HK_SUBJECTS.map(sub => (<button key={sub} type="button" onClick={() => setSubject(sub)} className={`text-xs py-2 rounded-lg border font-medium truncate px-1 ${subject === sub ? 'bg-school-600 text-white border-school-600 ring-2 ring-blue-100' : 'bg-white text-gray-600 border-gray-200'}`}>{sub}</button>))}</div></div>
+                    <div><label className="block text-xs font-bold text-gray-500 mb-1.5">家課內容</label><textarea value={content} onChange={e => setContent(e.target.value)} className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm min-h-[100px] resize-none" placeholder="請輸入家課詳情..." /></div>
+                    <div className="grid grid-cols-2 gap-4"><div><label className="block text-xs font-bold text-gray-500 mb-1.5">繳交日期</label><input type="date" value={deadline} onChange={e => setDeadline(e.target.value)} className="w-full p-2.5 border border-gray-300 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500" /></div>{isAdmin && (<div><label className="block text-xs font-bold text-gray-500 mb-1.5">發布對象</label><select value={type} onChange={e => setType(e.target.value)} className="w-full p-2.5 border border-gray-300 rounded-xl text-sm bg-white outline-none focus:ring-2 focus:ring-blue-500"><option value="global">全班家課</option><option value="personal">個人備忘</option></select></div>)}</div>
+                    <div className="pt-2 flex gap-3"><button type="button" onClick={onClose} className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-200">取消</button><button type="submit" className="flex-1 py-3 bg-school-600 text-white rounded-xl text-sm font-bold hover:bg-school-700 shadow-lg flex justify-center items-center gap-2"><Save size={18} /> 儲存</button></div>
                 </form>
             );
         };
@@ -651,11 +660,11 @@
         const BroadcastForm = ({ initialData, onSave }) => {
             const [message, setMessage] = useState(initialData?.message || '');
             const [active, setActive] = useState(initialData?.active || false);
-            return <div className="space-y-4"><div><label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase">廣播內容</label><input type="text" value={message} onChange={e => setMessage(e.target.value)} className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" placeholder="例如：明天因颱風停課一天..." /></div><div className="bg-blue-50 p-3 rounded-xl flex items-center gap-3 border border-blue-100"><input type="checkbox" id="bc_active" checked={active} onChange={e => setActive(e.target.checked)} className="w-5 h-5 text-blue-600 rounded" /><label htmlFor="bc_active" className="text-sm font-medium text-gray-700 select-none cursor-pointer">啟用跑馬燈顯示</label></div><button onClick={() => onSave(message, active)} className="w-full py-3 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 mt-2 shadow-lg">發布廣播</button></div>;
+            return <div className="space-y-4"><div><label className="block text-xs font-bold text-gray-500 mb-1.5">通告內容</label><input type="text" value={message} onChange={e => setMessage(e.target.value)} className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" placeholder="例如：明天測驗取消..." /></div><div className="bg-blue-50 p-3 rounded-xl flex items-center gap-3 border border-blue-100"><input type="checkbox" id="bc_active" checked={active} onChange={e => setActive(e.target.checked)} className="w-5 h-5 text-blue-600 rounded" /><label htmlFor="bc_active" className="text-sm font-medium text-gray-700 select-none cursor-pointer">啟用跑馬燈顯示</label></div><button onClick={() => onSave(message, active)} className="w-full py-3 bg-school-600 text-white rounded-xl text-sm font-bold hover:bg-school-700 mt-2 shadow-lg">發布通告</button></div>;
         };
 
         const getSubjectColor = (subject) => {
-            const colors = { '中文': 'bg-red-500', '英文': 'bg-orange-500', '數學': 'bg-blue-500', '公社科': 'bg-teal-600', '物理': 'bg-purple-600', '化學': 'bg-amber-500', '生物': 'bg-green-600', 'ICT': 'bg-cyan-600', '中史': 'bg-rose-700', '歷史': 'bg-amber-700', '地理': 'bg-emerald-600', '經濟': 'bg-indigo-600', 'BAFS': 'bg-violet-600', 'M1/M2': 'bg-blue-700', '其他': 'bg-gray-500' };
+            const colors = { '中國語文': 'bg-red-600', '英國語文': 'bg-amber-500', '數學': 'bg-blue-600', '公民與社會發展': 'bg-teal-600', '物理': 'bg-purple-600', '化學': 'bg-yellow-600', '生物': 'bg-green-600', '資訊及通訊科技(ICT)': 'bg-cyan-600', '中國歷史': 'bg-rose-700', '歷史': 'bg-amber-700', '地理': 'bg-emerald-600', '經濟': 'bg-indigo-600', '企業會計與財務概論': 'bg-violet-600', '數學延伸(M1/M2)': 'bg-blue-800', '其他': 'bg-gray-500' };
             return colors[subject] || 'bg-gray-500';
         };
 
