@@ -20,6 +20,7 @@
         @keyframes popIn { 0% { opacity: 0; transform: scale(0.9); } 70% { transform: scale(1.02); } 100% { opacity: 1; transform: scale(1); } }
         @keyframes meshFlow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
         
+        /* Gradient Classes - Only applied to specific containers now */
         .admin-mesh-bg {
             background: linear-gradient(-45deg, #c4b5fd, #818cf8, #a5b4fc, #e0e7ff);
             background-size: 400% 400%;
@@ -63,8 +64,8 @@
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="bg-slate-50 h-screen overflow-hidden flex flex-col md:flex-row admin-mesh-bg relative">
-    <div id="root" class="w-full h-full relative z-10 flex flex-col md:flex-row"></div>
+<body class="bg-slate-50 h-screen overflow-hidden">
+    <div id="root" class="w-full h-full"></div>
 
     <script type="module">
         const firebaseConfig = {
@@ -211,7 +212,7 @@
         // --- UI Components ---
         function StatCard({ title, value, icon, color, onClick, subtext }) {
             return (
-                <div onClick={onClick} className="glass-card p-6 rounded-3xl flex items-center justify-between hover:scale-[1.03] transition-all duration-300 cursor-pointer group bg-white/60 hover:bg-white/90">
+                <div onClick={onClick} className="glass-card p-6 rounded-3xl flex items-center justify-between hover:scale-[1.03] transition-all duration-300 cursor-pointer group bg-white/80 hover:bg-white shadow-sm hover:shadow-md">
                     <div>
                         <p className="text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-1.5">{title}</p>
                         <h3 className="text-4xl font-black text-slate-800 tracking-tight">{value}</h3>
@@ -309,7 +310,7 @@
             
             return (
                 <div className="flex flex-col h-full animate-enter pb-24 md:pb-0">
-                    <div className="sticky top-0 bg-transparent z-10 pb-6 pt-2">
+                    <div className="sticky top-0 bg-slate-50/0 z-10 pb-6 pt-2">
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-3xl font-black text-slate-800 tracking-tight">用戶管理</h2>
                             <span className="bg-white/80 backdrop-blur border border-white text-slate-600 px-3 py-1 rounded-full text-xs font-bold shadow-sm">{filtered.length} 人</span>
@@ -538,7 +539,7 @@
                 const init = () => {
                     if(window.fb && window.fb.isReady) {
                         // Polling safeguard in case auth takes too long
-                        const safetyTimer = setTimeout(() => setLoading(false), 5000);
+                        const safetyTimer = setTimeout(() => setLoading(false), 3000);
                         
                         window.fb.onAuthStateChanged(window.fb.auth, u => { 
                             setUser(u); 
@@ -566,7 +567,6 @@
             const showAlert = (msg, type='info') => setNotification({ isOpen: true, type, message: msg });
             const showConfirm = (msg, action) => setNotification({ isOpen: true, type: 'confirm', message: msg, onConfirm: action });
             const closeNotify = () => setNotification({ isOpen: false, type: '', message: '', onConfirm: null });
-
             const handleLogin = () => window.fb.signInWithPopup(window.fb.auth, window.fb.provider).catch(e=>showAlert(e.message, 'error'));
             
             const handleDeleteUser = async (u) => {
