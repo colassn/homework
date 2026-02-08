@@ -20,7 +20,7 @@
         @keyframes popIn { 0% { opacity: 0; transform: scale(0.9); } 70% { transform: scale(1.02); } 100% { opacity: 1; transform: scale(1); } }
         @keyframes meshFlow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
         
-        /* Gradient Classes - Only applied to specific containers now */
+        /* Gradient Classes */
         .admin-mesh-bg {
             background: linear-gradient(-45deg, #c4b5fd, #818cf8, #a5b4fc, #e0e7ff);
             background-size: 400% 400%;
@@ -310,7 +310,7 @@
             
             return (
                 <div className="flex flex-col h-full animate-enter pb-24 md:pb-0">
-                    <div className="sticky top-0 bg-slate-50/0 z-10 pb-6 pt-2">
+                    <div className="sticky top-0 bg-transparent z-10 pb-6 pt-2">
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-3xl font-black text-slate-800 tracking-tight">用戶管理</h2>
                             <span className="bg-white/80 backdrop-blur border border-white text-slate-600 px-3 py-1 rounded-full text-xs font-bold shadow-sm">{filtered.length} 人</span>
@@ -463,7 +463,6 @@
                                     <div className="flex gap-2 overflow-x-auto pb-3 -mx-1 px-1 scrollbar-hide">
                                         {SUBJECTS.map(s => {
                                             const isActive = sub === s.name;
-                                            // Extract colors correctly
                                             const bg = s.color.split(' ')[0];
                                             return (
                                                 <button key={s.name} type="button" onClick={()=>setSub(s.name)} 
@@ -496,7 +495,7 @@
                         <div className="overflow-y-auto flex-1 p-6 space-y-4">
                             {publicItems.map(i => {
                                 const subData = SUBJECTS.find(s=>s.name===i.subject) || { color: 'bg-gray-100 text-gray-600' };
-                                const [bg, text] = subData.color.split(' '); // simple parsing
+                                const [bg, text] = subData.color.split(' ');
                                 
                                 return (
                                     <div key={i.id} className="bg-white p-5 rounded-2xl border border-slate-100 flex justify-between items-start group hover:border-indigo-200 transition shadow-sm list-item-enter">
@@ -538,13 +537,12 @@
             useEffect(() => {
                 const init = () => {
                     if(window.fb && window.fb.isReady) {
-                        // Polling safeguard in case auth takes too long
-                        const safetyTimer = setTimeout(() => setLoading(false), 3000);
-                        
-                        window.fb.onAuthStateChanged(window.fb.auth, u => { 
-                            setUser(u); 
-                            setLoading(false); 
-                            clearTimeout(safetyTimer);
+                        // Force Logout on entry logic
+                        window.fb.signOut(window.fb.auth).then(() => {
+                             window.fb.onAuthStateChanged(window.fb.auth, u => { 
+                                setUser(u); 
+                                setLoading(false); 
+                            });
                         });
                     } else { setTimeout(init, 100); }
                 };
@@ -555,10 +553,10 @@
                 if(user && user.email === ADMIN_EMAIL && window.fb) {
                     const { db, collection, doc, onSnapshot, query, orderBy } = window.fb;
                     const unsubs = [
-                        onSnapshot(doc(db, "system_settings", "config"), s => setConfig(s.data()), e=>console.log("Config Err",e)),
-                        onSnapshot(query(collection(db, "users_public"), orderBy("lastSeen", "desc")), s => setUsers(s.docs.map(d=>({id:d.id, ...d.data()}))), e=>console.log("Users Err",e)),
-                        onSnapshot(query(collection(db, "access_requests"), orderBy("requestTime", "desc")), s => setRequests(s.docs.map(d=>({id:d.id, ...d.data()}))), e=>console.log("Reqs Err",e)),
-                        onSnapshot(query(collection(db, "public_assignments"), orderBy("createdAt", "desc")), s => setPublicItems(s.docs.map(d=>({id:d.id, ...d.data()}))), e=>console.log("Pub Err",e)),
+                        onSnapshot(doc(db, "system_settings", "config"), s => setConfig(s.data()), e=>console.log(e)),
+                        onSnapshot(query(collection(db, "users_public"), orderBy("lastSeen", "desc")), s => setUsers(s.docs.map(d=>({id:d.id, ...d.data()}))), e=>console.log(e)),
+                        onSnapshot(query(collection(db, "access_requests"), orderBy("requestTime", "desc")), s => setRequests(s.docs.map(d=>({id:d.id, ...d.data()}))), e=>console.log(e)),
+                        onSnapshot(query(collection(db, "public_assignments"), orderBy("createdAt", "desc")), s => setPublicItems(s.docs.map(d=>({id:d.id, ...d.data()}))), e=>console.log(e)),
                     ];
                     return () => unsubs.forEach(u => u());
                 }
@@ -598,7 +596,7 @@
 
             const handleBroadcast = async (data) => {
                 showConfirm("確定要發送這則通告嗎？", async () => {
-                    try { await window.fb.addDoc(window.fb.collection(window.fb.db,"public_assignments"), data); showAlert("✅ 發送成功", 'success'); } catch(e) { showAlert("發送失敗: " + e.message, 'error'); }
+                    try { await window.fb.addDoc(window.fb.collection(window.fb.db,"public_assignments"), data); showAlert("✅ 發送成功", 'success'); } catch(e) { showAlert("發送失敗", 'error'); }
                 });
             };
 
