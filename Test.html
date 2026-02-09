@@ -2,8 +2,8 @@
 <html lang="zh-HK">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>電子手冊</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>電子手冊 App</title>
     
     <!-- React & ReactDOM -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
@@ -28,46 +28,41 @@
         tailwind.config = {
             theme: {
                 extend: {
+                    fontFamily: {
+                        sans: ['-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
+                    },
                     colors: {
                         school: {
-                            50: '#eff6ff',
-                            100: '#dbeafe',
-                            500: '#3b82f6',
-                            600: '#2563eb',
-                            700: '#1d4ed8',
-                            800: '#1e40af',
-                            900: '#1e3a8a',
+                            50: '#eff6ff', 100: '#dbeafe', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8', 800: '#1e40af', 900: '#1e3a8a',
                         }
                     },
+                    boxShadow: {
+                        'soft': '0 8px 30px rgba(0,0,0,0.06)',
+                        'glow': '0 0 20px rgba(59, 130, 246, 0.4)',
+                        'float': '0 15px 40px -10px rgba(0,0,0,0.15)',
+                    },
                     animation: {
-                        marquee: 'marquee 25s linear infinite',
-                        'fade-in-up': 'fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1)',
-                        'float': 'float 4s ease-in-out infinite',
-                        'blob': 'blob 8s infinite',
-                        'bounce-subtle': 'bounceSubtle 2s infinite',
+                        'pop-in': 'popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                        'slide-up-fade': 'slideUpFade 0.4s ease-out forwards',
+                        'island-in': 'islandIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
+                        'gradient-x': 'gradientX 15s ease infinite',
                     },
                     keyframes: {
-                        marquee: {
-                            '0%': { transform: 'translateX(100%)' },
-                            '100%': { transform: 'translateX(-100%)' },
+                        popIn: {
+                            '0%': { transform: 'scale(0.9)', opacity: '0' },
+                            '100%': { transform: 'scale(1)', opacity: '1' },
                         },
-                        fadeInUp: {
-                            '0%': { opacity: '0', transform: 'translateY(30px) scale(0.95)' },
-                            '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
+                        slideUpFade: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
                         },
-                        float: {
-                            '0%, 100%': { transform: 'translateY(0)' },
-                            '50%': { transform: 'translateY(-12px)' },
+                        islandIn: { 
+                            '0%': { transform: 'translateY(-150%) scale(0.5)', opacity: '0' }, 
+                            '100%': { transform: 'translateY(0) scale(1)', opacity: '1' } 
                         },
-                        blob: {
-                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
-                            '33%': { transform: 'translate(40px, -40px) scale(1.15)' },
-                            '66%': { transform: 'translate(-30px, 30px) scale(0.9)' },
-                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
-                        },
-                        bounceSubtle: {
-                            '0%, 100%': { transform: 'translateY(-3%)' },
-                            '50%': { transform: 'translateY(0)' },
+                        gradientX: {
+                            '0%, 100%': { 'background-position': '0% 50%' },
+                            '50%': { 'background-position': '100% 50%' },
                         }
                     }
                 }
@@ -75,10 +70,26 @@
         }
     </script>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans TC", "Microsoft JhengHei", sans-serif; background-color: #ffffff; }
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        input, textarea, select, button { touch-action: manipulation; }
+        body { 
+            background: linear-gradient(-45deg, #F5F7FB, #Eef2f3, #F5F7FB, #E2EBF0);
+            background-size: 400% 400%;
+            animation: gradientX 15s ease infinite;
+            -webkit-font-smoothing: antialiased; 
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .app-input {
+            background: #F1F5F9;
+            border: 2px solid transparent;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .app-input:focus {
+            background: #FFFFFF;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+            transform: scale(1.01);
+        }
         
         .cute-input {
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -89,7 +100,22 @@
             background-color: #fff;
             border-color: #3b82f6;
             box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
-            transform: scale(1.01);
+            transform: scale(1.02);
+        }
+        
+        .btn-press { 
+            transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1); 
+            cursor: pointer; 
+        }
+        .btn-press:active { 
+            transform: scale(0.92); 
+        }
+        
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
         }
     </style>
 </head>
@@ -97,6 +123,9 @@
     <div id="root"></div>
 
     <script type="text/babel">
+        // ==========================================
+        // CONFIG
+        // ==========================================
         const firebaseConfig = {
           apiKey: "AIzaSyA7C10miZnBWXLBluCDU9nezCn9StmWZ3U",
           authDomain: "recordhw-ad1f9.firebaseapp.com",
@@ -112,470 +141,744 @@
         }
         const auth = firebase.auth();
         const db = firebase.firestore();
-
         const ADMIN_EMAIL = "chimhinhin@gmail.com";
 
-        const HK_SUBJECTS = [
-            "中國語文", "英國語文", "數學", "公民與社會發展", 
-            "物理", "化學", "生物", "中國歷史", "歷史", 
-            "地理", "經濟", "企業會計與財務概論", "資訊及通訊科技(ICT)", "數學延伸(M1/M2)", 
-            "視覺藝術", "音樂", "體育", "班主任課", "其他"
+        // Predefined Colors
+        const COLOR_PALETTE = {
+            red: { bg: 'bg-red-500', text: 'text-red-600', light: 'bg-red-50' },
+            orange: { bg: 'bg-orange-500', text: 'text-orange-600', light: 'bg-orange-50' },
+            amber: { bg: 'bg-amber-500', text: 'text-amber-600', light: 'bg-amber-50' },
+            green: { bg: 'bg-green-600', text: 'text-green-600', light: 'bg-green-50' },
+            teal: { bg: 'bg-teal-500', text: 'text-teal-600', light: 'bg-teal-50' },
+            blue: { bg: 'bg-blue-600', text: 'text-blue-600', light: 'bg-blue-50' },
+            indigo: { bg: 'bg-indigo-500', text: 'text-indigo-600', light: 'bg-indigo-50' },
+            violet: { bg: 'bg-violet-600', text: 'text-violet-600', light: 'bg-violet-50' },
+            purple: { bg: 'bg-purple-600', text: 'text-purple-600', light: 'bg-purple-50' },
+            pink: { bg: 'bg-pink-500', text: 'text-pink-600', light: 'bg-pink-50' },
+            rose: { bg: 'bg-rose-500', text: 'text-rose-600', light: 'bg-rose-50' },
+            slate: { bg: 'bg-slate-500', text: 'text-slate-600', light: 'bg-slate-100' }
+        };
+
+        // Default Subjects
+        const DEFAULT_SUBJECTS = [
+            { name: "中國語文", color: "red" }, { name: "英國語文", color: "orange" }, { name: "數學", color: "blue" },
+            { name: "公民與社會發展", color: "teal" }, { name: "物理", color: "purple" }, { name: "化學", color: "amber" },
+            { name: "生物", color: "green" }, { name: "歷史", color: "slate" }, { name: "地理", color: "teal" }
+        ];
+
+        // Default Timetable
+        const DEFAULT_TIMETABLE = [
+            { id: 1, start: "08:00", end: "08:35", type: "lesson", items: ["中國語文", "英國語文", "數學", "公民", "體育"] },
+            { id: 2, start: "08:35", end: "09:10", type: "lesson", items: ["英國語文", "中國語文", "數學", "體育", "音樂"] },
+            { id: 3, start: "09:10", end: "09:30", type: "break", label: "小息" },
+            { id: 4, start: "09:30", end: "10:05", type: "lesson", items: ["數學", "數學", "中國語文", "英國語文", "視覺藝術"] },
+            { id: 5, start: "10:05", end: "10:40", type: "lesson", items: ["物理", "化學", "生物", "歷史", "地理"] },
+            { id: 6, start: "12:00", end: "13:00", type: "break", label: "午膳" },
         ];
 
         const { useState, useEffect, useMemo } = React;
 
-        // Icons
-        const Icon = ({ name, size = 24, className = "", ...props }) => {
-            if (!window.lucide || !window.lucide.icons || !window.lucide.icons[name]) {
-                return <span style={{width: size, height: size, display: 'inline-block'}}></span>;
-            }
+        // ==========================================
+        // HELPERS
+        // ==========================================
+        const Icon = ({ name, size = 20, className = "", ...props }) => {
+            if (!window.lucide || !window.lucide.icons || !window.lucide.icons[name]) return null;
             const iconData = window.lucide.icons[name];
             return (
                 <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
-                    {iconData.map((child, index) => {
-                        const [tag, attrs] = child;
-                        return React.createElement(tag, { ...attrs, key: index });
-                    })}
+                    {iconData.map((child, index) => React.createElement(child[0], { ...child[1], key: index }))}
                 </svg>
             );
         };
 
-        const BookOpen = (p) => <Icon name="BookOpen" {...p} />;
-        const Check = (p) => <Icon name="Check" {...p} />;
-        const Trash2 = (p) => <Icon name="Trash2" {...p} />;
-        const Edit2 = (p) => <Icon name="Edit2" {...p} />;
-        const Plus = (p) => <Icon name="Plus" {...p} />;
-        const LogOut = (p) => <Icon name="LogOut" {...p} />;
-        const Calendar = (p) => <Icon name="Calendar" {...p} />;
-        const Clock = (p) => <Icon name="Clock" {...p} />;
-        const Users = (p) => <Icon name="Users" {...p} />;
-        const Filter = (p) => <Icon name="Filter" {...p} />;
-        const ArrowUpDown = (p) => <Icon name="ArrowUpDown" {...p} />;
-        const X = (p) => <Icon name="X" {...p} />;
-        const Volume2 = (p) => <Icon name="Volume2" {...p} />;
-        const Save = (p) => <Icon name="Save" {...p} />;
-        const RefreshCw = (p) => <Icon name="RefreshCw" {...p} />;
-        const AlertCircle = (p) => <Icon name="AlertCircle" {...p} />;
-        const Mail = (p) => <Icon name="Mail" {...p} />;
-        const Lock = (p) => <Icon name="Lock" {...p} />;
-        const UserCircle = (p) => <Icon name="UserCircle" {...p} />;
-        const Eye = (p) => <Icon name="Eye" {...p} />;
-        const ArrowRight = (p) => <Icon name="ArrowRight" {...p} />;
-        const Sparkles = (p) => <Icon name="Sparkles" {...p} />;
-        const GraduationCap = (p) => <Icon name="GraduationCap" {...p} />;
-        const CalendarDays = (p) => <Icon name="CalendarDays" {...p} />;
-        const ChevronDown = (p) => <Icon name="ChevronDown" {...p} />;
-        const ChevronUp = (p) => <Icon name="ChevronUp" {...p} />;
-        const Layers = (p) => <Icon name="Layers" {...p} />;
+        const getSubjectStyle = (colorKey) => COLOR_PALETTE[colorKey] || COLOR_PALETTE['slate'];
+
+        const getNextSchoolDay = () => {
+            const d = new Date();
+            const day = d.getDay(); 
+            let add = 1;
+            if (day === 5) add = 3; else if (day === 6) add = 2;
+            d.setDate(d.getDate() + add);
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const date = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${date}`;
+        };
+
+        const calculateDaysLeft = (deadline) => {
+            const today = new Date(); today.setHours(0,0,0,0);
+            const due = new Date(deadline); due.setHours(0,0,0,0);
+            const diffTime = due - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays < 0) return { text: `已逾期 ${Math.abs(diffDays)} 天`, color: 'text-red-500', bg: 'bg-red-100' };
+            if (diffDays === 0) return { text: '今天截止', color: 'text-white', bg: 'bg-orange-500' };
+            if (diffDays === 1) return { text: '明天截止', color: 'text-indigo-600', bg: 'bg-indigo-100' };
+            return { text: `還有 ${diffDays} 天`, color: 'text-green-600', bg: 'bg-green-100' };
+        };
 
         // ==========================================
-        // Main App
+        // COMPONENTS
+        // ==========================================
+        const DynamicIsland = ({ notification }) => {
+            if (!notification.visible) return null;
+            return (
+                <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] animate-island-in">
+                    <div className="bg-black/90 text-white px-6 py-3.5 rounded-full shadow-2xl flex items-center gap-3 min-w-[220px] justify-center backdrop-blur-xl border border-white/10">
+                        <div className={`p-1 rounded-full ${notification.type === 'success' ? 'bg-green-500' : 'bg-blue-500'}`}>
+                            <Icon name={notification.type === 'success' ? 'Check' : 'Info'} size={14} className="text-white"/>
+                        </div>
+                        <span className="text-sm font-bold tracking-wide">{notification.message}</span>
+                    </div>
+                </div>
+            );
+        };
+
+        const DeleteModal = ({ isOpen, onClose, onConfirm }) => {
+            if (!isOpen) return null;
+            return (
+                <div className="fixed inset-0 bg-black/40 z-[80] flex items-center justify-center p-6 backdrop-blur-sm animate-pop-in">
+                    <div className="bg-white w-full max-w-xs rounded-[28px] p-6 text-center shadow-2xl transform transition-all scale-100">
+                        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500 animate-pulse">
+                            <Icon name="Trash2" size={32}/>
+                        </div>
+                        <h3 className="text-xl font-black text-gray-800 mb-2">真的要刪除嗎？</h3>
+                        <p className="text-gray-500 text-sm mb-6 font-medium">刪除後將無法還原此紀錄。</p>
+                        <div className="flex gap-3">
+                            <button onClick={onClose} className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold text-sm btn-press hover:bg-gray-200">取消</button>
+                            <button onClick={onConfirm} className="flex-1 py-3 bg-red-500 text-white rounded-xl font-bold text-sm shadow-lg shadow-red-200 btn-press hover:bg-red-600">確認刪除</button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const TopActionButton = ({ icon, label, onClick, active }) => (
+            <button onClick={onClick} className={`flex-1 flex flex-col items-center justify-center p-3 rounded-2xl transition-all duration-300 btn-press ${active ? 'bg-white shadow-lg text-blue-600 ring-2 ring-blue-50 scale-105' : 'bg-white/60 text-gray-500 hover:bg-white hover:shadow-md'}`}>
+                <Icon name={icon} size={24} className="mb-1" strokeWidth={2.5}/>
+                <span className="text-[10px] font-bold">{label}</span>
+            </button>
+        );
+
+        // ==========================================
+        // TIMETABLE COMPONENT
+        // ==========================================
+        const TimetablePage = ({ subjects, timetableData, onUpdateTimetable, isAdmin, onClose }) => {
+            const [isEditing, setIsEditing] = useState(false);
+            const [localData, setLocalData] = useState(timetableData);
+            const [currentDay, setCurrentDay] = useState(() => {
+                const day = new Date().getDay();
+                return (day >= 1 && day <= 5) ? day - 1 : 0; 
+            });
+
+            useEffect(() => { setLocalData(timetableData); }, [timetableData]);
+
+            const days = ["星期一", "星期二", "星期三", "星期四", "星期五"];
+
+            const handleSave = () => { onUpdateTimetable(localData); setIsEditing(false); };
+            const addRow = () => { setLocalData([...localData, { id: Date.now(), start: "00:00", end: "00:00", type: "lesson", items: ["", "", "", "", ""] }]); };
+            const removeRow = (idx) => { const n = [...localData]; n.splice(idx, 1); setLocalData(n); };
+            const updateRow = (idx, field, val) => { const n = [...localData]; n[idx][field] = val; setLocalData(n); };
+            const updateItem = (rIdx, dIdx, val) => { const n = [...localData]; n[rIdx].items[dIdx] = val; setLocalData(n); };
+
+            const getSubColor = (name) => {
+                if(!name) return { bg: 'bg-white', text: 'text-gray-400', border: 'border-gray-100' };
+                const s = subjects.find(sub => sub.name.includes(name) || name.includes(sub.name));
+                const style = s ? getSubjectStyle(s.color) : { light: 'bg-gray-50', text: 'text-gray-700' };
+                return { bg: style.light, text: style.text, border: 'border-transparent' };
+            };
+
+            return (
+                <div className="min-h-screen bg-[#F5F7FB] animate-slide-up-fade relative z-50 flex flex-col">
+                    <div className="sticky top-0 z-40 bg-white/90 backdrop-blur-md px-5 py-4 border-b border-gray-200/50 flex justify-between items-center shrink-0 shadow-sm">
+                        <h1 className="text-2xl font-black text-gray-800 flex items-center gap-2"><Icon name="CalendarDays" className="text-blue-500"/> 課程表</h1>
+                        <div className="flex gap-2">
+                            {isAdmin && !isEditing && <button onClick={()=>setIsEditing(true)} className="px-4 py-2 bg-gray-100 rounded-xl text-xs font-bold text-gray-600 btn-press hover:bg-gray-200">編輯</button>}
+                            {isEditing && <button onClick={handleSave} className="px-4 py-2 bg-blue-600 rounded-xl text-xs font-bold text-white btn-press shadow-lg shadow-blue-200">儲存發佈</button>}
+                            <button onClick={onClose} className="p-2 bg-gray-100 rounded-full btn-press text-gray-500 hover:bg-gray-200"><Icon name="X" size={20}/></button>
+                        </div>
+                    </div>
+
+                    {/* Day Tabs */}
+                    <div className="flex justify-between px-4 py-4 bg-gray-50/50 overflow-x-auto no-scrollbar">
+                        {days.map((d, i) => (
+                            <button 
+                                key={d} 
+                                onClick={() => setCurrentDay(i)}
+                                className={`flex-1 min-w-[70px] py-2.5 mx-1 rounded-xl text-xs font-bold transition-all btn-press ${currentDay === i ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' : 'bg-white text-gray-500 border border-gray-100'}`}
+                            >
+                                {d.replace('星期', '週')}
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-20">
+                        {localData.map((row, rIdx) => {
+                            const isBreak = row.type === 'break';
+                            const subjectName = isBreak ? row.label : row.items[currentDay];
+                            const style = getSubColor(subjectName);
+
+                            return (
+                                <div key={row.id} className="flex gap-4 relative group animate-slide-up-fade" style={{animationDelay: `${rIdx * 0.05}s`}}>
+                                    {/* Time Column */}
+                                    <div className="w-16 flex flex-col justify-center items-end text-xs font-bold text-gray-400 py-2">
+                                        {isEditing ? (
+                                            <div className="flex flex-col gap-2 w-full">
+                                                <input type="time" value={row.start} onChange={e=>updateRow(rIdx,'start',e.target.value)} className="bg-white border rounded px-1 w-full text-center text-[10px]"/>
+                                                <input type="time" value={row.end} onChange={e=>updateRow(rIdx,'end',e.target.value)} className="bg-white border rounded px-1 w-full text-center text-[10px]"/>
+                                            </div>
+                                        ) : (
+                                            <>{row.start}<br/><div className="h-4 w-[1px] bg-gray-300 my-1 mx-auto"></div>{row.end}</>
+                                        )}
+                                    </div>
+
+                                    {/* Subject Card */}
+                                    <div className={`flex-1 rounded-2xl p-4 flex items-center shadow-soft border transition-all hover:scale-[1.02] ${isBreak ? 'bg-gray-100/80 border-gray-200 justify-center' : `${style.bg} border-transparent bg-white`}`}>
+                                        {isEditing ? (
+                                            <div className="w-full flex flex-col gap-2">
+                                                <div className="flex gap-2">
+                                                    <select value={row.type} onChange={e=>updateRow(rIdx,'type',e.target.value)} className="bg-white border rounded text-[10px] p-1"><option value="lesson">課堂</option><option value="break">休息</option></select>
+                                                    <button onClick={()=>removeRow(rIdx)} className="bg-red-100 text-red-500 rounded p-1 ml-auto"><Icon name="Trash2" size={14}/></button>
+                                                </div>
+                                                {isBreak ? (
+                                                    <input value={row.label||''} onChange={e=>updateRow(rIdx,'label',e.target.value)} className="w-full bg-white border rounded px-2 py-2 text-center font-bold" placeholder="休息名稱"/> 
+                                                ) : (
+                                                    <input value={row.items[currentDay]} onChange={e=>updateItem(rIdx, currentDay, e.target.value)} className="w-full bg-white border rounded px-2 py-2 font-bold text-gray-800" placeholder="輸入科目"/>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <span className={`font-bold text-lg ${isBreak ? 'text-gray-500 tracking-widest text-sm uppercase' : style.text}`}>
+                                                {subjectName || '-'}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                        
+                        {isEditing && (
+                            <button onClick={addRow} className="w-full mt-6 py-4 border-2 border-dashed border-blue-300 bg-blue-50 rounded-2xl text-blue-500 font-bold flex items-center justify-center gap-2 hover:bg-blue-100 transition-colors btn-press">
+                                <Icon name="PlusCircle" size={24}/> 新增時段
+                            </button>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        // ==========================================
+        // APP LOGIC
         // ==========================================
         const App = () => {
             const [user, setUser] = useState(null);
-            const [userData, setUserData] = useState(null); 
+            const [userData, setUserData] = useState(null);
             const [homeworks, setHomeworks] = useState([]);
-            const [usersList, setUsersList] = useState([]); 
+            const [usersList, setUsersList] = useState([]);
             const [broadcast, setBroadcast] = useState({ message: "", active: false });
-            
-            // Auth UI
-            const [authMode, setAuthMode] = useState('login'); 
-            const [authEmail, setAuthEmail] = useState('');
-            const [authPassword, setAuthPassword] = useState('');
+            const [subjects, setSubjects] = useState(DEFAULT_SUBJECTS);
+            const [timetableData, setTimetableData] = useState(DEFAULT_TIMETABLE);
             
             // UI States
-            const [showShortNameModal, setShowShortNameModal] = useState(false);
-            const [inputShortName, setInputShortName] = useState('');
-            const [loading, setLoading] = useState(true);
-            const [errorMsg, setErrorMsg] = useState(null);
-            const [filterSubject, setFilterSubject] = useState("全部");
-            const [sortBy, setSortBy] = useState("deadline");
-            const [showHistory, setShowHistory] = useState(false);
-            const [isAddFormOpen, setIsAddFormOpen] = useState(false); // Controls inline add form visibility
+            const [activeTab, setActiveTab] = useState('home'); 
+            const [notification, setNotification] = useState({ message: '', type: 'info', visible: false });
+            const [sortOrder, setSortOrder] = useState('asc'); 
             
             // Modals
             const [editingTask, setEditingTask] = useState(null);
-            const [isEditModalOpen, setIsEditModalOpen] = useState(false); // Only for editing now
+            const [filterSubject, setFilterSubject] = useState("全部");
+            const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+            const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
             const [isBroadcastModalOpen, setIsBroadcastModalOpen] = useState(false);
-            const [isAdminUsersModalOpen, setIsAdminUsersModalOpen] = useState(false);
+            const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+            const [cardModal, setCardModal] = useState({ open: false, title: '', type: 'all' });
+            
+            // Auth
+            const [authMode, setAuthMode] = useState('login');
+            const [authEmail, setAuthEmail] = useState('');
+            const [authPassword, setAuthPassword] = useState('');
+            const [showShortNameModal, setShowShortNameModal] = useState(false);
+            const [inputShortName, setInputShortName] = useState('');
+            const [deleteTargetId, setDeleteTargetId] = useState(null);
 
             const isAdmin = user?.email === ADMIN_EMAIL;
 
-            // ... (Auth Logic same as before) ...
+            const notify = (msg, type = 'success') => { setNotification({ message: msg, type, visible: true }); setTimeout(() => setNotification(prev => ({ ...prev, visible: false })), 2500); };
+
+            // ... Effects same as before ...
             useEffect(() => {
-                const unsubscribe = auth.onAuthStateChanged(async (currentUser) => {
-                    setUser(currentUser);
-                    if (currentUser) {
-                        try {
-                            const userDocRef = db.collection('users').doc(currentUser.uid);
-                            const docSnap = await userDocRef.get();
-                            if (docSnap.exists) {
-                                const data = docSnap.data();
-                                setUserData(data);
-                                if (!data.shortName) setShowShortNameModal(true);
-                                await userDocRef.update({ email: currentUser.email, lastLogin: firebase.firestore.FieldValue.serverTimestamp() });
-                            } else {
-                                await userDocRef.set({ email: currentUser.email, displayName: currentUser.displayName || '', photoURL: currentUser.photoURL || '', lastLogin: firebase.firestore.FieldValue.serverTimestamp() });
-                                setShowShortNameModal(true);
-                            }
-                        } catch (e) { console.error(e); }
-                    } else { setUserData(null); }
-                    setLoading(false);
+                const unsubscribe = auth.onAuthStateChanged(async (u) => {
+                    setUser(u);
+                    if (u) {
+                        const ref = db.collection('users').doc(u.uid);
+                        const snap = await ref.get();
+                        if (snap.exists) { setUserData(snap.data()); if (!snap.data().shortName) setShowShortNameModal(true); await ref.update({ lastLogin: firebase.firestore.FieldValue.serverTimestamp() }); }
+                        else { await ref.set({ email: u.email, displayName: u.displayName||'', photoURL: u.photoURL||'', lastLogin: firebase.firestore.FieldValue.serverTimestamp() }); setShowShortNameModal(true); }
+                        notify(`歡迎回來，${u.displayName || '同學'}`, 'info');
+                    }
                 });
                 return () => unsubscribe();
             }, []);
 
             useEffect(() => {
                 if (!user) return;
-                const hwUnsub = db.collection('homeworks').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
-                    const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    setHomeworks(items);
-                }, err => setErrorMsg("資料讀取錯誤"));
+                const hwUnsub = db.collection('homeworks').orderBy('createdAt', 'desc').onSnapshot(snap => setHomeworks(snap.docs.map(doc => ({ id: doc.id, ...doc.data() }))));
                 const bcUnsub = db.collection('settings').doc('broadcast').onSnapshot(doc => { if (doc.exists) setBroadcast(doc.data()); });
+                const subUnsub = db.collection('settings').doc('subjects').onSnapshot(doc => { if(doc.exists && doc.data().list) setSubjects(doc.data().list); else setSubjects(DEFAULT_SUBJECTS); });
+                const ttUnsub = db.collection('settings').doc('timetable').onSnapshot(doc => { if(doc.exists && doc.data().data) setTimetableData(doc.data().data); });
+                
                 let userUnsub = () => {};
-                if (isAdmin) {
-                    userUnsub = db.collection('users').orderBy('lastLogin', 'desc').onSnapshot(snapshot => {
-                        const users = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                        setUsersList(users);
-                    });
-                }
-                return () => { hwUnsub(); bcUnsub(); userUnsub(); };
+                if (isAdmin) userUnsub = db.collection('users').orderBy('lastLogin', 'desc').onSnapshot(snap => setUsersList(snap.docs.map(doc => ({ id: doc.id, ...doc.data() }))));
+                
+                return () => { hwUnsub(); bcUnsub(); userUnsub(); subUnsub(); ttUnsub(); };
             }, [user, isAdmin]);
 
-            const handleGoogleLogin = async () => { try { const provider = new firebase.auth.GoogleAuthProvider(); await auth.signInWithPopup(provider); } catch (err) { alert(err.message); } };
-            const handleEmailAuth = async (e) => { e.preventDefault(); try { if (authMode === 'login') await auth.signInWithEmailAndPassword(authEmail, authPassword); else await auth.createUserWithEmailAndPassword(authEmail, authPassword); } catch (err) { alert(err.message); } };
-            const handleSaveShortName = async (e) => { e.preventDefault(); if (!inputShortName.trim()) return; await db.collection('users').doc(user.uid).update({ shortName: inputShortName.trim() }); setUserData(prev => ({...prev, shortName: inputShortName.trim()})); setShowShortNameModal(false); };
-            const handleLogout = () => auth.signOut();
-
-            // Stats Logic
-            const stats = useMemo(() => {
-                const now = new Date();
-                const todayStr = now.toISOString().split('T')[0];
-                const tomorrow = new Date(now);
-                tomorrow.setDate(tomorrow.getDate() + 1);
-                const tomorrowStr = tomorrow.toISOString().split('T')[0];
-
-                let todayCount = 0;
-                let tomorrowCount = 0;
-                let futureCount = 0;
-                let examCount = 0;
-
-                homeworks.forEach(hw => {
-                    const isDone = hw.completedBy?.includes(user?.uid);
-                    if (isDone) return; // Don't count finished tasks
-
-                    const isRelevant = isAdmin ? true : (hw.type === 'global' || hw.createdBy === user?.uid);
-                    if (!isRelevant) return;
-
-                    if (hw.category === 'exam') {
-                        examCount++;
-                    }
-
-                    if (hw.deadline === todayStr) todayCount++;
-                    else if (hw.deadline === tomorrowStr) tomorrowCount++;
-                    else if (hw.deadline > tomorrowStr) futureCount++;
-                });
-
-                return { todayCount, tomorrowCount, futureCount, examCount };
-            }, [homeworks, user, isAdmin]);
-
+            const handleAuth = async (e) => { e.preventDefault(); try { if (authMode==='login') await auth.signInWithEmailAndPassword(authEmail, authPassword); else await auth.createUserWithEmailAndPassword(authEmail, authPassword); } catch (err) { alert(err.message); } };
+            const handleGoogleLogin = async () => { try { await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); } catch (err) { alert(err.message); } };
+            const handleSaveShortName = async (e) => { e.preventDefault(); if(!inputShortName.trim())return; await db.collection('users').doc(user.uid).update({shortName:inputShortName.trim()}); setUserData(prev=>({...prev, shortName:inputShortName.trim()})); setShowShortNameModal(false); notify("名稱已更新"); };
+            
             const saveHomework = async (task) => {
                 try {
                     const payload = {
-                        subject: task.subject,
-                        content: task.content,
-                        deadline: task.deadline,
-                        type: isAdmin ? (task.type || 'global') : 'personal',
-                        category: task.category || 'homework', // 'homework' or 'exam'
-                        createdBy: user.uid,
-                        creatorName: userData?.shortName || user.displayName || 'Unknown',
+                        subject: task.subject, content: task.content, deadline: task.deadline,
+                        type: isAdmin ? (task.type || 'global') : 'personal', category: task.category || 'homework',
+                        createdBy: user.uid, creatorName: userData?.shortName || user.displayName || 'Unknown',
                         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                     };
-                    if (editingTask) await db.collection('homeworks').doc(editingTask.id).update(payload);
-                    else {
-                        payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-                        payload.completedBy = [];
-                        await db.collection('homeworks').add(payload);
-                    }
+                    if (editingTask) { await db.collection('homeworks').doc(editingTask.id).update(payload); notify("已更新紀錄"); }
+                    else { payload.createdAt = firebase.firestore.FieldValue.serverTimestamp(); payload.completedBy = []; await db.collection('homeworks').add(payload); notify("已新增紀錄"); }
                     setIsEditModalOpen(false); setEditingTask(null);
-                    if(!editingTask) setIsAddFormOpen(false); // Close inline form after add
-                } catch (error) { alert("儲存失敗"); }
+                } catch (err) { alert("儲存失敗"); }
             };
 
             const toggleComplete = async (task) => {
-                const isCompleted = task.completedBy?.includes(user.uid);
-                let newCompletedBy = isCompleted ? task.completedBy.filter(uid => uid !== user.uid) : [...(task.completedBy || []), user.uid];
+                const isDone = task.completedBy?.includes(user.uid);
+                const newCompletedBy = isDone ? task.completedBy.filter(uid => uid !== user.uid) : [...(task.completedBy || []), user.uid];
                 await db.collection('homeworks').doc(task.id).update({ completedBy: newCompletedBy });
+                notify(isDone ? "標記為未完成" : "太棒了！已完成");
             };
-            const deleteTask = async (id) => { if(confirm("確定刪除？")) await db.collection('homeworks').doc(id).delete(); };
+
+            const handleDeleteConfirm = async () => { if (deleteTargetId) { await db.collection('homeworks').doc(deleteTargetId).delete(); notify("已刪除紀錄", 'info'); setDeleteTargetId(null); } };
             const adminResetCompletions = async (taskId) => { if(confirm("重置完成狀態？")) await db.collection('homeworks').doc(taskId).update({ completedBy: [] }); };
-            const saveBroadcast = async (msg, active) => { await db.collection('settings').doc('broadcast').set({ message: msg, active, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }); setIsBroadcastModalOpen(false); };
+            const saveBroadcast = async (msg, active) => { await db.collection('settings').doc('broadcast').set({ message: msg, active }); setIsBroadcastModalOpen(false); notify("通告已發布"); };
+            
+            const updateSubjects = async (newSubjects) => { await db.collection('settings').doc('subjects').set({ list: newSubjects }); notify("科目列表已更新"); };
+            const updateTimetable = async (newData) => { await db.collection('settings').doc('timetable').set({ data: newData }); notify("課程表已發佈給全班"); };
+
+            const stats = useMemo(() => {
+                const now = new Date(); const today = now.toISOString().split('T')[0];
+                const tmr = new Date(now); tmr.setDate(tmr.getDate()+1); const tmrStr = tmr.toISOString().split('T')[0];
+                let cToday=0, cTmr=0, cFuture=0, cExam=0;
+                homeworks.forEach(hw => {
+                    const isDone = hw.completedBy?.includes(user?.uid); if(isDone) return;
+                    const isRelevant = isAdmin ? true : (hw.type === 'global' || hw.createdBy === user?.uid); if(!isRelevant) return;
+                    if(hw.category==='exam') cExam++;
+                    if(hw.deadline===today) cToday++; else if(hw.deadline===tmrStr) cTmr++; else if(hw.deadline>tmrStr) cFuture++;
+                });
+                return { cToday, cTmr, cFuture, cExam };
+            }, [homeworks, user, isAdmin]);
 
             const filteredHomeworks = useMemo(() => {
                 let list = homeworks;
                 if (!isAdmin) list = list.filter(h => h.type === 'global' || h.createdBy === user?.uid);
-                if (filterSubject !== "全部") list = list.filter(h => h.subject === filterSubject);
-                return list.sort((a, b) => {
-                    if (sortBy === 'deadline') {
-                        const dateA = a.deadline ? new Date(a.deadline) : new Date('9999-12-31');
-                        const dateB = b.deadline ? new Date(b.deadline) : new Date('9999-12-31');
-                        return dateA - dateB;
-                    }
-                    return (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0);
-                });
-            }, [homeworks, filterSubject, sortBy, user, isAdmin]);
+                return list.sort((a, b) => (a.deadline || '9999').localeCompare(b.deadline || '9999'));
+            }, [homeworks, sortOrder, user, isAdmin]);
 
-            if (loading) return <div className="min-h-screen flex items-center justify-center bg-white text-blue-400"><div className="w-10 h-10 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin"></div></div>;
+            const cardDetailHomeworks = useMemo(() => {
+                const type = cardModal.type; if(type==='all') return [];
+                const now = new Date(); const today = now.toISOString().split('T')[0];
+                const tmr = new Date(now); tmr.setDate(tmr.getDate()+1); const tmrStr = tmr.toISOString().split('T')[0];
+                let list = homeworks;
+                if(!isAdmin) list = list.filter(h => h.type === 'global' || h.createdBy === user?.uid);
+                return list.filter(hw => {
+                    const isDone = hw.completedBy?.includes(user?.uid); if(isDone) return false;
+                    if(type==='today') return hw.deadline===today;
+                    if(type==='tomorrow') return hw.deadline===tmrStr;
+                    if(type==='future') return hw.deadline>tmrStr;
+                    if(type==='exam') return hw.category==='exam';
+                    return false;
+                }).sort((a, b) => (a.deadline || '9999').localeCompare(b.deadline || '9999'));
+            }, [homeworks, cardModal.type, user, isAdmin]);
 
-            // Auth View (Same as before)
             if (!user) {
                 return (
-                    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-white">
-                        <div className="absolute inset-0 z-0">
-                            <div className="absolute top-[5%] left-[10%] w-[400px] h-[400px] bg-blue-100/60 rounded-full mix-blend-multiply filter blur-[60px] animate-blob"></div>
-                            <div className="absolute bottom-[10%] right-[5%] w-[350px] h-[350px] bg-pink-100/60 rounded-full mix-blend-multiply filter blur-[60px] animate-blob animation-delay-2000"></div>
-                            <div className="absolute top-[40%] left-[30%] w-[300px] h-[300px] bg-yellow-100/50 rounded-full mix-blend-multiply filter blur-[50px] animate-blob animation-delay-4000"></div>
-                        </div>
-                        <div className="bg-white/80 backdrop-blur-xl w-full max-w-[360px] rounded-[32px] p-8 relative z-10 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] border border-white/50 animate-fade-in-up mx-6">
-                            <div className="text-center mb-8">
-                                <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-tr from-blue-400 to-indigo-400 shadow-lg shadow-blue-200 mb-4 animate-float"><BookOpen size={40} className="text-white drop-shadow-md" strokeWidth={2.5} /></div>
-                                <h1 className="text-2xl font-black text-gray-800 tracking-tight flex items-center justify-center gap-2">{authMode === 'login' ? '歡迎回來' : '加入我們'}</h1>
-                                <p className="text-gray-400 text-sm mt-1 font-medium">電子手冊登入系統</p>
+                    <div className="min-h-screen flex items-center justify-center bg-white relative overflow-hidden px-4">
+                        <DynamicIsland notification={notification} />
+                        <div className="absolute inset-0 z-0 opacity-50"><div className="absolute top-[10%] left-[10%] w-64 h-64 bg-blue-200 rounded-full blur-3xl animate-blob"></div><div className="absolute bottom-[10%] right-[10%] w-64 h-64 bg-purple-200 rounded-full blur-3xl animate-blob animation-delay-2000"></div></div>
+                        <div className="w-full max-w-4xl bg-white/80 backdrop-blur-xl rounded-[32px] shadow-2xl border border-white overflow-hidden animate-pop-in flex flex-col md:flex-row">
+                            <div className="hidden md:flex flex-col justify-center items-center w-1/2 bg-gradient-to-br from-blue-500 to-indigo-600 p-12 text-white relative overflow-hidden">
+                                <div className="absolute inset-0 bg-[url('https://source.unsplash.com/random/800x600/?school,book')] opacity-10 bg-cover bg-center mix-blend-overlay"></div>
+                                <div className="relative z-10 text-center">
+                                    <div className="inline-flex items-center justify-center w-24 h-24 rounded-3xl bg-white/20 backdrop-blur-md shadow-lg mb-6"><Icon name="BookOpen" size={48} className="text-white"/></div>
+                                    <h1 className="text-4xl font-black mb-2">電子手冊</h1>
+                                    <p className="text-blue-100 font-medium tracking-wide">智慧校園 • 高效學習</p>
+                                </div>
                             </div>
-                            <form onSubmit={handleEmailAuth} className="space-y-4">
-                                <div className="relative group"><div className="absolute left-4 top-3.5 text-blue-300 group-focus-within:text-blue-500 transition-colors"><Mail size={20} strokeWidth={2.5} /></div><input type="email" required value={authEmail} onChange={e=>setAuthEmail(e.target.value)} placeholder="輸入電子郵件" className="cute-input w-full pl-12 pr-4 py-3.5 rounded-2xl text-sm text-gray-700 placeholder-gray-400 outline-none" /></div>
-                                <div className="relative group"><div className="absolute left-4 top-3.5 text-blue-300 group-focus-within:text-blue-500 transition-colors"><Lock size={20} strokeWidth={2.5} /></div><input type="password" required value={authPassword} onChange={e=>setAuthPassword(e.target.value)} placeholder="輸入密碼" className="cute-input w-full pl-12 pr-4 py-3.5 rounded-2xl text-sm text-gray-700 placeholder-gray-400 outline-none" /></div>
-                                <button type="submit" className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white py-3.5 rounded-2xl font-bold text-sm shadow-lg shadow-blue-200 hover:shadow-blue-300 transform transition-all duration-200 active:scale-95">{authMode === 'login' ? '立即登入' : '註冊新帳戶'}</button>
-                            </form>
-                            <div className="relative my-6"><div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-100"></div></div><div className="relative flex justify-center text-[10px] text-gray-400 bg-transparent"><span className="px-3 bg-white/50 backdrop-blur-sm rounded-full">或</span></div></div>
-                            <button onClick={handleGoogleLogin} className="w-full bg-white border-2 border-gray-50 text-gray-600 py-3 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-gray-50 hover:border-gray-100 transition-all active:scale-95"><img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" />Google 登入</button>
-                            <div className="absolute -bottom-10 left-0 w-full text-center sm:text-left sm:w-auto"><button onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')} className="text-xs text-gray-400 hover:text-blue-500 transition-colors flex items-center gap-1.5 px-3 py-2 bg-white/50 rounded-full backdrop-blur-sm mx-auto sm:mx-0">{authMode === 'login' ? <><Sparkles size={14} className="text-yellow-400" fill="currentColor" /><span className="font-bold">新用戶註冊</span></> : <><ArrowRight size={14} className="rotate-180" /><span className="font-bold">返回登入</span></>}</button></div>
+                            <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center">
+                                <div className="md:hidden text-center mb-8">
+                                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-blue-600 shadow-lg shadow-blue-200 mb-4"><Icon name="BookOpen" size={32} className="text-white"/></div>
+                                    <h1 className="text-2xl font-black text-gray-800">電子手冊</h1>
+                                </div>
+                                <h2 className="text-2xl font-bold text-gray-800 mb-6 hidden md:block">{authMode==='login'?'歡迎回來':'建立帳戶'}</h2>
+                                <form onSubmit={handleAuth} className="space-y-5">
+                                    <div className="relative"><Icon name="Mail" size={18} className="absolute left-4 top-3.5 text-gray-400"/><input type="email" required value={authEmail} onChange={e=>setAuthEmail(e.target.value)} placeholder="電子郵件" className="cute-input w-full pl-12 pr-4 py-3 rounded-2xl text-sm outline-none"/></div>
+                                    <div className="relative"><Icon name="Lock" size={18} className="absolute left-4 top-3.5 text-gray-400"/><input type="password" required value={authPassword} onChange={e=>setAuthPassword(e.target.value)} placeholder="密碼" className="cute-input w-full pl-12 pr-4 py-3 rounded-2xl text-sm outline-none"/></div>
+                                    <button type="submit" className="w-full bg-blue-600 text-white py-3.5 rounded-2xl font-bold shadow-lg shadow-blue-200 btn-press transform hover:scale-[1.02] transition-all">{authMode==='login'?'登入':'註冊'}</button>
+                                </form>
+                                <div className="relative my-8"><div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-100"></div></div><div className="relative flex justify-center text-[10px] text-gray-400 bg-transparent"><span className="px-3 bg-white">或</span></div></div>
+                                <button onClick={handleGoogleLogin} className="w-full bg-white border-2 border-gray-100 text-gray-600 py-3 rounded-2xl font-bold text-sm flex items-center justify-center gap-3 btn-press hover:bg-gray-50 transition-colors"><img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" />Google 登入</button>
+                                <div className="mt-8 text-center"><button onClick={()=>setAuthMode(m=>m==='login'?'register':'login')} className="text-sm text-gray-400 hover:text-blue-600 font-bold transition-colors">{authMode==='login'?'註冊新帳戶':'返回登入'}</button></div>
+                            </div>
                         </div>
                     </div>
                 );
             }
 
-            // Main View
+            if (activeTab === 'timetable') return <TimetablePage subjects={subjects} timetableData={timetableData} onUpdateTimetable={updateTimetable} isAdmin={isAdmin} onClose={()=>setActiveTab('home')} />;
+            if (activeTab === 'history') {
+                return (
+                    <div className="min-h-screen bg-[#F5F7FB] animate-slide-up-fade relative">
+                        <DynamicIsland notification={notification} />
+                        <div className="sticky top-0 z-40 bg-[#F5F7FB]/90 backdrop-blur-md px-5 py-4 border-b border-gray-200/50 flex justify-between items-center">
+                            <h1 className="text-2xl font-black text-gray-800 flex items-center gap-2"><Icon name="Clock" className="text-amber-500"/> 歷史紀錄</h1>
+                            <button onClick={()=>setActiveTab('home')} className="p-2 bg-white rounded-full shadow-sm btn-press"><Icon name="X" size={20}/></button>
+                        </div>
+                        <div className="p-4 max-w-5xl mx-auto space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {filteredHomeworks.filter(h => h.completedBy?.includes(user.uid)).length === 0 ? (
+                                    <div className="col-span-full text-center py-20 text-gray-400">暫無歷史紀錄</div>
+                                ) : (
+                                    filteredHomeworks.filter(h => h.completedBy?.includes(user.uid)).map((hw, i) => (
+                                        <div key={hw.id} style={{animationDelay: `${i*0.05}s`}} className="animate-slide-up-fade">
+                                            <HomeworkItem hw={hw} isDone={true} user={user} isAdmin={isAdmin} subjects={subjects} onToggle={()=>toggleComplete(hw)} onEdit={()=>{setEditingTask(hw); setIsEditModalOpen(true)}} onDelete={()=>setDeleteTargetId(hw.id)} onReset={()=>adminResetCompletions(hw.id)} />
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                        <DeleteModal isOpen={!!deleteTargetId} onClose={()=>setDeleteTargetId(null)} onConfirm={handleDeleteConfirm} />
+                    </div>
+                );
+            }
+            if (activeTab === 'profile') {
+                return (
+                    <div className="min-h-screen bg-white animate-slide-up-fade relative z-50">
+                        <DynamicIsland notification={notification} />
+                        <div className="absolute top-4 right-4"><button onClick={()=>setActiveTab('home')} className="p-2 bg-gray-100 rounded-full btn-press"><Icon name="X" size={20}/></button></div>
+                        <div className="flex flex-col items-center justify-center min-h-[80vh] px-6">
+                            <div className="w-28 h-28 bg-gradient-to-tr from-blue-400 to-blue-600 rounded-full shadow-xl flex items-center justify-center text-5xl font-black text-white mb-6 border-4 border-white animate-pop-in">{userData?.shortName?userData.shortName[0]:user.email[0].toUpperCase()}</div>
+                            <h2 className="text-3xl font-black text-gray-800 mb-1">{userData?.shortName || user.displayName}</h2>
+                            <p className="text-gray-400 text-sm font-medium mb-8 bg-gray-100 px-4 py-1.5 rounded-full">{user.email}</p>
+                            <button onClick={()=>auth.signOut()} className="w-full max-w-xs bg-red-50 text-red-500 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 btn-press hover:bg-red-100 transition-colors"><Icon name="LogOut" size={20}/> 登出帳戶</button>
+                        </div>
+                    </div>
+                );
+            }
+
             return (
-                <div className="min-h-screen pb-24 relative bg-gray-50">
-                    <BroadcastBanner message={broadcast.message} active={broadcast.active} />
-
-                    <nav className="bg-white border-b border-gray-200 sticky top-0 z-30 px-4 py-3 flex justify-between items-center shadow-sm w-full">
-                        <div className="flex items-center gap-3 overflow-hidden">
-                            <div className="bg-school-800 p-2 rounded-lg shadow-sm shrink-0"><BookOpen size={20} className="text-white" /></div>
-                            <div className="overflow-hidden"><h1 className="font-bold text-gray-800 leading-tight truncate">電子手冊</h1><p className="text-xs text-gray-500 truncate font-medium text-school-600">{userData?.shortName || user.displayName || user.email}</p></div>
+                <div className="min-h-screen pb-20 bg-[#F5F7FB]">
+                    <DynamicIsland notification={notification} />
+                    
+                    <header className="sticky top-0 z-40 px-5 py-4 flex justify-between items-center bg-transparent pointer-events-none">
+                        <div className="pointer-events-auto flex items-center gap-3">
+                            <div className="bg-white/80 backdrop-blur p-2.5 rounded-2xl shadow-sm text-blue-600 border border-white/50"><Icon name="BookOpen" size={24}/></div>
+                            <div>
+                                <h1 className="text-xl font-black text-gray-800 leading-tight">電子手冊</h1>
+                                <div className="text-[11px] text-gray-500 font-medium flex gap-1.5 mt-0.5">
+                                    <span className="font-bold text-gray-700 bg-white/50 px-1.5 rounded">{userData?.shortName || '學生'}</span>
+                                    <span className="text-gray-300">|</span>
+                                    <span className="truncate max-w-[120px]">{user.email}</span>
+                                </div>
+                            </div>
                         </div>
-                        <div className="flex gap-2 shrink-0">
-                            <button onClick={() => setShowHistory(!showHistory)} title="歷史紀錄" className={`p-2 rounded-lg ${showHistory ? 'bg-amber-100 text-amber-600' : 'bg-gray-100 text-gray-600'}`}><Clock size={20} /></button>
-                            <button onClick={handleLogout} title="登出" className="p-2 bg-gray-100 rounded-lg hover:bg-red-50 text-red-500"><LogOut size={20} /></button>
+                        <div className="pointer-events-auto flex items-center gap-3">
+                            <button onClick={()=>setActiveTab('timetable')} className="p-2.5 bg-white/80 backdrop-blur rounded-full text-blue-600 shadow-sm border border-white/50 btn-press"><Icon name="Calendar" size={20}/></button>
+                            <button onClick={()=>setIsSettingsModalOpen(true)} className="p-2.5 bg-white/80 backdrop-blur rounded-full text-gray-600 shadow-sm border border-white/50 btn-press"><Icon name="Settings" size={20}/></button>
+                            <button onClick={()=>setActiveTab('history')} className="px-4 py-2 bg-white/80 backdrop-blur rounded-full text-xs font-bold text-gray-600 shadow-sm border border-white/50 btn-press flex items-center gap-1.5 hover:bg-white transition-colors"><Icon name="Clock" size={16}/> 歷史</button>
+                            <button onClick={()=>setActiveTab('profile')} className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold border-2 border-white shadow-md btn-press hover:scale-105 transition-transform">
+                                {userData?.shortName ? userData.shortName[0].toUpperCase() : <Icon name="User" size={18}/>}
+                            </button>
                         </div>
-                    </nav>
+                    </header>
 
-                    {errorMsg && <div className="bg-red-50 p-4 border-b border-red-200 flex gap-2 items-center text-red-600 text-sm"><AlertCircle size={16} /> {errorMsg}</div>}
-
-                    {isAdmin && (
-                        <div className="bg-school-900 text-white px-4 py-2 text-xs flex justify-between items-center overflow-x-auto whitespace-nowrap">
-                            <div className="flex items-center gap-3"><span className="bg-red-600 text-white px-2 py-0.5 rounded font-bold">管理員</span><button onClick={() => setIsAdminUsersModalOpen(true)} className="flex items-center gap-1 hover:text-white hover:bg-white/20 px-2 py-1 rounded transition-colors"><Eye size={12}/> 學生名單 ({usersList.length})</button></div>
-                            <button onClick={() => setIsBroadcastModalOpen(true)} className="flex items-center gap-1 hover:text-white px-2 py-1 rounded hover:bg-white/20"><Volume2 size={12}/> 發布通告</button>
+                    {broadcast.active && (
+                        <div className="mx-4 mt-2 bg-indigo-600 text-white text-xs font-bold py-3 px-4 rounded-2xl shadow-lg shadow-indigo-200 flex items-center gap-2 animate-pop-in transform hover:scale-[1.01] transition-transform">
+                            <Icon name="Volume2" size={16}/>
+                            <div className="whitespace-nowrap overflow-hidden flex-1"><div className="animate-marquee">{broadcast.message}</div></div>
                         </div>
                     )}
 
-                    <main className="p-4 space-y-6 max-w-3xl mx-auto w-full">
+                    <main className="px-4 mt-6 space-y-8 max-w-5xl mx-auto">
                         
-                        {/* 1. Dashboard Cards (Top) */}
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 animate-fade-in-up">
-                            <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-4 text-white shadow-lg shadow-blue-200 flex flex-col justify-between h-28 relative overflow-hidden group">
-                                <div className="absolute right-[-10px] top-[-10px] bg-white/20 w-16 h-16 rounded-full blur-xl group-hover:scale-150 transition-transform duration-500"></div>
-                                <div className="text-xs font-bold opacity-80 uppercase tracking-wide">今天到期</div>
-                                <div className="text-4xl font-black mt-1">{stats.todayCount}</div>
-                                <div className="text-[10px] opacity-70 mt-auto flex items-center gap-1"><CalendarDays size={10} /> 立即處理</div>
+                        <section>
+                            <h3 className="text-xs font-bold text-gray-400 mb-4 px-1 uppercase tracking-wider flex items-center gap-2"><Icon name="LayoutGrid" size={12}/> 概覽狀態</h3>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <StatCard bg="bg-blue-500/90" title="今天到期" count={stats.cToday} icon="CalendarDays" onClick={() => setCardModal({open: true, title: '今天到期', type: 'today'})} />
+                                <StatCard bg="bg-indigo-500/90" title="明天到期" count={stats.cTmr} icon="ArrowRight" onClick={() => setCardModal({open: true, title: '明天到期', type: 'tomorrow'})} />
+                                <StatCard bg="bg-rose-500/90" title="測驗考試" count={stats.cExam} icon="AlertCircle" onClick={() => setCardModal({open: true, title: '測驗考試', type: 'exam'})} />
+                                <StatCard bg="bg-teal-500/90" title="日後到期" count={stats.cFuture} icon="Layers" onClick={() => setCardModal({open: true, title: '日後到期', type: 'future'})} />
                             </div>
-                            <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-4 text-white shadow-lg shadow-indigo-200 flex flex-col justify-between h-28 relative overflow-hidden group">
-                                <div className="absolute right-[-10px] top-[-10px] bg-white/20 w-16 h-16 rounded-full blur-xl group-hover:scale-150 transition-transform duration-500"></div>
-                                <div className="text-xs font-bold opacity-80 uppercase tracking-wide">明天到期</div>
-                                <div className="text-4xl font-black mt-1">{stats.tomorrowCount}</div>
-                                <div className="text-[10px] opacity-70 mt-auto flex items-center gap-1"><ArrowRight size={10} /> 預先準備</div>
+                        </section>
+
+                        <div className="bg-white rounded-[32px] shadow-soft p-6 animate-slide-up-fade border border-white">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="bg-blue-100 text-blue-600 p-2.5 rounded-2xl shadow-inner"><Icon name="PlusCircle" size={24}/></div>
+                                <span className="text-lg font-black text-gray-800">新增紀錄</span>
                             </div>
-                            <div className="bg-gradient-to-br from-emerald-400 to-teal-500 rounded-2xl p-4 text-white shadow-lg shadow-teal-200 flex flex-col justify-between h-28 relative overflow-hidden group">
-                                <div className="absolute right-[-10px] top-[-10px] bg-white/20 w-16 h-16 rounded-full blur-xl group-hover:scale-150 transition-transform duration-500"></div>
-                                <div className="text-xs font-bold opacity-80 uppercase tracking-wide">日後到期</div>
-                                <div className="text-4xl font-black mt-1">{stats.futureCount}</div>
-                                <div className="text-[10px] opacity-70 mt-auto flex items-center gap-1"><Layers size={10} /> 稍後處理</div>
-                            </div>
-                            <div className="bg-gradient-to-br from-rose-400 to-orange-500 rounded-2xl p-4 text-white shadow-lg shadow-orange-200 flex flex-col justify-between h-28 relative overflow-hidden group">
-                                <div className="absolute right-[-10px] top-[-10px] bg-white/20 w-16 h-16 rounded-full blur-xl group-hover:scale-150 transition-transform duration-500"></div>
-                                <div className="text-xs font-bold opacity-80 uppercase tracking-wide">測驗考試</div>
-                                <div className="text-4xl font-black mt-1">{stats.examCount}</div>
-                                <div className="text-[10px] opacity-70 mt-auto flex items-center gap-1"><AlertCircle size={10} /> 重點溫習</div>
-                            </div>
+                            <HomeworkForm initialData={null} onSave={saveHomework} isAdmin={isAdmin} subjects={subjects} isInline={true} />
                         </div>
 
-                        {/* 2. Inline Add Form (Collapsible or Block) */}
-                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                            <button 
-                                onClick={() => setIsAddFormOpen(!isAddFormOpen)}
-                                className="w-full p-4 flex items-center justify-between text-left text-gray-700 font-bold hover:bg-gray-50 transition-colors"
-                            >
-                                <span className="flex items-center gap-2"><Plus size={20} className="text-school-600"/> 新增項目</span>
-                                {isAddFormOpen ? <ChevronUp size={18} className="text-gray-400"/> : <ChevronDown size={18} className="text-gray-400"/>}
-                            </button>
-                            
-                            {/* Form Content (Only visible when open) */}
-                            {isAddFormOpen && (
-                                <div className="p-4 pt-0 border-t border-gray-100 bg-gray-50/50">
-                                    <HomeworkForm 
-                                        initialData={null} 
-                                        onSave={saveHomework} 
-                                        isAdmin={isAdmin} 
-                                        onClose={() => setIsAddFormOpen(false)}
-                                        isInline={true}
-                                    />
-                                </div>
-                            )}
-                        </div>
+                        <section className="space-y-6">
+                            <div className="flex items-center justify-between px-1">
+                                <h2 className="font-bold text-xl text-gray-800">全部功課</h2>
+                                <button onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')} className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg flex items-center gap-1 btn-press">
+                                    <Icon name="ArrowUpDown" size={12}/> {sortOrder === 'asc' ? '最緊急' : '最不緊急'}
+                                </button>
+                            </div>
 
-                        {/* 3. Filters */}
-                        <div className="flex gap-2 overflow-x-auto scrollbar-hide py-1">
-                            <button onClick={() => setSortBy(sortBy === 'deadline' ? 'created' : 'deadline')} className="flex items-center gap-1 bg-white border border-gray-200 px-3 py-1.5 rounded-full text-xs font-medium text-gray-700 shrink-0 shadow-sm"><ArrowUpDown size={12} /> {sortBy === 'deadline' ? '按繳交日期' : '按發布日期'}</button>
-                            <div className="h-6 w-px bg-gray-300 mx-1 self-center"></div>
-                            <button onClick={() => setFilterSubject("全部")} className={`px-3 py-1.5 rounded-full text-xs font-medium shrink-0 shadow-sm transition-colors ${filterSubject === "全部" ? 'bg-school-800 text-white' : 'bg-white border border-gray-200 text-gray-600'}`}>全部</button>
-                            {HK_SUBJECTS.map(sub => (
-                                <button key={sub} onClick={() => setFilterSubject(sub)} className={`px-3 py-1.5 rounded-full text-xs font-medium shrink-0 shadow-sm transition-colors ${filterSubject === sub ? 'bg-school-600 text-white' : 'bg-white border border-gray-200 text-gray-600'}`}>{sub}</button>
-                            ))}
-                        </div>
-
-                        {/* 4. Homework List */}
-                        {filteredHomeworks.length === 0 ? (
-                            <div className="text-center py-12 text-gray-400 bg-white rounded-2xl border border-dashed border-gray-200"><div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center mx-auto mb-3"><Check size={32} className="text-gray-300" /></div><p>暫無相關紀錄</p></div>
-                        ) : (
-                            filteredHomeworks.map(hw => {
-                                const isDone = hw.completedBy?.includes(user.uid);
-                                if (!showHistory && isDone) return null;
-                                const isExam = hw.category === 'exam';
-                                return (
-                                    <div key={hw.id} className={`bg-white rounded-2xl p-4 shadow-sm border transition-all flex items-start gap-3 relative group ${isDone ? 'opacity-50 grayscale bg-gray-50' : 'hover:shadow-md hover:border-blue-200'} ${isExam ? 'border-l-4 border-l-rose-400' : 'border-l-4 border-l-transparent'}`}>
-                                        <div className="mt-1 shrink-0">
-                                            <button onClick={() => toggleComplete(hw)} className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${isDone ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 hover:border-school-400'}`}><Check size={14} strokeWidth={4} /></button>
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2 mb-2 flex-wrap">
-                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded text-white shadow-sm ${getSubjectColor(hw.subject)}`}>{hw.subject}</span>
-                                                {isExam && <span className="text-[10px] px-2 py-0.5 rounded bg-rose-100 text-rose-600 font-bold border border-rose-200 flex items-center gap-1"><AlertCircle size={10}/> 測驗考試</span>}
-                                                <span className={`text-[10px] px-1.5 py-0.5 rounded border font-medium ${hw.type==='global'?'bg-blue-50 text-blue-700 border-blue-100':'bg-gray-100 text-gray-600 border-gray-200'}`}>{hw.type==='global'?'全班':'個人'}</span>
-                                                {isAdmin && hw.type === 'global' && <span className="text-[10px] text-gray-400 ml-auto">完成: {hw.completedBy?.length||0}</span>}
-                                            </div>
-                                            <p className={`text-gray-800 text-sm leading-relaxed font-medium ${isDone ? 'line-through' : ''}`}>{hw.content}</p>
-                                            <div className="mt-3 flex items-center gap-3 text-xs text-gray-400 font-medium">{hw.deadline && <span className={`flex items-center gap-1 ${getDeadlineColor(hw.deadline, isDone)}`}><Clock size={12} /> {hw.deadline}</span>}</div>
-                                        </div>
-                                        <div className="flex flex-col gap-1 ml-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            {(isAdmin || hw.createdBy === user.uid) && (
-                                                <><button onClick={() => { setEditingTask(hw); setIsEditModalOpen(true); }} className="p-1.5 text-gray-400 hover:text-school-600 hover:bg-blue-50 rounded-lg"><Edit2 size={16} /></button><button onClick={() => deleteTask(hw.id)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg"><Trash2 size={16} /></button></>
-                                            )}
-                                            {isAdmin && hw.type === 'global' && <button onClick={() => adminResetCompletions(hw.id)} className="p-1.5 text-gray-300 hover:text-orange-500 hover:bg-orange-50 rounded-lg"><RefreshCw size={16} /></button>}
-                                        </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-12">
+                                {filteredHomeworks.length === 0 ? (
+                                    <div className="col-span-full flex flex-col items-center justify-center py-16 text-gray-400 bg-white rounded-[32px] border border-gray-100 shadow-sm">
+                                        <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4 animate-pulse"><Icon name="Inbox" size={40} className="text-gray-300"/></div>
+                                        <p className="text-base font-bold">暫無待辦事項</p>
                                     </div>
-                                );
-                            })
-                        )}
-                        <div className="h-10"></div>
+                                ) : (
+                                    filteredHomeworks.map((hw, i) => {
+                                        const isDone = hw.completedBy?.includes(user.uid);
+                                        if (isDone) return null;
+                                        return (
+                                            <div key={hw.id} style={{animationDelay: `${i*0.05}s`}} className="animate-slide-up-fade">
+                                                <HomeworkItem 
+                                                    hw={hw} isDone={isDone} user={user} isAdmin={isAdmin} subjects={subjects}
+                                                    onToggle={() => toggleComplete(hw)} 
+                                                    onEdit={() => {setEditingTask(hw); setIsEditModalOpen(true)}} 
+                                                    onDelete={() => setDeleteTargetId(hw.id)}
+                                                    onReset={() => adminResetCompletions(hw.id)}
+                                                />
+                                            </div>
+                                        );
+                                    })
+                                )}
+                            </div>
+                        </section>
                     </main>
 
-                    {/* Edit Modal (Still kept for edits) */}
-                    {isEditModalOpen && <Modal onClose={() => setIsEditModalOpen(false)} title="編輯項目"><HomeworkForm initialData={editingTask} onSave={saveHomework} isAdmin={isAdmin} onClose={() => setIsEditModalOpen(false)} /></Modal>}
-                    {isBroadcastModalOpen && <Modal onClose={() => setIsBroadcastModalOpen(false)} title="發布手冊通告"><BroadcastForm initialData={broadcast} onSave={saveBroadcast} /></Modal>}
+                    {/* MODALS */}
+                    <DeleteModal isOpen={!!deleteTargetId} onClose={()=>setDeleteTargetId(null)} onConfirm={handleDeleteConfirm} />
                     
-                    {showShortNameModal && (
-                        <div className="fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-4 backdrop-blur-sm">
-                            <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl text-center">
-                                <div className="bg-school-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"><UserCircle size={32} className="text-school-600" /></div>
-                                <h2 className="text-xl font-bold text-gray-800 mb-2">歡迎使用！</h2>
-                                <p className="text-gray-500 text-sm mb-6">為方便管理員識別，請設定您的<br/><strong>顯示名稱 (例如: Peter Chan)</strong></p>
-                                <form onSubmit={handleSaveShortName} className="space-y-4">
-                                    <input type="text" autoFocus value={inputShortName} onChange={e => setInputShortName(e.target.value)} placeholder="輸入名稱" className="w-full p-3 border-2 border-school-100 rounded-xl focus:border-school-500 outline-none text-center font-bold text-lg" required />
-                                    <button type="submit" className="w-full bg-school-600 text-white py-3 rounded-xl font-bold hover:bg-school-700 shadow-lg">確認並開始使用</button>
-                                </form>
+                    {isSettingsModalOpen && <Modal onClose={() => setIsSettingsModalOpen(false)} title="設定"><SettingsPanel subjects={subjects} onUpdateSubjects={updateSubjects} isAdmin={isAdmin} onClose={() => setIsSettingsModalOpen(false)} onOpenAdmin={() => {setIsSettingsModalOpen(false); setIsAdminPanelOpen(true);}} /></Modal>}
+                    
+                    {cardModal.open && (
+                        <div className="fixed inset-0 bg-black/60 z-[70] flex items-center justify-center p-4 backdrop-blur-md animate-pop-in">
+                            <div className="bg-[#F5F7FB] w-full max-w-lg rounded-[32px] overflow-hidden shadow-2xl flex flex-col max-h-[80vh]">
+                                <div className="px-6 py-5 border-b border-gray-200 flex justify-between items-center bg-white shrink-0">
+                                    <h3 className="font-bold text-xl text-gray-800 flex items-center gap-2"><Icon name="Layers" size={20} className="text-blue-500"/> {cardModal.title}</h3>
+                                    <button onClick={() => setCardModal({...cardModal, open: false})} className="p-2.5 bg-gray-100 rounded-full text-gray-500 btn-press hover:bg-gray-200"><Icon name="X" size={20}/></button>
+                                </div>
+                                <div className="p-6 overflow-y-auto no-scrollbar space-y-4">
+                                    {cardDetailHomeworks.length === 0 ? <div className="text-center py-10 text-gray-400">沒有紀錄</div> : cardDetailHomeworks.map(hw => (
+                                        <HomeworkItem key={hw.id} hw={hw} isDone={false} user={user} isAdmin={isAdmin} subjects={subjects} onToggle={()=>toggleComplete(hw)} onEdit={()=>{setCardModal({...cardModal,open:false});setEditingTask(hw);setIsEditModalOpen(true)}} onDelete={()=>setDeleteTargetId(hw.id)} />
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     )}
 
-                    {isAdminUsersModalOpen && (
-                        <Modal onClose={() => setIsAdminUsersModalOpen(false)} title="學生名單管理">
-                            <div className="space-y-2">
-                                <div className="bg-blue-50 p-3 rounded-lg text-xs text-blue-700 mb-2">管理模式：監控學生最後上線時間</div>
-                                {usersList.map(u => (
-                                    <div key={u.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
-                                        <div><div className="font-bold text-gray-800 flex items-center gap-2">{u.shortName || "未設定"}{u.shortName ? <span className="px-1.5 py-0.5 bg-green-100 text-green-700 text-[10px] rounded">正常</span> : <span className="px-1.5 py-0.5 bg-red-100 text-red-700 text-[10px] rounded">未設定</span>}</div><div className="text-xs text-gray-400">{u.email}</div></div>
-                                        <div className="text-right"><div className="text-[10px] text-gray-400">最後上線</div><div className="text-xs font-medium text-gray-600">{u.lastLogin ? new Date(u.lastLogin.seconds * 1000).toLocaleString('zh-HK', {month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit'}) : 'N/A'}</div></div>
-                                    </div>
-                                ))}
+                    {isEditModalOpen && <Modal onClose={() => setIsEditModalOpen(false)} title="編輯內容"><HomeworkForm initialData={editingTask} onSave={saveHomework} isAdmin={isAdmin} subjects={subjects} onClose={() => setIsEditModalOpen(false)} /></Modal>}
+                    
+                    {isAdminPanelOpen && (
+                        <Modal onClose={() => setIsAdminPanelOpen(false)} title="管理員控制台">
+                            <div className="space-y-4">
+                                <button onClick={() => setIsBroadcastModalOpen(true)} className="w-full p-5 bg-indigo-50 text-indigo-700 rounded-2xl font-bold flex items-center justify-between btn-press">發布全校通告 <Icon name="Volume2" size={20}/></button>
+                                <div className="space-y-2">
+                                    <h3 className="text-xs font-bold text-gray-400 uppercase ml-1">學生狀態</h3>
+                                    {usersList.map(u => (
+                                        <div key={u.id} className="flex justify-between items-center p-3.5 bg-white border border-gray-100 rounded-2xl shadow-sm">
+                                            <div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center font-bold text-sm text-gray-600">{u.shortName?u.shortName[0]:'?'}</div><div><div className="font-bold text-sm text-gray-800">{u.shortName||'未設定'}</div><div className="text-[10px] text-gray-400">{u.email}</div></div></div>
+                                            <div className="text-[10px] font-bold text-gray-400 bg-gray-50 px-2.5 py-1.5 rounded-lg">{u.lastLogin ? new Date(u.lastLogin.seconds * 1000).toLocaleDateString() : 'N/A'}</div>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         </Modal>
+                    )}
+                    
+                    {isBroadcastModalOpen && <Modal onClose={() => setIsBroadcastModalOpen(false)} title="發布通告"><div className="space-y-4"><input type="text" value={broadcast.message} onChange={e=>setBroadcast({...broadcast, message:e.target.value})} className="app-input w-full p-4 rounded-2xl" placeholder="輸入通告內容..." /><div className="flex items-center gap-3 bg-gray-50 p-3 rounded-xl"><input type="checkbox" checked={broadcast.active} onChange={e=>setBroadcast({...broadcast, active:e.target.checked})} className="w-5 h-5 text-blue-600 rounded"/><span>顯示在首頁</span></div><button onClick={()=>saveBroadcast(broadcast.message, broadcast.active)} className="w-full bg-indigo-600 text-white py-3.5 rounded-2xl font-bold btn-press">發布</button></div></Modal>}
+                    
+                    {showShortNameModal && (
+                        <div className="fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-6 backdrop-blur-sm animate-pop-in"><div className="bg-white rounded-[32px] w-full max-w-sm p-8 text-center"><h2 className="text-xl font-bold text-gray-800 mb-2">歡迎使用！</h2><form onSubmit={handleSaveShortName} className="space-y-4"><input autoFocus value={inputShortName} onChange={e => setInputShortName(e.target.value)} placeholder="例如: Peter" className="app-input w-full p-4 rounded-2xl text-center font-bold text-lg" required /><button type="submit" className="w-full bg-blue-600 text-white py-3.5 rounded-2xl font-bold shadow-lg btn-press">開始使用</button></form></div></div>
                     )}
                 </div>
             );
         };
 
-        const BroadcastBanner = ({ message, active }) => {
-            if (!active || !message) return null;
-            return <div className="bg-school-900 text-white py-2 overflow-hidden shadow-md relative z-40 border-b border-school-700"><div className="flex items-center absolute left-0 top-0 bottom-0 bg-school-800 px-3 z-10 shadow-lg"><Volume2 size={16} className="mr-2 animate-pulse" /><span className="text-xs font-bold uppercase tracking-wider">電子手冊通告</span></div><div className="whitespace-nowrap animate-marquee pl-32 text-sm font-medium flex items-center h-full">{message}</div></div>;
+        // ==========================================
+        // SUB COMPONENTS
+        // ==========================================
+
+        const SettingsPanel = ({ subjects, onUpdateSubjects, isAdmin, onClose, onOpenAdmin }) => {
+            const [newSubName, setNewSubName] = useState('');
+            const [newSubColor, setNewSubColor] = useState('blue');
+
+            const handleAddSubject = () => {
+                if (!newSubName.trim()) return;
+                const newSubject = { name: newSubName.trim(), color: newSubColor };
+                onUpdateSubjects([...subjects, newSubject]);
+                setNewSubName('');
+            };
+
+            const handleDeleteSubject = (index) => {
+                const updated = [...subjects];
+                updated.splice(index, 1);
+                onUpdateSubjects(updated);
+            };
+
+            return (
+                <div className="space-y-6">
+                    {isAdmin && (
+                        <button onClick={onOpenAdmin} className="w-full p-4 bg-gray-50 rounded-2xl flex items-center justify-between text-gray-700 font-bold hover:bg-gray-100 btn-press">
+                            <span>管理員控制台</span>
+                            <Icon name="ChevronRight" size={18}/>
+                        </button>
+                    )}
+
+                    <div>
+                        <h4 className="text-xs font-bold text-gray-400 mb-3 uppercase">科目管理</h4>
+                        <div className="flex gap-2 mb-3">
+                            <input value={newSubName} onChange={e=>setNewSubName(e.target.value)} className="app-input flex-1 px-4 py-2 rounded-xl text-sm" placeholder="新科目名稱..." />
+                            <select value={newSubColor} onChange={e=>setNewSubColor(e.target.value)} className="app-input px-2 rounded-xl text-xs w-20">
+                                {Object.keys(COLOR_PALETTE).map(c => <option key={c} value={c}>{c}</option>)}
+                            </select>
+                            <button onClick={handleAddSubject} className="p-2 bg-blue-600 text-white rounded-xl btn-press"><Icon name="Plus" size={20}/></button>
+                        </div>
+                        <div className="space-y-2 max-h-[300px] overflow-y-auto no-scrollbar">
+                            {subjects.map((sub, idx) => (
+                                <div key={idx} className="flex justify-between items-center p-3 bg-gray-50 rounded-xl animate-slide-up-fade" style={{animationDelay: `${idx*0.05}s`}}>
+                                    <div className="flex items-center gap-2">
+                                        <div className={`w-3 h-3 rounded-full ${COLOR_PALETTE[sub.color].bg}`}></div>
+                                        <span className="text-sm font-bold text-gray-700">{sub.name}</span>
+                                    </div>
+                                    <button onClick={()=>handleDeleteSubject(idx)} className="text-gray-400 hover:text-red-500 btn-press"><Icon name="Trash2" size={16}/></button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
         };
 
-        const Modal = ({ children, onClose, title }) => (
-            <div className="fixed inset-0 bg-gray-900/60 z-50 flex items-end sm:items-center justify-center sm:p-4 backdrop-blur-sm animate-fade-in-up">
-                <div className="bg-white w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
-                    <div className="px-4 py-3 border-b border-gray-100 flex justify-between items-center bg-gray-50 shrink-0"><h3 className="font-bold text-gray-800">{title}</h3><button onClick={onClose} className="p-1 rounded-full hover:bg-gray-200 text-gray-500"><X size={20} /></button></div>
-                    <div className="p-5 overflow-y-auto">{children}</div>
-                </div>
+        const StatCard = ({ bg, title, count, icon, onClick }) => (
+            <div onClick={onClick} className={`w-full aspect-[2/1] md:aspect-[5/3] ${bg} backdrop-blur-md rounded-[24px] p-5 text-white flex flex-col justify-between shadow-lg relative overflow-hidden cursor-pointer btn-press border border-white/20 transform hover:scale-[1.02] transition-all`}>
+                <div className="absolute -right-6 -top-6 w-24 h-24 bg-white/20 rounded-full blur-2xl"></div>
+                <div className="text-[11px] font-bold opacity-80 uppercase tracking-widest">{title}</div>
+                <div className="text-4xl font-black tracking-tighter">{count}</div>
+                <div className="absolute bottom-4 right-4 opacity-40"><Icon name={icon} size={28}/></div>
             </div>
         );
 
-        const HomeworkForm = ({ initialData, onSave, isAdmin, onClose, isInline }) => {
-            const [subject, setSubject] = useState(initialData?.subject || '中國語文');
+        const HomeworkItem = ({ hw, isDone, user, isAdmin, subjects, onToggle, onEdit, onDelete, onReset }) => {
+            const isExam = hw.category === 'exam';
+            const subjectObj = subjects.find(s => s.name === hw.subject) || { color: 'slate' };
+            const colors = getSubjectStyle(subjectObj.color);
+            const daysLeft = calculateDaysLeft(hw.deadline);
+            
+            return (
+                <div onClick={onEdit} className={`relative bg-white rounded-[24px] shadow-card border border-transparent overflow-hidden flex transition-all btn-press cursor-pointer hover:shadow-soft group ${isDone ? 'opacity-50 grayscale' : ''}`}>
+                    <div className={`w-3 ${colors.bg}`}></div>
+                    <div className="flex-1 p-5 pl-4 relative">
+                        <div className={`absolute top-5 right-5 text-[10px] font-bold px-3 py-1.5 rounded-full ${daysLeft.bg} ${daysLeft.color} shadow-sm z-10 flex items-center gap-1.5`}>
+                            <Icon name="Clock" size={12}/> {daysLeft.text}
+                        </div>
+                        <div className="flex items-center gap-2 mb-3">
+                            <span className={`text-[11px] font-bold px-2.5 py-1 rounded-lg ${colors.light} ${colors.text}`}>{hw.subject}</span>
+                            {isExam && <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-2.5 py-1 rounded-lg border border-rose-100 flex items-center gap-1"><Icon name="AlertCircle" size={10}/> 測驗</span>}
+                        </div>
+                        <p className="text-base font-bold text-gray-800 leading-relaxed whitespace-pre-wrap pr-24 mb-4 line-clamp-3">{hw.content}</p>
+                        <div className="flex items-center justify-between pt-3 border-t border-gray-50">
+                            <div className="text-xs text-gray-400 font-bold flex items-center gap-1.5">
+                                <Icon name="Calendar" size={14}/> {hw.deadline}
+                            </div>
+                            <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
+                                <button onClick={onToggle} className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors shadow-sm ${isDone ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-400 hover:bg-green-50 hover:text-green-600'}`}>
+                                    <Icon name="Check" size={18} strokeWidth={3}/>
+                                </button>
+                                {(isAdmin || hw.createdBy === user.uid) && (
+                                    <button onClick={onDelete} className="w-9 h-9 rounded-full bg-white border border-gray-100 text-red-400 hover:text-red-600 hover:bg-red-50 flex items-center justify-center shadow-sm">
+                                        <Icon name="Trash2" size={16}/>
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const HomeworkForm = ({ initialData, onSave, isAdmin, onClose, isInline, subjects }) => {
+            const [subject, setSubject] = useState(initialData?.subject || (subjects[0]?.name || '其他'));
             const [content, setContent] = useState(initialData?.content || '');
-            const [deadline, setDeadline] = useState(initialData?.deadline || new Date().toISOString().split('T')[0]);
+            const [deadline, setDeadline] = useState(initialData?.deadline || getNextSchoolDay());
             const [type, setType] = useState(initialData?.type || (isAdmin ? 'global' : 'personal'));
             const [category, setCategory] = useState(initialData?.category || 'homework');
 
-            const handleSubmit = (e) => { e.preventDefault(); if (!content.trim()) return alert("請輸入內容"); onSave({ subject, content, deadline, type, category }); };
-            
-            return (
-                <form onSubmit={handleSubmit} className="space-y-4 mt-2">
-                    {/* Category Switch */}
-                    <div className="flex bg-gray-100 p-1 rounded-lg">
-                        <button type="button" onClick={() => setCategory('homework')} className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${category==='homework'?'bg-white text-school-600 shadow-sm':'text-gray-500'}`}>一般家課</button>
-                        <button type="button" onClick={() => setCategory('exam')} className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${category==='exam'?'bg-rose-500 text-white shadow-sm':'text-gray-500'}`}>測驗 / 考試</button>
-                    </div>
+            const handleSubmit = (e) => { e.preventDefault(); if(!content.trim()) return; onSave({subject, content, deadline, type, category}); if(isInline) { setContent(''); setDeadline(getNextSchoolDay()); } };
 
-                    <div><label className="block text-xs font-bold text-gray-500 mb-2">科目</label><div className="grid grid-cols-4 gap-2">{HK_SUBJECTS.map(sub => (<button key={sub} type="button" onClick={() => setSubject(sub)} className={`text-[10px] py-1.5 rounded border font-medium truncate ${subject === sub ? 'bg-school-600 text-white border-school-600 ring-1 ring-blue-100' : 'bg-white text-gray-600 border-gray-200'}`}>{sub}</button>))}</div></div>
-                    <div><label className="block text-xs font-bold text-gray-500 mb-1.5">內容</label><textarea value={content} onChange={e => setContent(e.target.value)} className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm min-h-[80px] resize-none bg-white" placeholder="請輸入詳細內容..." /></div>
-                    <div className="grid grid-cols-2 gap-4"><div><label className="block text-xs font-bold text-gray-500 mb-1.5">日期</label><input type="date" value={deadline} onChange={e => setDeadline(e.target.value)} className="w-full p-2.5 border border-gray-300 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white" /></div>{isAdmin && (<div><label className="block text-xs font-bold text-gray-500 mb-1.5">對象</label><select value={type} onChange={e => setType(e.target.value)} className="w-full p-2.5 border border-gray-300 rounded-xl text-sm bg-white outline-none focus:ring-2 focus:ring-blue-500"><option value="global">全班</option><option value="personal">個人</option></select></div>)}</div>
-                    
-                    <div className="pt-2 flex gap-3">
-                        {!isInline && <button type="button" onClick={onClose} className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-200">取消</button>}
-                        <button type="submit" className={`flex-1 py-3 text-white rounded-xl text-sm font-bold shadow-lg flex justify-center items-center gap-2 ${category==='exam'?'bg-rose-500 hover:bg-rose-600':'bg-school-600 hover:bg-school-700'}`}><Save size={18} /> {isInline ? '新增紀錄' : '儲存變更'}</button>
+            return (
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="flex bg-gray-50 p-1.5 rounded-2xl">
+                        <button type="button" onClick={()=>setCategory('homework')} className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all btn-press ${category==='homework'?'bg-white text-blue-600 shadow-sm':'text-gray-400 hover:text-gray-600'}`}>一般家課</button>
+                        <button type="button" onClick={()=>setCategory('exam')} className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all btn-press ${category==='exam'?'bg-rose-500 text-white shadow-sm':'text-gray-400 hover:text-gray-600'}`}>測驗 / 考試</button>
+                    </div>
+                    <div>
+                        <label className="text-xs font-bold text-gray-400 ml-1 mb-3 block uppercase tracking-wide">選擇科目</label>
+                        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 -mx-1 px-1">
+                            {subjects.map(sub => {
+                                const colors = getSubjectStyle(sub.color);
+                                const isSelected = subject === sub.name;
+                                return (
+                                    <button 
+                                        type="button" 
+                                        key={sub.name} 
+                                        onClick={()=>setSubject(sub.name)} 
+                                        className={`whitespace-nowrap px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all btn-press border ${isSelected ? `${colors.bg} text-white border-transparent shadow-md transform scale-105` : `bg-white ${colors.text} ${colors.border} hover:bg-gray-50`}`}
+                                    >
+                                        {sub.name}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                    <textarea 
+                        value={content} 
+                        onChange={e=>setContent(e.target.value)} 
+                        className="app-input w-full p-5 rounded-[24px] text-base min-h-[120px] resize-none leading-relaxed font-bold text-gray-700 placeholder-gray-400" 
+                        placeholder={category === 'exam' ? '請輸入測驗範圍及溫習重點...' : '請輸入功課內容...'} 
+                    />
+                    <div className="flex gap-3 items-center">
+                        <div className="relative flex-1 flex items-center bg-white border border-gray-200 rounded-2xl px-4 py-1.5 hover:border-blue-400 transition-colors cursor-pointer group">
+                            <div className="flex flex-col">
+                                <span className="text-[10px] font-bold text-gray-400 uppercase">繳交日期</span>
+                                <input type="date" value={deadline} onChange={e=>setDeadline(e.target.value)} className="w-full py-1 text-sm font-black text-gray-800 outline-none bg-transparent cursor-pointer" />
+                            </div>
+                            <Icon name="Calendar" size={18} className="text-blue-500 ml-auto group-hover:scale-110 transition-transform"/>
+                        </div>
+                        {isAdmin && <select value={type} onChange={e=>setType(e.target.value)} className="app-input px-3 py-4 rounded-2xl text-xs font-bold text-gray-600 outline-none w-24 cursor-pointer bg-white border border-gray-200"><option value="global">全班</option><option value="personal">個人</option></select>}
+                        <button type="submit" className={`px-8 py-4 rounded-2xl text-white font-bold shadow-lg shadow-blue-200 transition-transform btn-press flex items-center gap-2 ${category==='exam'?'bg-rose-500 hover:bg-rose-600':'bg-blue-600 hover:bg-blue-700'}`}><Icon name="Send" size={20}/> {!isInline && '儲存'}</button>
                     </div>
                 </form>
             );
         };
 
-        const BroadcastForm = ({ initialData, onSave }) => {
-            const [message, setMessage] = useState(initialData?.message || '');
-            const [active, setActive] = useState(initialData?.active || false);
-            return <div className="space-y-4"><div><label className="block text-xs font-bold text-gray-500 mb-1.5">通告內容</label><input type="text" value={message} onChange={e => setMessage(e.target.value)} className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" placeholder="例如：明天測驗取消..." /></div><div className="bg-blue-50 p-3 rounded-xl flex items-center gap-3 border border-blue-100"><input type="checkbox" id="bc_active" checked={active} onChange={e => setActive(e.target.checked)} className="w-5 h-5 text-blue-600 rounded" /><label htmlFor="bc_active" className="text-sm font-medium text-gray-700 select-none cursor-pointer">啟用跑馬燈顯示</label></div><button onClick={() => onSave(message, active)} className="w-full py-3 bg-school-600 text-white rounded-xl text-sm font-bold hover:bg-school-700 mt-2 shadow-lg">發布通告</button></div>;
-        };
-
-        const getSubjectColor = (subject) => {
-            const colors = { '中國語文': 'bg-red-600', '英國語文': 'bg-amber-500', '數學': 'bg-blue-600', '公民與社會發展': 'bg-teal-600', '物理': 'bg-purple-600', '化學': 'bg-yellow-600', '生物': 'bg-green-600', '資訊及通訊科技(ICT)': 'bg-cyan-600', '中國歷史': 'bg-rose-700', '歷史': 'bg-amber-700', '地理': 'bg-emerald-600', '經濟': 'bg-indigo-600', '企業會計與財務概論': 'bg-violet-600', '數學延伸(M1/M2)': 'bg-blue-800', '其他': 'bg-gray-500' };
-            return colors[subject] || 'bg-gray-500';
-        };
-
-        const getDeadlineColor = (deadlineStr, isDone) => {
-            if (isDone) return 'text-gray-400';
-            const today = new Date().toISOString().split('T')[0];
-            if (deadlineStr < today) return 'text-red-500 font-bold';
-            if (deadlineStr === today) return 'text-orange-500 font-bold';
-            return 'text-green-600';
-        };
+        const Modal = ({ children, onClose, title }) => (
+            <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 backdrop-blur-sm animate-pop-in">
+                <div className="bg-white w-full sm:max-w-md rounded-[32px] overflow-hidden shadow-2xl flex flex-col max-h-[85vh]">
+                    <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10 shrink-0">
+                        <h3 className="font-bold text-xl text-gray-800">{title}</h3>
+                        <button onClick={onClose} className="p-2.5 bg-gray-50 rounded-full text-gray-500 hover:bg-gray-200 btn-press transition-colors"><Icon name="X" size={22}/></button>
+                    </div>
+                    <div className="p-6 overflow-y-auto no-scrollbar">{children}</div>
+                </div>
+            </div>
+        );
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
