@@ -37,7 +37,6 @@
                     boxShadow: {
                         'soft': '0 8px 30px rgba(0,0,0,0.06)',
                         'glow': '0 0 20px rgba(59, 130, 246, 0.4)',
-                        'float': '0 15px 40px -10px rgba(0,0,0,0.15)',
                     },
                     animation: {
                         'pop-in': 'popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
@@ -45,7 +44,6 @@
                         'island-in': 'islandIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
                         'gradient-x': 'gradientX 15s ease infinite',
                         'pulse-dot': 'pulseDot 2s infinite',
-                        'pulse-slow': 'pulse 3s infinite',
                     },
                     keyframes: {
                         popIn: {
@@ -65,8 +63,8 @@
                             '50%': { 'background-position': '100% 50%' },
                         },
                         pulseDot: {
-                            '0%': { boxShadow: '0 0 0 0px rgba(59, 130, 246, 0.4)' },
-                            '100%': { boxShadow: '0 0 0 8px rgba(59, 130, 246, 0)' }
+                            '0%': { boxShadow: '0 0 0 0px rgba(34, 197, 94, 0.4)' },
+                            '100%': { boxShadow: '0 0 0 12px rgba(34, 197, 94, 0)' }
                         }
                     }
                 }
@@ -114,29 +112,12 @@
         .btn-press:active { 
             transform: scale(0.92); 
         }
-        
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.6);
-        }
-        
-        .delay-0 { animation-delay: 0ms; }
-        .delay-100 { animation-delay: 100ms; }
-        .delay-200 { animation-delay: 200ms; }
-        .delay-300 { animation-delay: 300ms; }
-        .delay-400 { animation-delay: 400ms; }
-        .delay-500 { animation-delay: 500ms; }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        // ==========================================
-        // CONFIG
-        // ==========================================
         const firebaseConfig = {
           apiKey: "AIzaSyA7C10miZnBWXLBluCDU9nezCn9StmWZ3U",
           authDomain: "recordhw-ad1f9.firebaseapp.com",
@@ -147,9 +128,7 @@
           measurementId: "G-8VCPLTE2QT"
         };
 
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
+        if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
         const auth = firebase.auth();
         const db = firebase.firestore();
         const ADMIN_EMAIL = "chimhinhin@gmail.com";
@@ -176,19 +155,20 @@
         ];
 
         // 8:30 Start, 35m lessons.
+        // L1-L2, B1(15), L3-L4, B2(10), L5-L6, Lunch(70), L7-L8, B3(10), L9-L10
         const DEFAULT_TIMETABLE = [
             { id: 1, start: "08:30", end: "09:05", type: "lesson", items: ["空堂", "空堂", "空堂", "空堂", "空堂"] },
             { id: 2, start: "09:05", end: "09:40", type: "lesson", items: ["空堂", "空堂", "空堂", "空堂", "空堂"] },
-            { id: 3, start: "09:40", end: "09:55", type: "break", label: "小息 (15分鐘)" },
+            { id: 3, start: "09:40", end: "09:55", type: "break", label: "小息" },
             { id: 4, start: "09:55", end: "10:30", type: "lesson", items: ["空堂", "空堂", "空堂", "空堂", "空堂"] },
             { id: 5, start: "10:30", end: "11:05", type: "lesson", items: ["空堂", "空堂", "空堂", "空堂", "空堂"] },
-            { id: 6, start: "11:05", end: "11:15", type: "break", label: "小息 (10分鐘)" },
+            { id: 6, start: "11:05", end: "11:15", type: "break", label: "小息" },
             { id: 7, start: "11:15", end: "11:50", type: "lesson", items: ["空堂", "空堂", "空堂", "空堂", "空堂"] },
             { id: 8, start: "11:50", end: "12:25", type: "lesson", items: ["空堂", "空堂", "空堂", "空堂", "空堂"] },
-            { id: 9, start: "12:25", end: "13:35", type: "break", label: "午膳 (1小時10分鐘)" },
+            { id: 9, start: "12:25", end: "13:35", type: "break", label: "午膳" },
             { id: 10, start: "13:35", end: "14:10", type: "lesson", items: ["空堂", "空堂", "空堂", "空堂", "空堂"] },
             { id: 11, start: "14:10", end: "14:45", type: "lesson", items: ["空堂", "空堂", "空堂", "空堂", "空堂"] },
-            { id: 12, start: "14:45", end: "14:55", type: "break", label: "小息 (10分鐘)" },
+            { id: 12, start: "14:45", end: "14:55", type: "break", label: "小息" },
             { id: 13, start: "14:55", end: "15:30", type: "lesson", items: ["空堂", "空堂", "空堂", "空堂", "空堂"] },
             { id: 14, start: "15:30", end: "16:05", type: "lesson", items: ["空堂", "空堂", "空堂", "空堂", "空堂"] }
         ];
@@ -198,11 +178,7 @@
         const Icon = ({ name, size = 20, className = "", ...props }) => {
             if (!window.lucide || !window.lucide.icons || !window.lucide.icons[name]) return null;
             const iconData = window.lucide.icons[name];
-            return (
-                <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
-                    {iconData.map((child, index) => React.createElement(child[0], { ...child[1], key: index }))}
-                </svg>
-            );
+            return React.createElement('svg', { xmlns: "http://www.w3.org/2000/svg", width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", className, ...props }, iconData.map((child, index) => React.createElement(child[0], { ...child[1], key: index })));
         };
 
         const getSubjectStyle = (colorKey) => COLOR_PALETTE[colorKey] || COLOR_PALETTE['slate'];
@@ -235,76 +211,54 @@
             return days[new Date(dateStr).getUTCDay()];
         };
 
-        // ... (DynamicIsland, DeleteModal, ResetModal, TopActionButton same as before) ...
         const DynamicIsland = ({ notification }) => {
             if (!notification.visible) return null;
-            return (
-                <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] animate-island-in pointer-events-none">
-                    <div className="bg-black/90 text-white px-6 py-3.5 rounded-full shadow-2xl flex items-center gap-3 min-w-[220px] justify-center backdrop-blur-xl border border-white/10">
-                        <div className={`p-1 rounded-full ${notification.type === 'success' ? 'bg-green-500' : 'bg-blue-500'}`}>
-                            <Icon name={notification.type === 'success' ? 'Check' : 'Info'} size={12} className="text-white"/>
-                        </div>
-                        <span className="text-xs font-bold tracking-wide">{notification.message}</span>
-                    </div>
-                </div>
-            );
+            return (<div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] animate-island-in pointer-events-none"><div className="bg-black/90 text-white px-6 py-3.5 rounded-full shadow-2xl flex items-center gap-3 min-w-[220px] justify-center backdrop-blur-xl border border-white/10"><div className={`p-1 rounded-full ${notification.type === 'success' ? 'bg-green-500' : 'bg-blue-500'}`}><Icon name={notification.type === 'success' ? 'Check' : 'Info'} size={12} className="text-white"/></div><span className="text-xs font-bold tracking-wide">{notification.message}</span></div></div>);
         };
 
         const DeleteModal = ({ isOpen, onClose, onConfirm }) => {
             if (!isOpen) return null;
-            return (
-                <div className="fixed inset-0 bg-black/40 z-[80] flex items-center justify-center p-6 backdrop-blur-sm animate-pop-in">
-                    <div className="bg-white w-full max-w-xs rounded-[28px] p-6 text-center shadow-2xl transform transition-all scale-100">
-                        <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3 text-red-500 animate-pulse">
-                            <Icon name="Trash2" size={24}/>
-                        </div>
-                        <h3 className="text-lg font-bold text-gray-800 mb-2">確認刪除？</h3>
-                        <div className="flex gap-2 mt-4">
-                            <button onClick={onClose} className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold text-xs btn-press hover:bg-gray-200">取消</button>
-                            <button onClick={onConfirm} className="flex-1 py-3 bg-red-500 text-white rounded-xl font-bold text-xs shadow-md btn-press hover:bg-red-600">刪除</button>
-                        </div>
-                    </div>
-                </div>
-            );
+            return (<div className="fixed inset-0 bg-black/40 z-[80] flex items-center justify-center p-6 backdrop-blur-sm animate-pop-in"><div className="bg-white w-full max-w-xs rounded-[28px] p-6 text-center shadow-2xl"><div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3 text-red-500 animate-pulse"><Icon name="Trash2" size={24}/></div><h3 className="text-lg font-bold text-gray-800 mb-2">確認刪除？</h3><div className="flex gap-2 mt-4"><button onClick={onClose} className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold text-xs btn-press hover:bg-gray-200">取消</button><button onClick={onConfirm} className="flex-1 py-3 bg-red-500 text-white rounded-xl font-bold text-xs shadow-md btn-press hover:bg-red-600">刪除</button></div></div></div>);
         };
 
         const ResetModal = ({ isOpen, onClose, onConfirm, isAdmin }) => {
             if (!isOpen) return null;
-            return (
-                <div className="fixed inset-0 bg-black/40 z-[80] flex items-center justify-center p-6 backdrop-blur-sm animate-pop-in">
-                    <div className="bg-white w-full max-w-xs rounded-[28px] p-6 text-center shadow-2xl transform transition-all scale-100">
-                        <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3 text-orange-500 animate-pulse">
-                            <Icon name="RotateCcw" size={24}/>
-                        </div>
-                        <h3 className="text-lg font-bold text-gray-800 mb-2">確認重設課表？</h3>
-                        <p className="text-gray-500 text-sm mb-6 font-medium">
-                            {isAdmin ? "這將強制全校學生恢復使用預設課表。" : "這將刪除您的個人設定，恢復為全校統一課表。"}
-                        </p>
-                        <div className="flex gap-2 mt-4">
-                            <button onClick={onClose} className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold text-xs btn-press hover:bg-gray-200">取消</button>
-                            <button onClick={onConfirm} className="flex-1 py-3 bg-orange-500 text-white rounded-xl font-bold text-xs shadow-md btn-press hover:bg-orange-600">重設</button>
-                        </div>
-                    </div>
-                </div>
-            );
+            return (<div className="fixed inset-0 bg-black/40 z-[80] flex items-center justify-center p-6 backdrop-blur-sm animate-pop-in"><div className="bg-white w-full max-w-xs rounded-[28px] p-6 text-center shadow-2xl"><div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3 text-orange-500 animate-pulse"><Icon name="RotateCcw" size={24}/></div><h3 className="text-lg font-bold text-gray-800 mb-2">確認重設？</h3><p className="text-gray-500 text-sm mb-6 font-medium">{isAdmin ? "強制重設全校預設課表。" : "刪除個人設定，恢復預設。"}</p><div className="flex gap-2 mt-4"><button onClick={onClose} className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold text-xs btn-press hover:bg-gray-200">取消</button><button onClick={onConfirm} className="flex-1 py-3 bg-orange-500 text-white rounded-xl font-bold text-xs shadow-md btn-press hover:bg-orange-600">重設</button></div></div></div>);
         };
 
         const TopActionButton = ({ icon, label, onClick, active }) => (
-            <button onClick={onClick} className={`flex-1 flex flex-col items-center justify-center p-2 rounded-2xl transition-all duration-300 btn-press ${active ? 'bg-white shadow-md text-blue-600 ring-1 ring-blue-50' : 'bg-white/60 text-gray-500 hover:bg-white hover:shadow-sm'}`}>
-                <Icon name={icon} size={20} className="mb-0.5" strokeWidth={2.5}/>
-                <span className="text-[10px] font-bold">{label}</span>
-            </button>
+            <button onClick={onClick} className={`flex-1 flex flex-col items-center justify-center p-2 rounded-2xl transition-all duration-300 btn-press ${active ? 'bg-white shadow-md text-blue-600 ring-1 ring-blue-50' : 'bg-white/60 text-gray-500 hover:bg-white hover:shadow-sm'}`}><Icon name={icon} size={20} className="mb-0.5" strokeWidth={2.5}/><span className="text-[10px] font-bold">{label}</span></button>
         );
 
         const StatCard = ({ title, count, icon, colorClass, onClick }) => (
             <div onClick={onClick} className="flex flex-col items-center justify-center p-3 bg-white/60 backdrop-blur-xl border border-white/80 rounded-[20px] shadow-sm btn-press cursor-pointer hover:bg-white/80 transition-all h-24">
-                <div className={`p-2 rounded-xl mb-1 ${colorClass.bg} ${colorClass.text} shadow-sm`}>
-                    <Icon name={icon} size={20} strokeWidth={2.5}/>
-                </div>
+                <div className={`p-2 rounded-xl mb-1 ${colorClass.bg} ${colorClass.text} shadow-sm`}><Icon name={icon} size={20} strokeWidth={2.5}/></div>
                 <div className="text-2xl font-black text-gray-800 tracking-tight leading-none">{count}</div>
                 <div className="text-[10px] font-bold text-gray-400 mt-1">{title}</div>
             </div>
         );
+
+        const HomeworkItem = ({ hw, isDone, user, isAdmin, subjects, onToggle, onEdit, onDelete, onReset }) => {
+            const isExam = hw.category === 'exam';
+            const subjectObj = subjects.find(s => s.name === hw.subject) || { color: 'slate' };
+            const colors = getSubjectStyle(subjectObj.color);
+            const daysLeft = calculateDaysLeft(hw.deadline);
+            const weekday = getWeekday(hw.deadline);
+            
+            return (
+                <div onClick={onEdit} className={`relative bg-white rounded-[20px] shadow-card border border-transparent overflow-hidden flex transition-all btn-press cursor-pointer hover:shadow-soft group ${isDone ? 'opacity-50 grayscale' : ''}`}>
+                    <div className={`w-2 ${colors.bg}`}></div>
+                    <div className="flex items-center pl-3" onClick={e => e.stopPropagation()}><button onClick={onToggle} className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${isDone ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 text-transparent hover:border-blue-400'}`}><Icon name="Check" size={14} strokeWidth={4} /></button></div>
+                    <div className="flex-1 p-3.5 pl-3 relative min-w-0">
+                        <div className={`absolute top-3.5 right-3.5 text-[9px] font-bold px-2 py-0.5 rounded-md ${daysLeft.bg} ${daysLeft.color} shadow-sm z-10`}>{daysLeft.text}</div>
+                        <div className="flex items-center gap-1.5 mb-2"><span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${colors.light} ${colors.text}`}>{hw.subject}</span>{isExam && <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-100 flex items-center gap-1"><Icon name="AlertCircle" size={10}/> 測驗</span>}</div>
+                        <p className="text-sm font-bold text-gray-800 leading-relaxed whitespace-pre-wrap pr-16 mb-2 line-clamp-2">{hw.content}</p>
+                        <div className="flex items-center justify-between pt-2 border-t border-gray-50"><div className="text-[10px] text-gray-400 font-bold flex items-center gap-1"><Icon name="Calendar" size={12}/> {hw.deadline} · {weekday}</div></div>
+                    </div>
+                    {(isAdmin || hw.createdBy === user.uid) && (<div className="flex flex-col w-11 border-l border-gray-50 bg-gray-50/30" onClick={e => e.stopPropagation()}><button onClick={onEdit} className="flex-1 flex items-center justify-center text-blue-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"><Icon name="Edit3" size={16}/></button><div className="h-[1px] w-full bg-gray-100"></div><button onClick={onDelete} className="flex-1 flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors"><Icon name="Trash2" size={16}/></button></div>)}
+                </div>
+            );
+        };
 
         const CurrentStatusCard = ({ timetableData, userData }) => {
             const [status, setStatus] = useState(null);
@@ -316,7 +270,6 @@
                     if (day === 0 || day === 6) { setStatus({ type: 'weekend' }); return; }
                     const currentMinutes = now.getHours() * 60 + now.getMinutes();
                     const dayIndex = day - 1; 
-
                     let currentClass = null; let nextClass = null; let timeRemaining = 0;
                     const data = userData?.timetable || timetableData || DEFAULT_TIMETABLE;
 
@@ -326,16 +279,8 @@
                         const [eh, em] = row.end.split(':').map(Number);
                         const start = sh * 60 + sm;
                         const end = eh * 60 + em;
-
-                        if (currentMinutes >= start && currentMinutes < end) {
-                            currentClass = row; timeRemaining = end - currentMinutes;
-                            if (i + 1 < data.length) nextClass = data[i+1];
-                            break;
-                        }
-                        if (currentMinutes < start) {
-                            if (!nextClass) { nextClass = row; timeRemaining = start - currentMinutes; }
-                            break; 
-                        }
+                        if (currentMinutes >= start && currentMinutes < end) { currentClass = row; timeRemaining = end - currentMinutes; if (i + 1 < data.length) nextClass = data[i+1]; break; }
+                        if (currentMinutes < start) { if (!nextClass) { nextClass = row; timeRemaining = start - currentMinutes; } break; }
                     }
                     setStatus({ type: 'weekday', currentClass, nextClass, timeRemaining, dayIndex });
                 };
@@ -361,121 +306,20 @@
             }
         };
 
-        const HomeworkItem = ({ hw, isDone, user, isAdmin, subjects, onToggle, onEdit, onDelete, onReset }) => {
-            const isExam = hw.category === 'exam';
-            const subjectObj = subjects.find(s => s.name === hw.subject) || { color: 'slate' };
-            const colors = getSubjectStyle(subjectObj.color);
-            const daysLeft = calculateDaysLeft(hw.deadline);
-            const weekday = getWeekday(hw.deadline);
-            
-            return (
-                <div onClick={onEdit} className={`relative bg-white rounded-[24px] shadow-card border border-transparent overflow-hidden flex transition-all btn-press cursor-pointer hover:shadow-soft group ${isDone ? 'opacity-50 grayscale' : ''}`}>
-                    <div className={`w-2 ${colors.bg}`}></div>
-                    
-                    {/* Updated Check Circle (Left) */}
-                    <div className="flex items-center pl-4" onClick={e => e.stopPropagation()}>
-                        <button onClick={onToggle} className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all ${isDone ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 text-transparent hover:border-blue-400'}`}>
-                            <Icon name="Check" size={16} strokeWidth={4} />
-                        </button>
-                    </div>
-
-                    <div className="flex-1 p-4 pl-4 relative min-w-0">
-                        {/* Days Left Badge (Right) */}
-                        <div className={`absolute top-4 right-4 text-[9px] font-bold px-2 py-0.5 rounded-md ${daysLeft.bg} ${daysLeft.color} shadow-sm z-10`}>
-                            {daysLeft.text}
-                        </div>
-                        
-                        <div className="flex items-center gap-1.5 mb-2">
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${colors.light} ${colors.text}`}>{hw.subject}</span>
-                            {isExam && <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-100 flex items-center gap-1"><Icon name="AlertCircle" size={10}/> 測驗</span>}
-                        </div>
-                        <p className="text-sm font-bold text-gray-800 leading-relaxed whitespace-pre-wrap pr-16 mb-2 line-clamp-2">{hw.content}</p>
-                        
-                        <div className="flex items-center justify-between pt-2 border-t border-gray-50">
-                            <div className="text-[10px] text-gray-400 font-bold flex items-center gap-1"><Icon name="Calendar" size={12}/> {hw.deadline} · {weekday}</div>
-                        </div>
-                    </div>
-
-                    {/* Updated Right Vertical Action Bar */}
-                    {(isAdmin || hw.createdBy === user.uid) && (
-                        <div className="flex flex-col w-12 border-l border-gray-50 bg-gray-50/50" onClick={e => e.stopPropagation()}>
-                            <button onClick={onEdit} className="flex-1 flex items-center justify-center text-blue-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"><Icon name="Edit3" size={18}/></button>
-                            <div className="h-[1px] w-full bg-gray-200"></div>
-                            <button onClick={onDelete} className="flex-1 flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors"><Icon name="Trash2" size={18}/></button>
-                        </div>
-                    )}
-                </div>
-            );
-        };
-
         const HomeworkForm = ({ initialData, onSave, isAdmin, onClose, isInline, subjects }) => {
             const [subject, setSubject] = useState(initialData?.subject || (subjects[0]?.name || '其他'));
             const [content, setContent] = useState(initialData?.content || '');
             const [deadline, setDeadline] = useState(initialData?.deadline || getNextSchoolDay());
             const [type, setType] = useState(initialData?.type || (isAdmin ? 'global' : 'personal'));
             const [category, setCategory] = useState(initialData?.category || 'homework');
-
             const handleSubmit = (e) => { e.preventDefault(); if(!content.trim()) return; onSave({subject, content, deadline, type, category}); if(isInline) { setContent(''); setDeadline(getNextSchoolDay()); } };
-
             return (
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="flex bg-gray-50 p-1 rounded-xl">
-                        <button type="button" onClick={()=>setCategory('homework')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all btn-press ${category==='homework'?'bg-white text-blue-600 shadow-sm':'text-gray-400 hover:text-gray-600'}`}>一般家課</button>
-                        <button type="button" onClick={()=>setCategory('exam')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all btn-press ${category==='exam'?'bg-rose-500 text-white shadow-sm':'text-gray-400 hover:text-gray-600'}`}>測驗 / 考試</button>
-                    </div>
-                    <div>
-                        <label className="text-[10px] font-bold text-gray-400 ml-1 mb-2 block uppercase tracking-wide">選擇科目</label>
-                        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 -mx-1 px-1">
-                            {subjects.map(sub => {
-                                const colors = getSubjectStyle(sub.color);
-                                const isSelected = subject === sub.name;
-                                return (
-                                    <button 
-                                        type="button" 
-                                        key={sub.name} 
-                                        onClick={()=>setSubject(sub.name)} 
-                                        className={`whitespace-nowrap px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all btn-press border ${isSelected ? `${colors.bg} text-white border-transparent shadow-md transform scale-105` : `bg-white ${colors.text} ${colors.border} hover:bg-gray-50`}`}
-                                    >
-                                        {sub.name}
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </div>
-                    <textarea 
-                        value={content} 
-                        onChange={e=>setContent(e.target.value)} 
-                        className="app-input w-full p-4 rounded-[20px] text-sm min-h-[80px] resize-none leading-relaxed font-bold text-gray-700 placeholder-gray-400" 
-                        placeholder={category === 'exam' ? '請輸入測驗範圍及溫習重點...' : '請輸入功課內容...'} 
-                    />
-                    <div className="flex gap-2 items-center">
-                        <div className="relative flex-1 flex items-center bg-white border border-gray-200 rounded-xl px-3 py-1 hover:border-blue-400 transition-colors cursor-pointer group">
-                            <div className="flex flex-col flex-1">
-                                <span className="text-[9px] font-bold text-gray-400 uppercase">繳交日期</span>
-                                <input type="date" value={deadline} onChange={e=>setDeadline(e.target.value)} className="w-full py-0.5 text-xs font-black text-gray-800 outline-none bg-transparent cursor-pointer" />
-                            </div>
-                            <Icon name="Calendar" size={14} className="text-blue-500 ml-2 group-hover:scale-110 transition-transform"/>
-                        </div>
-                        {isAdmin && <select value={type} onChange={e=>setType(e.target.value)} className="app-input px-2 py-3 rounded-xl text-[10px] font-bold text-gray-600 outline-none w-16 cursor-pointer bg-white border border-gray-200"><option value="global">全班</option><option value="personal">個人</option></select>}
-                        <button type="submit" className={`px-6 py-3 rounded-xl text-white font-bold shadow-md transition-transform btn-press flex items-center gap-1 text-xs ${category==='exam'?'bg-rose-500 hover:bg-rose-600':'bg-blue-600 hover:bg-blue-700'}`}><Icon name="Send" size={14}/> {!isInline && '儲存'}</button>
-                    </div>
+                    <div className="flex bg-gray-50 p-1 rounded-xl"><button type="button" onClick={()=>setCategory('homework')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all btn-press ${category==='homework'?'bg-white text-blue-600 shadow-sm':'text-gray-400 hover:text-gray-600'}`}>一般家課</button><button type="button" onClick={()=>setCategory('exam')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all btn-press ${category==='exam'?'bg-rose-500 text-white shadow-sm':'text-gray-400 hover:text-gray-600'}`}>測驗 / 考試</button></div>
+                    {isAdmin && (<div className="flex bg-gray-100 p-1 rounded-lg w-full mb-3"><button type="button" onClick={()=>setType('global')} className={`flex-1 py-1.5 rounded-md text-xs font-bold transition-all ${type==='global'?'bg-white text-blue-600 shadow-sm':'text-gray-500'}`}>全班</button><button type="button" onClick={()=>setType('personal')} className={`flex-1 py-1.5 rounded-md text-xs font-bold transition-all ${type==='personal'?'bg-white text-blue-600 shadow-sm':'text-gray-500'}`}>個人</button></div>)}
+                    <div><label className="text-[10px] font-bold text-gray-400 ml-1 mb-2 block uppercase tracking-wide">選擇科目</label><div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 -mx-1 px-1">{subjects.map(sub => { const colors = getSubjectStyle(sub.color); const isSelected = subject === sub.name; return (<button type="button" key={sub.name} onClick={()=>setSubject(sub.name)} className={`whitespace-nowrap px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all btn-press border ${isSelected ? `${colors.bg} text-white border-transparent shadow-md transform scale-105` : `bg-white ${colors.text} ${colors.border} hover:bg-gray-50`}`}>{sub.name}</button>);})}</div></div>
+                    <textarea value={content} onChange={e=>setContent(e.target.value)} className="app-input w-full p-4 rounded-[20px] text-sm min-h-[80px] resize-none leading-relaxed font-bold text-gray-700 placeholder-gray-400" placeholder={category === 'exam' ? '請輸入測驗範圍及溫習重點...' : '請輸入功課內容...'} /><div className="flex gap-2 items-center"><div className="relative flex-1 flex items-center bg-white border border-gray-200 rounded-xl px-3 py-1 hover:border-blue-400 transition-colors cursor-pointer group"><div className="flex flex-col flex-1"><span className="text-[9px] font-bold text-gray-400 uppercase">繳交日期</span><input type="date" value={deadline} onChange={e=>setDeadline(e.target.value)} className="w-full py-0.5 text-xs font-black text-gray-800 outline-none bg-transparent cursor-pointer" /></div><Icon name="Calendar" size={14} className="text-blue-500 ml-2 group-hover:scale-110 transition-transform"/></div><button type="submit" className={`px-6 py-3 rounded-xl text-white font-bold shadow-md transition-transform btn-press flex items-center gap-1 text-xs ${category==='exam'?'bg-rose-500 hover:bg-rose-600':'bg-blue-600 hover:bg-blue-700'}`}><Icon name="Send" size={14}/> {!isInline && '儲存'}</button></div>
                 </form>
-            );
-        };
-
-        const SettingsPanel = ({ subjects, onUpdateSubjects, isAdmin, onClose, onOpenAdmin }) => {
-            const [newSubName, setNewSubName] = useState('');
-            const [newSubColor, setNewSubColor] = useState('blue');
-            const handleAddSubject = () => { if (!newSubName.trim()) return; onUpdateSubjects([...subjects, { name: newSubName.trim(), color: newSubColor }]); setNewSubName(''); };
-            const handleDeleteSubject = (idx) => { const u = [...subjects]; u.splice(idx, 1); onUpdateSubjects(u); };
-            return (
-                <div className="space-y-5">
-                    {isAdmin && <button onClick={onOpenAdmin} className="w-full p-3 bg-gray-50 rounded-xl flex items-center justify-between text-gray-700 font-bold hover:bg-gray-100 btn-press text-sm"><span>管理員控制台</span><Icon name="ChevronRight" size={16}/></button>}
-                    <div>
-                        <h4 className="text-[10px] font-bold text-gray-400 mb-2 uppercase">科目管理</h4>
-                        <div className="flex gap-2 mb-3"><input value={newSubName} onChange={e=>setNewSubName(e.target.value)} className="app-input flex-1 px-3 py-2 rounded-lg text-xs" placeholder="新科目..." /><select value={newSubColor} onChange={e=>setNewSubColor(e.target.value)} className="app-input px-2 rounded-lg text-xs w-20">{Object.keys(COLOR_PALETTE).map(c => <option key={c} value={c}>{c}</option>)}</select><button onClick={handleAddSubject} className="p-2 bg-blue-600 text-white rounded-lg btn-press"><Icon name="Plus" size={16}/></button></div>
-                        <div className="space-y-2 max-h-[250px] overflow-y-auto no-scrollbar">{subjects.map((sub, idx) => { const colorObj = COLOR_PALETTE[sub.color] || COLOR_PALETTE.blue; return (<div key={idx} className="flex justify-between items-center p-2 bg-gray-50 rounded-lg animate-pop" style={{animationDelay: `${idx*0.03}s`}}><div className="flex items-center gap-2"><div className={`w-2.5 h-2.5 rounded-full ${colorObj.bg}`}></div><span className="text-xs font-bold text-gray-700">{sub.name}</span></div><button onClick={()=>handleDeleteSubject(idx)} className="text-gray-400 hover:text-red-500 btn-press"><Icon name="Trash2" size={14}/></button></div>); })}</div></div>
-                </div>
             );
         };
 
@@ -486,10 +330,9 @@
             const [isResetModalOpen, setIsResetModalOpen] = useState(false);
             useEffect(() => { setLocalData(timetableData); }, [timetableData]);
             const days = ["星期一", "星期二", "星期三", "星期四", "星期五"];
-
             const handleSave = () => { onUpdateTimetable(localData, false); setIsEditing(false); };
             const handleAdminPublish = () => { onUpdateTimetable(localData, true); setIsEditing(false); };
-            const handleResetConfirm = () => { setLocalData(DEFAULT_TIMETABLE); if (isAdmin) onUpdateTimetable(DEFAULT_TIMETABLE, true); else onUpdateTimetable(DEFAULT_TIMETABLE, false); setIsEditing(false); setIsResetModalOpen(false); onUpdateTimetable(DEFAULT_TIMETABLE, false); }; 
+            const handleResetConfirm = () => { setLocalData(DEFAULT_TIMETABLE); if (isAdmin) onUpdateTimetable(DEFAULT_TIMETABLE, true); else onUpdateTimetable(DEFAULT_TIMETABLE, false); setIsEditing(false); setIsResetModalOpen(false); onResetTimetable(); };
             const addRow = () => { setLocalData([...localData, { id: Date.now(), start: "00:00", end: "00:00", type: "lesson", items: ["", "", "", "", ""] }]); };
             const removeRow = (idx) => { const n = [...localData]; n.splice(idx, 1); setLocalData(n); };
             const updateRow = (idx, field, val) => { const n = [...localData]; n[idx][field] = val; setLocalData(n); };
@@ -500,99 +343,62 @@
                 const now = new Date();
                 const currentMinutes = now.getHours() * 60 + now.getMinutes();
                 const dayIndex = now.getDay() - 1; 
-                if (currentDay !== dayIndex) return 'bg-white';
+                if (currentDay !== dayIndex) return 'opacity-100'; 
                 const [endH, endM] = row.end.split(':').map(Number);
                 const endTotal = endH * 60 + endM;
                 const [startH, startM] = row.start.split(':').map(Number);
                 const startTotal = startH * 60 + startM;
-                if (currentMinutes > endTotal) return 'text-gray-300 opacity-40 grayscale'; 
-                if (currentMinutes >= startTotal && currentMinutes <= endTotal) return 'text-blue-600 font-black scale-105'; 
-                return 'text-gray-800'; 
+                if (currentMinutes > endTotal) return 'opacity-40 grayscale'; 
+                if (currentMinutes >= startTotal && currentMinutes <= endTotal) return 'scale-105'; 
+                return 'opacity-100'; 
             };
             const getDotStatus = (row) => {
                 const now = new Date();
                 const currentMinutes = now.getHours() * 60 + now.getMinutes();
                 const dayIndex = now.getDay() - 1; 
-                if (currentDay > dayIndex && dayIndex >= 0) return 'bg-gray-200 border-white'; 
-                if (currentDay < dayIndex && dayIndex >= 0) return 'border-2 border-green-500 bg-white'; 
-                if (currentDay !== dayIndex) return 'border-2 border-green-500 bg-white'; 
+                if (currentDay > dayIndex && dayIndex >= 0) return 'bg-gray-300 border-white'; 
+                if (currentDay < dayIndex && dayIndex >= 0) return 'bg-white border-2 border-green-500'; 
+                if (currentDay !== dayIndex) return 'bg-white border-2 border-green-500'; 
                 const [endH, endM] = row.end.split(':').map(Number);
                 const endTotal = endH * 60 + endM;
                 const [startH, startM] = row.start.split(':').map(Number);
                 const startTotal = startH * 60 + startM;
-                if (currentMinutes > endTotal) return 'bg-gray-300 border-gray-300'; 
+                if (currentMinutes > endTotal) return 'bg-gray-300 border-white'; 
                 if (currentMinutes >= startTotal && currentMinutes <= endTotal) return 'bg-green-500 border-green-500 shadow-[0_0_0_4px_rgba(34,197,94,0.3)] animate-pulse-dot scale-125'; 
-                return 'border-2 border-green-500 bg-white'; 
+                return 'bg-white border-2 border-green-500'; 
             };
 
             return (
                 <div className="min-h-screen bg-[#F5F7FB] animate-slide-up-fade relative z-50 flex flex-col">
                     <ResetModal isOpen={isResetModalOpen} onClose={()=>setIsResetModalOpen(false)} onConfirm={handleResetConfirm} isAdmin={isAdmin}/>
-                    <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-md px-4 py-3 border-b border-gray-200/50 flex justify-between items-center shrink-0 shadow-sm"><h1 className="text-lg font-black text-gray-800 flex items-center gap-2"><Icon name="CalendarDays" className="text-blue-500" size={20}/> 課程表</h1><div className="flex gap-2">{!isEditing && <button onClick={()=>setIsEditing(true)} className="px-3 py-1.5 bg-gray-100 rounded-lg text-xs font-bold text-gray-600 btn-press hover:bg-gray-200">編輯</button>}{isEditing && (<><button onClick={()=>setIsResetModalOpen(true)} className="px-3 py-1.5 bg-red-100 text-red-500 rounded-lg text-xs font-bold btn-press shadow-sm">重設預設</button>{isAdmin ? <button onClick={handleAdminPublish} className="px-3 py-1.5 bg-indigo-600 rounded-lg text-xs font-bold text-white btn-press shadow-md">發佈(全校)</button> : <button onClick={handleSave} className="px-3 py-1.5 bg-blue-600 rounded-lg text-xs font-bold text-white btn-press shadow-md">儲存(個人)</button>}</>)}<button onClick={onClose} className="p-1.5 bg-gray-100 rounded-full btn-press text-gray-500 hover:bg-gray-200"><Icon name="X" size={18}/></button></div></div>
+                    <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-md px-4 py-3 border-b border-gray-200/50 flex justify-between items-center shrink-0 shadow-sm"><div className="flex items-center gap-2"><h1 className="text-lg font-black text-gray-800 flex items-center gap-2"><Icon name="CalendarDays" className="text-blue-500" size={20}/> 課程表</h1><span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${hasPersonal ? 'bg-indigo-100 text-indigo-600' : 'bg-green-100 text-green-600'}`}>{hasPersonal ? '個人自定義' : '全校統一'}</span></div><div className="flex gap-2">{!isEditing && <button onClick={()=>setIsEditing(true)} className="px-3 py-1.5 bg-gray-100 rounded-lg text-xs font-bold text-gray-600 btn-press hover:bg-gray-200">編輯</button>}{isEditing && (<><button onClick={()=>setIsResetModalOpen(true)} className="px-3 py-1.5 bg-red-100 text-red-500 rounded-lg text-xs font-bold btn-press shadow-sm">重設預設</button>{isAdmin ? <button onClick={handleAdminPublish} className="px-3 py-1.5 bg-indigo-600 rounded-lg text-xs font-bold text-white btn-press shadow-md">發佈(全校)</button> : <button onClick={handleSave} className="px-3 py-1.5 bg-blue-600 rounded-lg text-xs font-bold text-white btn-press shadow-md">儲存(個人)</button>}</>)}<button onClick={onClose} className="p-1.5 bg-gray-100 rounded-full btn-press text-gray-500 hover:bg-gray-200"><Icon name="X" size={18}/></button></div></div>
                     <div className="flex justify-between px-3 py-3 bg-gray-50/50 overflow-x-auto no-scrollbar">{days.map((d, i) => (<button key={d} onClick={() => setCurrentDay(i)} className={`flex-1 min-w-[60px] py-2 mx-1 rounded-lg text-xs font-bold transition-all btn-press ${currentDay === i ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-500 border border-gray-100'}`}>{d.replace('星期', '週')}</button>))}</div>
-                    <div className="flex-1 overflow-y-auto p-5 pb-20 relative bg-white m-4 rounded-[32px] shadow-sm border border-white">
-                        <div className="absolute left-[99px] top-6 bottom-6 w-[2px] bg-gray-100 z-0"></div>
-                        <div className="space-y-0 relative z-10">
-                            {localData.map((row, index) => {
-                                const isBreak = row.type === 'break';
-                                const subjectName = isBreak ? row.label : row.items[currentDay];
-                                const style = getSubColor(subjectName);
-                                const statusClass = !isEditing ? getStatusColor(row) : '';
-                                const dotClass = !isEditing ? getDotStatus(row) : 'bg-white border-gray-300';
-
-                                return (
-                                    <div key={row.id} className="flex gap-6 items-center group animate-pop py-3">
-                                        <div className="w-20 text-right flex flex-col justify-center shrink-0">
-                                            {isEditing ? (
-                                                <div className="flex flex-col gap-1"><input type="time" value={row.start} onChange={e=>updateRow(index,'start',e.target.value)} className="bg-gray-50 rounded px-1 w-full text-center text-[10px]"/><input type="time" value={row.end} onChange={e=>updateRow(index,'end',e.target.value)} className="bg-gray-50 rounded px-1 w-full text-center text-[10px]"/></div>
-                                            ) : (
-                                                <>
-                                                    <span className={`text-[14px] font-black leading-tight ${statusClass.includes('text-blue-600') ? 'text-blue-600' : 'text-gray-800'}`}>{row.start}</span>
-                                                    <span className="text-[10px] font-bold text-gray-300 leading-tight block mt-0.5">{row.end}</span>
-                                                </>
-                                            )}
-                                        </div>
-
-                                        <div className="relative flex items-center justify-center w-4 shrink-0">
-                                             <div className={`w-3.5 h-3.5 rounded-full z-10 box-content transition-all duration-500 ${dotClass}`}></div>
-                                        </div>
-
-                                        <div className="flex-1 min-h-[30px] flex items-center border-b border-gray-50 pb-2">
-                                            {isEditing ? (
-                                                <div className="flex gap-2 w-full"><select value={row.type} onChange={e=>updateRow(index,'type',e.target.value)} className="bg-gray-50 border border-gray-200 rounded text-[10px] p-1"><option value="lesson">課</option><option value="break">休</option></select>{isBreak ? <input value={row.label||''} onChange={e=>updateRow(index,'label',e.target.value)} className="w-full bg-white border rounded px-2 text-xs" placeholder="休息"/> : <input value={row.items[currentDay]} onChange={e=>updateItem(index, currentDay, e.target.value)} className="w-full bg-white border rounded px-2 text-xs font-bold" placeholder="科目"/>}<button onClick={()=>removeRow(index)} className="text-red-400 bg-red-50 p-1 rounded"><Icon name="Minus" size={12}/></button></div>
-                                            ) : (
-                                                <div className={`flex items-center w-full transition-all duration-300 ${statusClass}`}>
-                                                    <span className={`text-lg font-black tracking-tight ${isBreak ? 'text-gray-400 text-xs tracking-widest uppercase italic' : style.text.replace('text-', 'text-')}`}>
-                                                        {subjectName || '-'}
-                                                    </span>
-                                                </div>
-                                            )}
-                                        </div>
+                    <div className="flex-1 overflow-y-auto p-6 pb-20 relative bg-white m-4 rounded-[32px] shadow-sm border border-white">
+                        <div className="absolute left-[110px] top-6 bottom-6 w-[2px] bg-gray-100 z-0"></div>
+                        <div className="space-y-6 relative z-10">{localData.map((row, index) => {
+                            const isBreak = row.type === 'break';
+                            const subjectName = isBreak ? row.label : row.items[currentDay];
+                            const style = getSubColor(subjectName);
+                            const statusClass = !isEditing ? getStatusColor(row) : '';
+                            const dotClass = !isEditing ? getDotStatus(row) : 'bg-white border-2 border-gray-300';
+                            return (
+                                <div key={row.id} className="flex items-center group animate-pop">
+                                    <div className="w-24 text-right flex flex-col justify-center shrink-0 pr-4">
+                                        {isEditing ? (<div className="flex flex-col gap-1"><input type="time" value={row.start} onChange={e=>updateRow(index,'start',e.target.value)} className="bg-gray-50 rounded px-1 w-full text-center text-[10px]"/><input type="time" value={row.end} onChange={e=>updateRow(index,'end',e.target.value)} className="bg-gray-50 rounded px-1 w-full text-center text-[10px]"/></div>) : (<><span className={`text-[14px] font-black leading-tight ${statusClass.includes('scale') ? 'text-blue-600' : 'text-gray-800'}`}>{row.start}</span><span className="text-[10px] font-bold text-gray-300 leading-tight block mt-0.5 text-right">{row.end}</span></>)}
                                     </div>
-                                );
-                            })}
-                        </div>
-                        {isEditing && <button onClick={addRow} className="w-full mt-8 py-3 border-2 border-dashed border-blue-200 bg-blue-50/30 rounded-2xl text-blue-500 font-bold flex items-center justify-center gap-2 hover:bg-blue-100 transition-colors btn-press text-sm z-20 relative"><Icon name="PlusCircle" size={18}/> 新增時段</button>}
+                                    <div className="relative flex items-center justify-center w-4 shrink-0"><div className={`w-3.5 h-3.5 rounded-full z-10 box-content transition-all duration-500 ${dotClass}`}></div></div>
+                                    <div className="flex-1 min-h-[40px] flex items-center pl-6 border-b border-gray-50 pb-2 ml-2">
+                                        {isEditing ? (<div className="flex gap-2 w-full"><select value={row.type} onChange={e=>updateRow(index,'type',e.target.value)} className="bg-gray-50 border border-gray-200 rounded text-[10px] p-1"><option value="lesson">課</option><option value="break">休</option></select>{isBreak ? <input value={row.label||''} onChange={e=>updateRow(index,'label',e.target.value)} className="w-full bg-white border rounded px-2 text-xs" placeholder="休息"/> : <input value={row.items[currentDay]} onChange={e=>updateItem(index, currentDay, e.target.value)} className="w-full bg-white border rounded px-2 text-xs font-bold" placeholder="科目"/>}<button onClick={()=>removeRow(index)} className="text-red-400 bg-red-50 p-1 rounded"><Icon name="Minus" size={12}/></button></div>) : (<div className={`flex items-center w-full transition-all duration-300 ${statusClass}`}><span className={`text-xl font-black tracking-tight ${isBreak ? 'text-gray-400 text-xs tracking-widest uppercase italic' : style.text.replace('text-', 'text-')}`}>{subjectName || '-'}</span></div>)}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                        {isEditing && <button onClick={addRow} className="w-full mt-8 py-3 border-2 border-dashed border-blue-200 bg-blue-50/50 rounded-2xl text-blue-500 font-bold flex items-center justify-center gap-2 hover:bg-blue-100 transition-colors btn-press text-sm z-20 relative"><Icon name="PlusCircle" size={18}/> 新增時段</button>}</div>
                     </div>
                 </div>
             );
         };
 
-        const Modal = ({ children, onClose, title }) => (
-            <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 backdrop-blur-sm animate-pop">
-                <div className="bg-white w-full sm:max-w-md rounded-t-[32px] sm:rounded-[32px] overflow-hidden shadow-2xl flex flex-col max-h-[85vh]">
-                    <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10 shrink-0">
-                        <h3 className="font-bold text-xl text-gray-800">{title}</h3>
-                        <button onClick={onClose} className="p-2.5 bg-gray-100 rounded-full text-gray-500 hover:bg-gray-200 btn-press transition-colors"><Icon name="X" size={22}/></button>
-                    </div>
-                    <div className="p-6 overflow-y-auto no-scrollbar">{children}</div>
-                </div>
-            </div>
-        );
-
-        // ==========================================
-        // APP LOGIC (Main Component)
-        // ==========================================
         const App = () => {
             const [user, setUser] = useState(null);
             const [userData, setUserData] = useState(null);
@@ -664,14 +470,14 @@
                 <div className="min-h-screen flex items-center justify-center bg-white relative overflow-hidden px-4">
                     <DynamicIsland notification={notification}/>
                     <div className="absolute inset-0 z-0 opacity-50"><div className="absolute top-[10%] left-[10%] w-64 h-64 bg-blue-200 rounded-full blur-3xl animate-blob"></div><div className="absolute bottom-[10%] right-[10%] w-64 h-64 bg-purple-200 rounded-full blur-3xl animate-blob animation-delay-2000"></div></div>
-                    <div className="w-full max-w-md bg-white/80 backdrop-blur-xl rounded-[32px] shadow-2xl border border-white p-8 animate-pop">
-                        <div className="text-center mb-6"><div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-blue-600 shadow-lg mb-4 text-white"><Icon name="BookOpen" size={40}/></div><h1 className="text-2xl font-black text-gray-800">電子手冊</h1></div>
-                        <form onSubmit={handleAuth} className="space-y-4">
-                            <div className="relative"><Icon name="Mail" size={18} className="absolute left-4 top-3.5 text-gray-400"/><input type="email" required value={authEmail} onChange={e=>setAuthEmail(e.target.value)} placeholder="Email" className="cute-input w-full pl-12 pr-4 py-3 rounded-2xl text-sm outline-none"/></div>
-                            <div className="relative"><Icon name="Lock" size={18} className="absolute left-4 top-3.5 text-gray-400"/><input type="password" required value={authPassword} onChange={e=>setAuthPassword(e.target.value)} placeholder="Password" className="cute-input w-full pl-12 pr-4 py-3 rounded-2xl text-sm outline-none"/></div>
-                            <button type="submit" className="w-full bg-blue-600 text-white py-3.5 rounded-2xl font-bold shadow-lg btn-press">{authMode==='login'?'登入':'註冊'}</button>
+                    <div className="w-full max-w-lg bg-white/80 backdrop-blur-xl rounded-[32px] shadow-2xl border border-white p-12 animate-pop">
+                        <div className="text-center mb-8"><div className="inline-flex items-center justify-center w-24 h-24 rounded-3xl bg-blue-600 shadow-lg mb-6 text-white"><Icon name="BookOpen" size={48}/></div><h1 className="text-3xl font-black text-gray-800">電子手冊</h1></div>
+                        <form onSubmit={handleAuth} className="space-y-6">
+                            <div className="relative"><Icon name="Mail" size={20} className="absolute left-4 top-4 text-gray-400"/><input type="email" required value={authEmail} onChange={e=>setAuthEmail(e.target.value)} placeholder="Email" className="cute-input w-full pl-14 pr-5 py-4 rounded-2xl text-base outline-none"/></div>
+                            <div className="relative"><Icon name="Lock" size={20} className="absolute left-4 top-4 text-gray-400"/><input type="password" required value={authPassword} onChange={e=>setAuthPassword(e.target.value)} placeholder="Password" className="cute-input w-full pl-14 pr-5 py-4 rounded-2xl text-base outline-none"/></div>
+                            <button type="submit" className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold text-lg shadow-lg btn-press">{authMode==='login'?'登入':'註冊'}</button>
                         </form>
-                        <div className="mt-6 text-center"><button onClick={handleGoogleLogin} className="w-full bg-white border-2 border-gray-100 py-3 rounded-2xl font-bold text-sm flex justify-center gap-2 btn-press mb-4"><img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5"/> Google</button><button onClick={()=>setAuthMode(m=>m==='login'?'register':'login')} className="text-xs text-gray-400 font-bold">{authMode==='login'?'註冊':'登入'}</button></div>
+                        <div className="mt-8 text-center"><button onClick={handleGoogleLogin} className="w-full bg-white border-2 border-gray-100 py-4 rounded-2xl font-bold text-base flex justify-center gap-3 btn-press mb-6 text-gray-600"><img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-6 h-6"/> 使用 Google 帳戶登入</button><button onClick={()=>setAuthMode(m=>m==='login'?'register':'login')} className="text-sm text-gray-400 font-bold hover:text-blue-600 transition-colors">{authMode==='login'?'註冊新帳戶':'返回登入'}</button></div>
                     </div>
                 </div>
             );
@@ -700,10 +506,10 @@
                         </div>
                     </header>
                     {broadcast.active && <div className="mx-4 mt-2 bg-indigo-600 text-white text-xs font-bold py-3 px-4 rounded-xl shadow-lg flex items-center gap-2 animate-pop"><Icon name="Volume2" size={14}/><div className="whitespace-nowrap overflow-hidden flex-1"><div className="animate-marquee">{broadcast.message}</div></div></div>}
-                    <main className="px-4 mt-4 space-y-6 max-w-lg mx-auto">
+                    <main className="px-4 mt-4 space-y-6 max-w-7xl mx-auto">
                         <CurrentStatusCard timetableData={timetableData} userData={userData} />
                         <section><h3 className="text-xs font-bold text-gray-400 mb-3 px-1 uppercase tracking-wider">概覽狀態</h3>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 <StatCard title="今天截止" count={stats.cToday} icon="CalendarDays" colorClass={{bg:'bg-blue-100', text:'text-blue-600'}} onClick={()=>setCardModal({open:true,title:'今天到期',type:'today'})}/>
                                 <StatCard title="明天截止" count={stats.cTmr} icon="ArrowRight" colorClass={{bg:'bg-indigo-100', text:'text-indigo-600'}} onClick={()=>setCardModal({open:true,title:'明天到期',type:'tomorrow'})}/>
                                 <StatCard title="測驗考試" count={stats.cExam} icon="AlertCircle" colorClass={{bg:'bg-rose-100', text:'text-rose-600'}} onClick={()=>setCardModal({open:true,title:'測驗考試',type:'exam'})}/>
@@ -716,7 +522,7 @@
                         </div>
                         <section className="space-y-4">
                             <div className="flex items-center justify-between px-1"><h2 className="font-bold text-lg text-gray-800">全部功課</h2><div className="flex gap-2 overflow-x-auto no-scrollbar max-w-[180px]"><button onClick={()=>setFilterSubject("全部")} className={`whitespace-nowrap px-3 py-1 rounded-full text-[10px] font-bold transition-all btn-press ${filterSubject==="全部"?'bg-gray-800 text-white':'bg-white text-gray-500 border'}`}>全部</button>{subjects.map(s=><button key={s.name} onClick={()=>setFilterSubject(s.name)} className={`whitespace-nowrap px-3 py-1 rounded-full text-[10px] font-bold transition-all btn-press ${filterSubject===s.name?'bg-blue-600 text-white':'bg-white text-gray-500 border'}`}>{s.name}</button>)}</div></div>
-                            <div className="space-y-3 pb-10">{pendingHomeworks.length===0?<div className="text-center py-10 text-gray-300">暫無待辦事項</div>:pendingHomeworks.map((h, i)=><div key={h.id} style={{animationDelay: `${i*0.1}s`}} className="animate-slide-up-fade fill-mode-backwards"><HomeworkItem hw={h} isDone={false} user={user} isAdmin={isAdmin} subjects={subjects} onToggle={()=>toggleComplete(h)} onEdit={()=>{setEditingTask(h);setIsEditModalOpen(true)}} onDelete={()=>setDeleteTargetId(h.id)} onReset={()=>adminResetCompletions(h.id)}/></div>)}</div>
+                            <div className="space-y-3 pb-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">{pendingHomeworks.length===0?<div className="col-span-full text-center py-10 text-gray-300">暫無待辦事項</div>:pendingHomeworks.map((h, i)=><div key={h.id} style={{animationDelay: `${i*0.1}s`}} className="animate-slide-up-fade fill-mode-backwards"><HomeworkItem hw={h} isDone={false} user={user} isAdmin={isAdmin} subjects={subjects} onToggle={()=>toggleComplete(h)} onEdit={()=>{setEditingTask(h);setIsEditModalOpen(true)}} onDelete={()=>setDeleteTargetId(h.id)} onReset={()=>adminResetCompletions(h.id)}/></div>)}</div>
                         </section>
                     </main>
                     <DeleteModal isOpen={!!deleteTargetId} onClose={()=>setDeleteTargetId(null)} onConfirm={handleDeleteConfirm}/>
