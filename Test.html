@@ -65,8 +65,8 @@
                             '50%': { 'background-position': '100% 50%' },
                         },
                         pulseDot: {
-                            '0%': { boxShadow: '0 0 0 0px rgba(59, 130, 246, 0.4)' },
-                            '100%': { boxShadow: '0 0 0 8px rgba(59, 130, 246, 0)' }
+                            '0%': { boxShadow: '0 0 0 0px rgba(34, 197, 94, 0.4)' },
+                            '100%': { boxShadow: '0 0 0 12px rgba(34, 197, 94, 0)' }
                         }
                     }
                 }
@@ -188,6 +188,9 @@
 
         const { useState, useEffect, useMemo } = React;
 
+        // ==========================================
+        // HELPERS
+        // ==========================================
         const Icon = ({ name, size = 20, className = "", ...props }) => {
             if (!window.lucide || !window.lucide.icons || !window.lucide.icons[name]) return null;
             const iconData = window.lucide.icons[name];
@@ -224,7 +227,23 @@
             return days[new Date(dateStr).getUTCDay()];
         };
 
-        // ... (DynamicIsland, DeleteModal, ResetModal, TopActionButton same as before) ...
+        // ==========================================
+        // COMPONENTS (Defined BEFORE App)
+        // ==========================================
+        
+        // 1. Modal (Moved to top level)
+        const Modal = ({ children, onClose, title }) => (
+            <div className="fixed inset-0 bg-black/60 z-[90] flex items-center justify-center p-4 backdrop-blur-sm animate-pop-in">
+                <div className="bg-white w-full sm:max-w-md rounded-[32px] overflow-hidden shadow-2xl flex flex-col max-h-[85vh]">
+                    <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10 shrink-0">
+                        <h3 className="font-bold text-xl text-gray-800">{title}</h3>
+                        <button onClick={onClose} className="p-2.5 bg-gray-100 rounded-full text-gray-500 hover:bg-gray-200 btn-press transition-colors"><Icon name="X" size={22}/></button>
+                    </div>
+                    <div className="p-6 overflow-y-auto no-scrollbar">{children}</div>
+                </div>
+            </div>
+        );
+
         const DynamicIsland = ({ notification }) => {
             if (!notification.visible) return null;
             return (
@@ -357,17 +376,41 @@
             return (
                 <div onClick={onEdit} className={`relative bg-white rounded-[20px] shadow-card border border-transparent overflow-hidden flex transition-all btn-press cursor-pointer hover:shadow-soft group ${isDone ? 'opacity-50 grayscale' : ''}`}>
                     <div className={`w-2 ${colors.bg}`}></div>
+                    
+                    {/* Left Check Circle */}
                     <div className="flex items-center pl-3" onClick={e => e.stopPropagation()}>
-                        <button onClick={onToggle} className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${isDone ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 text-transparent hover:border-blue-400'}`}><Icon name="Check" size={14} strokeWidth={4} /></button>
+                        <button onClick={onToggle} className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${isDone ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 text-transparent hover:border-blue-400'}`}>
+                            <Icon name="Check" size={14} strokeWidth={4} />
+                        </button>
                     </div>
+
                     <div className="flex-1 p-3.5 pl-3 relative min-w-0">
-                        <div className={`absolute top-3.5 right-3.5 text-[9px] font-bold px-2 py-0.5 rounded-md ${daysLeft.bg} ${daysLeft.color} shadow-sm z-10`}>{daysLeft.text}</div>
-                        <div className="flex items-center gap-1.5 mb-2"><span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${colors.light} ${colors.text}`}>{hw.subject}</span>{isExam && <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-100 flex items-center gap-1"><Icon name="AlertCircle" size={10}/> 測驗</span>}</div>
+                        {/* Days Left Badge (Right) */}
+                        <div className={`absolute top-3.5 right-3.5 text-[9px] font-bold px-2 py-0.5 rounded-md ${daysLeft.bg} ${daysLeft.color} shadow-sm z-10`}>
+                            {daysLeft.text}
+                        </div>
+                        
+                        <div className="flex items-center gap-1.5 mb-2">
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${colors.light} ${colors.text}`}>{hw.subject}</span>
+                            {isExam && <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-100 flex items-center gap-1"><Icon name="AlertCircle" size={10}/> 測驗</span>}
+                        </div>
                         <p className="text-sm font-bold text-gray-800 leading-relaxed whitespace-pre-wrap pr-16 mb-2 line-clamp-2">{hw.content}</p>
-                        <div className="flex items-center justify-between pt-2 border-t border-gray-50"><div className="text-[10px] text-gray-400 font-bold flex items-center gap-1"><Icon name="Calendar" size={12}/> {hw.deadline} · {weekday}</div></div>
+                        
+                        {/* Footer: Date */}
+                        <div className="flex items-center justify-between pt-2 border-t border-gray-50">
+                            <div className="text-[10px] text-gray-400 font-bold flex items-center gap-1">
+                                <Icon name="Calendar" size={12}/> {hw.deadline} · {weekday}
+                            </div>
+                        </div>
                     </div>
+
+                    {/* Right Vertical Action Bar */}
                     {(isAdmin || hw.createdBy === user.uid) && (
-                        <div className="flex flex-col w-11 border-l border-gray-50 bg-gray-50/30" onClick={e => e.stopPropagation()}><button onClick={onEdit} className="flex-1 flex items-center justify-center text-blue-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"><Icon name="Edit3" size={16}/></button><div className="h-[1px] w-full bg-gray-100"></div><button onClick={onDelete} className="flex-1 flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors"><Icon name="Trash2" size={16}/></button></div>
+                        <div className="flex flex-col w-11 border-l border-gray-50 bg-gray-50/30" onClick={e => e.stopPropagation()}>
+                            <button onClick={onEdit} className="flex-1 flex items-center justify-center text-blue-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"><Icon name="Edit3" size={16}/></button>
+                            <div className="h-[1px] w-full bg-gray-100"></div>
+                            <button onClick={onDelete} className="flex-1 flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors"><Icon name="Trash2" size={16}/></button>
+                        </div>
                     )}
                 </div>
             );
@@ -418,11 +461,7 @@
                     <div>
                         <h4 className="text-[10px] font-bold text-gray-400 mb-2 uppercase">科目管理</h4>
                         <div className="flex gap-2 mb-3"><input value={newSubName} onChange={e=>setNewSubName(e.target.value)} className="app-input flex-1 px-3 py-2 rounded-lg text-xs" placeholder="新科目..." /><select value={newSubColor} onChange={e=>setNewSubColor(e.target.value)} className="app-input px-2 rounded-lg text-xs w-20">{Object.keys(COLOR_PALETTE).map(c => <option key={c} value={c}>{c}</option>)}</select><button onClick={handleAddSubject} className="p-2 bg-blue-600 text-white rounded-lg btn-press"><Icon name="Plus" size={16}/></button></div>
-                        <div className="space-y-2 max-h-[250px] overflow-y-auto no-scrollbar">{subjects.map((sub, idx) => {
-                            const colorObj = COLOR_PALETTE[sub.color] || COLOR_PALETTE.blue;
-                            return ( <div key={idx} className="flex justify-between items-center p-2 bg-gray-50 rounded-lg animate-pop" style={{animationDelay: `${idx*0.03}s`}}><div className="flex items-center gap-2"><div className={`w-2.5 h-2.5 rounded-full ${colorObj.bg}`}></div><span className="text-xs font-bold text-gray-700">{sub.name}</span></div><button onClick={()=>handleDeleteSubject(idx)} className="text-gray-400 hover:text-red-500 btn-press"><Icon name="Trash2" size={14}/></button></div>)
-                        })}</div>
-                    </div>
+                        <div className="space-y-2 max-h-[250px] overflow-y-auto no-scrollbar">{subjects.map((sub, idx) => { const colorObj = COLOR_PALETTE[sub.color] || COLOR_PALETTE.blue; return (<div key={idx} className="flex justify-between items-center p-2 bg-gray-50 rounded-lg animate-pop" style={{animationDelay: `${idx*0.03}s`}}><div className="flex items-center gap-2"><div className={`w-2.5 h-2.5 rounded-full ${colorObj.bg}`}></div><span className="text-xs font-bold text-gray-700">{sub.name}</span></div><button onClick={()=>handleDeleteSubject(idx)} className="text-gray-400 hover:text-red-500 btn-press"><Icon name="Trash2" size={14}/></button></div>); })}</div></div>
                 </div>
             );
         };
@@ -504,7 +543,7 @@
                                 </div>
                             );
                         })}
-                        {isEditing && <button onClick={addRow} className="w-full mt-8 py-3 border-2 border-dashed border-blue-200 bg-blue-50/30 rounded-2xl text-blue-500 font-bold flex items-center justify-center gap-2 hover:bg-blue-100 transition-colors btn-press text-sm z-20 relative"><Icon name="PlusCircle" size={18}/> 新增時段</button>}</div>
+                        {isEditing && <button onClick={addRow} className="w-full mt-8 py-3 border-2 border-dashed border-blue-200 bg-blue-50/50 rounded-2xl text-blue-500 font-bold flex items-center justify-center gap-2 hover:bg-blue-100 transition-colors btn-press text-sm z-20 relative"><Icon name="PlusCircle" size={18}/> 新增時段</button>}</div>
                     </div>
                 </div>
             );
