@@ -170,11 +170,7 @@
         ];
 
         // 8:30 Start, 35m lessons.
-        // L1, L2 (35m) -> Break 1 (15m)
-        // L3, L4 (35m) -> Break 2 (10m)
-        // L5, L6 (35m) -> Lunch (70m)
-        // L7, L8 (35m) -> Break 3 (10m) 
-        // L9, L10 (35m) -> Finish
+        // L1-L2, B1(15), L3-L4, B2(10), L5-L6, Lunch(70), L7-L8, B3(10), L9-L10
         const DEFAULT_TIMETABLE = [
             { id: 1, start: "08:30", end: "09:05", type: "lesson", items: ["空堂", "空堂", "空堂", "空堂", "空堂"] },
             { id: 2, start: "09:05", end: "09:40", type: "lesson", items: ["空堂", "空堂", "空堂", "空堂", "空堂"] },
@@ -429,15 +425,18 @@
             const handleSave = () => { onUpdateTimetable(localData, false); setIsEditing(false); }; 
             const handleAdminPublish = () => { onUpdateTimetable(localData, true); setIsEditing(false); }; 
             
-            // Updated Reset Logic
             const handleReset = () => { 
                 if(confirm("確定要重設為預設課表嗎？這將刪除您所有的個人課表設定。")) { 
-                    setLocalData(DEFAULT_TIMETABLE); // Important: Immediate visual feedback
+                    setLocalData(DEFAULT_TIMETABLE); 
                     onResetTimetable(); 
                     setIsEditing(false); 
                 } 
             };
             
+            // Restored add/remove functions
+            const addRow = () => { setLocalData([...localData, { id: Date.now(), start: "00:00", end: "00:00", type: "lesson", items: ["", "", "", "", ""] }]); };
+            const removeRow = (idx) => { const n = [...localData]; n.splice(idx, 1); setLocalData(n); };
+
             const updateRow = (idx, field, val) => { const n = [...localData]; n[idx][field] = val; setLocalData(n); };
             const updateItem = (rIdx, dIdx, val) => { const n = [...localData]; n[rIdx].items[dIdx] = val; setLocalData(n); };
             const getSubColor = (name) => { if(!name) return { bg: 'bg-white', text: 'text-gray-400', border: 'border-gray-100' }; const s = subjects.find(sub => sub.name.includes(name) || name.includes(sub.name)); const style = s ? getSubjectStyle(s.color) : { light: 'bg-gray-50', text: 'text-gray-700' }; return { bg: style.light, text: style.text, border: 'border-transparent' }; };
@@ -468,7 +467,7 @@
                         </div>
                     </div>
                     <div className="flex justify-between px-3 py-3 bg-gray-50/50 overflow-x-auto no-scrollbar">{days.map((d, i) => (<button key={d} onClick={() => setCurrentDay(i)} className={`flex-1 min-w-[60px] py-2 mx-1 rounded-lg text-xs font-bold transition-all btn-press ${currentDay === i ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-500 border border-gray-100'}`}>{d.replace('星期', '週')}</button>))}</div>
-                    <div className="flex-1 overflow-y-auto p-3 space-y-3 pb-20">{localData.map((row, rIdx) => { const isBreak = row.type === 'break'; const subjectName = isBreak ? row.label : row.items[currentDay]; const style = getSubColor(subjectName); return (<div key={row.id} className="flex gap-3 relative group animate-pop"><div className="w-14 flex flex-col justify-center items-end text-[10px] font-bold text-gray-400 py-2">{isEditing ? (<div className="flex flex-col gap-1 w-full"><input type="time" value={row.start} onChange={e=>updateRow(rIdx,'start',e.target.value)} className="bg-white border rounded px-1 w-full text-center"/><input type="time" value={row.end} onChange={e=>updateRow(rIdx,'end',e.target.value)} className="bg-white border rounded px-1 w-full text-center"/></div>) : (<>{row.start}<br/><div className="h-3 w-[1px] bg-gray-300 my-0.5 mx-auto"></div>{row.end}</>)}</div><div className={`flex-1 rounded-xl p-3 flex items-center shadow-sm border transition-all ${isBreak ? 'bg-gray-100/80 border-gray-200 justify-center min-h-[50px]' : `${style.bg} border-transparent bg-white min-h-[60px]`}`}>{isEditing ? (<div className="w-full flex flex-col gap-2"><div className="flex gap-2"><select value={row.type} onChange={e=>updateRow(rIdx,'type',e.target.value)} className="bg-white border rounded text-[10px] p-1 flex-1"><option value="lesson">課堂</option><option value="break">休息</option></select></div>{isBreak ? <input value={row.label||''} onChange={e=>updateRow(rIdx,'label',e.target.value)} className="w-full bg-white border rounded px-2 py-1 text-center font-bold text-xs" placeholder="休息名稱"/> : <input value={row.items[currentDay]} onChange={e=>updateItem(rIdx, currentDay, e.target.value)} className="w-full bg-white border rounded px-2 py-1 font-bold text-gray-800 text-xs" placeholder="科目"/>}</div>) : (<span className={`font-bold text-sm ${isBreak ? 'text-gray-500 tracking-widest text-xs uppercase' : style.text}`}>{subjectName || '-'}</span>)}</div></div>);})}{isEditing && <button onClick={addRow} className="w-full mt-4 py-3 border-2 border-dashed border-blue-300 bg-blue-50 rounded-xl text-blue-500 font-bold flex items-center justify-center gap-2 hover:bg-blue-100 btn-press text-xs"><Icon name="PlusCircle" size={18}/> 新增時段</button>}</div>
+                    <div className="flex-1 overflow-y-auto p-3 space-y-3 pb-20">{localData.map((row, rIdx) => { const isBreak = row.type === 'break'; const subjectName = isBreak ? row.label : row.items[currentDay]; const style = getSubColor(subjectName); return (<div key={row.id} className="flex gap-3 relative group animate-pop"><div className="w-14 flex flex-col justify-center items-end text-[10px] font-bold text-gray-400 py-2">{isEditing ? (<div className="flex flex-col gap-1 w-full"><input type="time" value={row.start} onChange={e=>updateRow(rIdx,'start',e.target.value)} className="bg-white border rounded px-1 w-full text-center"/><input type="time" value={row.end} onChange={e=>updateRow(rIdx,'end',e.target.value)} className="bg-white border rounded px-1 w-full text-center"/></div>) : (<>{row.start}<br/><div className="h-3 w-[1px] bg-gray-300 my-0.5 mx-auto"></div>{row.end}</>)}</div><div className={`flex-1 rounded-xl p-3 flex items-center shadow-sm border transition-all ${isBreak ? 'bg-gray-100/80 border-gray-200 justify-center min-h-[50px]' : `${style.bg} border-transparent bg-white min-h-[60px]`}`}>{isEditing ? (<div className="w-full flex flex-col gap-2"><div className="flex gap-2"><select value={row.type} onChange={e=>updateRow(rIdx,'type',e.target.value)} className="bg-white border rounded text-[10px] p-1 flex-1"><option value="lesson">課堂</option><option value="break">休息</option></select><button onClick={()=>removeRow(rIdx)} className="bg-red-100 text-red-500 rounded p-1"><Icon name="Trash2" size={14}/></button></div>{isBreak ? <input value={row.label||''} onChange={e=>updateRow(rIdx,'label',e.target.value)} className="w-full bg-white border rounded px-2 py-1 text-center font-bold text-xs" placeholder="休息名稱"/> : <input value={row.items[currentDay]} onChange={e=>updateItem(rIdx, currentDay, e.target.value)} className="w-full bg-white border rounded px-2 py-1 font-bold text-gray-800 text-xs" placeholder="科目"/>}</div>) : (<span className={`font-bold text-sm ${isBreak ? 'text-gray-500 tracking-widest text-xs uppercase' : style.text}`}>{subjectName || '-'}</span>)}</div></div>);})}{isEditing && <button onClick={addRow} className="w-full mt-4 py-3 border-2 border-dashed border-blue-300 bg-blue-50 rounded-xl text-blue-500 font-bold flex items-center justify-center gap-2 hover:bg-blue-100 btn-press text-xs"><Icon name="PlusCircle" size={18}/> 新增時段</button>}</div>
                 </div>
             );
         };
@@ -520,14 +519,12 @@
             
             useEffect(() => { const u = auth.onAuthStateChanged(async(u)=>{ setUser(u); if(u){ const r=db.collection('users').doc(u.uid); const s=await r.get(); if(s.exists){ setUserData(s.data()); if(!s.data().shortName)setShowShortNameModal(true); await r.update({lastLogin:firebase.firestore.FieldValue.serverTimestamp()}); } else { await r.set({email:u.email,displayName:u.displayName||'',photoURL:u.photoURL||'',lastLogin:firebase.firestore.FieldValue.serverTimestamp()}); setShowShortNameModal(true); } notify(`歡迎回來，${u.displayName || '同學'}`, 'info'); } }); return ()=>u(); }, []);
             
-            // Sync Logic
             useEffect(() => { 
                 if(!user) return; 
                 db.collection('homeworks').orderBy('createdAt','desc').onSnapshot(s=>setHomeworks(s.docs.map(d=>({id:d.id,...d.data()})))); 
                 db.collection('settings').doc('broadcast').onSnapshot(d=>{if(d.exists)setBroadcast(d.data())}); 
                 db.collection('settings').doc('subjects').onSnapshot(d=>{if(d.exists&&d.data().list)setSubjects(d.data().list)}); 
                 
-                // Fetch Global TT
                 db.collection('settings').doc('timetable').onSnapshot(d=>{
                     if(d.exists&&d.data().data) {
                         setGlobalTimetable(d.data().data);
@@ -546,7 +543,6 @@
                 } else if (globalTimetable.length > 0) {
                     setTimetableData(globalTimetable);
                 } else {
-                    // Force default if global is empty (e.g. first load)
                     setTimetableData(DEFAULT_TIMETABLE);
                 }
             }, [userData, globalTimetable]);
