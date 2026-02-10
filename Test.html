@@ -29,15 +29,17 @@
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
+                        sans: ['"Inter"', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
+                        display: ['"Oswald"', 'sans-serif'],
                     },
                     colors: {
-                        school: { 50: '#eff6ff', 100: '#dbeafe', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8', 800: '#1e40af', 900: '#1e3a8a' }
+                        school: { 50: '#f9fafb', 100: '#f3f4f6', 500: '#3b82f6', 600: '#2563eb', 900: '#111827' }
                     },
                     boxShadow: {
-                        'soft': '0 8px 30px rgba(0,0,0,0.06)',
-                        'glow': '0 0 20px rgba(59, 130, 246, 0.4)',
-                        'float': '0 15px 40px -10px rgba(0,0,0,0.15)',
+                        'soft': '0 4px 20px -2px rgba(0,0,0,0.05)',
+                        'card': '0 0 0 1px rgba(0,0,0,0.03), 0 2px 8px rgba(0,0,0,0.04)',
+                        'glow': '0 0 15px rgba(59, 130, 246, 0.5)',
+                        'neon': '0 0 10px rgba(59, 130, 246, 0.5), 0 0 20px rgba(59, 130, 246, 0.3)',
                     },
                     animation: {
                         'pop-in': 'popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
@@ -45,11 +47,11 @@
                         'island-in': 'islandIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
                         'gradient-x': 'gradientX 15s ease infinite',
                         'pulse-dot': 'pulseDot 2s infinite',
-                        'pulse-slow': 'pulse 3s infinite',
+                        'pulse-card': 'pulseCard 2s infinite',
                     },
                     keyframes: {
                         popIn: {
-                            '0%': { transform: 'scale(0.9)', opacity: '0' },
+                            '0%': { transform: 'scale(0.95)', opacity: '0' },
                             '100%': { transform: 'scale(1)', opacity: '1' },
                         },
                         slideUpFade: {
@@ -65,8 +67,12 @@
                             '50%': { 'background-position': '100% 50%' },
                         },
                         pulseDot: {
-                            '0%': { boxShadow: '0 0 0 0px rgba(34, 197, 94, 0.4)' },
+                            '0%': { boxShadow: '0 0 0 0px rgba(34, 197, 94, 0.6)' },
                             '100%': { boxShadow: '0 0 0 12px rgba(34, 197, 94, 0)' }
+                        },
+                        pulseCard: {
+                            '0%, 100%': { transform: 'scale(1.02)', boxShadow: '0 4px 20px rgba(34, 197, 94, 0.2)' },
+                            '50%': { transform: 'scale(1.03)', boxShadow: '0 10px 30px rgba(34, 197, 94, 0.4)' }
                         }
                     }
                 }
@@ -75,24 +81,21 @@
     </script>
     <style>
         body { 
-            background: linear-gradient(-45deg, #F5F7FB, #Eef2f3, #F5F7FB, #E2EBF0);
-            background-size: 400% 400%;
-            animation: gradientX 15s ease infinite;
+            background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
             -webkit-font-smoothing: antialiased; 
         }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
         .app-input {
-            background: #F1F5F9;
-            border: 2px solid transparent;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            background: #F8FAFC;
+            border: 1px solid #E2E8F0;
+            transition: all 0.2s;
         }
         .app-input:focus {
             background: #FFFFFF;
             border-color: #3b82f6;
-            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
-            transform: scale(1.01);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
         
         .cute-input {
@@ -112,7 +115,7 @@
             cursor: pointer; 
         }
         .btn-press:active { 
-            transform: scale(0.92); 
+            transform: scale(0.95); 
         }
         
         .glass-panel {
@@ -121,6 +124,13 @@
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.6);
         }
+        
+        .delay-0 { animation-delay: 0ms; }
+        .delay-100 { animation-delay: 100ms; }
+        .delay-200 { animation-delay: 200ms; }
+        .delay-300 { animation-delay: 300ms; }
+        .delay-400 { animation-delay: 400ms; }
+        .delay-500 { animation-delay: 500ms; }
     </style>
 </head>
 <body>
@@ -148,18 +158,18 @@
         const ADMIN_EMAIL = "chimhinhin@gmail.com";
 
         const COLOR_PALETTE = {
-            red: { bg: 'bg-red-500', text: 'text-red-600', light: 'bg-red-50' },
-            orange: { bg: 'bg-orange-500', text: 'text-orange-600', light: 'bg-orange-50' },
-            amber: { bg: 'bg-amber-500', text: 'text-amber-600', light: 'bg-amber-50' },
-            green: { bg: 'bg-green-600', text: 'text-green-600', light: 'bg-green-50' },
-            teal: { bg: 'bg-teal-500', text: 'text-teal-600', light: 'bg-teal-50' },
-            blue: { bg: 'bg-blue-600', text: 'text-blue-600', light: 'bg-blue-50' },
-            indigo: { bg: 'bg-indigo-500', text: 'text-indigo-600', light: 'bg-indigo-50' },
-            violet: { bg: 'bg-violet-600', text: 'text-violet-600', light: 'bg-violet-50' },
-            purple: { bg: 'bg-purple-600', text: 'text-purple-600', light: 'bg-purple-50' },
-            pink: { bg: 'bg-pink-500', text: 'text-pink-600', light: 'bg-pink-50' },
-            rose: { bg: 'bg-rose-500', text: 'text-rose-600', light: 'bg-rose-50' },
-            slate: { bg: 'bg-slate-500', text: 'text-slate-600', light: 'bg-slate-100' }
+            red: { bg: 'bg-red-500', text: 'text-red-600', light: 'bg-red-50', gradient: 'from-red-500 to-rose-500', name: '紅色' },
+            orange: { bg: 'bg-orange-500', text: 'text-orange-600', light: 'bg-orange-50', gradient: 'from-orange-400 to-amber-500', name: '橙色' },
+            amber: { bg: 'bg-amber-500', text: 'text-amber-600', light: 'bg-amber-50', gradient: 'from-amber-400 to-yellow-500', name: '琥珀' },
+            green: { bg: 'bg-green-600', text: 'text-green-600', light: 'bg-green-50', gradient: 'from-green-500 to-emerald-600', name: '綠色' },
+            teal: { bg: 'bg-teal-500', text: 'text-teal-600', light: 'bg-teal-50', gradient: 'from-teal-400 to-cyan-500', name: '青色' },
+            blue: { bg: 'bg-blue-600', text: 'text-blue-600', light: 'bg-blue-50', gradient: 'from-blue-500 to-indigo-600', name: '藍色' },
+            indigo: { bg: 'bg-indigo-500', text: 'text-indigo-600', light: 'bg-indigo-50', gradient: 'from-indigo-500 to-violet-600', name: '靛藍' },
+            violet: { bg: 'bg-violet-600', text: 'text-violet-600', light: 'bg-violet-50', gradient: 'from-violet-500 to-purple-600', name: '紫羅蘭' },
+            purple: { bg: 'bg-purple-600', text: 'text-purple-600', light: 'bg-purple-50', gradient: 'from-purple-500 to-fuchsia-600', name: '紫色' },
+            pink: { bg: 'bg-pink-500', text: 'text-pink-600', light: 'bg-pink-50', gradient: 'from-pink-500 to-rose-500', name: '粉紅' },
+            rose: { bg: 'bg-rose-500', text: 'text-rose-600', light: 'bg-rose-50', gradient: 'from-rose-500 to-red-600', name: '玫瑰' },
+            slate: { bg: 'bg-slate-500', text: 'text-slate-600', light: 'bg-slate-100', gradient: 'from-slate-500 to-gray-600', name: '灰色' }
         };
 
         const DEFAULT_SUBJECTS = [
@@ -216,6 +226,7 @@
             const due = new Date(deadline); due.setHours(0,0,0,0);
             const diffTime = due - today;
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
             if (diffDays < 0) return { text: `逾期 ${Math.abs(diffDays)} 天`, color: 'text-red-500', bg: 'bg-red-100' };
             if (diffDays === 0) return { text: '今天截止', color: 'text-white', bg: 'bg-orange-500' };
             if (diffDays === 1) return { text: '明天截止', color: 'text-indigo-600', bg: 'bg-indigo-100' };
@@ -230,8 +241,6 @@
         // ==========================================
         // COMPONENTS (Defined BEFORE App)
         // ==========================================
-        
-        // 1. Modal (Moved to top level)
         const Modal = ({ children, onClose, title }) => (
             <div className="fixed inset-0 bg-black/60 z-[90] flex items-center justify-center p-4 backdrop-blur-sm animate-pop-in">
                 <div className="bg-white w-full sm:max-w-md rounded-[32px] overflow-hidden shadow-2xl flex flex-col max-h-[85vh]">
@@ -258,18 +267,37 @@
             );
         };
 
-        const DeleteModal = ({ isOpen, onClose, onConfirm }) => {
+        const DeleteModal = ({ isOpen, onClose, onConfirm, type }) => {
             if (!isOpen) return null;
+            
+            let icon = "Trash2";
+            let colorClass = "text-red-500 bg-red-100";
+            let buttonClass = "bg-red-500 hover:bg-red-600";
+            let title = "確認刪除？";
+            let desc = "刪除後將無法還原此紀錄。";
+
+            if (type === 'hide') {
+                icon = "EyeOff";
+                colorClass = "text-gray-500 bg-gray-100";
+                buttonClass = "bg-gray-800 hover:bg-gray-900";
+                title = "隱藏紀錄？";
+                desc = "這將從您的列表中移除此項目，但不會影響其他同學。";
+            } else if (type === 'global') {
+                title = "⚠️ 全班刪除";
+                desc = "警告：這將從所有學生的裝置中永久刪除此紀錄！";
+            }
+
             return (
                 <div className="fixed inset-0 bg-black/40 z-[80] flex items-center justify-center p-6 backdrop-blur-sm animate-pop-in">
                     <div className="bg-white w-full max-w-xs rounded-[28px] p-6 text-center shadow-2xl transform transition-all scale-100">
-                        <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3 text-red-500 animate-pulse">
-                            <Icon name="Trash2" size={24}/>
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 animate-pulse ${colorClass}`}>
+                            <Icon name={icon} size={24}/>
                         </div>
-                        <h3 className="text-lg font-bold text-gray-800 mb-2">確認刪除？</h3>
+                        <h3 className="text-lg font-bold text-gray-800 mb-2">{title}</h3>
+                        <p className="text-gray-500 text-xs mb-4">{desc}</p>
                         <div className="flex gap-2 mt-4">
                             <button onClick={onClose} className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold text-xs btn-press hover:bg-gray-200">取消</button>
-                            <button onClick={onConfirm} className="flex-1 py-3 bg-red-500 text-white rounded-xl font-bold text-xs shadow-md btn-press hover:bg-red-600">刪除</button>
+                            <button onClick={onConfirm} className={`flex-1 py-3 text-white rounded-xl font-bold text-xs shadow-md btn-press ${buttonClass}`}>確認</button>
                         </div>
                     </div>
                 </div>
@@ -369,48 +397,33 @@
         const HomeworkItem = ({ hw, isDone, user, isAdmin, subjects, onToggle, onEdit, onDelete, onReset }) => {
             const isExam = hw.category === 'exam';
             const subjectObj = subjects.find(s => s.name === hw.subject) || { color: 'slate' };
-            const colors = getSubjectStyle(subjectObj.color);
+            // Define fallback color here to avoid getSubjectStyle dependency
+            const fallbackColor = COLOR_PALETTE['slate'];
+            const colors = COLOR_PALETTE[subjectObj.color] || fallbackColor;
+            
             const daysLeft = calculateDaysLeft(hw.deadline);
             const weekday = getWeekday(hw.deadline);
+            const isGlobal = hw.type === 'global';
             
             return (
                 <div onClick={onEdit} className={`relative bg-white rounded-[20px] shadow-card border border-transparent overflow-hidden flex transition-all btn-press cursor-pointer hover:shadow-soft group ${isDone ? 'opacity-50 grayscale' : ''}`}>
                     <div className={`w-2 ${colors.bg}`}></div>
-                    
-                    {/* Left Check Circle */}
-                    <div className="flex items-center pl-3" onClick={e => e.stopPropagation()}>
-                        <button onClick={onToggle} className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${isDone ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 text-transparent hover:border-blue-400'}`}>
-                            <Icon name="Check" size={14} strokeWidth={4} />
-                        </button>
+                    <div className="flex items-center pl-4" onClick={e => e.stopPropagation()}>
+                        <button onClick={onToggle} className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all ${isDone ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 text-transparent hover:border-blue-400'}`}><Icon name="Check" size={16} strokeWidth={4} /></button>
                     </div>
-
-                    <div className="flex-1 p-3.5 pl-3 relative min-w-0">
-                        {/* Days Left Badge (Right) */}
-                        <div className={`absolute top-3.5 right-3.5 text-[9px] font-bold px-2 py-0.5 rounded-md ${daysLeft.bg} ${daysLeft.color} shadow-sm z-10`}>
-                            {daysLeft.text}
-                        </div>
-                        
-                        <div className="flex items-center gap-1.5 mb-2">
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${colors.light} ${colors.text}`}>{hw.subject}</span>
-                            {isExam && <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-100 flex items-center gap-1"><Icon name="AlertCircle" size={10}/> 測驗</span>}
-                        </div>
+                    <div className="flex-1 p-4 pl-4 relative min-w-0">
+                        <div className={`absolute top-4 right-4 text-[9px] font-bold px-2 py-0.5 rounded-md ${daysLeft.bg} ${daysLeft.color} shadow-sm z-10`}>{daysLeft.text}</div>
+                        <div className="flex items-center gap-1.5 mb-2"><span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${colors.light} ${colors.text}`}>{hw.subject}</span>{isExam && <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-100 flex items-center gap-1"><Icon name="AlertCircle" size={10}/> 測驗</span>}</div>
                         <p className="text-sm font-bold text-gray-800 leading-relaxed whitespace-pre-wrap pr-16 mb-2 line-clamp-2">{hw.content}</p>
-                        
-                        {/* Footer: Date */}
                         <div className="flex items-center justify-between pt-2 border-t border-gray-50">
                             <div className="text-[10px] text-gray-400 font-bold flex items-center gap-1">
                                 <Icon name="Calendar" size={12}/> {hw.deadline} · {weekday}
+                                {isGlobal && <span className="ml-auto bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-[10px] font-bold">全班 (由管理員發放)</span>}
                             </div>
                         </div>
                     </div>
-
-                    {/* Right Vertical Action Bar */}
                     {(isAdmin || hw.createdBy === user.uid) && (
-                        <div className="flex flex-col w-11 border-l border-gray-50 bg-gray-50/30" onClick={e => e.stopPropagation()}>
-                            <button onClick={onEdit} className="flex-1 flex items-center justify-center text-blue-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"><Icon name="Edit3" size={16}/></button>
-                            <div className="h-[1px] w-full bg-gray-100"></div>
-                            <button onClick={onDelete} className="flex-1 flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors"><Icon name="Trash2" size={16}/></button>
-                        </div>
+                        <div className="flex flex-col w-11 border-l border-gray-50 bg-gray-50/30" onClick={e => e.stopPropagation()}><button onClick={onEdit} className="flex-1 flex items-center justify-center text-blue-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"><Icon name="Edit3" size={16}/></button><div className="h-[1px] w-full bg-gray-100"></div><button onClick={onDelete} className="flex-1 flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors"><Icon name="Trash2" size={16}/></button></div>
                     )}
                 </div>
             );
@@ -427,23 +440,55 @@
 
             return (
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="flex bg-gray-50 p-1 rounded-xl">
-                        <button type="button" onClick={()=>setCategory('homework')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all btn-press ${category==='homework'?'bg-white text-blue-600 shadow-sm':'text-gray-400 hover:text-gray-600'}`}>一般家課</button>
-                        <button type="button" onClick={()=>setCategory('exam')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all btn-press ${category==='exam'?'bg-rose-500 text-white shadow-sm':'text-gray-400 hover:text-gray-600'}`}>測驗 / 考試</button>
+                    <div className="flex bg-gray-100 p-1 rounded-xl">
+                        <button type="button" onClick={()=>setCategory('homework')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all btn-press ${category==='homework'?'bg-white text-blue-600 shadow-sm':'text-gray-500 hover:text-gray-700'}`}>一般家課</button>
+                        <button type="button" onClick={()=>setCategory('exam')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all btn-press ${category==='exam'?'bg-rose-500 text-white shadow-sm':'text-gray-400 hover:text-gray-700'}`}>測驗 / 考試</button>
                     </div>
-                    {isAdmin && (
+                    {isAdmin ? (
                         <div className="flex bg-gray-100 p-1 rounded-lg w-full mb-3">
                              <button type="button" onClick={()=>setType('global')} className={`flex-1 py-1.5 rounded-md text-xs font-bold transition-all ${type==='global'?'bg-white text-blue-600 shadow-sm':'text-gray-500 hover:text-gray-600'}`}>全班</button>
                              <button type="button" onClick={()=>setType('personal')} className={`flex-1 py-1.5 rounded-md text-xs font-bold transition-all ${type==='personal'?'bg-white text-blue-600 shadow-sm':'text-gray-500 hover:text-gray-600'}`}>個人</button>
                         </div>
+                    ) : (
+                        <div className="mb-3 px-1">
+                            <span className="text-xs font-bold text-gray-500 bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-200 flex items-center gap-2 w-fit">
+                                <Icon name="Lock" size={12}/> 個人紀錄 (僅自己可見)
+                            </span>
+                        </div>
                     )}
                     <div>
                         <label className="text-[10px] font-bold text-gray-400 ml-1 mb-2 block uppercase tracking-wide">選擇科目</label>
-                        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 -mx-1 px-1">{subjects.map(sub => { const colors = getSubjectStyle(sub.color); const isSelected = subject === sub.name; return (<button type="button" key={sub.name} onClick={()=>setSubject(sub.name)} className={`whitespace-nowrap px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all btn-press border ${isSelected ? `${colors.bg} text-white border-transparent shadow-md transform scale-105` : `bg-white ${colors.text} ${colors.border} hover:bg-gray-50`}`}>{sub.name}</button>);})}</div>
+                        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 -mx-1 px-1">
+                            {subjects.map(sub => {
+                                const colors = getSubjectStyle(sub.color);
+                                const isSelected = subject === sub.name;
+                                return (
+                                    <button 
+                                        type="button" 
+                                        key={sub.name} 
+                                        onClick={()=>setSubject(sub.name)} 
+                                        className={`whitespace-nowrap px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all btn-press border ${isSelected ? `${colors.bg} text-white border-transparent shadow-md transform scale-105` : `bg-white ${colors.text} ${colors.border} hover:bg-gray-50`}`}
+                                    >
+                                        {sub.name}
+                                    </button>
+                                );
+                            })}
+                        </div>
                     </div>
-                    <textarea value={content} onChange={e=>setContent(e.target.value)} className="app-input w-full p-4 rounded-[20px] text-sm min-h-[80px] resize-none leading-relaxed font-bold text-gray-700 placeholder-gray-400" placeholder={category === 'exam' ? '請輸入測驗範圍及溫習重點...' : '請輸入功課內容...'} />
+                    <textarea 
+                        value={content} 
+                        onChange={e=>setContent(e.target.value)} 
+                        className="app-input w-full p-4 rounded-[20px] text-sm min-h-[80px] resize-none leading-relaxed font-bold text-gray-700 placeholder-gray-400" 
+                        placeholder={category === 'exam' ? '請輸入測驗範圍及溫習重點...' : '請輸入功課內容...'} 
+                    />
                     <div className="flex gap-2 items-center">
-                        <div className="relative flex-1 flex items-center bg-white border border-gray-200 rounded-xl px-3 py-1 hover:border-blue-400 transition-colors cursor-pointer group"><div className="flex flex-col flex-1"><span className="text-[9px] font-bold text-gray-400 uppercase">繳交日期</span><input type="date" value={deadline} onChange={e=>setDeadline(e.target.value)} className="w-full py-0.5 text-xs font-black text-gray-800 outline-none bg-transparent cursor-pointer" /></div><Icon name="Calendar" size={14} className="text-blue-500 ml-2 group-hover:scale-110 transition-transform"/></div>
+                        <div className="relative flex-1 flex items-center bg-white border border-gray-200 rounded-xl px-3 py-1 hover:border-blue-400 transition-colors cursor-pointer group">
+                            <div className="flex flex-col flex-1">
+                                <span className="text-[9px] font-bold text-gray-400 uppercase">繳交日期</span>
+                                <input type="date" value={deadline} onChange={e=>setDeadline(e.target.value)} className="w-full py-0.5 text-xs font-black text-gray-800 outline-none bg-transparent cursor-pointer" />
+                            </div>
+                            <Icon name="Calendar" size={14} className="text-blue-500 ml-2 group-hover:scale-110 transition-transform"/>
+                        </div>
                         <button type="submit" className={`px-6 py-3 rounded-xl text-white font-bold shadow-md transition-transform btn-press flex items-center gap-1 text-xs ${category==='exam'?'bg-rose-500 hover:bg-rose-600':'bg-blue-600 hover:bg-blue-700'}`}><Icon name="Send" size={14}/> {!isInline && '儲存'}</button>
                     </div>
                 </form>
@@ -457,11 +502,50 @@
             const handleDeleteSubject = (idx) => { const u = [...subjects]; u.splice(idx, 1); onUpdateSubjects(u); };
             return (
                 <div className="space-y-5">
-                    {isAdmin && <button onClick={onOpenAdmin} className="w-full p-3 bg-gray-50 rounded-xl flex items-center justify-between text-gray-700 font-bold hover:bg-gray-100 btn-press text-sm"><span>管理員控制台</span><Icon name="ChevronRight" size={16}/></button>}
+                    {isAdmin && <button onClick={onOpenAdmin} className="w-full p-3 bg-gray-900 text-white rounded-xl flex items-center justify-between font-bold shadow-lg btn-press"><span>管理員控制台</span><Icon name="ChevronRight" size={16}/></button>}
                     <div>
-                        <h4 className="text-[10px] font-bold text-gray-400 mb-2 uppercase">科目管理</h4>
-                        <div className="flex gap-2 mb-3"><input value={newSubName} onChange={e=>setNewSubName(e.target.value)} className="app-input flex-1 px-3 py-2 rounded-lg text-xs" placeholder="新科目..." /><select value={newSubColor} onChange={e=>setNewSubColor(e.target.value)} className="app-input px-2 rounded-lg text-xs w-20">{Object.keys(COLOR_PALETTE).map(c => <option key={c} value={c}>{c}</option>)}</select><button onClick={handleAddSubject} className="p-2 bg-blue-600 text-white rounded-lg btn-press"><Icon name="Plus" size={16}/></button></div>
-                        <div className="space-y-2 max-h-[250px] overflow-y-auto no-scrollbar">{subjects.map((sub, idx) => { const colorObj = COLOR_PALETTE[sub.color] || COLOR_PALETTE.blue; return (<div key={idx} className="flex justify-between items-center p-2 bg-gray-50 rounded-lg animate-pop" style={{animationDelay: `${idx*0.03}s`}}><div className="flex items-center gap-2"><div className={`w-2.5 h-2.5 rounded-full ${colorObj.bg}`}></div><span className="text-xs font-bold text-gray-700">{sub.name}</span></div><button onClick={()=>handleDeleteSubject(idx)} className="text-gray-400 hover:text-red-500 btn-press"><Icon name="Trash2" size={14}/></button></div>); })}</div></div>
+                        <h4 className="text-[10px] font-bold text-gray-400 mb-3 uppercase tracking-wider">新增科目</h4>
+                        <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 mb-4">
+                            <div className="flex gap-2 mb-4">
+                                <input value={newSubName} onChange={e=>setNewSubName(e.target.value)} className="app-input flex-1 px-4 py-3 rounded-xl text-sm font-bold bg-white" placeholder="科目名稱..." />
+                                <button onClick={handleAddSubject} className={`w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-md btn-press transition-colors ${COLOR_PALETTE[newSubColor].bg}`}><Icon name="Plus" size={24}/></button>
+                            </div>
+                            <div className="flex flex-wrap gap-3">
+                                {Object.keys(COLOR_PALETTE).map(key => {
+                                    const color = COLOR_PALETTE[key];
+                                    const isSelected = newSubColor === key;
+                                    return (
+                                        <button 
+                                            key={key}
+                                            onClick={() => setNewSubColor(key)}
+                                            className={`w-8 h-8 rounded-full transition-all relative ${color.bg} ${isSelected ? 'ring-2 ring-offset-2 ring-gray-400 scale-110 shadow-sm' : 'opacity-70 hover:opacity-100'}`}
+                                            title={color.name}
+                                        >
+                                            {isSelected && <div className="absolute inset-0 flex items-center justify-center"><Icon name="Check" size={14} className="text-white"/></div>}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 className="text-[10px] font-bold text-gray-400 mb-3 uppercase tracking-wider">科目列表</h4>
+                        <div className="grid grid-cols-2 gap-3 max-h-[250px] overflow-y-auto no-scrollbar">
+                            {subjects.map((sub, idx) => { 
+                                const colorObj = COLOR_PALETTE[sub.color] || COLOR_PALETTE.blue; 
+                                return (
+                                    <div key={idx} className="flex justify-between items-center p-3 bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-all group">
+                                        <div className="flex items-center gap-2">
+                                            <div className={`w-2.5 h-2.5 rounded-full ${colorObj.bg}`}></div>
+                                            <span className="text-xs font-bold text-gray-700">{sub.name}</span>
+                                        </div>
+                                        <button onClick={()=>handleDeleteSubject(idx)} className="text-gray-300 hover:text-red-500 p-1.5 hover:bg-red-50 rounded-lg transition-colors"><Icon name="Trash2" size={14}/></button>
+                                    </div>
+                                ); 
+                            })}
+                        </div>
+                    </div>
                 </div>
             );
         };
@@ -471,6 +555,20 @@
             const [localData, setLocalData] = useState(timetableData);
             const [currentDay, setCurrentDay] = useState(() => { const d = new Date().getDay(); return (d >= 1 && d <= 5) ? d - 1 : 0; });
             const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+
+            // Add isCurrentRow definition HERE
+            const isCurrentRow = (row) => {
+                const now = new Date();
+                const currentMinutes = now.getHours() * 60 + now.getMinutes();
+                const dayIndex = now.getDay() - 1; 
+                if (currentDay !== dayIndex) return false;
+                const [startH, startM] = row.start.split(':').map(Number);
+                const [endH, endM] = row.end.split(':').map(Number);
+                const startTotal = startH * 60 + startM;
+                const endTotal = endH * 60 + endM;
+                return currentMinutes >= startTotal && currentMinutes < endTotal;
+            };
+
             useEffect(() => { setLocalData(timetableData); }, [timetableData]);
             const days = ["星期一", "星期二", "星期三", "星期四", "星期五"];
 
@@ -483,67 +581,90 @@
             const updateItem = (rIdx, dIdx, val) => { const n = [...localData]; n[rIdx].items[dIdx] = val; setLocalData(n); };
             
             const getSubColor = (name) => {
-                if(!name) return { text: 'text-gray-300' };
+                if(!name) return COLOR_PALETTE.slate;
                 const s = subjects.find(sub => sub.name.includes(name) || name.includes(sub.name));
-                const style = s ? getSubjectStyle(s.color) : { text: 'text-gray-700' };
-                return { text: style.text };
+                return s ? (COLOR_PALETTE[s.color] || COLOR_PALETTE.slate) : COLOR_PALETTE.slate;
+            };
+
+            const getSubjectGradient = (name) => {
+                if(!name) return 'bg-white border-2 border-gray-100 text-gray-400';
+                const s = subjects.find(sub => sub.name.includes(name) || name.includes(sub.name));
+                if (s && COLOR_PALETTE[s.color]) {
+                    const style = COLOR_PALETTE[s.color];
+                    return `${style.bg} text-white shadow-md border-transparent transform hover:scale-[1.02]`;
+                }
+                return 'bg-white border-2 border-gray-100 text-gray-700';
             };
             
             const getStatusColor = (row) => {
                 const now = new Date();
                 const currentMinutes = now.getHours() * 60 + now.getMinutes();
                 const dayIndex = now.getDay() - 1; 
-                if (currentDay !== dayIndex) return 'bg-white';
+                if (currentDay !== dayIndex) return 'opacity-100'; 
                 const [endH, endM] = row.end.split(':').map(Number);
                 const endTotal = endH * 60 + endM;
                 const [startH, startM] = row.start.split(':').map(Number);
                 const startTotal = startH * 60 + startM;
-                if (currentMinutes > endTotal) return 'text-gray-300 opacity-40 grayscale'; 
-                if (currentMinutes >= startTotal && currentMinutes <= endTotal) return 'text-blue-600 font-black scale-105'; 
-                return 'text-gray-800'; 
+                if (currentMinutes > endTotal) return 'opacity-40 grayscale blur-[0.5px]'; // Past
+                if (currentMinutes >= startTotal && currentMinutes <= endTotal) return 'scale-105 z-10 drop-shadow-xl'; // Current
+                return 'opacity-100'; // Future
             };
             const getDotStatus = (row) => {
                 const now = new Date();
                 const currentMinutes = now.getHours() * 60 + now.getMinutes();
                 const dayIndex = now.getDay() - 1; 
-                if (currentDay > dayIndex && dayIndex >= 0) return 'bg-gray-200 border-white'; 
-                if (currentDay < dayIndex && dayIndex >= 0) return 'border-2 border-green-500 bg-white'; 
-                if (currentDay !== dayIndex) return 'border-2 border-green-500 bg-white'; 
+                if (currentDay > dayIndex && dayIndex >= 0) return 'bg-gray-300 border-white'; 
+                if (currentDay < dayIndex && dayIndex >= 0) return 'bg-white border-2 border-green-500'; 
+                if (currentDay !== dayIndex) return 'bg-white border-2 border-green-500'; 
                 const [endH, endM] = row.end.split(':').map(Number);
                 const endTotal = endH * 60 + endM;
                 const [startH, startM] = row.start.split(':').map(Number);
                 const startTotal = startH * 60 + startM;
                 if (currentMinutes > endTotal) return 'bg-gray-300 border-gray-300'; 
-                if (currentMinutes >= startTotal && currentMinutes <= endTotal) return 'bg-green-500 border-green-500 shadow-[0_0_0_4px_rgba(34,197,94,0.3)] animate-pulse-dot scale-125'; 
-                return 'border-2 border-green-500 bg-white'; 
+                if (currentMinutes >= startTotal && currentMinutes <= endTotal) return 'bg-green-500 border-green-500 shadow-[0_0_0_4px_rgba(34,197,94,0.4)] animate-pulse-dot scale-125'; 
+                return 'bg-white border-2 border-green-500'; 
             };
 
             return (
-                <div className="min-h-screen bg-[#F5F7FB] animate-slide-up-fade relative z-50 flex flex-col">
+                <div className="min-h-screen bg-[#F8FAFC] animate-slide-up-fade relative z-50 flex flex-col">
                     <ResetModal isOpen={isResetModalOpen} onClose={()=>setIsResetModalOpen(false)} onConfirm={handleResetConfirm} isAdmin={isAdmin}/>
-                    <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-md px-4 py-3 border-b border-gray-200/50 flex justify-between items-center shrink-0 shadow-sm"><h1 className="text-lg font-black text-gray-800 flex items-center gap-2"><Icon name="CalendarDays" className="text-blue-500" size={20}/> 課程表</h1><div className="flex gap-2">{!isEditing && <button onClick={()=>setIsEditing(true)} className="px-3 py-1.5 bg-gray-100 rounded-lg text-xs font-bold text-gray-600 btn-press hover:bg-gray-200">編輯</button>}{isEditing && (<><button onClick={()=>setIsResetModalOpen(true)} className="px-3 py-1.5 bg-red-100 text-red-500 rounded-lg text-xs font-bold btn-press shadow-sm">重設預設</button>{isAdmin ? <button onClick={handleAdminPublish} className="px-3 py-1.5 bg-indigo-600 rounded-lg text-xs font-bold text-white btn-press shadow-md">發佈(全校)</button> : <button onClick={handleSave} className="px-3 py-1.5 bg-blue-600 rounded-lg text-xs font-bold text-white btn-press shadow-md">儲存(個人)</button>}</>)}<button onClick={onClose} className="p-1.5 bg-gray-100 rounded-full btn-press text-gray-500 hover:bg-gray-200"><Icon name="X" size={18}/></button></div></div>
-                    <div className="flex justify-between px-3 py-3 bg-gray-50/50 overflow-x-auto no-scrollbar">{days.map((d, i) => (<button key={d} onClick={() => setCurrentDay(i)} className={`flex-1 min-w-[60px] py-2 mx-1 rounded-lg text-xs font-bold transition-all btn-press ${currentDay === i ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-500 border border-gray-100'}`}>{d.replace('星期', '週')}</button>))}</div>
-                    <div className="flex-1 overflow-y-auto p-5 pb-20 relative bg-white m-4 rounded-[32px] shadow-sm border border-white">
-                        <div className="absolute left-[79px] top-6 bottom-6 w-[2px] bg-gray-100 z-0"></div>
+                    <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-md px-4 py-3 border-b border-gray-100 flex justify-between items-center shrink-0 shadow-sm"><div className="flex items-center gap-2"><h1 className="text-xl font-bold text-gray-800 flex items-center gap-2"><Icon name="CalendarDays" className="text-blue-500" size={24}/> 課程表</h1><span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${hasPersonal ? 'bg-indigo-100 text-indigo-600' : 'bg-green-100 text-green-600'}`}>{hasPersonal ? '個人' : '全校'}</span></div><div className="flex gap-2">{!isEditing && <button onClick={()=>setIsEditing(true)} className="px-3 py-1.5 bg-gray-100 rounded-lg text-xs font-bold text-gray-600 btn-press hover:bg-gray-200">編輯</button>}{isEditing && (<><button onClick={()=>setIsResetModalOpen(true)} className="px-3 py-1.5 bg-red-100 text-red-500 rounded-lg text-xs font-bold btn-press shadow-sm">重設</button>{isAdmin ? <button onClick={handleAdminPublish} className="px-3 py-1.5 bg-indigo-600 rounded-lg text-xs font-bold text-white btn-press shadow-md">發佈</button> : <button onClick={handleSave} className="px-3 py-1.5 bg-blue-600 rounded-lg text-xs font-bold text-white btn-press shadow-md">儲存</button>}</>)}<button onClick={onClose} className="p-2 bg-gray-100 rounded-full btn-press text-gray-500 hover:bg-gray-200"><Icon name="X" size={20}/></button></div></div>
+                    <div className="flex justify-between px-3 py-3 bg-white/50 backdrop-blur-sm border-b border-gray-50 overflow-x-auto no-scrollbar">{days.map((d, i) => (<button key={d} onClick={() => setCurrentDay(i)} className={`flex-1 min-w-[60px] py-2.5 mx-1 rounded-xl text-sm font-bold transition-all btn-press ${currentDay === i ? 'bg-gray-800 text-white shadow-md' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'}`}>{d.replace('星期', '週')}</button>))}</div>
+                    
+                    <div className="flex-1 overflow-y-auto px-5 py-6 pb-24 relative">
                         <div className="space-y-0 relative z-10">{localData.map((row, index) => {
                             const isBreak = row.type === 'break';
                             const subjectName = isBreak ? row.label : row.items[currentDay];
                             const style = getSubColor(subjectName);
                             const statusClass = !isEditing ? getStatusColor(row) : '';
-                            const dotClass = !isEditing ? getDotStatus(row) : 'bg-white border-gray-300';
+                            const dotClass = !isEditing ? getDotStatus(row) : 'bg-white border-2 border-gray-300';
+                            
                             return (
-                                <div key={row.id} className="flex gap-6 items-center group animate-pop py-2">
-                                    <div className="w-16 text-right flex flex-col justify-center">
-                                        {isEditing ? (<div className="flex flex-col gap-1"><input type="time" value={row.start} onChange={e=>updateRow(index,'start',e.target.value)} className="bg-gray-50 rounded px-1 w-16 text-center text-[10px]"/><input type="time" value={row.end} onChange={e=>updateRow(index,'end',e.target.value)} className="bg-gray-50 rounded px-1 w-16 text-center text-[10px]"/></div>) : (<><span className={`text-[13px] font-black leading-tight ${statusClass.includes('text-blue-600') ? 'text-blue-600' : 'text-gray-800'}`}>{row.start}</span><span className="text-[10px] font-bold text-gray-300 leading-tight block mt-0.5">{row.end}</span></>)}
+                                <div key={row.id} className={`flex gap-6 items-center group animate-pop transition-all duration-300 ${statusClass}`}>
+                                    <div className="w-20 text-right flex flex-col justify-center shrink-0">
+                                        {isEditing ? (<div className="flex flex-col gap-1"><input type="time" value={row.start} onChange={e=>updateRow(index,'start',e.target.value)} className="bg-gray-50 rounded px-1 w-full text-center text-[10px]"/><input type="time" value={row.end} onChange={e=>updateRow(index,'end',e.target.value)} className="bg-gray-50 rounded px-1 w-full text-center text-[10px]"/></div>) : (<><span className="text-[15px] font-black leading-tight text-gray-800">{row.start}</span><span className="text-[11px] font-bold text-gray-400 leading-tight block mt-1 text-right">{row.end}</span></>)}
                                     </div>
-                                    <div className="relative flex items-center justify-center w-4"><div className={`w-3.5 h-3.5 rounded-full border-[3px] z-10 box-content transition-all duration-500 ${dotClass}`}></div></div>
-                                    <div className="flex-1 min-h-[30px] flex items-center border-b border-gray-50 pb-2">
-                                        {isEditing ? (<div className="flex gap-2 w-full"><select value={row.type} onChange={e=>updateRow(index,'type',e.target.value)} className="bg-gray-50 border border-gray-200 rounded text-[10px] p-1"><option value="lesson">課</option><option value="break">休</option></select>{isBreak ? <input value={row.label||''} onChange={e=>updateRow(index,'label',e.target.value)} className="w-full bg-white border rounded px-2 text-xs" placeholder="休息"/> : <input value={row.items[currentDay]} onChange={e=>updateItem(index, currentDay, e.target.value)} className="w-full bg-white border rounded px-2 text-xs font-bold" placeholder="科目"/>}<button onClick={()=>removeRow(index)} className="text-red-400 bg-red-50 p-1 rounded"><Icon name="Minus" size={12}/></button></div>) : (<span className={`text-base font-bold ${isBreak ? 'text-gray-400 text-xs tracking-widest uppercase italic' : style.text.replace('text-', 'text-')}`}>{subjectName || '-'}</span>)}
+                                    <div className="relative flex items-center justify-center w-4 shrink-0"><div className={`w-3.5 h-3.5 rounded-full z-10 box-content transition-all duration-500 ${dotClass}`}></div></div>
+                                    <div className="flex-1 min-h-[50px] flex items-center border-b border-gray-200/50 pb-0">
+                                        {isEditing ? (<div className="flex gap-2 w-full"><select value={row.type} onChange={e=>updateRow(index,'type',e.target.value)} className="bg-gray-50 border border-gray-200 rounded text-[10px] p-1"><option value="lesson">課</option><option value="break">休</option></select>{isBreak ? <input value={row.label||''} onChange={e=>updateRow(index,'label',e.target.value)} className="w-full bg-white border rounded px-2 text-xs" placeholder="休息"/> : <input value={row.items[currentDay]} onChange={e=>updateItem(index, currentDay, e.target.value)} className="w-full bg-white border rounded px-2 text-xs font-bold" placeholder="科目"/>}<button onClick={()=>removeRow(index)} className="text-red-400 bg-red-50 p-1 rounded"><Icon name="Minus" size={12}/></button></div>) : (
+                                            <div className="w-full py-4 pl-4 flex items-center">
+                                                {isBreak ? (
+                                                    <span className="text-xs font-bold text-gray-400 tracking-[0.2em] uppercase italic flex items-center gap-2">
+                                                        <span className="not-italic text-base">{subjectName.includes('午') ? '🍱' : '☕'}</span> {subjectName || '-'}
+                                                    </span>
+                                                ) : (
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`w-2 h-2 rounded-full ${subjects.find(s=>s.name===subjectName) ? COLOR_PALETTE[subjects.find(s=>s.name===subjectName).color].bg : 'bg-gray-300'}`}></div>
+                                                        <span className={`text-lg font-black tracking-tight ${style.text.replace('text-', 'text-')}`}>{subjectName || '-'}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             );
                         })}
-                        {isEditing && <button onClick={addRow} className="w-full mt-8 py-3 border-2 border-dashed border-blue-200 bg-blue-50/50 rounded-2xl text-blue-500 font-bold flex items-center justify-center gap-2 hover:bg-blue-100 transition-colors btn-press text-sm z-20 relative"><Icon name="PlusCircle" size={18}/> 新增時段</button>}</div>
+                        {isEditing && <button onClick={addRow} className="w-full mt-8 py-3 border-2 border-dashed border-gray-300 text-gray-400 rounded-2xl font-bold flex items-center justify-center gap-2 hover:border-blue-400 hover:text-blue-500 transition-colors btn-press text-sm"><Icon name="Plus" size={18}/> 新增時段</button>}</div>
                     </div>
                 </div>
             );
@@ -569,40 +690,141 @@
             const [isBroadcastModalOpen, setIsBroadcastModalOpen] = useState(false);
             const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
             const [cardModal, setCardModal] = useState({ open: false, title: '', type: 'all' });
+            const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
             const [authMode, setAuthMode] = useState('login');
             const [authEmail, setAuthEmail] = useState('');
             const [authPassword, setAuthPassword] = useState('');
             const [showShortNameModal, setShowShortNameModal] = useState(false);
             const [inputShortName, setInputShortName] = useState('');
             const [deleteTargetId, setDeleteTargetId] = useState(null);
+            // Delete modal type
+            const [deleteType, setDeleteType] = useState(null); 
+
             const isAdmin = user?.email === ADMIN_EMAIL;
             const notify = (msg, type = 'success') => { setNotification({ message: msg, type, visible: true }); setTimeout(() => setNotification(prev => ({ ...prev, visible: false })), 2500); };
             
             useEffect(() => { const u = auth.onAuthStateChanged(async(u)=>{ setUser(u); if(u){ const r=db.collection('users').doc(u.uid); const s=await r.get(); if(s.exists){ setUserData(s.data()); if(!s.data().shortName)setShowShortNameModal(true); await r.update({lastLogin:firebase.firestore.FieldValue.serverTimestamp()}); } else { await r.set({email:u.email,displayName:u.displayName||'',photoURL:u.photoURL||'',lastLogin:firebase.firestore.FieldValue.serverTimestamp()}); setShowShortNameModal(true); } notify(`歡迎回來，${u.displayName || '同學'}`, 'info'); } }); return ()=>u(); }, []);
-            useEffect(() => { if(!user)return; db.collection('homeworks').orderBy('createdAt','desc').onSnapshot(s=>setHomeworks(s.docs.map(d=>({id:d.id,...d.data()})))); db.collection('settings').doc('broadcast').onSnapshot(d=>{if(d.exists)setBroadcast(d.data())}); db.collection('settings').doc('subjects').onSnapshot(d=>{if(d.exists&&d.data().list)setSubjects(d.data().list)}); db.collection('settings').doc('timetable').onSnapshot(d=>{if(d.exists&&d.data().data) { setGlobalTimetable(d.data().data); if(!userData?.timetable) setTimetableData(d.data().data); }}); if(isAdmin) db.collection('users').orderBy('lastLogin','desc').onSnapshot(s=>setUsersList(s.docs.map(d=>({id:d.id,...d.data()})))); }, [user,isAdmin]);
-            useEffect(() => { if(userData?.timetable) { setTimetableData(userData.timetable); } else { setTimetableData(globalTimetable); } }, [userData, globalTimetable]);
+            
+            useEffect(() => { 
+                if(!user) return; 
+                db.collection('homeworks').orderBy('createdAt','desc').onSnapshot(s=>setHomeworks(s.docs.map(d=>({id:d.id,...d.data()})))); 
+                db.collection('settings').doc('broadcast').onSnapshot(d=>{if(d.exists)setBroadcast(d.data())}); 
+                db.collection('settings').doc('subjects').onSnapshot(d=>{if(d.exists&&d.data().list)setSubjects(d.data().list)}); 
+                
+                db.collection('settings').doc('timetable').onSnapshot(d=>{
+                    if(d.exists&&d.data().data) {
+                        setGlobalTimetable(d.data().data);
+                        // If user has NO personal timetable, update view immediately
+                        if(!userData?.timetable) setTimetableData(d.data().data);
+                    }
+                });
+
+                // Monitor User Data Changes (e.g. after reset)
+                db.collection('users').doc(user.uid).onSnapshot(d => {
+                    if (d.exists) {
+                        const data = d.data();
+                        setUserData(data);
+                        // If personal timetable exists, use it; otherwise use global
+                        if (data.timetable) {
+                            setTimetableData(data.timetable);
+                        } else {
+                            setTimetableData(globalTimetable); // Fallback to whatever global is current
+                        }
+                    }
+                });
+
+                if(isAdmin) db.collection('users').orderBy('lastLogin','desc').onSnapshot(s=>setUsersList(s.docs.map(d=>({id:d.id,...d.data()})))); 
+            }, [user, isAdmin]); 
+
+            // Keep local view in sync if only global changes and user has no override
+            useEffect(() => {
+                if(!userData?.timetable && globalTimetable.length > 0) {
+                    setTimetableData(globalTimetable);
+                }
+            }, [globalTimetable, userData]); 
 
             const handleAuth = async(e)=>{e.preventDefault();try{if(authMode==='login')await auth.signInWithEmailAndPassword(authEmail,authPassword);else await auth.createUserWithEmailAndPassword(authEmail,authPassword);}catch(e){alert(e.message)}};
             const handleGoogleLogin = async()=>{try{await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());}catch(e){alert(e.message)}};
             const handleSaveShortName = async(e)=>{e.preventDefault();if(!inputShortName.trim())return;await db.collection('users').doc(user.uid).update({shortName:inputShortName.trim()});setUserData(p=>({...p,shortName:inputShortName.trim()}));setShowShortNameModal(false);notify("名稱已更新");};
-            const saveHomework = async(t)=>{try{const p={subject:t.subject,content:t.content,deadline:t.deadline,type:isAdmin?(t.type||'global'):'personal',category:t.category||'homework',createdBy:user.uid,creatorName:userData?.shortName||'Unknown',updatedAt:firebase.firestore.FieldValue.serverTimestamp()};if(editingTask){await db.collection('homeworks').doc(editingTask.id).update(p);notify("已更新");}else{p.createdAt=firebase.firestore.FieldValue.serverTimestamp();p.completedBy=[];await db.collection('homeworks').add(p);notify("已新增");}setIsEditModalOpen(false);setEditingTask(null);}catch(e){alert("失敗")}};
+            
+            // KEY LOGIC FIX: Enforce 'personal' type for non-admins
+            const saveHomework = async (t) => {
+                try {
+                    const p = {
+                        subject: t.subject,
+                        content: t.content,
+                        deadline: t.deadline,
+                        // Ensure normal users can ONLY add personal records
+                        type: isAdmin ? (t.type || 'global') : 'personal', 
+                        category: t.category || 'homework',
+                        createdBy: user.uid,
+                        creatorName: userData?.shortName || 'Unknown',
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    };
+                    
+                    if (editingTask) {
+                        await db.collection('homeworks').doc(editingTask.id).update(p);
+                        notify("已更新");
+                    } else {
+                        p.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+                        p.completedBy = [];
+                        await db.collection('homeworks').add(p);
+                        notify("已新增");
+                    }
+                    setIsEditModalOpen(false);
+                    setEditingTask(null);
+                } catch (e) {
+                    console.error(e);
+                    alert("失敗: " + e.message);
+                }
+            };
+            
             const toggleComplete = async(t)=>{const d=t.completedBy?.includes(user.uid);const n=d?t.completedBy.filter(u=>u!==user.uid):[...(t.completedBy||[]),user.uid];await db.collection('homeworks').doc(t.id).update({completedBy:n});notify(d?"未完成":"已完成");};
-            const handleDeleteConfirm = async()=>{if(deleteTargetId){await db.collection('homeworks').doc(deleteTargetId).delete();notify("已刪除",'info');setDeleteTargetId(null);}};
+            
+            const confirmDelete = async () => {
+                if (!deleteTargetId) return;
+                if (deleteType === 'global') { await db.collection('homeworks').doc(deleteTargetId).delete(); notify("已從全班刪除", 'info'); } 
+                else if (deleteType === 'hide') { await db.collection('homeworks').doc(deleteTargetId).update({ hiddenBy: firebase.firestore.FieldValue.arrayUnion(user.uid) }); notify("已從列表中隱藏", 'info'); } 
+                else { await db.collection('homeworks').doc(deleteTargetId).delete(); notify("已刪除", 'info'); }
+                setDeleteTargetId(null); setDeleteType(null);
+            };
+
+            const handleDeleteClick = (id, type) => { setDeleteTargetId(id); setDeleteType(type); };
             const adminResetCompletions = async(id)=>{if(confirm("重置?"))await db.collection('homeworks').doc(id).update({completedBy:[]});};
             const saveBroadcast = async(m,a)=>{await db.collection('settings').doc('broadcast').set({message:m,active:a});setIsBroadcastModalOpen(false);notify("通告已發布");};
             const updateSubjects = async(n)=>{await db.collection('settings').doc('subjects').set({list:n});notify("科目更新");};
-            const handleUpdateTimetable = async(newData, isGlobal) => { if(isGlobal) { await db.collection('settings').doc('timetable').set({data: newData}); notify("全校課表已更新"); } else { await db.collection('users').doc(user.uid).update({ timetable: newData }); setUserData(prev => ({ ...prev, timetable: newData })); notify("個人課表已儲存"); } };
-            const handleResetTimetable = async() => { await db.collection('users').doc(user.uid).update({ timetable: firebase.firestore.FieldValue.delete() }); setUserData(prev => { const next = { ...prev }; delete next.timetable; return next; }); setTimetableData(DEFAULT_TIMETABLE); notify("已還原為全校課表"); };
+            
+            const handleUpdateTimetable = async(newData, isGlobal) => { 
+                if(isGlobal) { 
+                    await db.collection('settings').doc('timetable').set({data: newData}); 
+                    setGlobalTimetable(newData); 
+                    notify("全校課表已更新"); 
+                } else { 
+                    await db.collection('users').doc(user.uid).update({ timetable: newData }); 
+                    notify("個人課表已儲存"); 
+                } 
+            };
+
+            const handleResetTimetable = async() => { 
+                await db.collection('users').doc(user.uid).update({ 
+                    timetable: firebase.firestore.FieldValue.delete() 
+                }); 
+                notify("已還原為全校課表"); 
+            };
 
             const stats = useMemo(() => {
                 const now=new Date(); const today=now.toISOString().split('T')[0]; const tmr=new Date(now); tmr.setDate(tmr.getDate()+1); const tmrStr=tmr.toISOString().split('T')[0];
                 let cToday=0,cTmr=0,cFuture=0,cExam=0;
-                homeworks.forEach(h=>{if(h.completedBy?.includes(user?.uid))return; if(!isAdmin && h.type!=='global' && h.createdBy!==user?.uid)return; if(h.category==='exam')cExam++; if(h.deadline===today)cToday++;else if(h.deadline===tmrStr)cTmr++;else if(h.deadline>tmrStr)cFuture++;});
+                homeworks.forEach(h=>{
+                    if(h.completedBy?.includes(user?.uid) || h.hiddenBy?.includes(user?.uid)) return; 
+                    if(!isAdmin && h.type!=='global' && h.createdBy!==user?.uid)return; 
+                    if(h.category==='exam')cExam++; if(h.deadline===today)cToday++;else if(h.deadline===tmrStr)cTmr++;else if(h.deadline>tmrStr)cFuture++;
+                });
                 return {cToday,cTmr,cFuture,cExam};
             }, [homeworks,user,isAdmin]);
 
             const filteredHomeworks = useMemo(() => {
-                let list = homeworks.filter(h => isAdmin || h.type==='global' || h.createdBy===user?.uid);
+                let list = homeworks.filter(h => { if (h.hiddenBy?.includes(user?.uid)) return false; return isAdmin || h.type==='global' || h.createdBy===user?.uid; });
                 if(filterSubject!=="全部") list=list.filter(h=>h.subject===filterSubject);
                 return list.sort((a,b)=>(sortOrder==='asc'?1:-1)*a.deadline.localeCompare(b.deadline));
             }, [homeworks,sortOrder,user,isAdmin,filterSubject]);
@@ -620,7 +842,7 @@
                 <div className="min-h-screen flex items-center justify-center bg-white relative overflow-hidden px-4">
                     <DynamicIsland notification={notification}/>
                     <div className="absolute inset-0 z-0 opacity-50"><div className="absolute top-[10%] left-[10%] w-64 h-64 bg-blue-200 rounded-full blur-3xl animate-blob"></div><div className="absolute bottom-[10%] right-[10%] w-64 h-64 bg-purple-200 rounded-full blur-3xl animate-blob animation-delay-2000"></div></div>
-                    <div className="w-full max-w-lg bg-white/80 backdrop-blur-xl rounded-[32px] shadow-2xl border border-white p-12 animate-pop">
+                    <div className="w-full max-w-lg bg-white/80 backdrop-blur-xl rounded-[32px] shadow-2xl border border-white p-12 animate-pop-in">
                         <div className="text-center mb-8"><div className="inline-flex items-center justify-center w-24 h-24 rounded-3xl bg-blue-600 shadow-lg mb-6 text-white"><Icon name="BookOpen" size={48}/></div><h1 className="text-3xl font-black text-gray-800">電子手冊</h1></div>
                         <form onSubmit={handleAuth} className="space-y-6">
                             <div className="relative"><Icon name="Mail" size={20} className="absolute left-4 top-4 text-gray-400"/><input type="email" required value={authEmail} onChange={e=>setAuthEmail(e.target.value)} placeholder="Email" className="cute-input w-full pl-14 pr-5 py-4 rounded-2xl text-base outline-none"/></div>
@@ -634,12 +856,13 @@
 
             if(activeTab==='timetable') return <TimetablePage subjects={subjects} timetableData={timetableData} onUpdateTimetable={handleUpdateTimetable} onResetTimetable={handleResetTimetable} isAdmin={isAdmin} hasPersonal={!!userData?.timetable} onClose={()=>setActiveTab('home')}/>;
             if(activeTab==='history') return (
-                <div className="min-h-screen bg-[#F5F7FB] animate-slide-in relative"><DynamicIsland notification={notification}/><div className="sticky top-0 z-40 bg-[#F5F7FB]/90 backdrop-blur-md px-5 py-4 border-b flex justify-between items-center"><h1 className="text-xl font-black text-gray-800 flex items-center gap-2"><Icon name="Clock" className="text-amber-500"/> 歷史紀錄</h1><button onClick={()=>setActiveTab('home')} className="p-2 bg-white rounded-full btn-press"><Icon name="X" size={20}/></button></div><div className="p-4 max-w-lg mx-auto space-y-3">{filteredHomeworks.filter(h=>h.completedBy?.includes(user.uid)).map((h, i)=><div key={h.id} style={{animationDelay:`${i*0.05}s`}} className="animate-slide-up-fade"><HomeworkItem hw={h} isDone={true} user={user} isAdmin={isAdmin} subjects={subjects} onToggle={()=>toggleComplete(h)} onEdit={()=>{setEditingTask(h);setIsEditModalOpen(true)}} onDelete={()=>setDeleteTargetId(h.id)} onReset={()=>adminResetCompletions(h.id)}/></div>)}</div><DeleteModal isOpen={!!deleteTargetId} onClose={()=>setDeleteTargetId(null)} onConfirm={handleDeleteConfirm}/></div>
+                <div className="min-h-screen bg-[#F5F7FB] animate-slide-in relative"><DynamicIsland notification={notification}/><div className="sticky top-0 z-40 bg-[#F5F7FB]/90 backdrop-blur-md px-5 py-4 border-b flex justify-between items-center"><h1 className="text-xl font-black text-gray-800 flex items-center gap-2"><Icon name="Clock" className="text-amber-500"/> 歷史紀錄</h1><button onClick={()=>setActiveTab('home')} className="p-2 bg-white rounded-full btn-press"><Icon name="X" size={20}/></button></div><div className="p-4 max-w-lg mx-auto space-y-3">{filteredHomeworks.filter(h=>h.completedBy?.includes(user.uid)).map((h, i)=><div key={h.id} style={{animationDelay:`${i*0.05}s`}} className="animate-slide-up-fade"><HomeworkItem hw={h} isDone={true} user={user} isAdmin={isAdmin} subjects={subjects} onToggle={()=>toggleComplete(h)} onEdit={()=>{setEditingTask(h);setIsEditModalOpen(true)}} onDelete={()=>handleDeleteClick(h.id, 'default')} onReset={()=>adminResetCompletions(h.id)}/></div>)}</div><DeleteModal isOpen={!!deleteTargetId} onClose={()=>setDeleteTargetId(null)} onConfirm={confirmDelete} type={deleteType}/></div>
             );
             if(activeTab==='profile') return (
                 <div className="min-h-screen bg-white animate-slide-in relative z-50"><DynamicIsland notification={notification}/><div className="absolute top-4 right-4"><button onClick={()=>setActiveTab('home')} className="p-2 bg-gray-100 rounded-full btn-press"><Icon name="X" size={20}/></button></div><div className="flex flex-col items-center justify-center min-h-[80vh]"><div className="w-24 h-24 bg-blue-600 rounded-full shadow-xl flex items-center justify-center text-4xl font-black text-white mb-4">{userData?.shortName?userData.shortName[0]:user.email[0].toUpperCase()}</div><h2 className="text-2xl font-black">{userData?.shortName||user.displayName}</h2><p className="text-gray-400 text-sm mb-6">{user.email}</p><button onClick={()=>auth.signOut()} className="bg-red-50 text-red-500 py-3 px-8 rounded-2xl font-bold btn-press">登出</button></div></div>
             );
 
+            // Added Profile Modal Logic
             return (
                 <div className="min-h-screen pb-20 bg-[#F5F7FB]">
                     <DynamicIsland notification={notification} />
@@ -652,7 +875,9 @@
                             <button onClick={()=>setActiveTab('timetable')} className="p-2 bg-white/80 backdrop-blur rounded-full text-blue-600 shadow-sm border border-white/50 btn-press"><Icon name="Calendar" size={18}/></button>
                             <button onClick={()=>setIsSettingsModalOpen(true)} className="p-2 bg-white/80 backdrop-blur rounded-full text-gray-600 shadow-sm border border-white/50 btn-press"><Icon name="Settings" size={18}/></button>
                             <button onClick={()=>setActiveTab('history')} className="px-3 py-1.5 bg-white/80 backdrop-blur rounded-full text-[10px] font-bold text-gray-600 shadow-sm border border-white/50 btn-press flex items-center gap-1"><Icon name="Clock" size={12}/> 歷史</button>
-                            <button onClick={()=>setActiveTab('profile')} className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold border-2 border-white shadow-md btn-press text-xs">{userData?.shortName?userData.shortName[0]:<Icon name="User" size={14}/>}</button>
+                            
+                            {/* Updated Profile Button to Open Modal */}
+                            <button onClick={()=>setIsProfileModalOpen(true)} className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold border-2 border-white shadow-md btn-press text-xs">{userData?.shortName?userData.shortName[0]:<Icon name="User" size={14}/>}</button>
                         </div>
                     </header>
                     {broadcast.active && <div className="mx-4 mt-2 bg-indigo-600 text-white text-xs font-bold py-3 px-4 rounded-xl shadow-lg flex items-center gap-2 animate-pop"><Icon name="Volume2" size={14}/><div className="whitespace-nowrap overflow-hidden flex-1"><div className="animate-marquee">{broadcast.message}</div></div></div>}
@@ -672,16 +897,47 @@
                         </div>
                         <section className="space-y-4">
                             <div className="flex items-center justify-between px-1"><h2 className="font-bold text-lg text-gray-800">全部功課</h2><div className="flex gap-2 overflow-x-auto no-scrollbar max-w-[180px]"><button onClick={()=>setFilterSubject("全部")} className={`whitespace-nowrap px-3 py-1 rounded-full text-[10px] font-bold transition-all btn-press ${filterSubject==="全部"?'bg-gray-800 text-white':'bg-white text-gray-500 border'}`}>全部</button>{subjects.map(s=><button key={s.name} onClick={()=>setFilterSubject(s.name)} className={`whitespace-nowrap px-3 py-1 rounded-full text-[10px] font-bold transition-all btn-press ${filterSubject===s.name?'bg-blue-600 text-white':'bg-white text-gray-500 border'}`}>{s.name}</button>)}</div></div>
-                            <div className="space-y-3 pb-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">{pendingHomeworks.length===0?<div className="col-span-full text-center py-10 text-gray-300">暫無待辦事項</div>:pendingHomeworks.map((h, i)=><div key={h.id} style={{animationDelay: `${i*0.1}s`}} className="animate-slide-up-fade fill-mode-backwards"><HomeworkItem hw={h} isDone={false} user={user} isAdmin={isAdmin} subjects={subjects} onToggle={()=>toggleComplete(h)} onEdit={()=>{setEditingTask(h);setIsEditModalOpen(true)}} onDelete={()=>setDeleteTargetId(h.id)} onReset={()=>adminResetCompletions(h.id)}/></div>)}</div>
+                            <div className="space-y-3 pb-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">{pendingHomeworks.length===0?<div className="col-span-full text-center py-10 text-gray-300">暫無待辦事項</div>:pendingHomeworks.map((h, i)=><div key={h.id} style={{animationDelay: `${i*0.1}s`}} className="animate-slide-up-fade fill-mode-backwards"><HomeworkItem hw={h} isDone={false} user={user} isAdmin={isAdmin} subjects={subjects} onToggle={()=>toggleComplete(h)} onEdit={()=>{setEditingTask(h);setIsEditModalOpen(true)}} onDelete={()=>handleDeleteClick(h.id, 'default')} onReset={()=>adminResetCompletions(h.id)}/></div>)}</div>
                         </section>
                     </main>
-                    <DeleteModal isOpen={!!deleteTargetId} onClose={()=>setDeleteTargetId(null)} onConfirm={handleDeleteConfirm}/>
+                    <DeleteModal isOpen={!!deleteTargetId} onClose={()=>setDeleteTargetId(null)} onConfirm={confirmDelete} type={deleteType}/>
                     {isSettingsModalOpen && <Modal onClose={()=>setIsSettingsModalOpen(false)} title="設定"><SettingsPanel subjects={subjects} onUpdateSubjects={updateSubjects} isAdmin={isAdmin} onClose={()=>setIsSettingsModalOpen(false)} onOpenAdmin={()=>{setIsSettingsModalOpen(false);setIsAdminPanelOpen(true)}}/></Modal>}
                     {cardModal.open && <div className="fixed inset-0 bg-black/60 z-[70] flex items-center justify-center p-4 backdrop-blur-md animate-pop"><div className="bg-[#F5F7FB] w-full max-w-lg rounded-[24px] overflow-hidden shadow-2xl flex flex-col max-h-[70vh]"><div className="px-5 py-4 border-b border-gray-200 flex justify-between items-center bg-white"><h3 className="font-bold text-lg text-gray-800 flex items-center gap-2"><Icon name="Layers" size={18} className="text-blue-500"/> {cardModal.title}</h3><button onClick={()=>setCardModal({...cardModal,open:false})} className="p-2 bg-gray-100 rounded-full btn-press"><Icon name="X" size={18}/></button></div><div className="p-4 overflow-y-auto no-scrollbar space-y-3">{cardDetailHomeworks.length===0?<div className="text-center py-8 text-gray-400">沒有紀錄</div>:cardDetailHomeworks.map((h, i)=><div key={h.id} style={{animationDelay: `${i*0.05}s`}} className="animate-slide-up-fade"><HomeworkItem hw={h} isDone={false} user={user} isAdmin={isAdmin} subjects={subjects} onToggle={()=>toggleComplete(h)} onEdit={()=>{setCardModal({...cardModal,open:false});setEditingTask(h);setIsEditModalOpen(true)}} onDelete={()=>setDeleteTargetId(h.id)}/></div>)}</div></div></div>}
                     {isEditModalOpen && <Modal onClose={()=>setIsEditModalOpen(false)} title="編輯"><HomeworkForm initialData={editingTask} onSave={saveHomework} isAdmin={isAdmin} subjects={subjects} onClose={()=>setIsEditModalOpen(false)}/></Modal>}
                     {isAdminPanelOpen && <Modal onClose={()=>setIsAdminPanelOpen(false)} title="管理員"><div className="space-y-4"><button onClick={()=>setIsBroadcastModalOpen(true)} className="w-full p-4 bg-indigo-50 text-indigo-700 rounded-xl font-bold flex items-center justify-between btn-press">發布全校通告 <Icon name="Volume2" size={18}/></button><div className="space-y-2"><h3 className="text-xs font-bold text-gray-400 uppercase">學生狀態</h3>{usersList.map(u=><div key={u.id} className="flex justify-between items-center p-3 bg-white border border-gray-100 rounded-xl shadow-sm"><div className="flex items-center gap-2"><div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center font-bold text-xs text-gray-600">{u.shortName?u.shortName[0]:'?'}</div><div className="text-xs font-bold text-gray-700">{u.shortName||'未設定'}</div></div><div className="text-[9px] font-bold text-gray-400 bg-gray-50 px-2 py-1 rounded-lg">{u.lastLogin?new Date(u.lastLogin.seconds*1000).toLocaleDateString():'N/A'}</div></div>)}</div></div></Modal>}
                     {isBroadcastModalOpen && <Modal onClose={()=>setIsBroadcastModalOpen(false)} title="發布通告"><div className="space-y-3"><input type="text" value={broadcast.message} onChange={e=>setBroadcast({...broadcast,message:e.target.value})} className="app-input w-full p-3 rounded-xl text-sm" placeholder="內容..."/><div className="flex items-center gap-2"><input type="checkbox" checked={broadcast.active} onChange={e=>setBroadcast({...broadcast,active:e.target.checked})}/><span className="text-xs">顯示</span></div><button onClick={()=>saveBroadcast(broadcast.message,broadcast.active)} className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold btn-press text-sm">發布</button></div></Modal>}
                     {showShortNameModal && <div className="fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-6 backdrop-blur-sm"><div className="bg-white rounded-[24px] w-full max-w-sm p-6 text-center animate-pop"><h2 className="text-lg font-bold text-gray-800 mb-2">歡迎使用！</h2><form onSubmit={handleSaveShortName} className="space-y-3"><input autoFocus value={inputShortName} onChange={e=>setInputShortName(e.target.value)} placeholder="名稱" className="app-input w-full p-3 rounded-xl text-center font-bold" required/><button type="submit" className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold shadow-lg btn-press">開始</button></form></div></div>}
+
+                    {/* Profile Modal */}
+                    {isProfileModalOpen && (
+                        <Modal onClose={()=>setIsProfileModalOpen(false)} title="個人檔案">
+                            <div className="flex flex-col items-center justify-center py-6">
+                                <div className="w-24 h-24 bg-blue-600 rounded-full shadow-xl flex items-center justify-center text-4xl font-black text-white mb-4">
+                                    {userData?.shortName ? userData.shortName[0] : (user?.email ? user.email[0].toUpperCase() : '?')}
+                                </div>
+                                <h2 className="text-2xl font-black text-gray-800 mb-1">{userData?.shortName || user?.displayName}</h2>
+                                <p className="text-gray-400 text-sm mb-8 font-medium">{user?.email}</p>
+                                
+                                <div className="w-full space-y-3">
+                                    <div className="bg-gray-50 p-4 rounded-xl flex justify-between items-center">
+                                        <span className="text-sm font-bold text-gray-500">身份</span>
+                                        <span className={`text-xs font-bold px-2 py-1 rounded ${isAdmin ? 'bg-indigo-100 text-indigo-600' : 'bg-green-100 text-green-600'}`}>
+                                            {isAdmin ? '管理員' : '學生'}
+                                        </span>
+                                    </div>
+                                     <button 
+                                        onClick={() => {
+                                            auth.signOut();
+                                            setIsProfileModalOpen(false);
+                                        }} 
+                                        className="w-full py-3 bg-red-50 text-red-500 rounded-xl font-bold btn-press hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
+                                    >
+                                        <Icon name="LogOut" size={18}/> 登出
+                                    </button>
+                                </div>
+                            </div>
+                        </Modal>
+                    )}
                 </div>
             );
         };
