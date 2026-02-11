@@ -51,6 +51,19 @@
         .btn-glow {
             animation: glowing 2s infinite;
         }
+
+        /* Dragging styles */
+        .dragging {
+            opacity: 0.5;
+            background-color: #f3f4f6;
+            border: 2px dashed #cbd5e1;
+        }
+        .drag-handle {
+            cursor: grab;
+        }
+        .drag-handle:active {
+            cursor: grabbing;
+        }
     </style>
 </head>
 <body class="bg-slate-50">
@@ -59,7 +72,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs, setDoc, arrayUnion, arrayRemove, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs, setDoc, arrayUnion, arrayRemove, getDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
 
         const firebaseConfig = {
@@ -81,7 +94,7 @@
         window.firebaseServices = { 
             auth, db, googleProvider, 
             signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, 
-            collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs, setDoc, arrayUnion, arrayRemove, getDoc 
+            collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs, setDoc, arrayUnion, arrayRemove, getDoc, writeBatch 
         };
     </script>
 
@@ -652,7 +665,7 @@
             const [users, setUsers] = useState([]); 
             const [selectedUser, setSelectedUser] = useState(null); 
             const [userHomeworks, setUserHomeworks] = useState([]); 
-            const { collection, getDocs, query, orderBy, onSnapshot, doc, updateDoc, arrayUnion } = window.firebaseServices; 
+            const { collection, getDocs, query, orderBy, onSnapshot, doc, updateDoc, arrayUnion, deleteDoc, writeBatch } = window.firebaseServices; 
             const allowedEmails = systemConfig?.allowedEmails || [];
 
             useEffect(() => { const fetchUsers = async () => { const q = query(collection(db, "users_public"), orderBy("lastSeen", "desc")); const snapshot = await getDocs(q); setUsers(snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() }))); }; fetchUsers(); }, [db]); 
@@ -667,6 +680,31 @@
                 } catch(e) { console.error(e); alert("操作失敗"); }
             };
 
+            const handleDeleteUser = async (targetUser) => {
+                if (!confirm(`確定要刪除用戶 ${targetUser.displayName} (${targetUser.email}) 的所有資料？此操作無法復原！`)) return;
+                
+                try {
+                    // Delete User Items
+                    const itemsQ = query(collection(db, "users", targetUser.uid, "items"));
+                    const itemsSnap = await getDocs(itemsQ);
+                    const deletePromises = itemsSnap.docs.map(doc => deleteDoc(doc.ref));
+                    await Promise.all(deletePromises);
+
+                    // Delete User Settings (Timetable, Subjects)
+                    await deleteDoc(doc(db, "users", targetUser.uid, "settings", "timetable"));
+                    await deleteDoc(doc(db, "users", targetUser.uid, "settings", "subjects"));
+
+                    // Delete Public Profile
+                    await deleteDoc(doc(db, "users_public", targetUser.uid));
+
+                    setUsers(prev => prev.filter(u => u.uid !== targetUser.uid));
+                    alert("用戶資料已刪除");
+                } catch (e) {
+                    console.error(e);
+                    alert("刪除失敗: " + e.message);
+                }
+            };
+
             return ( 
                 <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 min-h-[500px]"> 
                     <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4"> <button onClick={() => selectedUser ? setSelectedUser(null) : onBack()} className="p-2 hover:bg-slate-100 rounded-full transition-colors"><Icon name="arrow-left" className="w-5 h-5 text-slate-500" /></button> <h2 className="text-xl font-bold text-slate-800">{selectedUser ? `${selectedUser.displayName} 的紀錄` : '所有用戶管理'}</h2> </div> 
@@ -678,8 +716,11 @@
                                         <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold">{u.displayName?.[0]?.toUpperCase() || 'U'}</div>
                                         <div><div className="font-bold text-slate-800 flex items-center gap-2">{u.displayName || '未命名'} {allowedEmails.includes(u.email) && <span className="text-[10px] bg-green-100 text-green-700 px-1.5 rounded-full">白名單</span>}</div><div className="text-xs text-slate-400">{u.email}</div></div>
                                     </div>
-                                    {!allowedEmails.includes(u.email) && <button onClick={(e) => { e.stopPropagation(); handleQuickAddWhitelist(u.email); }} className="p-2 text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="加入白名單"><Icon name="shield-check" className="w-5 h-5" /></button>}
-                                    <Icon name="chevron-right" className="w-5 h-5 text-slate-300 group-hover:text-indigo-500 ml-2" /> 
+                                    <div className="flex items-center gap-2">
+                                        {!allowedEmails.includes(u.email) && <button onClick={(e) => { e.stopPropagation(); handleQuickAddWhitelist(u.email); }} className="p-2 text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="加入白名單"><Icon name="shield-check" className="w-5 h-5" /></button>}
+                                        <button onClick={(e) => { e.stopPropagation(); handleDeleteUser(u); }} className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="刪除用戶"><Icon name="trash-2" className="w-5 h-5" /></button>
+                                        <Icon name="chevron-right" className="w-5 h-5 text-slate-300 group-hover:text-indigo-500 ml-2" /> 
+                                    </div>
                                 </div> 
                             ))} 
                             {users.length === 0 && <div className="text-center text-slate-400 py-10">暫無用戶資料</div>} 
@@ -691,7 +732,7 @@
             ); 
         }
 
-        function AdminSystemPanel({ db, systemConfig, onBack }) { const [newEmail, setNewEmail] = useState(''); const [isSubmitting, setIsSubmitting] = useState(false); const { doc, updateDoc, arrayUnion, arrayRemove, setDoc } = window.firebaseServices; const configRef = doc(db, "system_settings", "config"); const updateConfig = async (key, value) => { try { await setDoc(configRef, { [key]: value }, { merge: true }); } catch (e) { console.error(e); alert("設定更新失敗"); } }; const handleAddWhitelist = async (e) => { e.preventDefault(); if (!newEmail.trim()) return; setIsSubmitting(true); try { await updateDoc(configRef, { allowedEmails: arrayUnion(newEmail.trim()) }); setNewEmail(''); } catch (e) { console.error(e); alert("新增失敗"); } setIsSubmitting(false); }; const handleRemoveWhitelist = async (email) => { if (window.confirm(`確定要移除 ${email} 嗎？`)) { await updateDoc(configRef, { allowedEmails: arrayRemove(email) }); } }; return ( <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 min-h-[500px]"> <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4"><button onClick={onBack} className="p-2 hover:bg-slate-100 rounded-full transition-colors"><Icon name="arrow-left" className="w-5 h-5 text-slate-500" /></button><h2 className="text-xl font-bold text-slate-800">系統控制台</h2></div> <div className="mb-8"><h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">網站狀態控制</h3><div className="bg-slate-50 rounded-xl p-4 border border-slate-200 space-y-4"><div className="grid grid-cols-3 gap-2">{['normal', 'updating', 'restructuring'].map(mode => (<button key={mode} onClick={() => updateConfig('maintenanceMode', mode)} className={`py-2 px-3 rounded-lg text-sm font-bold border transition-all ${systemConfig?.maintenanceMode === mode ? (mode === 'normal' ? 'bg-green-100 text-green-700 border-green-200' : mode === 'updating' ? 'bg-orange-100 text-orange-700 border-orange-200' : 'bg-blue-100 text-blue-700 border-blue-200') : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-100'}`}>{mode === 'normal' ? '🟢 正常運作' : mode === 'updating' ? '🟠 網站更新中' : '🔵 資料重整中'}</button>))}</div>{systemConfig?.maintenanceMode !== 'normal' && (<div className="space-y-3 pt-2 border-t border-slate-200"><div><label className="block text-xs font-bold text-slate-500 mb-1">自訂維護訊息</label><input type="text" className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" placeholder="例如：系統正在升級，請稍候..." value={systemConfig?.message || ''} onChange={(e) => updateConfig('message', e.target.value)} /></div><div><label className="block text-xs font-bold text-slate-500 mb-1">預計恢復時間</label><input type="text" className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" placeholder="例如: 下午 4:00" value={systemConfig?.estimatedTime || ''} onChange={(e) => updateConfig('estimatedTime', e.target.value)} /></div></div>)}</div></div> <div><div className="flex items-center justify-between mb-3"><h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider">白名單存取控制</h3><label className="relative inline-flex items-center cursor-pointer"><input type="checkbox" className="sr-only peer" checked={systemConfig?.whitelistEnabled || false} onChange={(e) => updateConfig('whitelistEnabled', e.target.checked)} /><div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div></label></div><div className={`bg-slate-50 rounded-xl p-4 border border-slate-200 transition-opacity ${!systemConfig?.whitelistEnabled ? 'opacity-50' : ''}`}><form onSubmit={handleAddWhitelist} className="flex gap-2 mb-4"><input type="email" className="flex-1 px-3 py-2 rounded-lg border border-slate-200 text-sm" placeholder="輸入允許的 Google 電郵" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} required /><button type="submit" disabled={isSubmitting} className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-indigo-700"><Icon name="plus" className="w-4 h-4" /></button></form><div className="space-y-2 max-h-[200px] overflow-y-auto">{(systemConfig?.allowedEmails || []).map(email => (<div key={email} className="flex items-center justify-between bg-white p-2 rounded-lg border border-slate-100 text-sm"><span className="text-slate-700">{email}</span><button onClick={() => handleRemoveWhitelist(email)} className="text-slate-400 hover:text-red-500"><Icon name="trash-2" className="w-4 h-4" /></button></div>))}{(!systemConfig?.allowedEmails || systemConfig.allowedEmails.length === 0) && <div className="text-center text-slate-400 text-xs">暫無白名單用戶</div>}</div></div></div> </div> ); }
+        function AdminSystemPanel({ db, systemConfig, onBack }) { const [newEmail, setNewEmail] = useState(''); const [isSubmitting, setIsSubmitting] = useState(false); const { doc, updateDoc, arrayUnion, arrayRemove, setDoc } = window.firebaseServices; const configRef = doc(db, "system_settings", "config"); const updateConfig = async (key, value) => { try { await setDoc(configRef, { [key]: value }, { merge: true }); } catch (e) { console.error(e); alert("設定更新失敗"); } }; const handleAddWhitelist = async (e) => { e.preventDefault(); if (!newEmail.trim()) return; setIsSubmitting(true); try { await updateDoc(configRef, { allowedEmails: arrayUnion(newEmail.trim()) }); setNewEmail(''); } catch (e) { console.error(e); alert("新增失敗"); } setIsSubmitting(false); }; const handleRemoveWhitelist = async (email) => { if (window.confirm(`確定要移除 ${email} 嗎？`)) { await updateDoc(configRef, { allowedEmails: arrayRemove(email) }); } }; return ( <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 min-h-[500px]"> <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4"><button onClick={onBack} className="p-2 hover:bg-slate-100 rounded-full transition-colors"><Icon name="arrow-left" className="w-5 h-5 text-slate-500" /></button><h2 className="text-xl font-bold text-slate-800">系統控制台</h2></div> <div className="mb-8"><h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">網站狀態控制</h3><div className="bg-slate-50 rounded-xl p-4 border border-slate-200 space-y-4"><div className="grid grid-cols-3 gap-2">{['normal', 'updating', 'restructuring'].map(mode => (<button key={mode} onClick={() => updateConfig('maintenanceMode', mode)} className={`py-2 px-3 rounded-lg text-sm font-bold border transition-all ${systemConfig?.maintenanceMode === mode ? (mode === 'normal' ? 'bg-green-100 text-green-700 border-green-200' : mode === 'updating' ? 'bg-orange-100 text-orange-700 border-orange-200' : 'bg-blue-100 text-blue-700 border-blue-200') : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-100'}`}>{mode === 'normal' ? '🟢 正常運作' : mode === 'updating' ? '🟠 網站更新中' : '🔵 資料重整中'}</button>))}</div>{systemConfig?.maintenanceMode !== 'normal' && (<div className="space-y-3 pt-2 border-t border-slate-200"><div><label className="block text-xs font-bold text-slate-500 mb-1">自訂維護訊息</label><input type="text" className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" placeholder="例如：系統正在升級，請稍候..." value={systemConfig?.message || ''} onChange={(e) => updateConfig('message', e.target.value)} /></div><div><label className="block text-xs font-bold text-slate-500 mb-1">預計恢復時間</label><input type="text" className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" placeholder="例如: 下午 4:00" value={systemConfig?.estimatedTime || ''} onChange={(e) => updateConfig('estimatedTime', e.target.value)} /></div></div>)}</div></div> <div><div className="flex items-center justify-between mb-3"><h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider">白名單存取控制</h3><label className="relative inline-flex items-center cursor-pointer"><input type="checkbox" className="sr-only peer" checked={systemConfig?.whitelistEnabled || false} onChange={(e) => updateConfig('whitelistEnabled', e.target.checked)} /><div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div></label></div><div className={`bg-slate-50 rounded-xl p-4 border border-slate-200 transition-opacity ${!systemConfig?.whitelistEnabled ? 'opacity-50' : ''}`}><p className="text-xs text-slate-500 mb-3 font-medium">⚠️ 開啟後，除了白名單及管理員外，其他所有用戶將無法登入或使用網站。</p><form onSubmit={handleAddWhitelist} className="flex gap-2 mb-4"><input type="email" className="flex-1 px-3 py-2 rounded-lg border border-slate-200 text-sm" placeholder="輸入允許的 Google 電郵" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} required /><button type="submit" disabled={isSubmitting} className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-indigo-700"><Icon name="plus" className="w-4 h-4" /></button></form><div className="space-y-2 max-h-[200px] overflow-y-auto">{(systemConfig?.allowedEmails || []).map(email => (<div key={email} className="flex items-center justify-between bg-white p-2 rounded-lg border border-slate-100 text-sm"><span className="text-slate-700">{email}</span><button onClick={() => handleRemoveWhitelist(email)} className="text-slate-400 hover:text-red-500"><Icon name="trash-2" className="w-4 h-4" /></button></div>))}{(!systemConfig?.allowedEmails || systemConfig.allowedEmails.length === 0) && <div className="text-center text-slate-400 text-xs">暫無白名單用戶</div>}</div></div></div> </div> ); }
 
         // Updated Timetable Component with Dynamic Config
         function Timetable({ currentDay, config, onDayChange, now, subjects }) { 
