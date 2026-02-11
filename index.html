@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>電子手冊 | 學生端</title>
+    <title>功課與默書追蹤小幫手</title>
     
+    <!-- React & Tailwind -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -12,53 +13,41 @@
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Microsoft JhengHei", sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; touch-action: manipulation; }
         input[type="file"]::file-selector-button { display: none; }
         
-        /* Original App Animations */
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes slideInRight { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: translateX(0); } }
-        @keyframes popIn { 0% { opacity: 0; transform: scale(0.9); } 70% { transform: scale(1.02); } 100% { opacity: 1; transform: scale(1); } }
-        @keyframes gradientFlow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-        @keyframes blob { 0% { transform: translate(0px, 0px) scale(1); } 33% { transform: translate(30px, -50px) scale(1.1); } 66% { transform: translate(-20px, 20px) scale(0.9); } 100% { transform: translate(0px, 0px) scale(1); } }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .modal-animate { animation: fadeIn 0.2s ease-out forwards; }
+        .notification-animate { animation: fadeIn 0.15s ease-out forwards; }
+        .animate-item { animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+        @keyframes slideUpFade { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         
-        .animate-blob { animation: blob 10s infinite alternate ease-in-out; }
-        .gradient-bg { background-size: 200% 200%; animation: gradientFlow 15s ease infinite; }
-        
-        .modal-animate { animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        .page-enter { animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        .list-item-enter { animation: slideInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
-        
-        /* Login Page Animations */
-        @keyframes meshFlow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
-        .mesh-bg { background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab); background-size: 400% 400%; animation: meshFlow 15s ease infinite; }
-        .mesh-bg-soft { background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); min-height: 100vh; }
-        .mesh-bg-block { background: linear-gradient(-45deg, #ff9a9e, #fad0c4, #fad0c4, #ffecd2); background-size: 400% 400%; animation: meshFlow 12s ease infinite; }
-        .animate-float { animation: float 6s ease-in-out infinite; }
-        
-        /* Glassmorphism */
-        .glass-card { 
-            background: rgba(255, 255, 255, 0.7); 
-            backdrop-filter: blur(20px); 
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.8); 
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
-        }
-
-        /* Utilities */
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         
-        input[type="time"]::-webkit-calendar-picker-indicator { cursor: pointer; filter: invert(0.5); }
+        /* 玻璃擬態背景 */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
     </style>
 </head>
-<body class="bg-slate-50 overflow-x-hidden">
-    <div id="root"></div>
+<body class="bg-slate-50">
+    <div id="root" class="flex h-screen items-center justify-center text-slate-400 font-bold">
+        <div class="text-center">
+            <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+            App 載入中...<br/><span class="text-xs font-normal opacity-50">連線至雲端資料庫</span>
+        </div>
+    </div>
 
+    <!-- Firebase SDK (Stable) -->
     <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs, setDoc } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+
         const firebaseConfig = {
             apiKey: "AIzaSyB3gYuwnyoTUwO7PFh4Nuue-Ud8GTruuRk",
             authDomain: "recordhwv2.firebaseapp.com",
@@ -69,399 +58,426 @@
             measurementId: "G-C51XDYW67W"
         };
 
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, where, getDocs, setDoc, arrayUnion, arrayRemove, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
         try {
             const app = initializeApp(firebaseConfig);
+            const auth = getAuth(app);
+            const db = getFirestore(app);
+            const googleProvider = new GoogleAuthProvider();
+
             window.firebaseServices = { 
-                auth: getAuth(app), 
-                db: getFirestore(app), 
-                googleProvider: new GoogleAuthProvider(), 
-                signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, 
-                collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, where, getDocs, setDoc, arrayUnion, arrayRemove, serverTimestamp,
-                isReady: true 
+                auth, db, googleProvider,
+                signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup,
+                signOut, onAuthStateChanged, updateProfile,
+                collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs, setDoc
             };
             window.dispatchEvent(new Event('firebase-ready'));
-            console.log("Firebase initialized");
         } catch (e) {
-            console.error(e);
-            document.body.innerHTML = `<div style="padding:20px;text-align:center;color:red;">連線失敗: ${e.message}</div>`;
+            console.error("Firebase Init Error", e);
         }
     </script>
 
     <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
+        const { useState, useEffect, useRef, useMemo } = React;
 
-        // [CONSTANTS]
-        const SUBJECTS = [{ name: '中文', color: 'bg-red-100 text-red-700 border-red-200', category: '主科' }, { name: '英文', color: 'bg-blue-100 text-blue-700 border-blue-200', category: '主科' }, { name: '數學', color: 'bg-green-100 text-green-700 border-green-200', category: '主科' }, { name: '常識/公社', color: 'bg-orange-100 text-orange-700 border-orange-200', category: '主科' }, { name: '物理', color: 'bg-cyan-100 text-cyan-700 border-cyan-200', category: '副科/其他' }, { name: '化學', color: 'bg-purple-100 text-purple-700 border-purple-200', category: '副科/其他' }, { name: '生物', color: 'bg-emerald-100 text-emerald-700 border-emerald-200', category: '副科/其他' }, { name: '中史', color: 'bg-amber-100 text-amber-800 border-amber-200', category: '副科/其他' }, { name: '歷史', color: 'bg-stone-100 text-stone-700 border-stone-200', category: '副科/其他' }, { name: '地理', color: 'bg-teal-100 text-teal-700 border-teal-200', category: '副科/其他' }, { name: '經濟', color: 'bg-yellow-100 text-yellow-700 border-yellow-200', category: '副科/其他' }, { name: '企會財', color: 'bg-lime-100 text-lime-700 border-lime-200', category: '副科/其他' }, { name: '資訊科技', color: 'bg-indigo-100 text-indigo-700 border-indigo-200', category: '副科/其他' }, { name: '佛學/宗教', color: 'bg-yellow-50 text-yellow-600 border-yellow-100', category: '副科/其他' }, { name: '普通話', color: 'bg-pink-100 text-pink-700 border-pink-200', category: '副科/其他' }, { name: '視藝', color: 'bg-fuchsia-100 text-fuchsia-700 border-fuchsia-200', category: '副科/其他' }, { name: '音樂', color: 'bg-sky-100 text-sky-700 border-sky-200', category: '副科/其他' }, { name: '體育', color: 'bg-lime-50 text-lime-600 border-lime-100', category: '副科/其他' }, { name: '設計與科技', color: 'bg-zinc-100 text-zinc-700 border-zinc-200', category: '副科/其他' }, { name: '家政', color: 'bg-rose-100 text-rose-700 border-rose-200', category: '副科/其他' }, { name: '文學', color: 'bg-violet-100 text-violet-700 border-violet-200', category: '副科/其他' }, { name: 'STEAM', color: 'bg-violet-50 text-violet-600 border-violet-100', category: '副科/其他' }, { name: '全方位', color: 'bg-rose-50 text-rose-600 border-rose-100', category: '副科/其他' }, { name: '其他', color: 'bg-gray-100 text-gray-700 border-gray-200', category: '副科/其他' }, { name: '空堂', color: 'bg-slate-100 text-slate-500 border-slate-200', category: '副科/其他' }];
-        const COLOR_PRESETS = [{ label: '紅', value: 'bg-red-100 text-red-700 border-red-200' }, { label: '橙', value: 'bg-orange-100 text-orange-700 border-orange-200' }, { label: '黃', value: 'bg-yellow-100 text-yellow-700 border-yellow-200' }, { label: '綠', value: 'bg-green-100 text-green-700 border-green-200' }, { label: '藍', value: 'bg-blue-100 text-blue-700 border-blue-200' }, { label: '紫', value: 'bg-purple-100 text-purple-700 border-purple-200' }, { label: '粉', value: 'bg-pink-100 text-pink-700 border-pink-200' }, { label: '灰', value: 'bg-gray-100 text-gray-700 border-gray-200' }, { label: '青', value: 'bg-cyan-100 text-cyan-700 border-cyan-200' }, { label: '石', value: 'bg-stone-100 text-stone-700 border-stone-200' }];
-        const DEFAULT_SCHEDULE = { 1: ["普通電腦", "普通電腦", "英文", "英文", "中文", "中文", "普通話", "佛學", "歷史", "公民經濟與社會"], 2: ["英文", "英文", "音樂", "地理", "物理", "物理", "中文", "中文", "數學", "數學"], 3: ["化學", "化學", "英文", "英文", "數學", "中文", "視藝", "視藝", "公民經濟與社會", "中史"], 4: ["STEAM", "STEAM", "數學", "歷史", "英文", "英文", "生物", "生物", "中史", "地理"], 5: ["英文", "英文", "中文", "中文", "體育", "體育", "數學", "數學", "全方位", "全方位"] };
-        const DEFAULT_START_TIMES = [510, 545, 595, 630, 675, 710, 815, 850, 895, 930]; 
-        const DEFAULT_DURATIONS = [35, 35, 35, 35, 35, 35, 35, 35, 35, 35];
-        const ADMIN_EMAIL = 'chimhinhin@gmail.com';
-        const SUBJECT_GROUPS = {
-            "主科": ['中文', '英文', '數學', '常識/公社'],
-            "選修/其他": ['物理', '化學', '生物', '中史', '歷史', '地理', '經濟', '企會財', '資訊科技', '佛學/宗教', '普通話', '視藝', '音樂', '體育', '設計與科技', '家政', '文學', 'STEAM', '全方位', '其他', '空堂']
+        const ADMIN_EMAIL = 'chimhinhin@gmail.com'; 
+        
+        const SUBJECTS = [
+            { name: '中文', color: 'bg-red-100 text-red-700 border-red-200' },
+            { name: '英文', color: 'bg-blue-100 text-blue-700 border-blue-200' },
+            { name: '數學', color: 'bg-green-100 text-green-700 border-green-200' },
+            { name: '公社', color: 'bg-orange-100 text-orange-700 border-orange-200' },
+            { name: '佛學', color: 'bg-yellow-100 text-yellow-700 border-yellow-200' },
+            { name: '生物', color: 'bg-emerald-100 text-emerald-700 border-emerald-200' },
+            { name: '物理', color: 'bg-cyan-100 text-cyan-700 border-cyan-200' },
+            { name: '化學', color: 'bg-purple-100 text-purple-700 border-purple-200' },
+            { name: '地理', color: 'bg-teal-100 text-teal-700 border-teal-200' },
+            { name: '歷史', color: 'bg-stone-100 text-stone-700 border-stone-200' },
+            { name: '中史', color: 'bg-amber-100 text-amber-800 border-amber-200' },
+            { name: '體育', color: 'bg-lime-100 text-lime-700 border-lime-200' },
+            { name: '電腦', color: 'bg-indigo-100 text-indigo-700 border-indigo-200' },
+            { name: 'STEAM', color: 'bg-violet-100 text-violet-700 border-violet-200' },
+            { name: '普通話', color: 'bg-pink-100 text-pink-700 border-pink-200' },
+            { name: '視藝', color: 'bg-fuchsia-100 text-fuchsia-700 border-fuchsia-200' },
+            { name: '全方位', color: 'bg-rose-100 text-rose-700 border-rose-200' },
+            { name: '音樂', color: 'bg-sky-100 text-sky-700 border-sky-200' },
+            { name: '其他', color: 'bg-gray-100 text-gray-700 border-gray-200' }
+        ];
+
+        const CLASS_SCHEDULE = {
+            1: ["普通電腦", "普通電腦", "英文", "英文", "中文", "中文", "普通話", "佛學", "歷史", "公民經濟與社會"],
+            2: ["英文", "英文", "音樂", "地理", "物理", "物理", "中文", "中文", "數學", "數學"],
+            3: ["化學", "化學", "英文", "英文", "數學", "中文", "視藝", "視藝", "公民經濟與社會", "中史"],
+            4: ["STEAM", "STEAM", "數學", "歷史", "英文", "英文", "生物", "生物", "中史", "地理"],
+            5: ["英文", "英文", "中文", "中文", "體育", "體育", "數學", "數學", "全方位", "全方位"]
         };
+        const LESSON_START_TIMES = [510, 545, 595, 630, 675, 710, 815, 850, 895, 930];
 
-        // --- Helpers ---
-        function Icon({name, className}) {
+        const Icon = ({ name, className }) => {
             const ref = useRef(null);
             useEffect(() => {
-                if(window.lucide && ref.current) {
+                if (window.lucide && ref.current) {
                     ref.current.innerHTML = '';
                     const i = document.createElement('i');
                     i.setAttribute('data-lucide', name);
-                    if(className) i.className = className;
+                    if (className) i.setAttribute('class', className);
                     ref.current.appendChild(i);
-                    window.lucide.createIcons({root:ref.current});
+                    try { window.lucide.createIcons({ root: ref.current, nameAttr: 'data-lucide' }); } catch(e) {}
                 }
             }, [name, className]);
-            return <span ref={ref} style={{display:'inline-flex', alignItems:'center', justifyContent:'center'}}></span>;
-        }
+            return <span ref={ref} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}></span>;
+        };
 
-        const normalizeDate = (d) => { const n = d ? new Date(d) : new Date(); n.setHours(0,0,0,0); return n; };
-        const getDaysRemaining = (dateString) => { const today = normalizeDate(); const due = normalizeDate(dateString); return Math.ceil((due - today) / (1000 * 60 * 60 * 24)); };
-        const minutesToTimeStr = (m) => `${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;
-        const timeStrToMinutes = (s) => { const [h,m] = s.split(':').map(Number); return h*60+m; };
         const formatCountdown = (ms) => { const totalSeconds = Math.floor(ms / 1000); const hours = Math.floor(totalSeconds / 3600); const minutes = Math.floor((totalSeconds % 3600) / 60); const seconds = totalSeconds % 60; return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`; };
-        const compressImage = (file) => new Promise((resolve, reject) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = (e) => { const img = new Image(); img.src = e.target.result; img.onload = () => { const canvas = document.createElement('canvas'); const MAX_WIDTH = 1024; const scale = MAX_WIDTH / img.width; if(scale < 1) { canvas.width = MAX_WIDTH; canvas.height = img.height * scale; } else { canvas.width = img.width; canvas.height = img.height; } const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, canvas.width, canvas.height); resolve(canvas.toDataURL('image/jpeg', 0.7)); }; img.onerror = reject; }; reader.onerror = reject; });
-
-        // --- COMPONENTS ---
-
-        function LiveLessonCard({ schedule, times, durations, currentDay, user }) {
-            const [now, setNow] = useState(new Date());
-            useEffect(() => { const t = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(t); }, []);
-            
-            const daySubjects = schedule[currentDay] || [];
-            const curMin = now.getHours() * 60 + now.getMinutes();
-            let status = "放學啦 / 休息中", subStatus = "", nextInfo = "沒有下一節", icon = "moon", bg = "from-slate-700 to-slate-900";
-
-            if (currentDay === 0 || currentDay === 6) {
-                status = "放假啦！"; subStatus = "好好休息，享受週末 🏖️"; nextInfo = "下週見"; icon = "coffee"; bg = "from-teal-400 to-emerald-500";
-            } else {
-                const getEnd = (i) => times[i] + (durations[i]||35);
-                if (times.length > 0 && curMin < times[0]) {
-                    status = "早晨！未上堂"; const diff = times[0] - curMin; subStatus = `距離第一堂仲有 ${Math.floor(diff/60)}小時 ${diff%60}分鐘`; nextInfo = `第一堂: ${daySubjects[0]||'未知'}`; icon = "sun"; bg = "from-orange-400 to-red-500";
-                } else if (times.length > 0) {
-                    let found = false;
-                    for(let i=0; i<10; i++) {
-                        const start = times[i]; const end = getEnd(i);
-                        if(curMin >= start && curMin < end) {
-                            const left = end - curMin; status = `上緊: ${daySubjects[i]||'空堂'}`; subStatus = `仲有 ${left} 分鐘落堂`;
-                            if(i===1||i===3||i===7) nextInfo="下一節: 小息"; else if(i===5) nextInfo="下一節: 午膳"; else if(i===9) nextInfo="之後放學"; else nextInfo=`下一節: ${daySubjects[i+1]}`;
-                            icon = "book-open"; bg = "from-indigo-500 to-purple-600"; found = true; break;
-                        }
-                        if(i<9) {
-                            const nextStart = times[i+1];
-                            if(curMin >= end && curMin < nextStart) {
-                                const left = nextStart - curMin; let gapName = (i===5) ? "午膳時間" : "小息";
-                                status = `${gapName}中`; subStatus = `仲有 ${left} 分鐘上堂`; nextInfo = `下一節: ${daySubjects[i+1]}`;
-                                icon = (i===5) ? "utensils" : "coffee"; bg = (i===5) ? "from-emerald-400 to-teal-600" : "from-amber-400 to-orange-500"; found = true; break;
-                            }
-                        }
+        const getTodayDateString = () => new Date().toLocaleDateString('zh-HK', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+        const getNextSchoolDay = () => { const d = new Date(); const day = d.getDay(); let addDays = 1; if (day === 5) addDays = 3; else if (day === 6) addDays = 2; else if (day === 0) addDays = 1; d.setDate(d.getDate() + addDays); const y = d.getFullYear(); const m = String(d.getMonth() + 1).padStart(2, '0'); const dd = String(d.getDate()).padStart(2, '0'); return `${y}-${m}-${dd}`; };
+        const getDaysRemaining = (dateString) => { const today = new Date(); today.setHours(0,0,0,0); const due = new Date(dateString); return Math.ceil((due - today) / (1000 * 60 * 60 * 24)); };
+        
+        const getNextLesson = (subjectName, now) => {
+            if (!subjectName || subjectName === '其他') return null;
+            const currentDay = now.getDay(); const currentMinutes = now.getHours() * 60 + now.getMinutes(); const currentSeconds = now.getSeconds();
+            for (let d = 0; d < 7; d++) {
+                const checkDay = (currentDay + d) % 7; if (checkDay === 0 || checkDay === 6) continue;
+                const subjects = CLASS_SCHEDULE[checkDay]; if (!subjects) continue;
+                for (let i = 0; i < subjects.length; i++) {
+                    if (subjects[i].includes(subjectName) || subjectName.includes(subjects[i])) {
+                        const startMin = LESSON_START_TIMES[i]; const endMin = startMin + 35;
+                        if (d === 0) { if (currentMinutes >= startMin && currentMinutes < endMin) { return { type: 'now', diff: 0 }; } if (currentMinutes < startMin) { const diffMs = ((startMin * 60) - (currentMinutes * 60 + currentSeconds)) * 1000; return { type: 'future', diff: diffMs, date: new Date(now.getTime() + diffMs) }; } } else { const dayDiff = d; const targetTimeMs = startMin * 60 * 1000; const currentTimeMs = (currentMinutes * 60 + currentSeconds) * 1000; const msInDay = 24 * 60 * 60 * 1000; const diffMs = (dayDiff * msInDay) - currentTimeMs + targetTimeMs; return { type: 'future', diff: diffMs }; }
                     }
-                    if(!found && curMin >= getEnd(9)) { status = "放學啦！"; subStatus = "好好休息"; nextInfo="明天見"; icon="moon"; bg="from-slate-600 to-slate-800"; }
                 }
             }
-            let dayDisplay = currentDay === 0 ? "星期日" : currentDay === 6 ? "星期六" : `Day ${currentDay}`;
-            const dateStr = now.toLocaleDateString('zh-HK', { month: 'long', day: 'numeric', weekday: 'long' });
-            const timeStr = now.toLocaleTimeString('zh-HK', { hour: '2-digit', minute: '2-digit' });
+            return null;
+        };
 
-            return (
-                <div className={`relative overflow-hidden rounded-3xl p-6 text-white shadow-xl bg-gradient-to-r ${bg} mb-6 gradient-bg transition-all duration-500`}>
-                    <div className="absolute top-0 right-0 p-4 opacity-10"><Icon name={icon} className="w-32 h-32" /></div>
-                    <div className="relative z-10">
-                        <div className="flex justify-between items-start mb-4">
-                            <div><div className="text-xs opacity-80 mb-1 flex items-center gap-1 font-bold"><Icon name="user" className="w-3 h-3"/> {user?.displayName||'同學'}</div><h2 className="text-2xl font-black">{status}</h2><p className="text-lg font-bold opacity-90 mt-1">{subStatus}</p></div>
-                            <div className="text-right"><div className="text-2xl font-black font-mono">{timeStr}</div><div className="text-xs font-bold opacity-80 mt-1">{dateStr}</div><div className="mt-2 inline-block bg-white/20 px-3 py-1 rounded-full text-xs font-bold border border-white/30">{dayDisplay}</div></div>
-                        </div>
-                        <div className="inline-flex items-center gap-2 bg-black/20 px-4 py-2 rounded-xl text-sm font-bold backdrop-blur-sm border border-white/10"><Icon name="arrow-right-circle" className="w-4 h-4"/> {nextInfo}</div>
-                    </div>
-                </div>
-            );
-        }
+        const getStatusBadge = (item, isExiting) => {
+            const daysLeft = getDaysRemaining(item.dueDate);
+            const isCompleted = item.completed || isExiting;
+            
+            if (isCompleted) return { text: '已完成', color: 'bg-blue-100 text-blue-700', border: 'border-blue-200' };
+            if (item.type === 'homework') {
+                if (daysLeft < 0) return { text: `遲咗 ${Math.abs(daysLeft)} 日`, color: 'bg-red-500 text-white', border: 'border-red-500' };
+                if (daysLeft === 0) return { text: '今日要交！', color: 'bg-orange-500 text-white font-bold', border: 'border-orange-500' };
+                if (daysLeft === 1) return { text: '聽日要交', color: 'bg-amber-100 text-amber-800', border: 'border-amber-200' };
+                return { text: `仲有 ${daysLeft} 日`, color: 'bg-emerald-100 text-emerald-700', border: 'border-emerald-200' };
+            } else {
+                if (daysLeft < 0) return { text: '已結束', color: 'bg-gray-100 text-gray-500', border: 'border-gray-200' };
+                if (daysLeft === 0) return { text: '今日考！', color: 'bg-red-600 text-white font-bold animate-pulse', border: 'border-red-600' };
+                if (daysLeft === 1) return { text: '聽日考！', color: 'bg-red-100 text-red-700 font-bold', border: 'border-red-200' };
+                return { text: `仲有 ${daysLeft} 日`, color: 'bg-indigo-100 text-indigo-700', border: 'border-indigo-200' };
+            }
+        };
 
-        function BlockScreen({ type, estimatedTime, customConfig, onLogin, user, triggerAlert }) {
-            const [showRequest, setShowRequest] = useState(false);
-            const [email, setEmail] = useState(''); const [name, setName] = useState(''); const [submitting, setSubmitting] = useState(false);
-            const { db, setDoc, doc } = window.firebaseServices || {};
-            useEffect(() => { if(user) { setEmail(user.email||''); setName(user.displayName||''); } }, [user]);
+        // --- Auth Modal ---
+        function AuthModal({ isOpen, onClose, triggerAlert }) {
+            const [isLogin, setIsLogin] = useState(true);
+            const [email, setEmail] = useState('');
+            const [password, setPassword] = useState('');
+            const [displayName, setDisplayName] = useState('');
+            const [loading, setLoading] = useState(false);
+            
+            if (!isOpen) return null;
 
-            const title = customConfig?.customBlockTitle || (type === 'access_denied' ? "存取權限受限" : "網站維護中");
-            const msg = customConfig?.customBlockMessage || (type === 'access_denied' ? "本網站僅開放白名單用戶。\n如需開通，請提交申請。" : "系統升級中，請稍後。");
-
-            const handleReq = async (e) => {
-                e.preventDefault(); if(!user) { onLogin(); return; }
-                setSubmitting(true);
+            const handleGoogleLogin = async () => {
+                setLoading(true);
+                const { auth, googleProvider, signInWithPopup, db, doc, setDoc, serverTimestamp } = window.firebaseServices;
                 try {
-                    await setDoc(doc(db, "access_requests", user.uid), { email, displayName: name, status: 'pending', requestTime: new Date().toISOString(), uid: user.uid });
-                    triggerAlert("申請已送出！請等待批核。"); setShowRequest(false);
-                } catch(e) { 
-                    console.error(e); 
-                    if(e.code === 'permission-denied') { alert("✅ 系統已收到您的申請！\n\n您的申請正在審核中，無需重複提交。"); setShowRequest(false); } 
-                    else { triggerAlert("申請失敗: " + e.message); }
-                } finally { setSubmitting(false); }
+                    const result = await signInWithPopup(auth, googleProvider);
+                    await setDoc(doc(db, "users_public", result.user.uid), {
+                        email: result.user.email, displayName: result.user.displayName, photoURL: result.user.photoURL, lastSeen: serverTimestamp()
+                    }, { merge: true });
+                    onClose();
+                } catch (e) { 
+                    console.error(e);
+                    if (e.code === 'auth/unauthorized-domain') {
+                        triggerAlert("網域未授權：請在 Firebase Console 加入此網域");
+                    } else {
+                        triggerAlert("Google 登入失敗"); 
+                    }
+                } finally { setLoading(false); }
+            };
+
+            const handleEmailAuth = async (e) => {
+                e.preventDefault();
+                setLoading(true);
+                const { auth, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, db, doc, setDoc, serverTimestamp } = window.firebaseServices;
+                try {
+                    let userCred;
+                    if (isLogin) {
+                        userCred = await signInWithEmailAndPassword(auth, email, password);
+                    } else {
+                        if (!displayName) { triggerAlert("請輸入名字"); setLoading(false); return; }
+                        userCred = await createUserWithEmailAndPassword(auth, email, password);
+                        await updateProfile(userCred.user, { displayName });
+                    }
+                    await setDoc(doc(db, "users_public", userCred.user.uid), {
+                        email: userCred.user.email, displayName: userCred.user.displayName || displayName, lastSeen: serverTimestamp()
+                    }, { merge: true });
+                    onClose();
+                } catch (e) { triggerAlert(e.message); } finally { setLoading(false); }
             };
 
             return (
-                <div className="fixed inset-0 z-40 flex flex-col items-center justify-center bg-slate-900 p-6 text-center mesh-bg-block relative overflow-hidden">
-                    <div className="absolute inset-0 bg-black/10 backdrop-blur-[2px]"></div>
-                    <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-purple-500/40 rounded-full blur-[120px] animate-float"></div>
-                    <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-orange-500/40 rounded-full blur-[120px] animate-float" style={{animationDelay:'-3s'}}></div>
-                    <div className="glass-card p-10 rounded-[2.5rem] shadow-2xl max-w-md w-full relative z-10 modal-animate border border-white/40">
-                        <div className="w-20 h-20 bg-white/50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner border border-white/50"><Icon name={type==='access_denied'?'lock':'hammer'} className="w-10 h-10 text-slate-700"/></div>
-                        <h2 className="text-3xl font-black text-slate-800 mb-3 tracking-tight">{title}</h2>
-                        <p className="text-slate-600 font-medium mb-8 whitespace-pre-wrap leading-relaxed">{msg}</p>
-                        {type === 'access_denied' && ( !showRequest ? <button onClick={()=>setShowRequest(true)} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold shadow-xl hover:bg-black transition transform hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2"><Icon name="file-pen" className="w-5 h-5"/> 申請訪問權限</button> : <form onSubmit={handleReq} className="text-left space-y-4 animate-fadeIn"><div className="space-y-1"><label className="text-xs font-bold text-slate-500 ml-1">顯示名稱</label><input value={name} onChange={e=>setName(e.target.value)} className="w-full p-3.5 bg-white/60 border border-white rounded-xl text-slate-800 font-bold outline-none focus:ring-2 focus:ring-slate-900" placeholder="例如: Peter Chan" required /></div><div className="space-y-1"><label className="text-xs font-bold text-slate-500 ml-1">Google Email</label><input value={email} onChange={e=>setEmail(e.target.value)} className="w-full p-3.5 bg-white/60 border border-white rounded-xl text-slate-800 font-bold outline-none focus:ring-2 focus:ring-slate-900" placeholder="your@email.com" required readOnly /></div><div className="flex gap-3 pt-2"><button type="button" onClick={()=>setShowRequest(false)} className="flex-1 py-3 bg-white border border-slate-200 text-slate-600 rounded-xl font-bold hover:bg-slate-50 transition">取消</button><button type="submit" disabled={submitting} className="flex-[2] py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-black transition shadow-lg">{submitting?'送出中...':'確認送出'}</button></div></form> )}
-                        {!user && <button onClick={onLogin} className="mt-6 w-full py-3 border border-slate-300 rounded-2xl font-bold text-slate-600 hover:bg-slate-50 transition">登入帳號</button>}
-                        {user && <div className="mt-8 pt-6 border-t border-slate-200/50 text-xs text-slate-500 font-medium">當前帳號: {user.email} <button onClick={()=>window.firebaseServices.signOut(window.firebaseServices.auth)} className="text-indigo-600 hover:text-indigo-800 font-bold ml-2 underline">登出</button></div>}
+                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
+                    <div className="modal-animate bg-white/90 backdrop-blur-2xl rounded-3xl shadow-2xl w-full max-w-md p-8 relative z-10 border border-white/50">
+                        <button onClick={onClose} className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600"><Icon name="x" className="w-6 h-6" /></button>
+                        <div className="text-center mb-8">
+                            <h2 className="text-2xl font-black text-slate-800 tracking-tight">{isLogin ? '登入帳戶' : '立即註冊'}</h2>
+                            <p className="text-slate-500 mt-1 text-sm">請登入以同步資料</p>
+                        </div>
+                        <button onClick={handleGoogleLogin} disabled={loading} className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-all shadow-sm mb-6 disabled:opacity-50"><img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" alt="Google"/> 使用 Google 帳號登入</button>
+                        <div className="flex items-center gap-4 mb-6"><div className="flex-1 h-[1px] bg-slate-100"></div><span className="text-xs text-slate-400 font-medium">或使用 Email</span><div className="flex-1 h-[1px] bg-slate-100"></div></div>
+                        <form onSubmit={handleEmailAuth} className="space-y-4">
+                            {!isLogin && <input type="text" placeholder="你的名字" className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200" value={displayName} onChange={e=>setDisplayName(e.target.value)} />}
+                            <input type="email" placeholder="電子郵件" className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200" value={email} onChange={e=>setEmail(e.target.value)} required />
+                            <input type="password" placeholder="密碼" className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200" value={password} onChange={e=>setPassword(e.target.value)} required />
+                            <button type="submit" disabled={loading} className="w-full py-3.5 rounded-xl bg-indigo-600 text-white font-bold text-lg shadow-lg hover:bg-indigo-700 transition-all disabled:opacity-70">{loading ? '處理中...' : (isLogin ? '登入' : '註冊')}</button>
+                        </form>
+                        <p className="mt-6 text-center text-sm text-slate-500">{isLogin ? '還沒有帳號？' : '已有帳號？'}<button onClick={()=>setIsLogin(!isLogin)} className="ml-1 text-indigo-600 font-bold underline">{isLogin ? '立即註冊' : '直接登入'}</button></p>
                     </div>
                 </div>
             );
         }
 
-        function AuthModal({ onClose, onLogin, onEmailLogin }) {
-            const [email, setEmail] = useState(''); const [pwd, setPwd] = useState(''); const [isReg, setIsReg] = useState(false); const [name, setName] = useState('');
-            const handleSubmit = (e) => { e.preventDefault(); onEmailLogin(email, pwd, isReg, name); };
-            return (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose}></div>
-                    <div className="glass-card p-8 rounded-3xl w-full max-w-sm relative z-10 modal-animate">
-                        <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100"><Icon name="x" className="w-5 h-5 text-slate-400"/></button>
-                        <h2 className="text-2xl font-black text-center mb-6 text-slate-800">{isReg ? '註冊帳號' : '歡迎回來'}</h2>
-                        <button onClick={onLogin} className="w-full py-3.5 bg-white border border-slate-200 rounded-2xl font-bold text-slate-600 flex items-center justify-center gap-3 hover:bg-slate-50 transition mb-6 shadow-sm active:scale-95 group"><img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5 group-hover:scale-110 transition-transform" />使用 Google 登入</button>
-                        <div className="relative mb-6"><div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200"></div></div><div className="relative flex justify-center text-xs bg-white/0 px-2 text-slate-400"><span className="bg-white/80 px-2">或使用 Email</span></div></div>
-                        <form onSubmit={handleSubmit} className="space-y-3">{isReg && <input type="text" placeholder="你的名字 (例如: Peter)" className="w-full p-3.5 bg-slate-50 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500 border border-transparent focus:bg-white transition" value={name} onChange={e=>setName(e.target.value)} required />}<input type="email" placeholder="電子郵件" className="w-full p-3.5 bg-slate-50 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500 border border-transparent focus:bg-white transition" value={email} onChange={e=>setEmail(e.target.value)} required /><input type="password" placeholder="密碼" className="w-full p-3.5 bg-slate-50 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500 border border-transparent focus:bg-white transition" value={pwd} onChange={e=>setPwd(e.target.value)} required /><button className="w-full py-3.5 bg-slate-900 text-white rounded-xl font-bold hover:bg-black transition shadow-lg shadow-indigo-200 active:scale-95 mt-2">{isReg ? '註冊帳號' : '立即登入'}</button></form>
-                        <div className="mt-6 text-center text-xs text-slate-400">{isReg ? '已有帳號？' : '還沒有帳號？'} <button onClick={()=>setIsReg(!isReg)} className="text-indigo-600 font-bold hover:underline ml-1">{isReg ? '直接登入' : '免費註冊'}</button></div>
-                    </div>
-                </div>
-            );
+        // --- Other Modals & Components ---
+        function NameSetupModal({ onSave, loading }) { const [name, setName] = useState(''); return ( <div className="fixed inset-0 z-[150] flex items-center justify-center p-4"> <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm"></div> <div className="modal-animate bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8 relative z-10 text-center"> <h2 className="text-2xl font-black text-slate-800 mb-2">歡迎加入！</h2> <form onSubmit={(e)=>{e.preventDefault(); onSave(name);}}><input type="text" className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-center font-bold mb-4" placeholder="例如: Peter" value={name} onChange={e=>setName(e.target.value)} required /><button type="submit" disabled={loading} className="w-full py-3 rounded-xl bg-indigo-600 text-white font-bold">開始使用</button></form> </div> </div> ); }
+        function EditModal({ item, onClose, onSave }) { const [desc, setDesc] = useState(item.description); const [sub, setSub] = useState(item.subject); const [due, setDue] = useState(item.dueDate); const [load, setLoad] = useState(false); return ( <div className="fixed inset-0 z-[110] flex items-center justify-center p-4"> <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose}></div> <div className="modal-animate bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 relative z-10"> <div className="flex justify-between mb-4"><h3 className="font-bold text-lg">修改</h3><button onClick={onClose}><Icon name="x" className="w-5 h-5"/></button></div> <form onSubmit={async(e)=>{e.preventDefault(); setLoad(true); await onSave(item.id, {description:desc, subject:sub, dueDate:due}); onClose();}}> <div className="mb-4"><label className="block text-xs font-bold text-slate-500 mb-2">科目</label><div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">{SUBJECTS.map(s=><button key={s.name} type="button" onClick={()=>setSub(s.name)} className={`px-3 py-1.5 rounded-lg text-xs font-bold border ${sub===s.name?s.color:'bg-white text-slate-500 border-slate-200'}`}>{s.name}</button>)}</div></div> <textarea value={desc} onChange={e=>setDesc(e.target.value)} className="w-full p-3 rounded-xl border border-slate-200 mb-4 text-sm" rows="3"></textarea> <input type="date" value={due} onChange={e=>setDue(e.target.value)} className="w-full p-3 rounded-xl border border-slate-200 mb-4 text-sm" /> <button disabled={load} className="w-full py-3 rounded-xl bg-indigo-600 text-white font-bold">{load?'儲存中...':'儲存'}</button> </form> </div> </div> ); }
+        function CustomDropdown({ value, onChange, options }) { const [isOpen, setIsOpen] = useState(false); return ( <div className="relative"> <button onClick={()=>setIsOpen(!isOpen)} className="flex items-center gap-2 bg-white border border-slate-200 text-slate-600 text-xs rounded-lg px-3 py-1.5 font-bold shadow-sm"><span>{options.find(o=>o.value===value)?.label}</span><Icon name="chevron-down" className="w-3 h-3"/></button> {isOpen && <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-100 z-50 overflow-hidden">{options.map(opt=><button key={opt.value} onClick={()=>{onChange(opt.value); setIsOpen(false);}} className="w-full text-left px-4 py-3 text-xs font-bold hover:bg-slate-50 flex items-center gap-2">{opt.icon && <Icon name={opt.icon} className="w-3 h-3"/>}{opt.label}</button>)}</div>} </div> ); }
+        
+        function Timetable({ currentDay, subjects, onDayChange, now }) { 
+            const weekDays = ['日','一','二','三','四','五','六']; 
+            const getSchedule = (subs) => { if(!subs) return []; const start = new Date(now); start.setHours(8,30,0,0); const list=[]; let cur=start; let idx=0; const add=(dur, type, name)=>{ const next=new Date(cur.getTime()+dur*60000); list.push({timeStr:`${cur.toLocaleTimeString('zh-HK',{hour:'2-digit',minute:'2-digit'})} - ${next.toLocaleTimeString('zh-HK',{hour:'2-digit',minute:'2-digit'})}`, start:new Date(cur), end:new Date(next), type, subject:name}); cur=next; }; for(let i=0;i<2;i++) add(35,'lesson',subs[idx++]||'自修'); add(15,'break','小息'); for(let i=0;i<2;i++) add(35,'lesson',subs[idx++]||'自修'); add(10,'break','小息'); for(let i=0;i<2;i++) add(35,'lesson',subs[idx++]||'自修'); add(70,'lunch','午膳'); for(let i=0;i<2;i++) add(35,'lesson',subs[idx++]||'自修'); add(10,'break','小息'); for(let i=0;i<2;i++) add(35,'lesson',subs[idx++]||'自修'); return list; }; 
+            const data = getSchedule(subjects[currentDay]); 
+            return ( 
+                <div className="space-y-4 w-full h-full"> 
+                    <div className="flex bg-white rounded-xl p-1 shadow-sm overflow-x-auto w-full">{[1,2,3,4,5].map(d=><button key={d} onClick={()=>onDayChange(d)} className={`flex-1 py-2 px-3 rounded-lg text-sm font-bold whitespace-nowrap ${currentDay===d?'bg-indigo-600 text-white shadow':'text-slate-500'}`}>星期{weekDays[d]}</button>)}</div> 
+                    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 relative w-full">{data.map((slot,i)=>{ const active=now>=slot.start&&now<slot.end; const past=now>=slot.end; let prog=0, left=0; if(active){ const total=slot.end-slot.start; const elap=now-slot.start; prog=Math.min(100, Math.max(0,(elap/total)*100)); left=Math.ceil((total-elap)/60000); } return ( <div key={i} className={`relative pl-8 pb-8 last:pb-0 border-l-2 transition-all ${active?'border-green-500':past?'border-slate-100':'border-green-200'}`}> <div className={`absolute -left-[9px] top-0 w-4 h-4 rounded-full border-2 transition-all ${active?'bg-green-600 border-green-200 scale-125':past?'bg-slate-200 border-slate-300':'bg-green-50 border-green-300'}`}></div> <div className={`transition-all ${active?'translate-x-2':''} ${past?'opacity-40 grayscale blur-[1px]':''}`}> <div className="flex justify-between items-start mb-1"> <div><div className={`text-xs font-mono mb-1 flex items-center gap-2 ${active?'text-green-600 font-bold':'text-slate-400'}`}>{slot.timeStr} {active&&<span className="text-[10px] bg-green-100 text-green-700 px-1.5 rounded font-bold">進行中</span>}</div><div className={`text-base font-bold flex items-center gap-2 ${active?'text-green-900 text-xl':slot.type!=='lesson'?'text-slate-500 text-sm italic':'text-slate-700'}`}>{slot.subject}</div></div> {active&&<div className="text-right bg-green-50 px-3 py-1.5 rounded-lg border border-green-100"><div className="text-2xl font-black text-green-600">{left}<span className="text-xs ml-1">min</span></div></div>} </div> {active&&<div className="w-full h-2 bg-slate-100 rounded-full mt-3 overflow-hidden shadow-inner"><div className="h-full bg-gradient-to-r from-green-500 to-teal-500 transition-all duration-1000 relative" style={{width:`${prog}%`}}><div className="absolute right-0 top-0 bottom-0 w-1 bg-white/50 animate-pulse"></div></div></div>} </div> </div> ); })}</div> 
+                </div> 
+            ); 
         }
+        
+        function AdminUserView({ onBack }) { const [users, setUsers] = useState([]); useEffect(()=>{ if(!window.firebaseServices)return; const {db,collection,query,orderBy,onSnapshot}=window.firebaseServices; const q=query(collection(db,"users_public"),orderBy("lastSeen","desc")); const unsub=onSnapshot(q,s=>{setUsers(s.docs.map(d=>({uid:d.id,...d.data()})));}); return ()=>unsub(); },[]); return (<div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 min-h-[500px] w-full"><div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4"><button onClick={onBack}><Icon name="arrow-left" className="w-5 h-5 text-slate-500"/></button><h2 className="text-xl font-bold text-slate-800">用戶狀態</h2></div><div className="space-y-3 max-h-[600px] overflow-y-auto">{users.map(u=>{ const online=u.lastSeen&&((new Date()-u.lastSeen.toDate())<300000); return (<div key={u.uid} className={`flex items-center justify-between p-4 rounded-xl border ${online?'bg-green-50 border-green-200':'bg-white border-slate-100'}`}><div className="flex items-center gap-3"><div className="relative">{u.photoURL?<img src={u.photoURL} className="w-10 h-10 rounded-full"/>:<div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold">{u.displayName?.[0]||'U'}</div>}<div className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white ${online?'bg-green-500':'bg-slate-300'}`}></div></div><div><div className="font-bold text-slate-800">{u.displayName||'未命名'}</div><div className="text-xs text-slate-400">{u.email}</div></div></div></div>); })}</div></div>); }
+        function AdminSystemPanel({ onBack }) { return (<div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 min-h-[500px] w-full"><div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4"><button onClick={onBack} className="p-2 hover:bg-slate-100 rounded-full transition-colors"><Icon name="arrow-left" className="w-5 h-5 text-slate-500" /></button><h2 className="text-xl font-bold text-slate-800">系統控制台</h2></div><div className="p-6 text-center text-slate-500 bg-slate-50 rounded-xl">系統設定功能開發中...</div></div>); }
 
-        // --- UserSettings (Restored V3) ---
-        function UserSettings({ subjects, onSave, onBack }) {
-            const [list, setList] = useState(subjects || []);
-            const [newName, setNewName] = useState('');
-            const [newColor, setNewColor] = useState(COLOR_PRESETS[0].value);
-            const handleAdd = () => { if(!newName.trim()) return; setList([...list, { name: newName, color: newColor, category: '自訂' }]); setNewName(''); };
-            
-            return (
-                <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 min-h-[500px] page-enter">
-                    <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
-                        <button onClick={onBack} className="p-2 hover:bg-slate-100 rounded-full transition active:scale-95"><Icon name="arrow-left" className="w-5 h-5"/></button>
-                        <h2 className="text-xl font-bold text-slate-800">科目設定</h2>
-                    </div>
-                    <div className="mb-6 bg-slate-50 p-4 rounded-xl border border-slate-200">
-                        <h4 className="text-xs font-bold text-slate-500 mb-2">新增科目</h4>
-                        <div className="flex gap-2 mb-3"><input value={newName} onChange={e=>setNewName(e.target.value)} className="flex-1 p-2 rounded-lg border border-slate-300 text-sm outline-none focus:ring-2 focus:ring-indigo-500" placeholder="例如: 日文" /><button onClick={handleAdd} className="bg-indigo-600 text-white px-4 rounded-lg font-bold text-sm shadow-md active:scale-95">新增</button></div>
-                        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">{COLOR_PRESETS.map((c,i) => (<button key={i} onClick={()=>setNewColor(c.value)} className={`w-6 h-6 rounded-full border-2 shrink-0 ${c.value.split(' ')[0]} ${newColor===c.value ? 'ring-2 ring-indigo-400 border-white' : 'border-transparent'}`}></button>))}</div>
-                    </div>
-                    <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
-                        {list.map((s, i) => (
-                            <div key={i} className="flex justify-between items-center p-3 bg-white border border-slate-100 rounded-xl">
-                                <div className="flex items-center gap-3"><div className={`w-3 h-3 rounded-full ${s.color?.split(' ')[0] || 'bg-gray-400'}`}></div><span className="text-sm font-bold text-slate-700">{s.name}</span></div>
-                                <button onClick={()=>{if(confirm('刪除?')) { const n=[...list];n.splice(i,1);setList(n); }}} className="text-slate-300 hover:text-red-500 transition"><Icon name="trash-2" className="w-4 h-4"/></button>
-                            </div>
-                        ))}
-                    </div>
-                    <button onClick={()=>onSave(list)} className="w-full mt-6 py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-200 active:scale-95 transition">儲存設定</button>
-                </div>
-            );
-        }
-
-        // --- Custom Dropdowns & Selects (Restored) ---
-        function CustomDropdown({ value, onChange, options }) { const [isOpen, setIsOpen] = useState(false); const ref = useRef(null); useEffect(() => { const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setIsOpen(false); }; document.addEventListener('mousedown', h); return () => document.removeEventListener('mousedown', h); }, []); const label = options.find(o => o.value === value)?.label || '排序'; return ( <div className="relative" ref={ref}> <button type="button" onClick={() => setIsOpen(!isOpen)} className="flex items-center gap-2 bg-white border border-slate-200 text-slate-600 text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold hover:bg-slate-50 transition-all shadow-sm active:scale-95 min-w-[100px] justify-between"> <span>{label}</span> <Icon name="chevron-down" className={`w-3 h-3 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} /> </button> {isOpen && ( <div className="absolute right-0 mt-2 w-48 bg-white/95 backdrop-blur-xl rounded-xl shadow-xl border border-slate-100 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right">{options.map((opt, idx) => ( <button key={idx} onClick={() => { onChange(opt.value); setIsOpen(false); }} className={`w-full text-left px-4 py-3 text-xs font-bold flex items-center gap-2 transition-colors ${value === opt.value ? 'bg-indigo-50 text-indigo-600' : 'text-slate-600 hover:bg-slate-50'}`}> {opt.label} </button> ))} </div> )} </div> ); }
-
-        function SubjectFilterDropdown({ currentFilter, onSelect, subjects }) { const [isOpen, setIsOpen] = useState(false); const ref = useRef(null); useEffect(() => { const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setIsOpen(false); }; document.addEventListener('mousedown', h); return () => document.removeEventListener('mousedown', h); }, []); const groups = { "主科": [], "副科/其他": [] }; const safeSubjects = Array.isArray(subjects) ? subjects : []; safeSubjects.forEach(sub => { const cat = sub.category || (SUBJECT_GROUPS["主科"].includes(sub.name) ? "主科" : "副科/其他"); if (!groups[cat]) groups[cat] = []; groups[cat].push(sub); }); return ( <div className="relative" ref={ref}> <button onClick={() => setIsOpen(!isOpen)} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all min-w-[100px] justify-between ${currentFilter !== '全部' ? 'bg-indigo-50 text-indigo-600 border-indigo-200' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}> <div className="flex items-center gap-2"><Icon name="filter" className="w-3.5 h-3.5" /> {currentFilter === '全部' ? '篩選科目' : currentFilter}</div> <Icon name="chevron-down" className="w-3 h-3" /> </button> {isOpen && ( <div className="absolute left-0 mt-2 w-48 bg-white/95 backdrop-blur-xl rounded-xl shadow-xl border border-slate-100 z-50 max-h-64 overflow-y-auto animate-in fade-in zoom-in-95"> <button onClick={() => {onSelect('全部'); setIsOpen(false);}} className="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50 border-b border-slate-50">全部</button> {Object.entries(groups).map(([group, subs]) => ( subs.length > 0 && <div key={group}><div className="px-4 py-2 text-[10px] font-bold text-slate-400 bg-slate-50 uppercase tracking-wider border-b border-slate-50">{group}</div>{subs.map((sub, idx) => ( <button key={`${sub.name}-${idx}`} onClick={() => {onSelect(sub.name); setIsOpen(false);}} className={`w-full text-left px-4 py-2.5 text-xs font-bold hover:bg-indigo-50 transition-colors ${currentFilter === sub.name ? 'text-indigo-600 bg-indigo-50' : 'text-slate-600'}`}>{sub.name}</button> ))}</div> ))} </div> )} </div> ); }
-
-        function FloatingSelect({ value, onChange, className, subjects = [] }) { const [isOpen, setIsOpen] = useState(false); const ref = useRef(null); const safeSubjects = Array.isArray(subjects) ? subjects : []; const groups = { "主科": [], "副科/其他": [] }; safeSubjects.forEach(sub => { const cat = sub.category || (SUBJECT_GROUPS["主科"].includes(sub.name) ? "主科" : "副科/其他"); if (!groups[cat]) groups[cat] = []; groups[cat].push(sub); }); const safeGroups = Object.keys(groups).length > 0 ? groups : { "所有科目": safeSubjects }; useEffect(() => { const handleClickOutside = (event) => { if (ref.current && !ref.current.contains(event.target)) { setIsOpen(false); } }; document.addEventListener('mousedown', handleClickOutside); return () => document.removeEventListener('mousedown', handleClickOutside); }, []); const handleSelect = (val) => { onChange({ target: { value: val } }); setIsOpen(false); }; return ( <div className={`relative ${className} border-0 p-0 bg-transparent`} ref={ref}> <button type="button" onClick={() => setIsOpen(!isOpen)} className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl border border-slate-300 bg-white text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 transition-all ${isOpen ? 'ring-2 ring-indigo-500 border-indigo-500' : ''}`}> <span className="truncate">{value || "選擇科目"}</span> <Icon name="chevron-down" className={`w-4 h-4 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} /> </button> {isOpen && ( <div className="absolute left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-slate-100 z-50 max-h-60 overflow-y-auto animate-in fade-in zoom-in-95 origin-top"> {Object.entries(safeGroups).map(([group, subs]) => ( subs.length > 0 && ( <div key={group}> <div className="px-4 py-2 text-[10px] font-bold text-slate-400 bg-slate-50 uppercase tracking-wider border-b border-slate-100 sticky top-0 z-10 bg-slate-50">{group}</div> <div className="p-1">{subs.map((sub, idx) => ( <button key={`${sub.name}-${idx}`} type="button" onClick={() => handleSelect(sub.name)} className={`w-full text-left px-4 py-2 text-xs font-bold rounded-lg transition-colors flex items-center justify-between ${value === sub.name ? 'bg-indigo-50 text-indigo-600' : 'text-slate-600 hover:bg-slate-50'}`}> {sub.name} {value === sub.name && <Icon name="check" className="w-3.5 h-3.5" />} </button> ))}</div> </div> ) ))} </div> )} </div> ); }
-
-        // --- APP ---
+        // --- Main App ---
         function App() {
             const [user, setUser] = useState(null);
-            const [loading, setLoading] = useState(true);
-            const [view, setView] = useState('home');
             const [items, setItems] = useState([]);
-            const [config, setConfig] = useState(null);
-            const [authModalOpen, setAuthModalOpen] = useState(false);
-            
-            // Timetable
-            const [manualDay, setManualDay] = useState(new Date().getDay());
-            const [schedule, setSchedule] = useState(DEFAULT_SCHEDULE);
-            const [subjects, setSubjects] = useState(SUBJECTS);
-            const [times, setTimes] = useState(DEFAULT_START_TIMES);
-            const [durations, setDurations] = useState(DEFAULT_DURATIONS);
-
-            // Inputs
-            const [desc, setDesc] = useState('');
-            const [date, setDate] = useState('');
-            const [sub, setSub] = useState('中文');
+            const [loading, setLoading] = useState(true);
+            const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+            const [notification, setNotification] = useState({ isOpen: false, type: 'alert', message: '' });
+            const [viewMode, setViewMode] = useState('current');
+            const [inputType, setInputType] = useState('homework');
+            const [subject, setSubject] = useState('中文');
+            const [description, setDescription] = useState('');
+            const [dueDate, setDueDate] = useState('');
+            const [now, setNow] = useState(new Date());
+            const [selectedImage, setSelectedImage] = useState(null);
+            const [currentTimetableDay, setCurrentTimetableDay] = useState(new Date().getDay() || 1); 
+            const [isAdmin, setIsAdmin] = useState(false);
             const [filterSubject, setFilterSubject] = useState('全部');
             const [sortOption, setSortOption] = useState('date_asc');
+            const [activeModal, setActiveModal] = useState(null);
+            const [exitingIds, setExitingIds] = useState([]);
+            const [showNameSetup, setShowNameSetup] = useState(false);
+            const [nameSetupLoading, setNameSetupLoading] = useState(false);
+            const [isListVisible, setIsListVisible] = useState(true);
+            const [editingItem, setEditingItem] = useState(null);
+            const fileInputRef = useRef(null);
+
+            const triggerAlert = (message) => setNotification({ isOpen: true, type: 'alert', message });
+            const triggerConfirm = (message, onConfirmAction) => setNotification({ isOpen: true, type: 'confirm', message, onConfirm: onConfirmAction });
+            const handleNotificationConfirm = () => { if (notification.onConfirm) notification.onConfirm(); setNotification(prev => ({...prev, isOpen: false})); };
+            const handleFilterChange = (newFilter) => { if (newFilter === filterSubject) return; setIsListVisible(false); setTimeout(() => { setFilterSubject(newFilter); setIsListVisible(true); }, 200); };
+            const handleSortChange = (newSort) => { if (newSort === sortOption) return; setIsListVisible(false); setTimeout(() => { setSortOption(newSort); setIsListVisible(true); }, 200); };
+            const handleDashboardClick = (mode) => setActiveModal(mode);
+
+            const handleSignOut = () => { triggerConfirm("確定登出?", async () => { await window.firebaseServices.signOut(window.firebaseServices.auth); setUser(null); }); };
+
+            useEffect(() => { const timer = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(timer); }, []);
 
             useEffect(() => {
-                const init = () => { if(window.firebaseServices && window.firebaseServices.isReady) { const { auth, db, onAuthStateChanged, doc, onSnapshot } = window.firebaseServices; onAuthStateChanged(auth, u => { setUser(u); setLoading(false); if(u) setDate(new Date().toISOString().split('T')[0]); }); onSnapshot(doc(db, "system_settings", "config"), s => setConfig(s.data())); } else { setTimeout(init, 100); } }; init();
+                const init = () => {
+                    if (window.firebaseServices) {
+                        const { auth, db, onAuthStateChanged, collection, query, orderBy, onSnapshot, doc, setDoc, serverTimestamp } = window.firebaseServices;
+                        onAuthStateChanged(auth, async (currentUser) => {
+                            setUser(currentUser);
+                            setLoading(false);
+                            if (currentUser) {
+                                setIsAdmin(currentUser.email === ADMIN_EMAIL);
+                                setDueDate(getNextSchoolDay());
+                                setIsAuthModalOpen(false);
+                                if (!currentUser.displayName) setShowNameSetup(true);
+                                const updatePresence = async () => { await setDoc(doc(db, "users_public", currentUser.uid), { email: currentUser.email, displayName: currentUser.displayName, photoURL: currentUser.photoURL, lastSeen: serverTimestamp() }, { merge: true }); };
+                                updatePresence();
+                                setInterval(updatePresence, 5 * 60 * 1000);
+                                const q = query(collection(db, "users", currentUser.uid, "items"), orderBy("dueDate"));
+                                const unsubscribe = onSnapshot(q, (snap) => setItems(snap.docs.map(doc => ({ id: doc.id, ...doc.data() }))));
+                                return () => unsubscribe();
+                            } else {
+                                setItems([]); setIsAdmin(false);
+                            }
+                        });
+                    }
+                };
+                window.firebaseServices ? init() : window.addEventListener('firebase-ready', init);
             }, []);
 
-            useEffect(() => {
-                if(!user || !window.firebaseServices) return;
-                const { db, collection, doc, onSnapshot, query, orderBy, where, getDocs, addDoc } = window.firebaseServices;
-                if(config?.whitelistEnabled && !config?.allowedEmails?.includes(user.email)) return;
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                if (!user) return;
+                const { db, collection, addDoc, serverTimestamp } = window.firebaseServices;
+                try {
+                    await addDoc(collection(db, "users", user.uid, "items"), { type: inputType, subject, description, image: selectedImage, dueDate, completed: false, createdAt: serverTimestamp() });
+                    setDescription(''); setSelectedImage(null); if(fileInputRef.current) fileInputRef.current.value = "";
+                } catch (e) { triggerAlert("新增失敗"); }
+            };
 
-                const unsubItems = onSnapshot(query(collection(db, "users", user.uid, "items")), s => setItems(s.docs.map(d => ({id:d.id, ...d.data()}))));
-                const unsubSettings = onSnapshot(doc(db, "users", user.uid, "settings", "timetable"), s => { if(s.exists()) { const d = s.data(); if(d.schedule) setSchedule(d.schedule); if(d.times) setTimes(d.times); if(d.durations) setDurations(d.durations); } });
-                const unsubSubj = onSnapshot(doc(db, "users", user.uid, "settings", "subjects"), s => { if(s.exists() && s.data().list) setSubjects(s.data().list); });
-                const qPublic = query(collection(db, "public_assignments"), orderBy("createdAt", "desc"));
-                const unsubPublic = onSnapshot(qPublic, snapshot => { snapshot.docChanges().forEach(async (change) => { if (change.type === "added") { const publicId = change.doc.id; const checkSnap = await getDocs(query(collection(db, "users", user.uid, "items"), where("publicRefId", "==", publicId))); if(checkSnap.empty) { await addDoc(collection(db, "users", user.uid, "items"), { ...change.doc.data(), publicRefId: publicId, completed: false }); alert(`📢 新功課: ${change.doc.data().subject}`); } } }); });
-                return () => { unsubItems(); unsubSettings(); unsubSubj(); unsubPublic(); }
-            }, [user, config]);
+            const handleToggle = async (id, status) => {
+                const { db, doc, updateDoc } = window.firebaseServices;
+                const itemRef = doc(db, "users", user.uid, "items", id);
+                if (!status) { setExitingIds(prev => [...prev, id]); setTimeout(async () => { await updateDoc(itemRef, { completed: true }); setExitingIds(prev => prev.filter(eid => eid !== id)); }, 1000); } else { await updateDoc(itemRef, { completed: false }); }
+            };
 
-            const handleGoogleLogin = () => window.firebaseServices.signInWithPopup(window.firebaseServices.auth, window.firebaseServices.googleProvider).then(()=>setAuthModalOpen(false)).catch(e=>alert(e.message));
-            const handleEmailAuth = async (email, pwd, isReg, name) => { const { auth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, db, doc, setDoc, serverTimestamp } = window.firebaseServices; try { if(isReg) { const cred = await createUserWithEmailAndPassword(auth, email, pwd); await updateProfile(cred.user, { displayName: name }); await setDoc(doc(db, "users_public", cred.user.uid), { email: email, displayName: name, lastSeen: serverTimestamp() }, { merge: true }); } else { await signInWithEmailAndPassword(auth, email, pwd); } setAuthModalOpen(false); } catch(e) { alert("操作失敗: " + e.message); } };
-            const handleAddHomework = async (e) => { e.preventDefault(); if(!desc || !date) return; const { db, addDoc, collection } = window.firebaseServices; await addDoc(collection(db, "users", user.uid, "items"), { description: desc, subject: sub, dueDate: date, completed: false, type: 'homework', createdAt: new Date().toISOString() }); setDesc(''); alert("已新增"); };
-            const toggleItem = async (item) => { const { db, doc, updateDoc } = window.firebaseServices; await updateDoc(doc(db, "users", user.uid, "items", item.id), { completed: !item.completed }); };
-            const deleteItem = async (id) => { if(confirm("確定刪除?")) { const { db, doc, deleteDoc } = window.firebaseServices; await deleteDoc(doc(db, "users", user.uid, "items", id)); } };
-            const saveSubjects = async (newList) => { const { db, doc, setDoc } = window.firebaseServices; await setDoc(doc(db, "users", user.uid, "settings", "subjects"), { list: newList }, { merge: true }); setSubjects(newList); setView('home'); };
+            const deleteItem = (id) => { const { db, doc, deleteDoc } = window.firebaseServices; triggerConfirm("確定刪除？", async () => await deleteDoc(doc(db, "users", user.uid, "items", id))); };
+            const handleImageUpload = (e) => { const file = e.target.files[0]; if (file) { if (file.size > 800000) { triggerAlert("圖片過大"); return; } const reader = new FileReader(); reader.onloadend = () => setSelectedImage(reader.result); reader.readAsDataURL(file); } };
+            const handleUpdateItem = async (id, data) => { const { db, doc, updateDoc } = window.firebaseServices; try { await updateDoc(doc(db, "users", user.uid, "items", id), data); triggerAlert("已更新"); } catch (e) { triggerAlert("更新失敗"); } };
+            const handleNameSetupSave = async (name) => { if (!user) return; setNameSetupLoading(true); const { updateProfile, db, doc, setDoc, serverTimestamp } = window.firebaseServices; try { await updateProfile(user, { displayName: name }); await setDoc(doc(db, "users_public", user.uid), { email: user.email, displayName: name, lastSeen: serverTimestamp() }, { merge: true }); setShowNameSetup(false); triggerAlert(`歡迎, ${name}!`); } catch (e) { triggerAlert("設定失敗"); } finally { setNameSetupLoading(false); } };
+
+            if (loading) return <div className="min-h-screen flex items-center justify-center bg-slate-50"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div></div>;
 
             const activeItems = items.filter(i => !i.completed);
-            const finishedItems = items.filter(i => i.completed);
-            const getFilteredItems = () => { let filtered = [...activeItems]; if(filterSubject !== '全部') filtered = filtered.filter(i => i.subject === filterSubject); if(sortOption === 'date_asc') filtered.sort((a,b) => new Date(a.dueDate) - new Date(b.dueDate)); else if(sortOption === 'date_desc') filtered.sort((a,b) => new Date(b.dueDate) - new Date(a.dueDate)); return filtered; };
-            const todayCount = activeItems.filter(i => getDaysRemaining(i.dueDate) <= 0).length;
-            const tomorrowCount = activeItems.filter(i => getDaysRemaining(i.dueDate) === 1).length;
-            const futureCount = activeItems.filter(i => getDaysRemaining(i.dueDate) > 1).length;
-            const testCount = activeItems.filter(i => i.subject.includes('測驗') || i.description.includes('測驗')).length;
+            const todayHomeworks = activeItems.filter(i => i.type === 'homework' && getDaysRemaining(i.dueDate) <= 0);
+            const tomorrowHomeworks = activeItems.filter(i => i.type === 'homework' && getDaysRemaining(i.dueDate) === 1);
+            const futureHomeworks = activeItems.filter(i => i.type === 'homework' && getDaysRemaining(i.dueDate) > 1);
+            const activeTests = activeItems.filter(i => i.type !== 'homework');
+            activeTests.sort((a,b) => new Date(a.dueDate) - new Date(b.dueDate));
+            const nextTest = activeTests[0]; const nextTestDays = nextTest ? getDaysRemaining(nextTest.dueDate) : null;
 
-            if(loading) return <div className="h-screen flex items-center justify-center text-slate-400 font-bold">載入中...</div>;
-            if(user && config?.whitelistEnabled && !config?.allowedEmails?.includes(user.email)) return <BlockScreen type="access_denied" user={user} onLogin={()=>{}} triggerAlert={alert} />;
+            const getModalTitle = () => { if (activeModal === 'today') return '今日要交'; if (activeModal === 'tomorrow') return '聽日要交'; if (activeModal === 'future') return '日後要交'; if (activeModal === 'revision') return '默書測驗'; };
+            const getModalItems = () => { if (activeModal === 'today') return todayHomeworks; if (activeModal === 'tomorrow') return tomorrowHomeworks; if (activeModal === 'future') return futureHomeworks; if (activeModal === 'revision') return activeTests; return []; };
 
-            if(!user) {
+            const displayedItems = items.filter(item => {
+                const visible = viewMode === 'current' ? !item.completed : item.completed;
+                if (!visible) return false;
+                if (filterSubject !== '全部' && (item.subject || '其他') !== filterSubject) return false;
+                return true;
+            }).sort((a, b) => {
+                const da = new Date(a.dueDate), db = new Date(b.dueDate);
+                if (sortOption === 'date_asc') return da - db;
+                if (sortOption === 'date_desc') return db - da;
+                if (sortOption === 'type_assess') return (b.type==='assessment'?1:0) - (a.type==='assessment'?1:0);
+                if (sortOption === 'type_hw') return (a.type==='homework'?1:0) - (b.type==='homework'?1:0);
+                return 0;
+            });
+
+            const renderItemCard = (item, idx) => {
+                const daysLeft = getDaysRemaining(item.dueDate); const isExiting = exitingIds.includes(item.id);
+                const status = getStatusBadge(item, isExiting);
+                const nextLesson = getNextLesson(item.subject, now);
                 return (
-                    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 relative overflow-hidden mesh-bg">
-                         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-500 rounded-full blur-[150px] opacity-30 animate-float"></div>
-                         <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-purple-500 rounded-full blur-[150px] opacity-30 animate-float" style={{animationDelay:'-3s'}}></div>
-                         <div className="glass-card p-10 rounded-[2.5rem] w-full max-w-md text-center relative z-10 modal-animate border border-white/20 shadow-2xl">
-                             <div className="w-24 h-24 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-xl rotate-6 text-white transform hover:rotate-12 transition duration-500 hover:scale-105"><Icon name="graduation-cap" className="w-12 h-12"/></div>
-                             <h1 className="text-4xl font-black text-slate-800 mb-3 tracking-tight">電子手冊</h1>
-                             <p className="text-slate-500 mb-10 font-medium text-lg">你的智能學習助手</p>
-                             <button onClick={handleGoogleLogin} className="w-full py-4 bg-white border border-slate-100 rounded-2xl font-bold text-slate-700 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-3 group"><img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-6 h-6 group-hover:scale-110 transition-transform"/> <span className="text-base">使用 Google 帳號登入</span></button>
-                             <div className="mt-6"><button onClick={()=>setAuthModalOpen(true)} className="text-sm font-bold text-slate-400 hover:text-indigo-600 transition">或使用 Email 登入/註冊</button></div>
-                         </div>
-                         {authModalOpen && <AuthModal onClose={()=>setAuthModalOpen(false)} onLogin={handleGoogleLogin} onEmailLogin={handleEmailAuth} triggerAlert={alert} />}
+                    <div key={item.id} style={{ animationDelay: `${idx * 0.05}s` }} className={`animate-item relative group overflow-hidden bg-white rounded-xl p-4 shadow-sm border transition-all duration-300 ${isExiting ? 'scale-95 opacity-0 translate-y-4' : 'hover:shadow-md'} border-slate-100 ${item.type !== 'homework' ? 'border-l-4 border-l-purple-400' : ''}`}>
+                        {item.type==='homework' && <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${daysLeft < 0 ? 'bg-red-500' : daysLeft === 0 ? 'bg-orange-500' : 'bg-transparent'}`}></div>}
+                        <div className="flex items-start gap-3">
+                            <button onClick={() => handleToggle(item.id, item.completed)} className={`flex-shrink-0 mt-1 w-6 h-6 rounded-full border-2 transition-all flex items-center justify-center ${item.type!=='homework'?'border-purple-300 hover:border-purple-500':'border-slate-300 hover:border-indigo-500'}`}><Icon name="check-circle" className={`w-3.5 h-3.5 transition-transform scale-0`} /></button>
+                            <div className="flex-grow min-w-0">
+                                <div className="flex flex-col gap-1">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${SUBJECTS.find(s=>s.name===item.subject)?.color || 'bg-gray-100'}`}>{item.subject}</span>
+                                            <span className="text-xs font-bold text-slate-500">{item.type==='homework'?'功課':'默書'}</span>
+                                        </div>
+                                        <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold shadow-sm border ${status.color} ${status.border}`}>{status.text}</span>
+                                    </div>
+                                    <div className={`text-base font-medium whitespace-pre-wrap leading-relaxed text-slate-800`}>{item.description}</div>
+                                    {item.image && <div className="mt-2 relative w-fit"><img src={item.image} className="max-h-32 rounded-lg border border-slate-200 object-cover" /></div>}
+                                    <div className="flex items-center justify-between mt-1">
+                                        <div className="flex items-center gap-1 text-xs text-slate-400"><Icon name="calendar" className="w-3 h-3"/>{item.dueDate}</div>
+                                        {nextLesson && viewMode==='current' && !item.completed && <div className="text-[10px] font-bold text-indigo-600 flex items-center gap-1"><Icon name="clock" className="w-3 h-3"/>距離上課 {formatCountdown(nextLesson.diff)}</div>}
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flex flex-col gap-1">
+                                <button onClick={() => setEditingItem(item)} className="flex-shrink-0 p-1.5 text-slate-300 hover:text-blue-500 rounded-lg"><Icon name="pencil" className="w-4 h-4" /></button>
+                                <button onClick={() => deleteItem(item.id)} className="flex-shrink-0 p-1.5 text-slate-300 hover:text-red-500 rounded-xl"><Icon name="trash-2" className="w-4 h-4" /></button>
+                            </div>
+                        </div>
                     </div>
                 );
-            }
+            };
 
             return (
-                <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-4 pb-28 md:pb-8 max-w-md mx-auto relative mesh-bg-soft">
-                    <header className="flex justify-between items-center mb-6 py-2">
-                        <div className="flex flex-col"><span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Welcome back</span><h1 className="text-3xl font-black text-slate-800 tracking-tight">{user.displayName}</h1></div>
-                        <div className="flex gap-2">
-                            <button onClick={()=>setView(view==='settings'?'home':'settings')} className="p-3 bg-white/80 backdrop-blur rounded-2xl shadow-sm border border-white/50 text-slate-600 hover:text-indigo-600 transition hover:scale-105 active:scale-95"><Icon name="settings" className="w-5 h-5"/></button>
-                            <button onClick={()=>window.firebaseServices.signOut(window.firebaseServices.auth)} className="p-3 bg-white/80 backdrop-blur rounded-2xl shadow-sm border border-white/50 text-slate-400 hover:text-red-500 transition hover:scale-105 active:scale-95"><Icon name="log-out" className="w-5 h-5"/></button>
-                        </div>
-                    </header>
-
-                    {view === 'timetable' ? (
-                        <div className="glass-card bg-white/90 rounded-[2rem] p-6 shadow-xl min-h-[500px] page-enter">
-                            <div className="flex items-center gap-4 mb-6"><button onClick={()=>setView('home')} className="p-2 hover:bg-slate-100 rounded-full transition"><Icon name="arrow-left" className="w-6 h-6"/></button><h2 className="text-2xl font-black text-slate-800">完整時間表</h2></div>
-                            <Timetable currentDay={manualDay} subjects={schedule} timeConfig={DEFAULT_START_TIMES} durations={DEFAULT_DURATIONS} manualDay={manualDay} setManualDay={setManualDay} />
-                        </div>
-                    ) : view === 'settings' ? (
-                        <UserSettings subjects={subjects} onSave={saveSubjects} onBack={()=>setView('home')} />
-                    ) : (
-                        <div className="page-enter space-y-6">
-                            <LiveLessonCard schedule={schedule} times={DEFAULT_START_TIMES} durations={DEFAULT_DURATIONS} currentDay={manualDay} user={user} />
-                            
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                <div className="bg-white/80 backdrop-blur p-4 rounded-2xl shadow-sm border border-white flex flex-col items-center justify-center text-center group hover:scale-[1.02] transition"><div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center text-red-500 mb-2 group-hover:bg-red-500 group-hover:text-white transition-colors"><Icon name="flame" className="w-5 h-5"/></div><div className="text-2xl font-black text-slate-800">{todayCount}</div><div className="text-[10px] font-bold text-slate-400 uppercase">今日要交</div></div>
-                                <div className="bg-white/80 backdrop-blur p-4 rounded-2xl shadow-sm border border-white flex flex-col items-center justify-center text-center group hover:scale-[1.02] transition"><div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center text-orange-500 mb-2 group-hover:bg-orange-500 group-hover:text-white transition-colors"><Icon name="sun" className="w-5 h-5"/></div><div className="text-2xl font-black text-slate-800">{tomorrowCount}</div><div className="text-[10px] font-bold text-slate-400 uppercase">聽日要交</div></div>
-                                <div className="bg-white/80 backdrop-blur p-4 rounded-2xl shadow-sm border border-white flex flex-col items-center justify-center text-center group hover:scale-[1.02] transition"><div className="w-10 h-10 rounded-full bg-sky-50 flex items-center justify-center text-sky-500 mb-2 group-hover:bg-sky-500 group-hover:text-white transition-colors"><Icon name="calendar-range" className="w-5 h-5"/></div><div className="text-2xl font-black text-slate-800">{futureCount}</div><div className="text-[10px] font-bold text-slate-400 uppercase">日後要交</div></div>
-                                <div className="bg-white/80 backdrop-blur p-4 rounded-2xl shadow-sm border border-white flex flex-col items-center justify-center text-center group hover:scale-[1.02] transition"><div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500 mb-2 group-hover:bg-indigo-500 group-hover:text-white transition-colors"><Icon name="brain-circuit" className="w-5 h-5"/></div><div className="text-2xl font-black text-slate-800">{testCount}</div><div className="text-[10px] font-bold text-slate-400 uppercase">溫習考核</div></div>
-                            </div>
-
-                            <div className="glass-card bg-white/90 p-6 rounded-[2rem] shadow-xl relative overflow-hidden">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-100 rounded-full blur-3xl opacity-50 -mr-10 -mt-10"></div>
-                                <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2 relative z-10"><Icon name="plus-circle" className="w-5 h-5 text-indigo-600"/> 快速新增</h3>
-                                <form onSubmit={handleAddHomework} className="space-y-4 relative z-10">
-                                    <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-2 px-2">
-                                        {subjects.map(s=><button key={s.name} type="button" onClick={()=>setSub(s.name)} className={`whitespace-nowrap px-4 py-2 rounded-xl text-xs font-bold border-2 transition ${sub===s.name ? 'bg-slate-800 text-white border-slate-800 shadow-md' : 'bg-white text-slate-500 border-slate-100 hover:border-slate-300'}`}>{s.name}</button>)}
-                                    </div>
-                                    <div className="flex gap-3">
-                                        <input value={desc} onChange={e=>setDesc(e.target.value)} className="flex-1 p-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-100 focus:bg-white transition" placeholder="功課內容..." required />
-                                        <button className="w-14 h-14 bg-slate-900 text-white rounded-2xl flex items-center justify-center shadow-lg hover:bg-black transition active:scale-95 shrink-0"><Icon name="arrow-up" className="w-6 h-6"/></button>
-                                    </div>
-                                    <input type="date" value={date} onChange={e=>setDate(e.target.value)} className="w-full p-3 bg-white border border-slate-100 rounded-xl text-xs font-bold text-slate-500 outline-none" required />
-                                </form>
-                            </div>
-
+                <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-4 sm:p-6 md:p-8 font-sans text-slate-800 relative overflow-x-hidden">
+                    {!user && <div className="fixed inset-0 z-40 cursor-pointer" onClick={() => { triggerAlert("👋 歡迎！請先登入以開始使用。"); setIsAuthModalOpen(true); }}></div>}
+                    <div className={`w-full max-w-2xl mx-auto min-h-[80vh] transition-all duration-700 ${!user ? 'blur-[2px] grayscale opacity-60 pointer-events-none' : ''}`}>
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4 relative z-50">
                             <div>
-                                <div className="flex justify-between items-center mb-4 px-2">
-                                    <h3 className="font-bold text-slate-800 text-lg">待辦清單</h3>
-                                    <div className="flex gap-2">
-                                        <CustomDropdown value={sortOption} onChange={setSortOption} options={[{value:'date_asc', label:'日期 (趕急)'}, {value:'date_desc', label:'日期 (長遠)'}]} />
-                                        <SubjectFilterDropdown currentFilter={filterSubject} onSelect={setFilterSubject} subjects={subjects} />
-                                    </div>
-                                </div>
-
-                                <div className="space-y-3 pb-4">
-                                    {getFilteredItems().map((item, idx) => {
-                                        const daysLeft = getDaysRemaining(item.dueDate);
-                                        const subColor = SUBJECTS.find(s=>s.name===item.subject)?.color || 'bg-gray-100 text-gray-600';
-                                        
-                                        return (
-                                            <div key={item.id} className="bg-white/80 backdrop-blur p-4 rounded-2xl shadow-sm border border-white flex gap-4 items-start group list-item-enter hover:scale-[1.01] transition-transform duration-200" style={{animationDelay: `${idx*0.05}s`}}>
-                                                <div className={`w-1.5 self-stretch rounded-full mr-1 ${daysLeft<0?'bg-red-500':daysLeft===0?'bg-orange-500':'bg-transparent'}`}></div>
-                                                <button onClick={()=>toggleItem(item)} className="mt-1 w-6 h-6 rounded-full border-2 border-slate-200 flex items-center justify-center hover:border-emerald-500 hover:bg-emerald-50 transition shrink-0 group/btn bg-white">
-                                                    <Icon name="check" className="w-3.5 h-3.5 text-emerald-500 opacity-0 group-hover/btn:opacity-100 transition"/>
-                                                </button>
-                                                <div className="flex-1">
-                                                    <div className="flex justify-between mb-1">
-                                                        <div className="flex gap-2 items-center">
-                                                            <span className={`text-[10px] font-black px-2 py-0.5 rounded-md ${subColor}`}>{item.subject}</span>
-                                                            {item.senderName && <span className="text-[10px] bg-amber-50 text-amber-600 px-2 py-0.5 rounded-full font-bold flex items-center gap-1"><Icon name="user" className="w-3 h-3"/> {item.senderName}</span>}
-                                                        </div>
-                                                        <span className={`text-[10px] font-mono font-bold ${daysLeft<0?'text-red-500':'text-slate-400'}`}>{item.dueDate}</span>
-                                                    </div>
-                                                    <p className="text-sm font-bold text-slate-700 leading-relaxed">{item.description}</p>
-                                                    <div className="flex justify-between items-center mt-2">
-                                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${daysLeft<0?'bg-red-100 text-red-600':daysLeft===0?'bg-orange-100 text-orange-600':'bg-emerald-100 text-emerald-600'}`}>
-                                                            {daysLeft<0 ? `遲咗 ${Math.abs(daysLeft)} 日` : daysLeft===0 ? '今日要交！' : `仲有 ${daysLeft} 日`}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                <button onClick={()=>deleteItem(item.id)} className="text-slate-300 hover:text-red-400 transition opacity-0 group-hover:opacity-100"><Icon name="trash-2" className="w-4 h-4"/></button>
-                                            </div>
-                                        );
-                                    })}
-                                    {activeItems.length === 0 && <div className="text-center text-slate-400 py-12 flex flex-col items-center"><Icon name="coffee" className="w-12 h-12 mb-3 opacity-20"/>太棒了！暫時沒有功課</div>}
-                                    
-                                    {finishedItems.length > 0 && (
-                                        <div className="mt-8 pt-8 border-t border-slate-200/50">
-                                            <h3 className="font-bold text-slate-400 text-xs uppercase tracking-wider mb-4 px-2">已完成 ({finishedItems.length})</h3>
-                                            <div className="space-y-2 opacity-60 hover:opacity-100 transition duration-300">
-                                                {finishedItems.map(item => (
-                                                    <div key={item.id} className="bg-slate-50 p-3 rounded-xl flex gap-3 items-center mb-2 border border-transparent hover:border-slate-200 transition">
-                                                        <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center text-white shrink-0"><Icon name="check" className="w-3 h-3"/></div>
-                                                        <div className="flex-1 line-through text-slate-400 text-xs font-medium">{item.description}</div>
-                                                        <button onClick={()=>deleteItem(item.id)} className="text-slate-300 hover:text-red-400"><Icon name="trash-2" className="w-3 h-3"/></button>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
+                                <h1 className="text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center gap-2"><Icon name="graduation-cap" className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-600"/> 學生小幫手</h1>
+                                <p className="text-slate-500 text-sm mt-1 ml-1 font-medium">{getTodayDateString()}</p>
+                            </div>
+                            <div className="flex gap-2 flex-wrap justify-end">
+                                <button onClick={() => setViewMode('timetable')} className={`group relative flex items-center gap-2 px-3 py-2.5 rounded-full font-bold text-sm transition-all shadow-md hover:shadow-xl hover:-translate-y-1 ${viewMode === 'timetable' ? 'bg-orange-500 text-white' : 'bg-white text-slate-700 border-2 border-slate-100'}`}><Icon name="calendar-days" className="w-4 h-4"/>時間表</button>
+                                {isAdmin && <button onClick={() => setViewMode('admin_users')} className={`group relative flex items-center gap-2 px-3 py-2.5 rounded-full font-bold text-sm transition-all shadow-md hover:shadow-xl hover:-translate-y-1 ${viewMode === 'admin_users' ? 'bg-blue-600 text-white' : 'bg-white text-slate-700 border-2 border-slate-100'}`}><Icon name="users" className="w-4 h-4"/>用戶</button>}
+                                <button onClick={() => setViewMode(viewMode === 'current' ? 'history' : 'current')} className={`group relative flex items-center gap-2 px-3 py-2.5 rounded-full font-bold text-sm transition-all shadow-md hover:shadow-xl hover:-translate-y-1 ${viewMode === 'history' ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white' : 'bg-white text-slate-700 border-2 border-slate-100'}`}>{viewMode === 'history' || viewMode === 'admin_users' ? '返主頁' : '睇紀錄'}</button>
+                                {user ? <button onClick={handleSignOut} className="px-3 py-2.5 rounded-full font-bold text-sm bg-slate-200 text-slate-600 hover:bg-slate-300 shadow-sm relative z-50"><Icon name="log-out" className="w-4 h-4"/></button> : <button onClick={(e)=>{e.stopPropagation(); setIsAuthModalOpen(true);}} className="px-4 py-2.5 rounded-full font-bold text-sm bg-indigo-600 text-white shadow-md relative z-50 pointer-events-auto">登入</button>}
                             </div>
                         </div>
-                    )}
 
-                    {/* Modern Bottom Nav */}
-                    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/80 backdrop-blur-xl text-white px-2 py-2 rounded-full shadow-2xl flex gap-2 z-40 border border-white/10 ring-1 ring-black/5">
-                        <button onClick={()=>setView('home')} className={`p-3 rounded-full transition-all duration-300 ${view==='home'?'bg-white text-slate-900 scale-105 shadow-lg':'text-slate-400 hover:text-white'}`}><Icon name="layout-grid" className="w-5 h-5"/></button>
-                        <button onClick={()=>setView('timetable')} className={`p-3 rounded-full transition-all duration-300 ${view==='timetable'?'bg-white text-slate-900 scale-105 shadow-lg':'text-slate-400 hover:text-white'}`}><Icon name="calendar" className="w-5 h-5"/></button>
+                        {viewMode === 'system_admin' ? <AdminSystemPanel onBack={() => setViewMode('current')} /> : 
+                         viewMode === 'admin_users' ? <AdminUserView onBack={()=>setViewMode('current')} /> : 
+                         viewMode === 'timetable' ? <Timetable currentDay={currentTimetableDay} subjects={CLASS_SCHEDULE} onDayChange={setCurrentTimetableDay} now={now} /> : (
+                            <>
+                                {viewMode === 'current' && (
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+                                        <div onClick={() => handleDashboardClick('today')} className="cursor-pointer bg-white/80 backdrop-blur rounded-2xl p-3 sm:p-4 shadow-sm border border-red-100 flex flex-col items-center justify-center text-center ring-1 ring-red-50 hover:scale-105 hover:shadow-md transition-all active:scale-95"><div className="text-red-500 mb-1"><Icon name="flame" className="w-5 h-5 sm:w-6 sm:h-6"/></div><div className="text-2xl sm:text-3xl font-bold text-slate-800">{todayHomeworks.length}</div><div className="text-xs sm:text-sm font-medium text-slate-500">今日要交</div></div>
+                                        <div onClick={() => handleDashboardClick('tomorrow')} className="cursor-pointer bg-white/80 backdrop-blur rounded-2xl p-3 sm:p-4 shadow-sm border border-orange-100 flex flex-col items-center justify-center text-center ring-1 ring-orange-50 hover:scale-105 hover:shadow-md transition-all active:scale-95"><div className="text-orange-500 mb-1"><Icon name="sun" className="w-5 h-5 sm:w-6 sm:h-6"/></div><div className="text-2xl sm:text-3xl font-bold text-slate-800">{tomorrowHomeworks.length}</div><div className="text-xs sm:text-sm font-medium text-slate-500">聽日要交</div></div>
+                                        <div onClick={() => handleDashboardClick('future')} className="cursor-pointer bg-white/80 backdrop-blur rounded-2xl p-3 sm:p-4 shadow-sm border border-sky-100 flex flex-col items-center justify-center text-center ring-1 ring-sky-50 hover:scale-105 hover:shadow-md transition-all active:scale-95"><div className="text-sky-500 mb-1"><Icon name="calendar-range" className="w-5 h-5 sm:w-6 sm:h-6"/></div><div className="text-2xl sm:text-3xl font-bold text-slate-800">{futureHomeworks.length}</div><div className="text-xs sm:text-sm font-medium text-slate-500">日後要交</div></div>
+                                        <div onClick={() => handleDashboardClick('revision')} className={`cursor-pointer bg-white/80 backdrop-blur rounded-2xl p-3 sm:p-4 shadow-sm border flex flex-col items-center justify-center text-center ring-1 hover:scale-105 hover:shadow-md transition-all active:scale-95 ${nextTestDays !== null && nextTestDays <= 3 ? 'border-purple-200 ring-purple-100 bg-purple-50/50' : 'border-indigo-100 ring-indigo-50'}`}><div className="text-purple-500 mb-1"><Icon name="brain-circuit" className="w-5 h-5 sm:w-6 sm:h-6"/></div><div className="text-2xl sm:text-3xl font-bold text-slate-800">{activeTests.length}</div><div className="text-xs sm:text-sm font-medium text-slate-500">溫習考核</div></div>
+                                    </div>
+                                )}
+
+                                {viewMode === 'current' && (
+                                    <div className="relative bg-white/80 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-4 sm:p-6 mb-8 sm:mb-10 border border-white/50 ring-1 ring-indigo-50 transition-all z-20">
+                                        <div className="flex bg-slate-100/80 p-1 rounded-xl mb-4">
+                                            <button onClick={() => setInputType('homework')} className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-bold transition-all ${inputType === 'homework' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}><Icon name="book-open" className="w-4 h-4"/> 做功課</button>
+                                            <button onClick={() => setInputType('assessment')} className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-bold transition-all ${inputType === 'assessment' ? 'bg-white text-purple-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}><Icon name="file-question" className="w-4 h-4"/> 溫默書/測驗</button>
+                                        </div>
+                                        <form onSubmit={handleSubmit} className="flex flex-col gap-3 sm:gap-4">
+                                            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">{SUBJECTS.map(sub => (<button key={sub.name} type="button" onClick={() => setSubject(sub.name)} className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${subject === sub.name ? sub.color + ' ring-1 ring-offset-1 ring-indigo-100' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}>{sub.name}</button>))}</div>
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+                                                <div className="md:col-span-2 space-y-3">
+                                                    <textarea placeholder={inputType === 'homework' ? "打返功課內容..." : "輸入範圍 (例如: 第3課 / P.20-25)"} value={description} onChange={(e) => setDescription(e.target.value)} rows="2" className="w-full min-h-[80px] rounded-xl sm:rounded-2xl border-slate-200 bg-slate-50/50 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all p-3 sm:p-4 border text-slate-700 placeholder:text-slate-400 resize-none text-sm sm:text-base" />
+                                                    {inputType !== 'homework' && (<div className="flex items-center gap-2"><label className="cursor-pointer flex items-center gap-2 px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-600 text-sm transition-colors border border-slate-200"><Icon name="image" className="w-4 h-4"/>{selectedImage ? '換張相' : '上傳範圍圖片'}<input type="file" accept="image/*" ref={fileInputRef} onChange={handleImageUpload} className="hidden" /></label>{selectedImage && (<div className="flex items-center gap-2 bg-indigo-50 px-2 py-1 rounded text-xs text-indigo-600 border border-indigo-100"><span>已選圖片</span><button type="button" onClick={() => {setSelectedImage(null); fileInputRef.current.value="";}} className="hover:text-red-500"><Icon name="x" className="w-3 h-3"/></button></div>)}</div>)}
+                                                </div>
+                                                <div className="flex flex-col gap-2 md:col-span-1">
+                                                    <label className="block text-xs font-medium text-slate-500 mb-1 ml-1">{inputType === 'homework' ? '繳交日期' : '考試日期'}</label>
+                                                    <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="w-full h-10 sm:h-12 rounded-lg sm:rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all px-3 sm:px-4 border text-slate-600 font-medium text-sm sm:text-base" required />
+                                                    <button type="submit" className={`w-full h-10 sm:h-12 text-white font-bold rounded-lg sm:rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-lg active:scale-95 text-sm sm:text-base ${inputType === 'homework' ? 'bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 shadow-indigo-200' : 'bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 shadow-purple-200'}`}><Icon name="plus" className="w-4 h-4 sm:w-5 sm:h-5"/>{inputType === 'homework' ? '加功課' : 'Mark 低'}</button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                        <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mt-6 pt-4 border-t border-slate-100 relative">
+                                            <div className={`flex items-center gap-2 w-full sm:w-auto overflow-x-auto scrollbar-hide pb-1 transition-opacity duration-300 ${!isListVisible ? 'opacity-50' : 'opacity-100'}`}>
+                                                <span className="text-slate-400 text-xs font-bold whitespace-nowrap flex items-center gap-1"><Icon name="filter" className="w-3 h-3"/>篩選:</span>
+                                                <button onClick={() => handleFilterChange('全部')} className={`flex-shrink-0 px-2.5 py-1 rounded text-[10px] font-bold border transition-all ${filterSubject === '全部' ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}>全部</button>
+                                                {SUBJECTS.map(sub => (<button key={sub.name} onClick={() => handleFilterChange(sub.name)} className={`flex-shrink-0 px-2.5 py-1 rounded text-[10px] font-bold border transition-all ${filterSubject === sub.name ? sub.color + ' ring-1 ring-offset-1 ring-indigo-100' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}>{sub.name}</button>))}
+                                            </div>
+                                            <div className="flex items-center gap-2 w-full sm:w-auto z-30"><span className="text-slate-400 text-xs font-bold whitespace-nowrap flex items-center gap-1"><Icon name="arrow-up-down" className="w-3 h-3"/>排序:</span><CustomDropdown value={sortOption} onChange={handleSortChange} options={[{ value: 'date_asc', label: '日期 (趕急先)', icon: 'calendar' }, { value: 'date_desc', label: '日期 (長遠先)', icon: 'calendar-off' }, { value: 'type_assess', label: '默書測驗 優先', icon: 'flame' }, { value: 'type_hw', label: '功課 優先', icon: 'book-open' }]} /></div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className={`space-y-3 sm:space-y-4 pb-12 transition-all duration-300 ${!isListVisible ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'}`}>
+                                    {displayedItems.length === 0 ? (<div className="text-center py-12 sm:py-20"><div className="relative inline-block"><div className="absolute inset-0 bg-indigo-200 blur-2xl opacity-20 rounded-full animate-pulse"></div><div className="relative bg-white p-4 sm:p-6 rounded-full shadow-sm mb-4 inline-flex"><Icon name="sparkles" className="w-8 h-8 sm:w-12 sm:h-12 text-indigo-300" /></div></div><h3 className="text-lg sm:text-xl font-bold text-slate-700 mb-2">{user ? (filterSubject !== '全部' ? '這個科目暫時沒有功課' : '太好了！暫時冇嘢做') : '登入後就可以使用'}</h3></div>) : (displayedItems.map((item, index) => renderItemCard(item, index)))}
+                                </div>
+                            </>
+                         )}
                     </div>
+                    
+                    {activeModal && <div className="fixed inset-0 z-50 flex items-center justify-center p-4"><div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={()=>setActiveModal(null)}></div><div className="modal-animate relative bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[80vh] flex flex-col overflow-hidden"><div className="p-5 border-b border-slate-100 flex items-center justify-between bg-white z-10"><h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">{activeModal === 'today' && <Icon name="flame" className="w-6 h-6 text-red-500" />}{activeModal === 'tomorrow' && <Icon name="sun" className="w-6 h-6 text-orange-500" />}{activeModal === 'future' && <Icon name="calendar-range" className="w-6 h-6 text-sky-500" />}{activeModal === 'revision' && <Icon name="brain-circuit" className="w-6 h-6 text-purple-500" />}{getModalTitle()}</h3><button onClick={() => setActiveModal(null)} className="p-2 bg-slate-100 rounded-full hover:bg-slate-200 transition-colors"><Icon name="x" className="w-5 h-5 text-slate-500" /></button></div><div className="p-4 overflow-y-auto space-y-3 bg-slate-50 flex-1">{getModalItems().length === 0 ? (<div className="text-center py-10 text-slate-400">暫時沒有相關項目</div>) : (getModalItems().map((item, i) => renderItemCard(item, i)))}</div></div></div>}
+                    <AuthModal isOpen={isAuthModalOpen} onClose={()=>setIsAuthModalOpen(false)} triggerAlert={triggerAlert} />
+                    {showNameSetup && <NameSetupModal onSave={handleNameSetupSave} loading={nameSetupLoading} triggerAlert={triggerAlert}/>}
+                    {editingItem && <EditModal item={editingItem} onClose={()=>setEditingItem(null)} onSave={handleUpdateItem} triggerAlert={triggerAlert}/>}
+                    {notification.isOpen && <div className="fixed inset-0 z-[300] flex items-center justify-center p-4"><div className="absolute inset-0 bg-black/30 backdrop-blur-sm"></div><div className="notification-animate bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center relative z-10"><div className={`mx-auto w-12 h-12 rounded-full flex items-center justify-center mb-4 ${notification.type==='confirm'?'bg-red-100 text-red-500':'bg-indigo-100 text-indigo-500'}`}><Icon name={notification.type==='confirm'?'alert-triangle':'info'} className="w-6 h-6"/></div><h3 className="text-lg font-bold text-slate-800 mb-2">{notification.type==='confirm'?'確認操作':'提示'}</h3><p className="text-slate-600 mb-6 leading-relaxed">{notification.message}</p><div className="flex gap-3 justify-center">{notification.type==='confirm'?(<><button onClick={()=>setNotification({isOpen:false})} className="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 text-slate-600 font-medium hover:bg-slate-50 transition-colors">取消</button><button onClick={handleNotificationConfirm} className="flex-1 py-2.5 px-4 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 shadow-lg shadow-red-200 transition-all active:scale-95">確認</button></>):<button onClick={()=>setNotification({isOpen:false})} className="w-full py-2.5 px-4 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all active:scale-95">知道了</button>}</div></div></div>}
                 </div>
             );
         }
