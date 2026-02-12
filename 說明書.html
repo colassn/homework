@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>電子手冊 Pro - 程式碼功能導航地圖</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { font-family: 'Noto Sans TC', sans-serif; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .card-hover { transition: all 0.3s ease; }
+        .card-hover:hover { transform: translateY(-4px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); }
+    </style>
+    <!-- Chosen Palette: Indigo Slate (Technical & Clean) -->
+    <!-- Application Structure Plan: The app is designed as an interactive documentation explorer. 
+         1. Dashboard Header: Introduction and quick stats visualization to understand code distribution.
+         2. Search & Filter: A central interaction point to quickly find functions by keywords or description.
+         3. Module Grid: The core content, organized by the sections defined in the source (Styles, Utils, UI, etc.), presented as interactive cards.
+         4. Developer Tips: A dedicated section for best practices found in the source.
+         Why this structure: It transforms a linear markdown list into a non-linear, searchable, and visual knowledge base, making it easier for developers to jump to the right code block. -->
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Navbar -->
+    <nav class="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <i data-lucide="map" class="text-indigo-600 w-6 h-6"></i>
+                    <h1 class="text-xl font-bold text-slate-800 tracking-tight">電子手冊 Pro <span class="text-slate-400 font-normal">| 功能導航地圖</span></h1>
+                </div>
+                <div class="flex items-center">
+                    <span class="text-xs font-mono bg-slate-100 text-slate-500 px-2 py-1 rounded">v2.0.0</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+        
+        <!-- Intro & Stats Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
+            <div class="lg:col-span-2 flex flex-col justify-center space-y-4">
+                <h2 class="text-3xl font-bold text-slate-900">專案架構概覽</h2>
+                <p class="text-slate-600 text-lg leading-relaxed">
+                    這份互動式地圖將 <span class="font-bold text-indigo-600">電子手冊 Pro</span> 的 UI 畫面功能與程式碼位置進行了精確對接。
+                    透過視覺化分類與即時搜尋，協助開發者快速定位 Styles、Logic 與 Components，提升維護效率。
+                </p>
+                <div class="flex gap-4 pt-2">
+                    <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 flex-1">
+                        <div class="text-indigo-500 mb-1"><i data-lucide="layers" class="w-5 h-5"></i></div>
+                        <div class="text-2xl font-bold text-indigo-700" id="total-modules">6</div>
+                        <div class="text-xs text-indigo-600 font-medium">核心模組</div>
+                    </div>
+                    <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-100 flex-1">
+                        <div class="text-emerald-500 mb-1"><i data-lucide="code" class="w-5 h-5"></i></div>
+                        <div class="text-2xl font-bold text-emerald-700" id="total-functions">19</div>
+                        <div class="text-xs text-emerald-600 font-medium">關鍵函數</div>
+                    </div>
+                    <div class="bg-amber-50 p-4 rounded-xl border border-amber-100 flex-1">
+                        <div class="text-amber-500 mb-1"><i data-lucide="lightbulb" class="w-5 h-5"></i></div>
+                        <div class="text-2xl font-bold text-amber-700">3</div>
+                        <div class="text-xs text-amber-600 font-medium">開發技巧</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Visualization: Code Distribution -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <h3 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">程式碼結構分佈</h3>
+                <!-- Chart Container -->
+                <div class="chart-container">
+                    <canvas id="structureChart"></canvas>
+                </div>
+                <!-- Visualization & Content Choices: 
+                     Source Info: Categories of code (Styles, Logic, etc.) and count of items.
+                     Goal: Organize/Compare. Show which parts of the app are most complex.
+                     Viz Method: Doughnut Chart.
+                     Interaction: Hover to see exact counts.
+                     Justification: A doughnut chart provides a quick visual summary of the codebase composition.
+                -->
+            </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="sticky top-20 z-40 mb-8 glass-panel rounded-xl p-4 shadow-lg shadow-indigo-100/50">
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i data-lucide="search" class="text-slate-400 w-5 h-5"></i>
+                </div>
+                <input type="text" id="searchInput" 
+                    class="block w-full pl-10 pr-3 py-3 border border-slate-200 rounded-lg leading-5 bg-white placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-all" 
+                    placeholder="搜尋關鍵字、函數名稱或功能說明 (例如: AdminConsole, 時間表, CSS)...">
+            </div>
+        </div>
+
+        <!-- Modules Grid -->
+        <div id="modulesGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-12">
+            <!-- Dynamic Content will be injected here -->
+        </div>
+
+        <!-- Developer Tips Section -->
+        <section class="bg-slate-800 text-slate-100 rounded-3xl p-8 shadow-xl overflow-hidden relative">
+            <div class="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-indigo-500 rounded-full opacity-20 blur-3xl"></div>
+            <div class="relative z-10">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="p-2 bg-indigo-500/20 rounded-lg"><i data-lucide="cpu" class="w-6 h-6 text-indigo-300"></i></div>
+                    <h2 class="text-2xl font-bold">開發者最佳實踐 (Best Practices)</h2>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-slate-700/50 p-5 rounded-2xl border border-slate-600 hover:bg-slate-700 transition-colors">
+                        <h4 class="text-indigo-300 font-bold mb-2 flex items-center gap-2">1. 局部更新</h4>
+                        <p class="text-sm text-slate-300 leading-relaxed">
+                            修改功能時，建議只請求該特定元件（如 <code>CalendarWidget</code>）的代碼，避免全檔生成導致截斷。
+                        </p>
+                    </div>
+                    <div class="bg-slate-700/50 p-5 rounded-2xl border border-slate-600 hover:bg-slate-700 transition-colors">
+                        <h4 class="text-indigo-300 font-bold mb-2 flex items-center gap-2">2. 搜尋變數</h4>
+                        <p class="text-sm text-slate-300 leading-relaxed">
+                            不確定按鈕功能時，直接搜尋按鈕上的中文字（如「儲存設定」），即可找到對應的 <code>onClick</code> 處理函數。
+                        </p>
+                    </div>
+                    <div class="bg-slate-700/50 p-5 rounded-2xl border border-slate-600 hover:bg-slate-700 transition-colors">
+                        <h4 class="text-indigo-300 font-bold mb-2 flex items-center gap-2">3. 行號參考</h4>
+                        <ul class="text-sm text-slate-300 space-y-1 list-disc pl-4 marker:text-slate-500">
+                            <li>CSS 樣式：約 40-110 行</li>
+                            <li>元件定義：約 200-1150 行</li>
+                            <li>App 邏輯：約 1177 行以後</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-white border-t border-slate-200 mt-auto py-8">
+        <div class="max-w-7xl mx-auto px-4 text-center text-slate-500 text-sm">
+            <p class="mb-2">© 2026 電子手冊 Pro 開發團隊</p>
+            <p>使用 Ctrl+F 配合本指南進行精準開發</p>
+        </div>
+    </footer>
+
+    <!-- CONFIRMATION: NO SVG graphics used (Lucide uses JS/Font). NO Mermaid JS used. -->
+
+    <script>
+        // Data Source from the Report
+        const codeMapData = [
+            {
+                category: "🎨 視覺與外觀設計 (Styles)",
+                icon: "palette",
+                color: "text-pink-500",
+                bg: "bg-pink-50",
+                border: "border-pink-100",
+                items: [
+                    { name: "手機浮空導航島", keyword: ".glass-dock", desc: "控制底座的毛玻璃、透明度與邊框" },
+                    { name: "導航圖示動畫", keyword: ".nav-icon-active", desc: "圖示上下浮動（呼吸感）的動態效果" },
+                    { name: "Q 彈按鈕回饋", keyword: ".nav-btn-press", desc: "點擊底座按鈕時的縮放比例與手感" },
+                    { name: "主題顏色數值", keyword: "const THEME_CONFIG", desc: "修改不同主題（靛藍、櫻粉等）的具體色號" }
+                ]
+            },
+            {
+                category: "🛠️ 核心工具函數 (Utilities)",
+                icon: "wrench",
+                color: "text-slate-600",
+                bg: "bg-slate-100",
+                border: "border-slate-200",
+                items: [
+                    { name: "倒數時間格式化", keyword: "const formatCountdown", desc: "將毫秒轉換為 00:00:00 格式" },
+                    { name: "安全時間格式化", keyword: "const formatTimeStr", desc: "處理時間顯示，防止 Invalid Date 崩潰" },
+                    { name: "課程數據生成", keyword: "generateFullSchedule", desc: "根據時間表配置計算每一節課的起訖時間" }
+                ]
+            },
+            {
+                category: "🧩 獨立 UI 元件 (View Components)",
+                icon: "layout-template",
+                color: "text-blue-500",
+                bg: "bg-blue-50",
+                border: "border-blue-100",
+                items: [
+                    { name: "倒數計時小標籤", keyword: "function LessonCountdown", desc: "功課卡片下方的「距離上課還有多久」" },
+                    { name: "首頁日曆選單", keyword: "function CalendarWidget", desc: "月份切換、日期小圓點、日期篩選邏輯" },
+                    { name: "系統維護遮罩", keyword: "function BlockScreen", desc: "當管理員開啟「維護模式」時顯示的鎖定畫面" }
+                ]
+            },
+            {
+                category: "🛡️ 管理員與班級功能 (Admin)",
+                icon: "shield",
+                color: "text-purple-500",
+                bg: "bg-purple-50",
+                border: "border-purple-100",
+                items: [
+                    { name: "管理員控制台", keyword: "function AdminConsole", desc: "白名單管理、班級代碼生成、廣播任務撤回" },
+                    { name: "加入班級視窗", keyword: "function JoinClassModal", desc: "輸入 6 位代碼加入班級的 UI 與驗證" },
+                    { name: "班級發放選單", keyword: "id=\"targetClassMenu\"", desc: "管理員新增功課時的自訂玻璃感下拉選單" }
+                ]
+            },
+            {
+                category: "📅 時間表系統 (Timetable)",
+                icon: "calendar-clock",
+                color: "text-orange-500",
+                bg: "bg-orange-50",
+                border: "border-orange-100",
+                items: [
+                    { name: "時間表編輯器", keyword: "function TimetableEditor", desc: "修改課節時間、移動順序、編排科目" },
+                    { name: "時間表主顯示", keyword: "function Timetable", desc: "顯示今天的課表、進度條、進行中標籤" }
+                ]
+            },
+            {
+                category: "🧠 App 核心邏輯 (Core Logic)",
+                icon: "cpu",
+                color: "text-indigo-600",
+                bg: "bg-indigo-50",
+                border: "border-indigo-100",
+                items: [
+                    { name: "登入狀態監聽", keyword: "onAuthStateChanged", desc: "處理用戶登入、登出及讀取公開資料" },
+                    { name: "新增紀錄邏輯", keyword: "const handleSubmit", desc: "處理個人新增與管理員廣播寫入資料庫" },
+                    { name: "完成勾選切換", keyword: "const handleToggle", desc: "點擊小圓圈標記完成，帶有消失動畫延遲" },
+                    { name: "廣播任務監聽器", keyword: "// Public Assignments", desc: "自動將班級廣播功課抓取到個人清單的關鍵邏輯" }
+                ]
+            }
+        ];
+
+        // Initialize Icons
+        lucide.createIcons();
+
+        // 1. Render Chart
+        const initChart = () => {
+            const ctx = document.getElementById('structureChart').getContext('2d');
+            const labels = codeMapData.map(d => d.category.split(' ')[1]); // Get the clean name
+            const data = codeMapData.map(d => d.items.length);
+            const colors = ['#ec4899', '#475569', '#3b82f6', '#a855f7', '#f97316', '#4f46e5'];
+
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: colors,
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right', labels: { font: { family: "'Noto Sans TC', sans-serif" } } }
+                    }
+                }
+            });
+        };
+
+        // 2. Render Grid Logic
+        const renderModules = (data) => {
+            const container = document.getElementById('modulesGrid');
+            container.innerHTML = '';
+
+            data.forEach(module => {
+                const moduleEl = document.createElement('div');
+                moduleEl.className = `bg-white rounded-2xl border ${module.border} shadow-sm overflow-hidden flex flex-col h-full card-hover`;
+                
+                let itemsHtml = '';
+                module.items.forEach(item => {
+                    itemsHtml += `
+                        <div class="p-3 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors group cursor-default">
+                            <div class="flex justify-between items-start mb-1">
+                                <span class="font-bold text-slate-700 text-sm">${item.name}</span>
+                                <button onclick="copyToClipboard('${item.keyword.replace(/'/g, "\\'")}')" class="text-slate-400 hover:text-indigo-600 transition-colors" title="複製關鍵字">
+                                    <i data-lucide="copy" class="w-3 h-3"></i>
+                                </button>
+                            </div>
+                            <code class="block text-xs font-mono text-indigo-600 bg-white border border-slate-200 rounded px-1.5 py-0.5 mb-1.5 w-fit break-all">${item.keyword}</code>
+                            <p class="text-xs text-slate-500 leading-snug">${item.desc}</p>
+                        </div>
+                    `;
+                });
+
+                moduleEl.innerHTML = `
+                    <div class="p-5 border-b ${module.border} ${module.bg} flex items-center gap-3">
+                        <div class="p-2 bg-white/60 rounded-lg backdrop-blur-sm shadow-sm ${module.color}">
+                            <i data-lucide="${module.icon}" class="w-5 h-5"></i>
+                        </div>
+                        <h3 class="font-bold text-lg text-slate-800 tracking-tight">${module.category}</h3>
+                    </div>
+                    <div class="p-5 flex-1 space-y-3">
+                        ${itemsHtml}
+                    </div>
+                `;
+                container.appendChild(moduleEl);
+            });
+            lucide.createIcons();
+        };
+
+        // 3. Search Logic
+        const handleSearch = (e) => {
+            const query = e.target.value.toLowerCase();
+            const filteredData = codeMapData.map(module => {
+                // Check if category matches
+                if (module.category.toLowerCase().includes(query)) return module;
+
+                // Filter items
+                const matchingItems = module.items.filter(item => 
+                    item.name.toLowerCase().includes(query) || 
+                    item.keyword.toLowerCase().includes(query) || 
+                    item.desc.toLowerCase().includes(query)
+                );
+
+                if (matchingItems.length > 0) {
+                    return { ...module, items: matchingItems };
+                }
+                return null;
+            }).filter(Boolean);
+
+            renderModules(filteredData);
+            
+            if (filteredData.length === 0) {
+                document.getElementById('modulesGrid').innerHTML = `
+                    <div class="col-span-full text-center py-12 text-slate-400">
+                        <i data-lucide="search-x" class="w-12 h-12 mx-auto mb-3 opacity-50"></i>
+                        <p>找不到符合 "${query}" 的功能或關鍵字</p>
+                    </div>
+                `;
+                lucide.createIcons();
+            }
+        };
+
+        // Helper: Copy to Clipboard
+        window.copyToClipboard = (text) => {
+            const temp = document.createElement('textarea');
+            temp.value = text;
+            document.body.appendChild(temp);
+            temp.select();
+            document.execCommand('copy');
+            document.body.removeChild(temp);
+            
+            // Simple toast feedback
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-4 right-4 bg-slate-800 text-white px-4 py-2 rounded-lg shadow-lg text-sm z-50 animate-bounce';
+            toast.innerText = '已複製關鍵字: ' + text;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2000);
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            renderModules(codeMapData);
+            initChart();
+            document.getElementById('searchInput').addEventListener('input', handleSearch);
+        });
+
+    </script>
+</body>
+</html>
