@@ -4,16 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#4f46e5">
-    <title>電子手冊</title>
+    <title>電子手冊 Pro v2.1</title>
 
-    <!-- 引入 React 和 ReactDOM -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
 
-    <!-- 引入 Babel 用來解析 JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <!-- 引入 Tailwind CSS & 設定 Dark Mode -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -28,7 +25,6 @@
         }
     </script>
 
-    <!-- 引入 Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <style>
@@ -96,7 +92,6 @@
         };
     </script>
 
-    <!-- PWA Setup -->
     <script>
         (function setupPWA() {
             const manifest = {
@@ -610,6 +605,38 @@
                 setNewSubjectName('');
             };
             const handleDelete = (name) => { if (confirm(`確定要刪除「${name}」嗎？`)) setTempSubjects(tempSubjects.filter(s => s.name !== name)); };
+            
+            // --- Custom Sorting Logic (v2.1) ---
+            const moveSubject = (index, direction) => {
+                const newSubjects = [...tempSubjects];
+                if (direction === 'up' && index > 0) {
+                    [newSubjects[index], newSubjects[index - 1]] = [newSubjects[index - 1], newSubjects[index]];
+                } else if (direction === 'down' && index < newSubjects.length - 1) {
+                    [newSubjects[index], newSubjects[index + 1]] = [newSubjects[index + 1], newSubjects[index]];
+                }
+                setTempSubjects(newSubjects);
+            };
+
+            const handleAISort = () => {
+                const priority = ['中文', '英文', '數學', '常識', '通識', '公社', '物理', '化學', '生物'];
+                const sorted = [...tempSubjects].sort((a, b) => {
+                    const idxA = priority.indexOf(a.name);
+                    const idxB = priority.indexOf(b.name);
+                    
+                    // 1. Priority Subjects First
+                    if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+                    if (idxA !== -1) return -1;
+                    if (idxB !== -1) return 1;
+
+                    // 2. Then by length (shorter names usually more important/generic)
+                    if (a.name.length !== b.name.length) return a.name.length - b.name.length;
+
+                    // 3. Fallback to locale compare
+                    return a.name.localeCompare(b.name);
+                });
+                setTempSubjects(sorted);
+            };
+
             const handleSaveInternal = () => { onSave(tempSubjects); onClose(); };
             const handleReset = () => { if(confirm("確定重置為預設科目？這將覆蓋您的自訂科目。")) { onSave(DEFAULT_SUBJECTS); onClose(); } };
 
@@ -622,6 +649,13 @@
                             <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"><Icon name="x" className="w-5 h-5 text-slate-500 dark:text-slate-400" /></button>
                         </div>
                         <div className="flex-1 overflow-y-auto pr-1">
+                            <div className="flex justify-between items-center mb-3">
+                                <span className="text-xs font-bold text-slate-500 dark:text-slate-400">科目列表</span>
+                                <button onClick={handleAISort} className="text-xs font-bold bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-3 py-1.5 rounded-lg shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center gap-1">
+                                    <Icon name="sparkles" className="w-3 h-3" /> AI 智能排序
+                                </button>
+                            </div>
+
                             <form onSubmit={handleAdd} className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-100 dark:border-slate-700 mb-4">
                                 <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">新增科目</label>
                                 <div className="flex gap-2 mb-2">
@@ -635,10 +669,15 @@
                                 <button type="submit" className="w-full mt-3 py-2 bg-indigo-600 text-white rounded-lg text-sm font-bold hover:bg-indigo-700 transition-colors">新增</button>
                             </form>
                             <div className="space-y-2">
-                                {tempSubjects.map(sub => (
-                                    <div key={sub.name} className="flex items-center justify-between p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm">
+                                {tempSubjects.map((sub, index) => (
+                                    <div key={sub.name + index} className="flex items-center justify-between p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm group">
                                         <span className={`px-2 py-1 rounded text-xs font-bold border ${sub.color}`}>{sub.name}</span>
-                                        <button onClick={() => handleDelete(sub.name)} className="text-slate-400 hover:text-red-500 transition-colors"><Icon name="trash-2" className="w-4 h-4" /></button>
+                                        <div className="flex items-center gap-1">
+                                            <button type="button" onClick={() => moveSubject(index, 'up')} disabled={index === 0} className="p-1.5 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 disabled:opacity-20 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"><Icon name="arrow-up" className="w-3.5 h-3.5" /></button>
+                                            <button type="button" onClick={() => moveSubject(index, 'down')} disabled={index === tempSubjects.length - 1} className="p-1.5 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 disabled:opacity-20 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"><Icon name="arrow-down" className="w-3.5 h-3.5" /></button>
+                                            <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 mx-1"></div>
+                                            <button onClick={() => handleDelete(sub.name)} className="text-slate-400 hover:text-red-500 transition-colors p-1"><Icon name="trash-2" className="w-4 h-4" /></button>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
@@ -830,9 +869,9 @@
             const [newEmail, setNewEmail] = useState('');
             const [newClassName, setNewClassName] = useState('');
             const [isSubmitting, setIsSubmitting] = useState(false);
+            const [newName, setNewName] = useState(''); // v2.1 feature
 
-            // Added 'where' to destructuring
-            const { collection, getDocs, query, orderBy, onSnapshot, doc, updateDoc, arrayUnion, arrayRemove, deleteDoc, setDoc, where } = window.firebaseServices || {};
+            const { collection, getDocs, query, orderBy, onSnapshot, doc, updateDoc, arrayUnion, arrayRemove, deleteDoc, setDoc } = window.firebaseServices || {};
             const allowedEmails = systemConfig?.allowedEmails || [];
 
             useEffect(() => {
@@ -853,6 +892,7 @@
                 if (!selectedUser || !db || !collection) return;
                 const q = query(collection(db, "users", selectedUser.uid, "items"), orderBy("dueDate", "asc"));
                 const unsubscribe = onSnapshot(q, (snapshot) => setUserHomeworks(snapshot.docs.map(d => ({ id: d.id, ...d.data() }))), (err) => console.warn("Admin user items err:", err));
+                setNewName(selectedUser.displayName || '');
                 return () => unsubscribe();
             }, [selectedUser, db, collection]);
 
@@ -871,31 +911,9 @@
                     setNewClassName(''); triggerAlert(`成功建立班級：${name} (代碼: ${code})`);
                 }
             };
-            
-            // Updated handleDeleteClass with Hard Delete Logic
             const handleDeleteClass = async (classObj) => {
-                triggerConfirm(`⚠️ 危險操作！\n這將徹底刪除「${classObj.name}」！\n1. 撤回該班級所有廣播功課\n2. 將所有學生踢出此班級\n\n確定執行嗎？`, async () => {
-                    try {
-                        // 1. 搜尋並刪除該班級的所有廣播功課 (Public Tasks)
-                        const tasksQuery = query(collection(db, "public_assignments"), where("targetClass", "==", classObj.code));
-                        const tasksSnap = await getDocs(tasksQuery);
-                        const deleteTasksPromises = tasksSnap.docs.map(d => deleteDoc(d.ref));
-                        await Promise.all(deleteTasksPromises);
-
-                        // 2. 搜尋已加入該班級的學生，將代碼從他們的 joinedClasses 中移除
-                        const usersQuery = query(collection(db, "users_public"), where("joinedClasses", "array-contains", classObj.code));
-                        const usersSnap = await getDocs(usersQuery);
-                        const updateUsersPromises = usersSnap.docs.map(d => updateDoc(d.ref, { joinedClasses: arrayRemove(classObj.code) }));
-                        await Promise.all(updateUsersPromises);
-
-                        // 3. 最後，從系統班級列表中移除該班級
-                        await updateDoc(doc(db, 'system_settings', 'classes'), { list: arrayRemove(classObj) });
-                        
-                        triggerAlert(`班級 ${classObj.name} 已徹底刪除，相關資料已清理。`);
-                    } catch (e) {
-                        console.error(e);
-                        triggerAlert("刪除失敗: " + e.message);
-                    }
+                triggerConfirm(`確定刪除班級 ${classObj.name} 嗎？學生的歷史紀錄仍會保留。`, async () => {
+                    try { await updateDoc(doc(db, 'system_settings', 'classes'), { list: arrayRemove(classObj) }); triggerAlert("已刪除班級"); } catch (e) { }
                 });
             };
 
@@ -909,13 +927,33 @@
                         await deleteDoc(doc(db, "users", targetUser.uid, "settings", "subjects"));
                         await deleteDoc(doc(db, "users_public", targetUser.uid));
                         triggerAlert("用戶資料已徹底刪除");
+                        if (selectedUser?.uid === targetUser.uid) setSelectedUser(null);
                     } catch (e) { triggerAlert("刪除失敗: " + e.message); }
                 });
             };
+            
+            // v2.1 Update Name Feature
+            const handleUpdateUserName = async () => {
+                if(!selectedUser || !newName.trim()) return;
+                try {
+                    await updateDoc(doc(db, "users_public", selectedUser.uid), { displayName: newName.trim() });
+                    triggerAlert("用戶名稱已更新");
+                } catch(e) { triggerAlert("更新失敗"); }
+            };
+
             const handleDeletePublicTask = (taskId) => {
                 triggerConfirm("確定要撤回這份廣播功課嗎？這會同時從所有同學的清單中移除。", async () => {
                     try { await deleteDoc(doc(db, "public_assignments", taskId)); triggerAlert("廣播功課已撤回"); } catch (e) { triggerAlert("撤回失敗"); }
                 });
+            };
+            
+            // v2.1 Online Status Helper
+            const getUserStatus = (lastSeen) => {
+                if (!lastSeen || typeof lastSeen.toDate !== 'function') return 'offline';
+                const diff = new Date() - lastSeen.toDate();
+                if (diff < 2 * 60 * 1000) return 'online'; // 2 mins
+                if (diff < 10 * 60 * 1000) return 'idle'; // 10 mins
+                return 'offline';
             };
 
             const activeTodayCount = users.filter(u => u.lastSeen && typeof u.lastSeen.toDate === 'function' && (new Date() - u.lastSeen.toDate()) < 24 * 60 * 60 * 1000).length;
@@ -1012,11 +1050,17 @@
                                                     const isAdm = u.email === ADMIN_EMAIL;
                                                     const isWhite = allowedEmails.includes(u.email);
                                                     const userClassesNames = (u.joinedClasses || []).map(code => { const cls = systemClasses.find(c => c.code === code); return cls ? cls.name : code; }).join(', ');
+                                                    const onlineStatus = getUserStatus(u.lastSeen);
+
                                                     return (
                                                         <tr key={u.uid} className="hover:bg-indigo-50/30 dark:hover:bg-slate-700/50 transition-colors group cursor-pointer" onClick={() => setSelectedUser(u)}>
                                                             <td className="px-6 py-4">
                                                                 <div className="flex items-center gap-3">
-                                                                    <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-white shadow-sm shrink-0 ${isAdm ? 'bg-purple-500' : isWhite ? 'bg-emerald-500' : 'bg-slate-400 dark:bg-slate-600'}`}>{u.displayName?.[0]?.toUpperCase() || 'U'}</div>
+                                                                    <div className={`relative w-9 h-9 rounded-full flex items-center justify-center font-bold text-white shadow-sm shrink-0 ${isAdm ? 'bg-purple-500' : isWhite ? 'bg-emerald-500' : 'bg-slate-400 dark:bg-slate-600'}`}>
+                                                                        {u.displayName?.[0]?.toUpperCase() || 'U'}
+                                                                        {onlineStatus === 'online' && <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white dark:border-slate-800 rounded-full"></span>}
+                                                                        {onlineStatus === 'idle' && <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-yellow-400 border-2 border-white dark:border-slate-800 rounded-full"></span>}
+                                                                    </div>
                                                                     <div>
                                                                         <div className="font-bold dark:text-white flex items-center gap-2">{u.displayName || '未命名'}</div>
                                                                         <div className="text-xs text-slate-400">{u.email}</div>
@@ -1029,11 +1073,14 @@
                                                                  isWhite ? <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold">白名單</span> :
                                                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-bold">普通用戶</span>}
                                                             </td>
-                                                            <td className="px-6 py-4 text-slate-500 dark:text-slate-400 text-xs font-mono">{u.lastSeen && typeof u.lastSeen.toDate === 'function' ? u.lastSeen.toDate().toLocaleString('zh-HK') : '無紀錄'}</td>
+                                                            <td className="px-6 py-4 text-slate-500 dark:text-slate-400 text-xs font-mono">
+                                                                {onlineStatus === 'online' ? <span className="text-green-500 font-bold">🟢 線上</span> :
+                                                                 onlineStatus === 'idle' ? <span className="text-yellow-500 font-bold">🟡 剛離開</span> :
+                                                                 <span className="text-slate-400">⚪ {u.lastSeen && typeof u.lastSeen.toDate === 'function' ? u.lastSeen.toDate().toLocaleString('zh-HK') : '無紀錄'}</span>}
+                                                            </td>
                                                             <td className="px-6 py-4 text-right">
                                                                 <div className="flex items-center justify-end gap-2">
-                                                                    {!isAdm && !isWhite && <button onClick={(e) => { e.stopPropagation(); triggerConfirm(`加入白名單？`, () => updateConfig('allowedEmails', arrayUnion(u.email))); }} className="p-2 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-lg">➕</button>}
-                                                                    {!isAdm && <button onClick={(e) => { e.stopPropagation(); handleDeleteUser(u); }} className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg"><Icon name="trash-2" className="w-4 h-4" /></button>}
+                                                                    <Icon name="chevron-right" className="w-4 h-4 text-slate-300" />
                                                                 </div>
                                                             </td>
                                                         </tr>
@@ -1056,10 +1103,26 @@
                                         <p className="text-sm text-slate-500">{selectedUser.email}</p>
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                                    <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 text-center"><div className="text-3xl font-black">{userHomeworks.length}</div><div className="text-xs font-bold text-slate-400 mt-1">總項目</div></div>
-                                    <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 text-center"><div className="text-3xl font-black text-emerald-500">{userHomeworks.filter(h=>h.completed).length}</div><div className="text-xs font-bold text-slate-400 mt-1">已完成</div></div>
+                                
+                                {/* v2.1 Profile Editor */}
+                                <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col md:flex-row gap-6 items-center md:items-start">
+                                     <div className="w-full md:w-auto flex-1 space-y-4">
+                                         <h4 className="font-bold text-slate-700 dark:text-slate-200">用戶檔案編輯</h4>
+                                         <div className="flex gap-2">
+                                             <input type="text" value={newName} onChange={e => setNewName(e.target.value)} className="flex-1 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white" placeholder="顯示名稱" />
+                                             <button onClick={handleUpdateUserName} className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-bold text-sm hover:bg-indigo-700">更新</button>
+                                         </div>
+                                         <div className="flex gap-2 pt-2">
+                                             {!allowedEmails.includes(selectedUser.email) && <button onClick={() => updateConfig('allowedEmails', arrayUnion(selectedUser.email))} className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 rounded-lg hover:bg-emerald-100 transition-colors">➕ 加入白名單</button>}
+                                             <button onClick={() => handleDeleteUser(selectedUser)} className="text-xs font-bold text-red-600 bg-red-50 dark:bg-red-900/20 px-3 py-1.5 rounded-lg hover:bg-red-100 transition-colors flex items-center gap-1"><Icon name="trash-2" className="w-3 h-3" /> 強制刪除帳號</button>
+                                         </div>
+                                     </div>
+                                     <div className="flex gap-4">
+                                        <div className="text-center p-2"><div className="text-2xl font-black">{userHomeworks.length}</div><div className="text-xs font-bold text-slate-400 mt-1">總項目</div></div>
+                                        <div className="text-center p-2"><div className="text-2xl font-black text-emerald-500">{userHomeworks.filter(h=>h.completed).length}</div><div className="text-xs font-bold text-slate-400 mt-1">已完成</div></div>
+                                     </div>
                                 </div>
+
                                 <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 overflow-hidden p-2">
                                     <div className="max-h-[400px] overflow-y-auto space-y-2 pr-2">
                                         {userHomeworks.map(h => (
@@ -1206,9 +1269,8 @@
             const [nameSetupLoading, setNameSetupLoading] = useState(false);
 
             const [userProfile, setUserProfile] = useState(null);
-            const [joinedClasses, setJoinedClasses] = useState([]);
-            // Safe access for joinedClasses
-            const joinedClassesStr = (userProfile?.joinedClasses || []).join(',');
+            const joinedClasses = userProfile?.joinedClasses || [];
+            const joinedClassesStr = joinedClasses.join(',');
 
             const [isJoinClassOpen, setIsJoinClassOpen] = useState(false);
             const [selectedClassBoard, setSelectedClassBoard] = useState(null);
@@ -1221,6 +1283,18 @@
             useEffect(() => { if ("Notification" in window && Notification.permission === "default") Notification.requestPermission(); }, []);
             useEffect(() => { localStorage.setItem('isDarkMode', isDarkMode); if (isDarkMode) document.documentElement.classList.add('dark'); else document.documentElement.classList.remove('dark'); }, [isDarkMode]);
             useEffect(() => localStorage.setItem('themeColor', themeColor), [themeColor]);
+
+            // v2.1 Heartbeat Effect
+            useEffect(() => {
+                if(!user || !db) return;
+                // Initial update
+                updateDoc(doc(db, "users_public", user.uid), { lastSeen: serverTimestamp() }).catch(e=>{});
+                // Loop update every 60s
+                const interval = setInterval(() => {
+                     updateDoc(doc(db, "users_public", user.uid), { lastSeen: serverTimestamp() }).catch(e=>{});
+                }, 60000);
+                return () => clearInterval(interval);
+            }, [user, db]);
 
             useEffect(() => {
                 if (!db) return;
@@ -1242,9 +1316,7 @@
                             const unsubProfile = onSnapshot(doc(db, "users_public", currentUser.uid), async (docSnap) => {
                                 try {
                                     if (docSnap.exists()) {
-                                        const data = docSnap.data();
-                                        setUserProfile(data);
-                                        setJoinedClasses(data.joinedClasses || []);
+                                        setUserProfile(docSnap.data());
                                         if (!currentUser.displayName) setShowNameSetup(true);
                                     } else {
                                         if (!currentUser.displayName) setShowNameSetup(true);
@@ -1255,7 +1327,7 @@
 
                             return () => unsubProfile();
                         } else { 
-                            setItems([]); setIsAdmin(false); setShowNameSetup(false); setUserProfile(null); setJoinedClasses([]); setTimetableConfig({ timeSlots: DEFAULT_TIME_SLOTS, schedule: DEFAULT_SCHEDULE }); setSubjects(DEFAULT_SUBJECTS);
+                            setItems([]); setIsAdmin(false); setShowNameSetup(false); setUserProfile(null); setTimetableConfig({ timeSlots: DEFAULT_TIME_SLOTS, schedule: DEFAULT_SCHEDULE }); setSubjects(DEFAULT_SUBJECTS);
                         }
                     } catch (e) { console.warn("Auth err:", e); }
                 });
