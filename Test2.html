@@ -4,16 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#4f46e5">
-    <title>電子手冊</title>
-    
-    <!-- 引入 React 和 ReactDOM -->
+    <title>電子手冊 Pro v2.2</title>
+
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-    
-    <!-- 引入 Babel 用來解析 JSX -->
+
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
-    <!-- 引入 Tailwind CSS & 設定 Dark Mode -->
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -22,13 +19,15 @@
                 extend: {
                     colors: {
                         slate: { 850: '#151e2e' }
+                    },
+                    animation: {
+                        'pop-in': 'popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
                     }
                 }
             }
         }
     </script>
-    
-    <!-- 引入 Lucide Icons -->
+
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <style>
@@ -36,7 +35,13 @@
         input[type="file"]::file-selector-button { display: none; }
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         .modal-animate { animation: fadeIn 0.2s ease-out forwards; }
-        .notification-animate { animation: fadeIn 0.15s ease-out forwards; }
+        
+        @keyframes popIn { 
+            0% { opacity: 0; transform: scale(0.9) translateY(10px); } 
+            100% { opacity: 1; transform: scale(1) translateY(0); } 
+        }
+        .dialog-animate { animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
         @keyframes blob { 0% { transform: translate(0px, 0px) scale(1); } 33% { transform: translate(30px, -50px) scale(1.1); } 66% { transform: translate(-20px, 20px) scale(0.9); } 100% { transform: translate(0px, 0px) scale(1); } }
         .animate-blob { animation: blob 7s infinite; }
         .animation-delay-2000 { animation-delay: 2s; }
@@ -44,9 +49,9 @@
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         @keyframes slideUpFade { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .animate-item { animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
-        
+
         .guest-blur { filter: blur(6px) grayscale(100%); opacity: 0.8; pointer-events: none; user-select: none; transition: all 0.8s ease; }
-        
+
         @keyframes glowing { 0% { box-shadow: 0 0 5px currentColor; } 50% { box-shadow: 0 0 20px currentColor; } 100% { box-shadow: 0 0 5px currentColor; } }
         .btn-glow { animation: glowing 2s infinite; }
 
@@ -58,12 +63,12 @@
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
 
         /* 浮空錯誤動畫 */
-        @keyframes popIn {
+        @keyframes popInError {
             0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
             50% { transform: translate(-50%, -50%) scale(1.05); opacity: 1; }
             100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
         }
-        .pop-in-error { animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .pop-in-error { animation: popInError 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100">
@@ -73,7 +78,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs, setDoc, arrayUnion, arrayRemove, getDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        
+
         const firebaseConfig = {
             apiKey: "AIzaSyB3gYuwnyoTUwO7PFh4Nuue-Ud8GTruuRk",
             authDomain: "recordhwv2.firebaseapp.com",
@@ -96,7 +101,6 @@
         };
     </script>
 
-    <!-- PWA Setup -->
     <script>
         (function setupPWA() {
             const manifest = {
@@ -114,7 +118,7 @@
         const { useState, useEffect, useRef, useMemo } = React;
 
         const ADMIN_EMAIL = 'chimhinhin@gmail.com'; 
-        
+
         // --- Configuration Constants ---
         const DEFAULT_SUBJECTS = [
             { name: '中文', color: 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800' },
@@ -174,10 +178,8 @@
             return <span ref={ref} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}></span>;
         };
 
-        // 倒數計時格式化工具
         const formatCountdown = (ms) => { const totalSeconds = Math.floor(ms / 1000); const hours = Math.floor(totalSeconds / 3600); const minutes = Math.floor((totalSeconds % 3600) / 60); const seconds = totalSeconds % 60; return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`; };
 
-        // 安全的時間格式化工具，防止 Invalid Date 崩潰
         const formatTimeStr = (date) => { 
             try {
                 if (!(date instanceof Date) || isNaN(date.getTime())) return '--:--';
@@ -185,7 +187,6 @@
             } catch(e) { return '--:--'; }
         };
 
-        // 安全的行程表生成工具，防禦 corrupted data 崩潰
         const generateFullSchedule = (config, now, dayOverride = null) => {
             if (!config || !Array.isArray(config.timeSlots)) return [];
             const day = dayOverride !== null ? dayOverride : now.getDay();
@@ -193,16 +194,16 @@
             const daySubjects = config.schedule?.[day] || [];
             let lessonIndex = 0;
             const baseDate = new Date(now); baseDate.setHours(0,0,0,0);
-            
+
             return config.timeSlots.map(slot => {
                 const timeStr = slot.startTime || "00:00";
                 const parts = timeStr.split(':');
                 const h = parseInt(parts[0]) || 0;
                 const m = parseInt(parts[1]) || 0;
-                
+
                 const start = new Date(baseDate); start.setHours(h, m, 0, 0);
                 const end = new Date(start.getTime() + (parseInt(slot.duration) || 35) * 60000);
-                
+
                 let subject = slot.label || '';
                 if (slot.type === 'lesson') { subject = daySubjects[lessonIndex] || '---'; lessonIndex++; }
                 return { ...slot, start, end, subjectName: subject };
@@ -214,14 +215,14 @@
             const schedule = generateFullSchedule(config, now);
             const currentMinutes = now.getHours() * 60 + now.getMinutes();
             const currentSeconds = now.getSeconds();
-            
+
             for (let slot of schedule) {
                 if (slot.type === 'lesson' && (slot.subjectName.includes(subjectName) || subjectName.includes(slot.subjectName))) {
                     const startH = slot.start.getHours();
                     const startM = slot.start.getMinutes();
                     const startTotalMins = startH * 60 + startM;
                     const endTotalMins = startTotalMins + slot.duration;
-                    
+
                     if (currentMinutes >= startTotalMins && currentMinutes < endTotalMins) return { type: 'now', diff: 0 };
                     if (currentMinutes < startTotalMins) {
                         const diffMs = ((startTotalMins * 60) - (currentMinutes * 60 + currentSeconds)) * 1000;
@@ -236,7 +237,7 @@
         function LessonCountdown({ subject, config }) {
             const [now, setNow] = useState(new Date());
             useEffect(() => { const timer = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(timer); }, []);
-            
+
             const nextLesson = getNextLesson(subject, now, config);
             if (!nextLesson) return null;
             if (nextLesson.type === 'now') {
@@ -249,12 +250,12 @@
 
         function CalendarWidget({ items, selectedDate, onSelectDate, t }) {
             const [currentMonth, setCurrentMonth] = useState(new Date());
-            
+
             const startOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
             const endOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
             const startDate = startOfMonth.getDay(); 
             const daysInMonth = endOfMonth.getDate();
-            
+
             const days = [];
             for (let i = 0; i < startDate; i++) days.push(null);
             for (let i = 1; i <= daysInMonth; i++) days.push(new Date(currentMonth.getFullYear(), currentMonth.getMonth(), i));
@@ -352,7 +353,7 @@
                             <h3 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2"><Icon name="palette" className={`w-5 h-5 ${t.text}`} /> 外觀設定</h3>
                             <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"><Icon name="x" className="w-5 h-5 dark:text-slate-300" /></button>
                         </div>
-                        
+
                         <div className="space-y-6">
                             <div>
                                 <label className="block text-sm font-bold text-slate-500 dark:text-slate-400 mb-3">主題顏色</label>
@@ -365,7 +366,7 @@
                                     ))}
                                 </div>
                             </div>
-                            
+
                             <div>
                                 <label className="block text-sm font-bold text-slate-500 dark:text-slate-400 mb-3">介面模式</label>
                                 <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-xl">
@@ -422,7 +423,7 @@
                 e.preventDefault();
                 const upperCode = code.trim().toUpperCase();
                 const targetClass = systemClasses.find(c => c.code === upperCode);
-                
+
                 if (!targetClass) return showError('無效的班級代碼！請確認後再試。');
                 if (joinedClasses.includes(upperCode)) return showError('你已經加入過這個班級了！');
 
@@ -440,7 +441,7 @@
                 <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose}></div>
                     <div className="modal-animate bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-sm p-6 relative z-10 text-center">
-                        
+
                         {/* 浮空錯誤提示 */}
                         {floatingError && (
                             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white px-5 py-3 rounded-2xl shadow-[0_10px_30px_rgba(239,68,68,0.4)] z-50 font-bold text-sm whitespace-nowrap pop-in-error flex items-center gap-2">
@@ -494,7 +495,7 @@
 
             useEffect(() => { if (isOpen) { setLoading(false); setEmail(''); setPassword(''); setIsLogin(true); } }, [isOpen]); 
             if (!isOpen) return null; 
-            
+
             const handleGoogleLogin = async () => { try { setLoading(true); await signInWithPopup(auth, googleProvider); onClose(); } catch (error) { console.error(error); triggerAlert("Google 登入失敗: " + error.message); setLoading(false); } };
             const handleEmailAuth = async (e) => { 
                 e.preventDefault(); if(!email || !password) return;
@@ -594,7 +595,7 @@
             );
         }
 
-        function SubjectManagerModal({ isOpen, onClose, currentSubjects, onSave }) {
+        function SubjectManagerModal({ isOpen, onClose, currentSubjects, onSave, triggerConfirm }) {
             const [newSubjectName, setNewSubjectName] = useState('');
             const [newSubjectColor, setNewSubjectColor] = useState(COLOR_PALETTE[0].value);
             const [tempSubjects, setTempSubjects] = useState([]);
@@ -609,9 +610,41 @@
                 setTempSubjects([...tempSubjects, { name: newSubjectName.trim(), color: newSubjectColor }]);
                 setNewSubjectName('');
             };
-            const handleDelete = (name) => { if (confirm(`確定要刪除「${name}」嗎？`)) setTempSubjects(tempSubjects.filter(s => s.name !== name)); };
+            const handleDelete = (name) => { triggerConfirm(`確定要刪除「${name}」嗎？`, () => setTempSubjects(tempSubjects.filter(s => s.name !== name))); };
+            
+            // --- Custom Sorting Logic (v2.1) ---
+            const moveSubject = (index, direction) => {
+                const newSubjects = [...tempSubjects];
+                if (direction === 'up' && index > 0) {
+                    [newSubjects[index], newSubjects[index - 1]] = [newSubjects[index - 1], newSubjects[index]];
+                } else if (direction === 'down' && index < newSubjects.length - 1) {
+                    [newSubjects[index], newSubjects[index + 1]] = [newSubjects[index + 1], newSubjects[index]];
+                }
+                setTempSubjects(newSubjects);
+            };
+
+            const handleAISort = () => {
+                const priority = ['中文', '英文', '數學', '常識', '通識', '公社', '物理', '化學', '生物'];
+                const sorted = [...tempSubjects].sort((a, b) => {
+                    const idxA = priority.indexOf(a.name);
+                    const idxB = priority.indexOf(b.name);
+                    
+                    // 1. Priority Subjects First
+                    if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+                    if (idxA !== -1) return -1;
+                    if (idxB !== -1) return 1;
+
+                    // 2. Then by length (shorter names usually more important/generic)
+                    if (a.name.length !== b.name.length) return a.name.length - b.name.length;
+
+                    // 3. Fallback to locale compare
+                    return a.name.localeCompare(b.name);
+                });
+                setTempSubjects(sorted);
+            };
+
             const handleSaveInternal = () => { onSave(tempSubjects); onClose(); };
-            const handleReset = () => { if(confirm("確定重置為預設科目？這將覆蓋您的自訂科目。")) { onSave(DEFAULT_SUBJECTS); onClose(); } };
+            const handleReset = () => { triggerConfirm("確定重置為預設科目？這將覆蓋您的自訂科目。", () => { onSave(DEFAULT_SUBJECTS); onClose(); }); };
 
             return (
                 <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
@@ -622,6 +655,13 @@
                             <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"><Icon name="x" className="w-5 h-5 text-slate-500 dark:text-slate-400" /></button>
                         </div>
                         <div className="flex-1 overflow-y-auto pr-1">
+                            <div className="flex justify-between items-center mb-3">
+                                <span className="text-xs font-bold text-slate-500 dark:text-slate-400">科目列表</span>
+                                <button onClick={handleAISort} className="text-xs font-bold bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-3 py-1.5 rounded-lg shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center gap-1">
+                                    <Icon name="sparkles" className="w-3 h-3" /> AI 智能排序
+                                </button>
+                            </div>
+
                             <form onSubmit={handleAdd} className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-100 dark:border-slate-700 mb-4">
                                 <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">新增科目</label>
                                 <div className="flex gap-2 mb-2">
@@ -635,10 +675,15 @@
                                 <button type="submit" className="w-full mt-3 py-2 bg-indigo-600 text-white rounded-lg text-sm font-bold hover:bg-indigo-700 transition-colors">新增</button>
                             </form>
                             <div className="space-y-2">
-                                {tempSubjects.map(sub => (
-                                    <div key={sub.name} className="flex items-center justify-between p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm">
+                                {tempSubjects.map((sub, index) => (
+                                    <div key={sub.name + index} className="flex items-center justify-between p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm group">
                                         <span className={`px-2 py-1 rounded text-xs font-bold border ${sub.color}`}>{sub.name}</span>
-                                        <button onClick={() => handleDelete(sub.name)} className="text-slate-400 hover:text-red-500 transition-colors"><Icon name="trash-2" className="w-4 h-4" /></button>
+                                        <div className="flex items-center gap-1">
+                                            <button type="button" onClick={() => moveSubject(index, 'up')} disabled={index === 0} className="p-1.5 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 disabled:opacity-20 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"><Icon name="arrow-up" className="w-3.5 h-3.5" /></button>
+                                            <button type="button" onClick={() => moveSubject(index, 'down')} disabled={index === tempSubjects.length - 1} className="p-1.5 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 disabled:opacity-20 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"><Icon name="arrow-down" className="w-3.5 h-3.5" /></button>
+                                            <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 mx-1"></div>
+                                            <button onClick={() => handleDelete(sub.name)} className="text-slate-400 hover:text-red-500 transition-colors p-1"><Icon name="trash-2" className="w-4 h-4" /></button>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
@@ -665,7 +710,7 @@
             );
         }
 
-        function TimetableEditor({ initialConfig, onSave, onCancel, subjects }) {
+        function TimetableEditor({ initialConfig, onSave, onCancel, subjects, triggerConfirm }) {
             const [activeTab, setActiveTab] = useState('slots'); 
             const [timeSlots, setTimeSlots] = useState(initialConfig?.timeSlots || [...DEFAULT_TIME_SLOTS]);
             const [schedule, setSchedule] = useState(initialConfig?.schedule || { ...DEFAULT_SCHEDULE });
@@ -693,7 +738,7 @@
                 }
             };
             const handleSave = () => onSave({ timeSlots, schedule });
-            const resetToDefault = () => { if (confirm("確定要重置為預設時間表嗎？")) { setTimeSlots([...DEFAULT_TIME_SLOTS]); setSchedule({ ...DEFAULT_SCHEDULE }); } };
+            const resetToDefault = () => { triggerConfirm("確定要重置為預設時間表嗎？", () => { setTimeSlots([...DEFAULT_TIME_SLOTS]); setSchedule({ ...DEFAULT_SCHEDULE }); }); };
             const lessonSlots = timeSlots.map((s, i) => ({ ...s, originalIndex: i })).filter(s => s.type === 'lesson');
 
             return (
@@ -705,7 +750,7 @@
                             <button onClick={onCancel} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full text-slate-400"><Icon name="x" className="w-5 h-5"/></button>
                         </div>
                     </div>
-                    
+
                     <div className="flex border-b border-slate-100 dark:border-slate-700">
                         <button onClick={() => setActiveTab('slots')} className={`flex-1 py-3 text-sm font-bold transition-colors ${activeTab === 'slots' ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400 bg-indigo-50/50 dark:bg-indigo-900/20' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}>時間設定</button>
                         <button onClick={() => setActiveTab('schedule')} className={`flex-1 py-3 text-sm font-bold transition-colors ${activeTab === 'schedule' ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400 bg-indigo-50/50 dark:bg-indigo-900/20' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}>課程編排</button>
@@ -749,7 +794,7 @@
                                         const currentSubjectName = schedule[editDay]?.[lessonIdx];
                                         const subObj = subjects.find(s => s.name === currentSubjectName);
                                         const colorClass = subObj ? subObj.color : 'bg-slate-100 dark:bg-slate-900/50 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-700';
-                                        
+
                                         return (
                                             <div key={lessonIdx} className="flex items-center gap-3">
                                                 <div className="w-20 text-xs font-bold text-slate-500 dark:text-slate-400 text-right">{slot.label}</div>
@@ -781,7 +826,7 @@
             const weekDays = ['日', '一', '二', '三', '四', '五', '六']; 
             const [now, setNow] = useState(new Date());
             useEffect(() => { const timer = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(timer); }, []);
-            
+
             const scheduleData = generateFullSchedule(config, now, currentDay); 
             const formatTimeStr = (date) => { 
                 try {
@@ -830,6 +875,10 @@
             const [newEmail, setNewEmail] = useState('');
             const [newClassName, setNewClassName] = useState('');
             const [isSubmitting, setIsSubmitting] = useState(false);
+            const [newName, setNewName] = useState('');
+            
+            // v2.2 Admin Editing State
+            const [editingAdminItem, setEditingAdminItem] = useState(null);
 
             const { collection, getDocs, query, orderBy, onSnapshot, doc, updateDoc, arrayUnion, arrayRemove, deleteDoc, setDoc } = window.firebaseServices || {};
             const allowedEmails = systemConfig?.allowedEmails || [];
@@ -852,13 +901,14 @@
                 if (!selectedUser || !db || !collection) return;
                 const q = query(collection(db, "users", selectedUser.uid, "items"), orderBy("dueDate", "asc"));
                 const unsubscribe = onSnapshot(q, (snapshot) => setUserHomeworks(snapshot.docs.map(d => ({ id: d.id, ...d.data() }))), (err) => console.warn("Admin user items err:", err));
+                setNewName(selectedUser.displayName || '');
                 return () => unsubscribe();
             }, [selectedUser, db, collection]);
 
             const updateConfig = async (key, value) => { try { await setDoc(doc(db, "system_settings", "config"), { [key]: value }, { merge: true }); triggerAlert("設定已更新"); } catch (e) { triggerAlert("設定更新失敗"); } };
             const handleAddWhitelist = async (e) => { e.preventDefault(); if (!newEmail.trim()) return; setIsSubmitting(true); try { await updateDoc(doc(db, "system_settings", "config"), { allowedEmails: arrayUnion(newEmail.trim()) }); setNewEmail(''); triggerAlert("已新增至白名單"); } catch (e) { triggerAlert("新增失敗"); } setIsSubmitting(false); };
             const handleRemoveWhitelist = async (email) => { triggerConfirm(`確定要移除白名單 ${email} 嗎？`, async () => { try { await updateDoc(doc(db, "system_settings", "config"), { allowedEmails: arrayRemove(email) }); triggerAlert("已移除"); } catch (e) { } }); };
-            
+
             const handleCreateClass = async (e) => {
                 e.preventDefault(); const name = newClassName.trim(); if (!name) return;
                 const code = Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -886,13 +936,53 @@
                         await deleteDoc(doc(db, "users", targetUser.uid, "settings", "subjects"));
                         await deleteDoc(doc(db, "users_public", targetUser.uid));
                         triggerAlert("用戶資料已徹底刪除");
+                        if (selectedUser?.uid === targetUser.uid) setSelectedUser(null);
                     } catch (e) { triggerAlert("刪除失敗: " + e.message); }
                 });
             };
+            
+            const handleUpdateUserName = async () => {
+                if(!selectedUser || !newName.trim()) return;
+                try {
+                    await updateDoc(doc(db, "users_public", selectedUser.uid), { displayName: newName.trim() });
+                    triggerAlert("用戶名稱已更新");
+                } catch(e) { triggerAlert("更新失敗"); }
+            };
+
+            // v2.2 Admin Editing Logic
+            const handleAdminUpdateItem = async (itemId, updatedData) => {
+                if (!selectedUser) return;
+                try {
+                    await updateDoc(doc(db, "users", selectedUser.uid, "items", itemId), updatedData);
+                    triggerAlert("已修改該用戶紀錄");
+                } catch(e) {
+                    triggerAlert("修改失敗: " + e.message);
+                    throw e;
+                }
+            };
+
+            // v2.2 Admin Delete Item (Individual)
+            const handleAdminDeleteItem = async (itemId) => {
+                if (!selectedUser) return;
+                triggerConfirm("確定要刪除此條紀錄嗎？", async () => {
+                    try {
+                        await deleteDoc(doc(db, "users", selectedUser.uid, "items", itemId));
+                    } catch(e) { triggerAlert("刪除失敗"); }
+                });
+            };
+
             const handleDeletePublicTask = (taskId) => {
                 triggerConfirm("確定要撤回這份廣播功課嗎？這會同時從所有同學的清單中移除。", async () => {
                     try { await deleteDoc(doc(db, "public_assignments", taskId)); triggerAlert("廣播功課已撤回"); } catch (e) { triggerAlert("撤回失敗"); }
                 });
+            };
+            
+            const getUserStatus = (lastSeen) => {
+                if (!lastSeen || typeof lastSeen.toDate !== 'function') return 'offline';
+                const diff = new Date() - lastSeen.toDate();
+                if (diff < 2 * 60 * 1000) return 'online'; // 2 mins
+                if (diff < 10 * 60 * 1000) return 'idle'; // 10 mins
+                return 'offline';
             };
 
             const activeTodayCount = users.filter(u => u.lastSeen && typeof u.lastSeen.toDate === 'function' && (new Date() - u.lastSeen.toDate()) < 24 * 60 * 60 * 1000).length;
@@ -914,7 +1004,12 @@
                         </div>
                     </div>
 
-                    <div className="flex-1 p-6 md:p-8 overflow-y-auto bg-slate-50/50 dark:bg-slate-900/50 text-slate-800 dark:text-slate-200">
+                    <div className="flex-1 p-6 md:p-8 overflow-y-auto bg-slate-50/50 dark:bg-slate-900/50 text-slate-800 dark:text-slate-200 relative">
+                        {/* Admin-side Edit Modal */}
+                        {editingAdminItem && (
+                            <EditModal item={editingAdminItem} onClose={() => setEditingAdminItem(null)} onSave={handleAdminUpdateItem} triggerAlert={triggerAlert} subjects={subjects} />
+                        )}
+
                         {activeTab === 'overview' && (
                             <div className="space-y-6 animate-fadeIn">
                                 <h3 className="text-2xl font-bold dark:text-white mb-6">系統概覽</h3>
@@ -939,7 +1034,7 @@
                             <div className="space-y-6 animate-fadeIn h-full flex flex-col">
                                 <h3 className="text-2xl font-bold dark:text-white">班級代碼管理</h3>
                                 <p className="text-sm text-slate-500 dark:text-slate-400 -mt-2">建立班級群組，系統會自動生成隨機代碼。學生憑代碼加入後，即可接收該班級專屬的廣播功課。</p>
-                                
+
                                 <form onSubmit={handleCreateClass} className="flex gap-3 mt-4">
                                     <input type="text" placeholder="輸入班級名稱 (例如: 3A 班)..." value={newClassName} onChange={e => setNewClassName(e.target.value)} className="flex-1 px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-sm" required />
                                     <button type="submit" className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-md active:scale-95 flex items-center gap-2 whitespace-nowrap"><Icon name="plus" className="w-4 h-4" /> 建立班級</button>
@@ -989,11 +1084,17 @@
                                                     const isAdm = u.email === ADMIN_EMAIL;
                                                     const isWhite = allowedEmails.includes(u.email);
                                                     const userClassesNames = (u.joinedClasses || []).map(code => { const cls = systemClasses.find(c => c.code === code); return cls ? cls.name : code; }).join(', ');
+                                                    const onlineStatus = getUserStatus(u.lastSeen);
+
                                                     return (
                                                         <tr key={u.uid} className="hover:bg-indigo-50/30 dark:hover:bg-slate-700/50 transition-colors group cursor-pointer" onClick={() => setSelectedUser(u)}>
                                                             <td className="px-6 py-4">
                                                                 <div className="flex items-center gap-3">
-                                                                    <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-white shadow-sm shrink-0 ${isAdm ? 'bg-purple-500' : isWhite ? 'bg-emerald-500' : 'bg-slate-400 dark:bg-slate-600'}`}>{u.displayName?.[0]?.toUpperCase() || 'U'}</div>
+                                                                    <div className={`relative w-9 h-9 rounded-full flex items-center justify-center font-bold text-white shadow-sm shrink-0 ${isAdm ? 'bg-purple-500' : isWhite ? 'bg-emerald-500' : 'bg-slate-400 dark:bg-slate-600'}`}>
+                                                                        {u.displayName?.[0]?.toUpperCase() || 'U'}
+                                                                        {onlineStatus === 'online' && <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white dark:border-slate-800 rounded-full"></span>}
+                                                                        {onlineStatus === 'idle' && <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-yellow-400 border-2 border-white dark:border-slate-800 rounded-full"></span>}
+                                                                    </div>
                                                                     <div>
                                                                         <div className="font-bold dark:text-white flex items-center gap-2">{u.displayName || '未命名'}</div>
                                                                         <div className="text-xs text-slate-400">{u.email}</div>
@@ -1006,11 +1107,14 @@
                                                                  isWhite ? <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold">白名單</span> :
                                                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-bold">普通用戶</span>}
                                                             </td>
-                                                            <td className="px-6 py-4 text-slate-500 dark:text-slate-400 text-xs font-mono">{u.lastSeen && typeof u.lastSeen.toDate === 'function' ? u.lastSeen.toDate().toLocaleString('zh-HK') : '無紀錄'}</td>
+                                                            <td className="px-6 py-4 text-slate-500 dark:text-slate-400 text-xs font-mono">
+                                                                {onlineStatus === 'online' ? <span className="text-green-500 font-bold">🟢 線上</span> :
+                                                                 onlineStatus === 'idle' ? <span className="text-yellow-500 font-bold">🟡 剛離開</span> :
+                                                                 <span className="text-slate-400">⚪ {u.lastSeen && typeof u.lastSeen.toDate === 'function' ? u.lastSeen.toDate().toLocaleString('zh-HK') : '無紀錄'}</span>}
+                                                            </td>
                                                             <td className="px-6 py-4 text-right">
                                                                 <div className="flex items-center justify-end gap-2">
-                                                                    {!isAdm && !isWhite && <button onClick={(e) => { e.stopPropagation(); triggerConfirm(`加入白名單？`, () => updateConfig('allowedEmails', arrayUnion(u.email))); }} className="p-2 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-lg">➕</button>}
-                                                                    {!isAdm && <button onClick={(e) => { e.stopPropagation(); handleDeleteUser(u); }} className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg"><Icon name="trash-2" className="w-4 h-4" /></button>}
+                                                                    <Icon name="chevron-right" className="w-4 h-4 text-slate-300" />
                                                                 </div>
                                                             </td>
                                                         </tr>
@@ -1033,10 +1137,25 @@
                                         <p className="text-sm text-slate-500">{selectedUser.email}</p>
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                                    <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 text-center"><div className="text-3xl font-black">{userHomeworks.length}</div><div className="text-xs font-bold text-slate-400 mt-1">總項目</div></div>
-                                    <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 text-center"><div className="text-3xl font-black text-emerald-500">{userHomeworks.filter(h=>h.completed).length}</div><div className="text-xs font-bold text-slate-400 mt-1">已完成</div></div>
+                                
+                                <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col md:flex-row gap-6 items-center md:items-start">
+                                     <div className="w-full md:w-auto flex-1 space-y-4">
+                                         <h4 className="font-bold text-slate-700 dark:text-slate-200">用戶檔案編輯</h4>
+                                         <div className="flex gap-2">
+                                             <input type="text" value={newName} onChange={e => setNewName(e.target.value)} className="flex-1 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white" placeholder="顯示名稱" />
+                                             <button onClick={handleUpdateUserName} className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-bold text-sm hover:bg-indigo-700">更新</button>
+                                         </div>
+                                         <div className="flex gap-2 pt-2">
+                                             {!allowedEmails.includes(selectedUser.email) && <button onClick={() => updateConfig('allowedEmails', arrayUnion(selectedUser.email))} className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 rounded-lg hover:bg-emerald-100 transition-colors">➕ 加入白名單</button>}
+                                             <button onClick={() => handleDeleteUser(selectedUser)} className="text-xs font-bold text-red-600 bg-red-50 dark:bg-red-900/20 px-3 py-1.5 rounded-lg hover:bg-red-100 transition-colors flex items-center gap-1"><Icon name="trash-2" className="w-3 h-3" /> 強制刪除帳號</button>
+                                         </div>
+                                     </div>
+                                     <div className="flex gap-4">
+                                        <div className="text-center p-2"><div className="text-2xl font-black">{userHomeworks.length}</div><div className="text-xs font-bold text-slate-400 mt-1">總項目</div></div>
+                                        <div className="text-center p-2"><div className="text-2xl font-black text-emerald-500">{userHomeworks.filter(h=>h.completed).length}</div><div className="text-xs font-bold text-slate-400 mt-1">已完成</div></div>
+                                     </div>
                                 </div>
+
                                 <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 overflow-hidden p-2">
                                     <div className="max-h-[400px] overflow-y-auto space-y-2 pr-2">
                                         {userHomeworks.map(h => (
@@ -1048,7 +1167,14 @@
                                                     </div>
                                                     <div className={`font-medium ${h.completed ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-700 dark:text-slate-200'}`}>{h.description}</div>
                                                 </div>
-                                                <div className="text-xs font-mono text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-900 px-2 py-1 rounded border border-slate-100 dark:border-slate-800">{h.dueDate}</div>
+                                                <div className="flex items-center gap-3">
+                                                    <div className="text-xs font-mono text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-900 px-2 py-1 rounded border border-slate-100 dark:border-slate-800">{h.dueDate}</div>
+                                                    {/* v2.2 Admin Editing Buttons */}
+                                                    <div className="flex gap-1">
+                                                        <button onClick={() => setEditingAdminItem(h)} className="p-1.5 text-slate-400 hover:text-indigo-600 bg-slate-100 dark:bg-slate-700 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors"><Icon name="pencil" className="w-3.5 h-3.5" /></button>
+                                                        <button onClick={() => handleAdminDeleteItem(h.id)} className="p-1.5 text-slate-400 hover:text-red-600 bg-slate-100 dark:bg-slate-700 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"><Icon name="trash-2" className="w-3.5 h-3.5" /></button>
+                                                    </div>
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
@@ -1098,7 +1224,7 @@
                         {activeTab === 'settings' && (
                             <div className="space-y-8 animate-fadeIn max-w-2xl">
                                 <div><h3 className="text-2xl font-bold dark:text-white mb-2">核心系統設定</h3></div>
-                                
+
                                 <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden p-1">
                                     <div className="p-5 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50">
                                         <h4 className="font-bold dark:text-white flex items-center gap-2"><Icon name="megaphone" className="w-5 h-5 text-amber-500"/> 系統跑馬燈公告</h4>
@@ -1143,7 +1269,7 @@
             const [items, setItems] = useState([]);
             const [timetableConfig, setTimetableConfig] = useState({ timeSlots: DEFAULT_TIME_SLOTS, schedule: DEFAULT_SCHEDULE });
             const [subjects, setSubjects] = useState(DEFAULT_SUBJECTS);
-            
+
             const { auth, db, signOut, onAuthStateChanged, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs, setDoc, updateProfile, arrayUnion } = window.firebaseServices || {};
 
             const [inputType, setInputType] = useState('homework');
@@ -1151,7 +1277,7 @@
             const [description, setDescription] = useState('');
             const [dueDate, setDueDate] = useState(''); 
             const [selectedImage, setSelectedImage] = useState(null);
-            
+
             // Broadcast states
             const [isBroadcast, setIsBroadcast] = useState(false);
             const [targetClassInput, setTargetClassInput] = useState('全校');
@@ -1160,7 +1286,7 @@
             const [appMode, setAppMode] = useState('personal'); // 'personal' | 'class'
             const [viewLayout, setViewLayout] = useState('list'); 
             const [calendarSelectedDate, setCalendarSelectedDate] = useState(null);
-            
+
             const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('isDarkMode') === 'true');
             const [themeColor, setThemeColor] = useState(() => localStorage.getItem('themeColor') || 'indigo');
             const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
@@ -1171,21 +1297,21 @@
             const [isSubjectManagerOpen, setIsSubjectManagerOpen] = useState(false);
             const [systemConfig, setSystemConfig] = useState(null);
             const [systemClasses, setSystemClasses] = useState([]);
-            
+
             const [filterSubject, setFilterSubject] = useState('全部');
             const [sortOption, setSortOption] = useState('date_asc');
             const [isListVisible, setIsListVisible] = useState(true);
             const [editingItem, setEditingItem] = useState(null);
             const [isAdmin, setIsAdmin] = useState(false);
             const [notification, setNotification] = useState({ isOpen: false, type: 'alert', message: '', onConfirm: null });
-            
+
             const [showNameSetup, setShowNameSetup] = useState(false);
             const [nameSetupLoading, setNameSetupLoading] = useState(false);
-            
+
             const [userProfile, setUserProfile] = useState(null);
             const joinedClasses = userProfile?.joinedClasses || [];
             const joinedClassesStr = joinedClasses.join(',');
-            
+
             const [isJoinClassOpen, setIsJoinClassOpen] = useState(false);
             const [selectedClassBoard, setSelectedClassBoard] = useState(null);
             const [publicTasks, setPublicTasks] = useState([]);
@@ -1197,6 +1323,18 @@
             useEffect(() => { if ("Notification" in window && Notification.permission === "default") Notification.requestPermission(); }, []);
             useEffect(() => { localStorage.setItem('isDarkMode', isDarkMode); if (isDarkMode) document.documentElement.classList.add('dark'); else document.documentElement.classList.remove('dark'); }, [isDarkMode]);
             useEffect(() => localStorage.setItem('themeColor', themeColor), [themeColor]);
+
+            // v2.1 Heartbeat Effect
+            useEffect(() => {
+                if(!user || !db) return;
+                // Initial update
+                updateDoc(doc(db, "users_public", user.uid), { lastSeen: serverTimestamp() }).catch(e=>{});
+                // Loop update every 60s
+                const interval = setInterval(() => {
+                     updateDoc(doc(db, "users_public", user.uid), { lastSeen: serverTimestamp() }).catch(e=>{});
+                }, 60000);
+                return () => clearInterval(interval);
+            }, [user, db]);
 
             useEffect(() => {
                 if (!db) return;
@@ -1214,7 +1352,7 @@
                             const d = new Date(); d.setDate(d.getDate() + (d.getDay()===5?3:d.getDay()===6?2:1));
                             setDueDate(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`); 
                             setIsAuthModalOpen(false); setIsAdmin(currentUser.email === ADMIN_EMAIL);
-                            
+
                             const unsubProfile = onSnapshot(doc(db, "users_public", currentUser.uid), async (docSnap) => {
                                 try {
                                     if (docSnap.exists()) {
@@ -1226,7 +1364,7 @@
                                     }
                                 } catch (e) { console.warn("Profile inner err:", e); }
                             }, (err) => console.warn("Profile err:", err));
-                            
+
                             return () => unsubProfile();
                         } else { 
                             setItems([]); setIsAdmin(false); setShowNameSetup(false); setUserProfile(null); setTimetableConfig({ timeSlots: DEFAULT_TIME_SLOTS, schedule: DEFAULT_SCHEDULE }); setSubjects(DEFAULT_SUBJECTS);
@@ -1262,13 +1400,13 @@
                     try {
                         setPublicTasks(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
                         const currentClasses = joinedClassesStr ? joinedClassesStr.split(',') : [];
-                        
+
                         snapshot.docChanges().forEach(async (change) => { 
                             try {
                                 const publicData = change.doc.data(); const publicId = change.doc.id; 
                                 const target = publicData.targetClass || '全校';
                                 const isForMe = isAdmin || target === '全校' || currentClasses.includes(target); 
-                                
+
                                 if (change.type === "added" && isForMe) { 
                                     const userItemsRef = collection(db, "users", user.uid, "items"); const dupQuery = query(userItemsRef, where("publicRefId", "==", publicId)); 
                                     const dupSnapshot = await getDocs(dupQuery); 
@@ -1307,7 +1445,7 @@
                 try { await updateProfile(user, { displayName: name }); await setDoc(doc(db, "users_public", user.uid), { email: user.email, displayName: name, lastSeen: serverTimestamp() }, { merge: true }); setShowNameSetup(false); triggerAlert(`歡迎, ${name}!`); } 
                 catch (e) { triggerAlert("設定失敗，請重試"); } finally { setNameSetupLoading(false); } 
             };
-            
+
             const handleJoinClassSubmit = async (code, name) => {
                 try {
                     await updateDoc(doc(db, "users_public", user.uid), { joinedClasses: arrayUnion(code) });
@@ -1319,16 +1457,27 @@
             const handleSubmit = async (e) => { 
                 e.preventDefault(); if (isGuest) { setIsAuthModalOpen(true); return; }
                 if ((!description.trim() && !selectedImage) || !dueDate) { triggerAlert("請輸入功課內容！"); return; }
-                const newItem = { type: inputType, subject, description: description.trim(), image: selectedImage, dueDate, completed: false, createdAt: new Date().toISOString() }; 
-                try { 
-                    if (isBroadcast && isAdmin) { 
-                        newItem.senderName = user.displayName || '老師'; newItem.targetClass = targetClassInput;
-                        await addDoc(collection(db, "public_assignments"), newItem); 
-                        const className = targetClassInput === '全校' ? '全校' : (systemClasses.find(c => c.code === targetClassInput)?.name || targetClassInput);
-                        triggerAlert(`已發放功課給 ${className}！`); 
-                    } else { await addDoc(collection(db, "users", user.uid, "items"), newItem); triggerAlert("已新增紀錄"); } 
-                    setDescription(''); setSelectedImage(null); if (fileInputRef.current) fileInputRef.current.value = ""; setAppMode('personal'); setIsBroadcast(false); setTargetClassInput('全校');
-                } catch (error) { triggerAlert("新增失敗"); } 
+                
+                const performSubmit = async () => {
+                    const newItem = { type: inputType, subject, description: description.trim(), image: selectedImage, dueDate, completed: false, createdAt: new Date().toISOString() }; 
+                    try { 
+                        if (isBroadcast && isAdmin) { 
+                            newItem.senderName = user.displayName || '老師'; newItem.targetClass = targetClassInput;
+                            await addDoc(collection(db, "public_assignments"), newItem); 
+                            const className = targetClassInput === '全校' ? '全校' : (systemClasses.find(c => c.code === targetClassInput)?.name || targetClassInput);
+                            triggerAlert(`已發放功課給 ${className}！`); 
+                        } else { await addDoc(collection(db, "users", user.uid, "items"), newItem); triggerAlert("已新增紀錄"); } 
+                        setDescription(''); setSelectedImage(null); if (fileInputRef.current) fileInputRef.current.value = ""; setAppMode('personal'); setIsBroadcast(false); setTargetClassInput('全校');
+                    } catch (error) { triggerAlert("新增失敗"); } 
+                };
+
+                // v2.2 Broadcast Confirmation
+                if (isBroadcast && isAdmin) {
+                    const targetName = targetClassInput === '全校' ? '全校' : (systemClasses.find(c => c.code === targetClassInput)?.name || targetClassInput);
+                    triggerConfirm(`確定要發送廣播功課給【${targetName}】嗎？`, performSubmit);
+                } else {
+                    performSubmit();
+                }
             };
 
             const handleToggle = (id, currentCompletedStatus) => { 
@@ -1346,9 +1495,11 @@
             const saveTimetableConfig = async (newConfig) => { if (!user) return; try { await setDoc(doc(db, 'users', user.uid, 'settings', 'timetable'), JSON.parse(JSON.stringify(newConfig))); triggerAlert("時間表已儲存"); setViewMode('timetable'); } catch (e) { triggerAlert("儲存失敗"); } };
             const saveSubjects = async (newSubjects) => { if (!user) return; try { await setDoc(doc(db, 'users', user.uid, 'settings', 'subjects'), { list: JSON.parse(JSON.stringify(newSubjects)) }); triggerAlert("科目已更新"); } catch (e) { triggerAlert("儲存失敗"); } };
 
+            const handleLogout = () => { triggerConfirm("確定要登出系統嗎？", () => window.firebaseServices.signOut(auth)); };
+
             const activeItems = items.filter(i => !i.completed && !i.forceExpired);
             const getDaysRemaining = (dString) => { const today = new Date(); today.setHours(0,0,0,0); const due = new Date(dString); due.setHours(0,0,0,0); return Math.ceil((due - today) / 86400000); };
-            
+
             const displayedItems = items.filter(item => {
                 if (viewMode === 'current' ? item.completed : !item.completed) return false;
                 if (filterSubject !== '全部' && (item.subject || '其他') !== filterSubject) return false;
@@ -1378,7 +1529,7 @@
                             <div className="flex-1 overflow-hidden h-full flex items-center group"><div className="animate-marquee whitespace-nowrap text-xs sm:text-sm font-bold tracking-wider">{systemConfig.announcementText}</div></div>
                         </div>
                     )}
-                    
+
                     <div className={`max-w-[1200px] mx-auto relative z-10 transition-all duration-500 ${isGuest ? 'guest-blur' : ''}`}>
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4 max-w-3xl mx-auto bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl p-4 sm:p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700">
                             <div>
@@ -1391,11 +1542,11 @@
                                 {viewMode === 'current' && appMode === 'personal' && (
                                     <button onClick={() => setViewLayout(viewLayout === 'list' ? 'calendar' : 'list')} className="p-2.5 rounded-full bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 shadow-sm hover:shadow-md transition border border-slate-100 dark:border-slate-600" title="切換視圖"><Icon name={viewLayout === 'list' ? "calendar" : "list"} className="w-5 h-5" /></button>
                                 )}
-                                
+
                                 {viewMode === 'timetable' && (
                                     <button onClick={() => setViewMode('timetable_edit')} className={`px-4 py-2.5 rounded-full font-bold text-sm bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 shadow-sm transition-all flex items-center gap-2`}><Icon name="edit" className="w-4 h-4" /> 編輯時間表</button>
                                 )}
-                                
+
                                 <button onClick={() => !user ? setIsAuthModalOpen(true) : setViewMode('timetable')} className={`px-4 py-2.5 rounded-full font-bold text-sm shadow-sm hover:shadow-md transition-all flex items-center gap-2 ${viewMode === 'timetable' || viewMode === 'timetable_edit' ? 'bg-orange-500 text-white' : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-2 border-slate-100 dark:border-slate-700 hover:border-orange-200'}`}><Icon name="calendar-days" className="w-4 h-4" />時間表</button>
 
                                 {isAdmin && (
@@ -1405,12 +1556,12 @@
                                 <button onClick={() => !user ? setIsAuthModalOpen(true) : setViewMode(viewMode === 'current' ? 'history' : 'current')} className={`px-4 py-2.5 rounded-full font-bold text-sm shadow-sm hover:shadow-md transition-all flex items-center gap-2 ${viewMode === 'current' ? 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-2 border-slate-100 dark:border-slate-700 hover:border-indigo-200' : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-transparent'}`}>
                                     {viewMode === 'history' || viewMode === 'admin' || viewMode === 'timetable' || viewMode === 'timetable_edit' ? (<><Icon name="arrow-left" className="w-4 h-4" />返主頁</>) : (<><Icon name="history" className="w-4 h-4" />睇紀錄</>)}
                                 </button>
-                                
+
                                 {user && (
                                     <>
                                         <button onClick={() => setIsPreferencesOpen(true)} className="p-2.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition shadow-sm border border-transparent"><Icon name="palette" className="w-5 h-5" /></button>
                                         <button onClick={() => setIsSubjectManagerOpen(true)} className="p-2.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition shadow-sm border border-transparent"><Icon name="settings" className="w-5 h-5" /></button>
-                                        <button onClick={() => { if(confirm("確定登出?")) window.firebaseServices.signOut(auth) }} className="p-2.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-red-500 dark:hover:text-red-400 transition shadow-sm"><Icon name="log-out" className="w-5 h-5" /></button>
+                                        <button onClick={handleLogout} className="p-2.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-red-500 dark:hover:text-red-400 transition shadow-sm"><Icon name="log-out" className="w-5 h-5" /></button>
                                     </>
                                 )}
                             </div>
@@ -1418,9 +1569,9 @@
 
                         {viewMode === 'admin' ? ( <AdminConsole db={db} systemConfig={systemConfig} systemClasses={systemClasses} onBack={() => setViewMode('current')} subjects={subjects} triggerAlert={triggerAlert} triggerConfirm={triggerConfirm} /> ) : 
                          viewMode === 'timetable' ? ( <div className="max-w-3xl mx-auto"><Timetable currentDay={currentTimetableDay} config={timetableConfig} onDayChange={setCurrentTimetableDay} subjects={subjects} /></div> ) : 
-                         viewMode === 'timetable_edit' ? ( <TimetableEditor initialConfig={timetableConfig} onSave={saveTimetableConfig} onCancel={() => setViewMode('timetable')} subjects={subjects} /> ) : (
+                         viewMode === 'timetable_edit' ? ( <TimetableEditor initialConfig={timetableConfig} onSave={saveTimetableConfig} onCancel={() => setViewMode('timetable')} subjects={subjects} triggerConfirm={triggerConfirm} /> ) : (
                         <div className="max-w-3xl mx-auto">
-                            
+
                             {/* --- 雙模式切換器 --- */}
                             {viewMode === 'current' && (
                                 <div className="flex bg-slate-200/50 dark:bg-slate-800/50 p-1.5 rounded-2xl w-full sm:w-fit mx-auto mb-8 shadow-inner border border-white/20 dark:border-slate-700">
@@ -1619,21 +1770,21 @@
 
                     {notification.isOpen && (
                         <div className="fixed inset-0 z-[200] flex items-center justify-center px-4">
-                            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
-                            <div className="notification-animate relative bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-sm p-6 text-center">
-                                <div className={`mx-auto w-12 h-12 rounded-full flex items-center justify-center mb-4 ${notification.type === 'confirm' ? 'bg-red-100 text-red-500' : 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-500 dark:text-indigo-400'}`}>
-                                    {notification.type === 'confirm' ? <Icon name="alert-triangle" className="w-6 h-6" /> : <Icon name="info" className="w-6 h-6" />}
+                            <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" onClick={closeNotification}></div>
+                            <div className="dialog-animate relative bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-sm p-6 text-center border border-slate-100 dark:border-slate-700">
+                                <div className={`mx-auto w-14 h-14 rounded-full flex items-center justify-center mb-4 ${notification.type === 'confirm' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400' : 'bg-slate-50 dark:bg-slate-700 text-slate-500 dark:text-slate-300'}`}>
+                                    {notification.type === 'confirm' ? <Icon name="help-circle" className="w-8 h-8" /> : <Icon name="info" className="w-8 h-8" />}
                                 </div>
-                                <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-2">{notification.type === 'confirm' ? '確認操作' : '提示'}</h3>
-                                <p className="text-slate-600 dark:text-slate-300 mb-6 leading-relaxed">{notification.message}</p>
+                                <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2">{notification.type === 'confirm' ? '確認操作' : '提示'}</h3>
+                                <p className="text-slate-600 dark:text-slate-300 mb-8 font-medium leading-relaxed">{notification.message}</p>
                                 <div className="flex gap-3 justify-center">
                                     {notification.type === 'confirm' ? (
                                         <>
-                                            <button onClick={closeNotification} className="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">取消</button>
-                                            <button onClick={handleNotificationConfirm} className="flex-1 py-2.5 px-4 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 transition-all active:scale-95">確認</button>
+                                            <button onClick={closeNotification} className="flex-1 py-3 px-4 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">取消</button>
+                                            <button onClick={handleNotificationConfirm} className="flex-1 py-3 px-4 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-200 dark:shadow-none transition-all active:scale-95">確認</button>
                                         </>
                                     ) : (
-                                        <button onClick={closeNotification} className={`w-full py-2.5 px-4 rounded-xl text-white font-bold transition-all active:scale-95 ${t.bg}`}>知道了</button>
+                                        <button onClick={closeNotification} className="w-full py-3 px-4 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-200 dark:shadow-none transition-all active:scale-95">知道了</button>
                                     )}
                                 </div>
                             </div>
@@ -1645,7 +1796,7 @@
                     <JoinClassModal isOpen={isJoinClassOpen} onClose={() => setIsJoinClassOpen(false)} systemClasses={systemClasses} joinedClasses={joinedClasses} onJoin={handleJoinClassSubmit} t={t} />
                     {showNameSetup && <NameSetupModal user={user} onSave={handleNameSetupSave} loading={nameSetupLoading} triggerAlert={triggerAlert} t={t} />}
                     {editingItem && <EditModal item={editingItem} onClose={() => setEditingItem(null)} onSave={handleUpdateItem} triggerAlert={triggerAlert} subjects={subjects} />}
-                    <SubjectManagerModal isOpen={isSubjectManagerOpen} onClose={() => setIsSubjectManagerOpen(false)} currentSubjects={subjects} onSave={saveSubjects} />
+                    <SubjectManagerModal isOpen={isSubjectManagerOpen} onClose={() => setIsSubjectManagerOpen(false)} currentSubjects={subjects} onSave={saveSubjects} triggerConfirm={triggerConfirm} />
                 </div>
             );
         }
