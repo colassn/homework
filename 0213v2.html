@@ -428,13 +428,25 @@
                                 <button 
                                     key={i} 
                                     onClick={() => onSelectDate(isSelected ? null : dateStr)}
-                                    className={`relative aspect-square flex flex-col items-center justify-center rounded-xl sm:rounded-2xl transition-all border-2 ${isSelected ? `${t.border} ${t.lightBg} shadow-sm` : 'border-transparent hover:bg-slate-50 dark:hover:bg-slate-700'} ${isToday && !isSelected ? 'border-slate-200 dark:border-slate-600' : ''}`}
+                                    className={`relative aspect-square flex flex-col items-center justify-center rounded-xl sm:rounded-2xl transition-all border-2 
+                                        ${isSelected 
+                                            ? `${t.border} ${t.lightBg} shadow-sm` 
+                                            : (isToday 
+                                                ? 'border-indigo-400 dark:border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' 
+                                                : 'border-transparent hover:bg-slate-50 dark:hover:bg-slate-700')
+                                        }
+                                    `}
                                 >
-                                    <span className={`text-sm sm:text-base font-bold ${isSelected ? t.text : (isWeekend ? 'text-red-500' : 'text-slate-700 dark:text-slate-300')}`}>{date.getDate()}</span>
+                                    <span className={`text-sm sm:text-base font-bold ${isSelected ? t.text : (isToday ? 'text-indigo-700 dark:text-indigo-300 scale-110' : (isWeekend ? 'text-red-500' : 'text-slate-700 dark:text-slate-300'))}`}>
+                                        {date.getDate()}
+                                    </span>
+                                    
+                                    {isToday && <span className="text-[9px] font-bold text-indigo-500 dark:text-indigo-400 -mt-0.5 mb-0.5">今天</span>}
+
                                     {count > 0 ? (
-                                        <span className={`mt-1 text-[9px] sm:text-[10px] font-bold px-1.5 rounded-full ${badgeColor}`}>{count}</span>
+                                        <span className={`mt-0.5 text-[9px] sm:text-[10px] font-bold px-1.5 rounded-full ${badgeColor}`}>{count}</span>
                                     ) : (
-                                        <div className="h-4"></div>
+                                        !isToday && <div className="h-4"></div>
                                     )}
                                 </button>
                             );
@@ -450,7 +462,7 @@
             );
         }
 
-        // v2.4 Quick View Modal (Enhanced)
+        // v2.4 Quick View Modal (Enhanced) - RESTORED
         function QuickViewModal({ isOpen, onClose, title, items, subjects, onEdit, onDelete, isAdmin, userUid }) {
             if (!isOpen) return null;
 
@@ -486,7 +498,6 @@
                                                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${subjectStyle}`}>{item.subject}</span>
                                                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${statusColor}`}>{statusText}</span>
                                             </div>
-                                            {/* 操作按鈕 */}
                                             <div className="flex gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
                                                 {!item.forceExpired && <button onClick={() => { onEdit(item); onClose(); }} className="p-1.5 text-slate-400 hover:text-blue-500 bg-white dark:bg-slate-800 rounded-lg shadow-sm"><Icon name="pencil" className="w-3.5 h-3.5" /></button>}
                                                 <button onClick={() => { onDelete(item.id); }} className="p-1.5 text-slate-400 hover:text-red-500 bg-white dark:bg-slate-800 rounded-lg shadow-sm"><Icon name="trash-2" className="w-3.5 h-3.5" /></button>
@@ -502,8 +513,6 @@
                 </div>
             );
         }
-
-        // --- Modals ---
 
         function BlockScreen({ type, estimatedTime, customMessage, onLogin, user }) {
             const defaultMessage = type === 'access_denied' ? '抱歉，此網站目前僅限白名單用戶訪問。\n請聯絡管理員開通權限。' : '管理員正在進行系統維護，請稍後再回來。';
@@ -613,11 +622,7 @@
 
         function NameSetupModal({ user, onSave, loading, triggerAlert, t }) {
             const [name, setName] = useState(user?.displayName || '');
-            const handleSubmit = (e) => { 
-                e.preventDefault(); 
-                if (!name.trim()) { triggerAlert("請輸入名字"); return; } 
-                onSave(name.trim()); 
-            };
+            const handleSubmit = (e) => { e.preventDefault(); if (!name.trim()) { triggerAlert("請輸入名字"); return; } onSave(name.trim()); };
             return (
                 <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm"></div>
@@ -641,26 +646,16 @@
 
             if (!isOpen) return null;
 
-            const showError = (msg) => {
-                setFloatingError(msg);
-                setTimeout(() => setFloatingError(''), 3000);
-            };
+            const showError = (msg) => { setFloatingError(msg); setTimeout(() => setFloatingError(''), 3000); };
 
             const handleJoin = async (e) => {
                 e.preventDefault();
                 const upperCode = code.trim().toUpperCase();
                 const targetClass = systemClasses.find(c => c.code === upperCode);
-
                 if (!targetClass) return showError('無效的班級代碼！請確認後再試。');
                 if (joinedClasses.includes(upperCode)) return showError('你已經加入過這個班級了！');
-
                 setLoading(true);
-                try {
-                    await onJoin(upperCode, targetClass.name);
-                    setCode('');
-                } catch (err) {
-                    showError('加入失敗，請重試');
-                }
+                try { await onJoin(upperCode, targetClass.name); setCode(''); } catch (err) { showError('加入失敗，請重試'); }
                 setLoading(false);
             };
 
@@ -668,30 +663,18 @@
                 <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose}></div>
                     <div className="modal-animate bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-sm p-6 relative z-10 text-center">
-
-                        {/* 浮空錯誤提示 */}
                         {floatingError && (
                             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white px-5 py-3 rounded-2xl shadow-[0_10px_30px_rgba(239,68,68,0.4)] z-50 font-bold text-sm whitespace-nowrap pop-in-error flex items-center gap-2">
                                 <Icon name="alert-circle" className="w-5 h-5" />
                                 {floatingError}
                             </div>
                         )}
-
                         <button onClick={onClose} className="absolute top-4 right-4 p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"><Icon name="x" className="w-5 h-5 dark:text-slate-300" /></button>
                         <div className={`w-16 h-16 ${t.lightBg} rounded-full flex items-center justify-center mx-auto mb-4 mt-2 ${t.text}`}><Icon name="school" className="w-8 h-8" /></div>
                         <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-2">加入班級</h2>
                         <p className="text-slate-500 dark:text-slate-400 mb-6 text-sm">請輸入由老師提供的 6 位數班級代碼</p>
                         <form onSubmit={handleJoin}>
-                            <input 
-                                type="text" 
-                                maxLength={6} 
-                                className={`w-full px-4 py-4 rounded-2xl border ${floatingError ? 'border-red-400 bg-red-50 dark:bg-red-900/10 focus:ring-red-400' : `border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:${t.ring}`} dark:text-white text-center font-mono font-bold text-2xl tracking-[0.5em] outline-none mb-4 uppercase placeholder:tracking-normal placeholder:text-base placeholder:font-sans transition-colors`} 
-                                placeholder="輸入代碼" 
-                                value={code} 
-                                onChange={e => {setCode(e.target.value); setFloatingError('');}} 
-                                autoFocus 
-                                required 
-                            />
+                            <input type="text" maxLength={6} className={`w-full px-4 py-4 rounded-2xl border ${floatingError ? 'border-red-400 bg-red-50 dark:bg-red-900/10 focus:ring-red-400' : `border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:${t.ring}`} dark:text-white text-center font-mono font-bold text-2xl tracking-[0.5em] outline-none mb-4 uppercase placeholder:tracking-normal placeholder:text-base placeholder:font-sans transition-colors`} placeholder="輸入代碼" value={code} onChange={e => {setCode(e.target.value); setFloatingError('');}} autoFocus required />
                             <button type="submit" disabled={loading || code.length !== 6} className={`w-full py-3 rounded-xl text-white font-bold transition-all shadow-lg active:scale-95 disabled:opacity-50 ${t.bg}`}>{loading ? '處理中...' : '確認加入'}</button>
                         </form>
                     </div>
@@ -728,17 +711,9 @@
                 e.preventDefault(); if(!email || !password) return;
                 try { 
                     setLoading(true); 
-                    if (isLogin) { 
-                        await signInWithEmailAndPassword(auth, email, password); 
-                    } else { 
-                        await createUserWithEmailAndPassword(auth, email, password); 
-                    } 
+                    if (isLogin) { await signInWithEmailAndPassword(auth, email, password); } else { await createUserWithEmailAndPassword(auth, email, password); } 
                     onClose(); 
-                } catch (error) { 
-                    console.error(error); 
-                    triggerAlert(isLogin ? "登入失敗: " + error.message : "註冊失敗: " + error.message); 
-                    setLoading(false); 
-                } 
+                } catch (error) { console.error(error); triggerAlert(isLogin ? "登入失敗: " + error.message : "註冊失敗: " + error.message); setLoading(false); } 
             };
 
             return ( 
@@ -1099,7 +1074,8 @@
             
             const [editingAdminItem, setEditingAdminItem] = useState(null);
 
-            const { collection, getDocs, query, orderBy, onSnapshot, doc, updateDoc, arrayUnion, arrayRemove, deleteDoc, setDoc } = window.firebaseServices || {};
+            // Added getDoc to destructuring
+            const { collection, getDocs, query, orderBy, onSnapshot, doc, updateDoc, arrayUnion, arrayRemove, deleteDoc, setDoc, getDoc } = window.firebaseServices || {};
             const allowedEmails = systemConfig?.allowedEmails || [];
 
             useEffect(() => {
@@ -1140,8 +1116,11 @@
                 }
             };
 
-            // v2.3 Deep Clean Class Delete
+            // v2.3 Deep Clean Class Delete (Fixed: Use getDoc/filter for robust deletion)
             const handleDeepDeleteClass = async (classObj) => {
+                // Explicitly get services inside the function to ensure scope
+                const { getDoc, doc, updateDoc, deleteDoc, getDocs, query, where, collection, arrayRemove } = window.firebaseServices;
+
                 triggerConfirm(`⚠️ 警告：確定要刪除班級 ${classObj.name}？\n\n此操作將會：\n1. 刪除班級代碼\n2. 刪除該班級所有廣播功課\n3. 將所有學生踢出該班級\n\n(學生私有記錄將保留但變為孤兒記錄)`, async () => {
                     try {
                         // 1. Delete Public Assignments for this class
@@ -1154,8 +1133,16 @@
                         const usersSnap = await getDocs(usersQ);
                         await Promise.all(usersSnap.docs.map(d => updateDoc(d.ref, { joinedClasses: arrayRemove(classObj.code) })));
 
-                        // 3. Delete Class Config
-                        await updateDoc(doc(db, 'system_settings', 'classes'), { list: arrayRemove(classObj) });
+                        // 3. Delete Class Config (Fixed logic: Read-Filter-Write)
+                        const classesRef = doc(db, 'system_settings', 'classes');
+                        const classesSnap = await getDoc(classesRef);
+                        
+                        if (classesSnap.exists()) {
+                            const currentList = classesSnap.data().list || [];
+                            // Filter out the class by unique code instead of object equality
+                            const newList = currentList.filter(c => c.code !== classObj.code);
+                            await updateDoc(classesRef, { list: newList });
+                        }
                         
                         triggerAlert("班級已徹底刪除及清理");
                     } catch (e) { 
@@ -1496,7 +1483,7 @@
             );
         }
 
-        // --- App Component ---
+        // --- App Component (Restored) ---
         function App() {
             const [user, setUser] = useState(null);
             const [authLoading, setAuthLoading] = useState(true);
