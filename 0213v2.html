@@ -6,14 +6,32 @@
     <meta name="theme-color" content="#4f46e5">
     <title>電子手冊</title>
 
-    <!-- 引入 React 和 ReactDOM -->
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <!-- 
+        === CDN 備援區 (Mobile GitHub Friendly) === 
+        策略：預設使用 cdnjs (穩定)，如果失敗則自動切換到 unpkg。
+    -->
 
-    <!-- 引入 Babel 用來解析 JSX -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- 1. React 核心 -->
+    <script 
+        src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js" 
+        crossorigin 
+        onerror="this.onerror=null; this.src='https://unpkg.com/react@18/umd/react.production.min.js'">
+    </script>
 
-    <!-- 引入 Tailwind CSS & 設定 Dark Mode -->
+    <!-- 2. React DOM -->
+    <script 
+        src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js" 
+        crossorigin 
+        onerror="this.onerror=null; this.src='https://unpkg.com/react-dom@18/umd/react-dom.production.min.js'">
+    </script>
+
+    <!-- 3. Babel (解析 JSX) -->
+    <script 
+        src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"
+        onerror="this.onerror=null; this.src='https://unpkg.com/@babel/standalone/babel.min.js'">
+    </script>
+
+    <!-- 4. Tailwind CSS (樣式) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -30,14 +48,8 @@
                     },
                     keyframes: {
                         'gradient-x': {
-                            '0%, 100%': {
-                                'background-size': '200% 200%',
-                                'background-position': 'left center'
-                            },
-                            '50%': {
-                                'background-size': '200% 200%',
-                                'background-position': 'right center'
-                            },
+                            '0%, 100%': { 'background-size': '200% 200%', 'background-position': 'left center' },
+                            '50%': { 'background-size': '200% 200%', 'background-position': 'right center' },
                         },
                         'float': {
                             '0%, 100%': { transform: 'translateY(0)' },
@@ -49,8 +61,11 @@
         }
     </script>
 
-    <!-- 引入 Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- 5. Lucide Icons (圖標) -->
+    <script 
+        src="https://unpkg.com/lucide@latest"
+        onerror="this.onerror=null; this.src='https://cdn.jsdelivr.net/npm/lucide@latest'">
+    </script>
 
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; transition: background-color 0.3s ease, color 0.3s ease; }
@@ -91,11 +106,36 @@
             100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
         }
         .pop-in-error { animation: popInError 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+
+        /* Loading Screen Styles */
+        #loading-screen {
+            position: fixed; inset: 0; z-index: 9999;
+            background-color: #f8fafc; color: #475569;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            font-family: sans-serif; transition: opacity 0.5s ease;
+        }
+        .dark #loading-screen { background-color: #0f172a; color: #cbd5e1; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top: 4px solid #4f46e5; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .hidden-loader { opacity: 0; pointer-events: none; }
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100">
+    
+    <!-- 載入畫面 (Fallback UI) -->
+    <!-- 如果 CDN 掛了，React 跑不出來，使用者至少會看到這裡，而不是白畫面 -->
+    <div id="loading-screen">
+        <div class="spinner"></div>
+        <h2 style="font-size: 1.2rem; font-weight: bold; margin-bottom: 0.5rem;">正在啟動電子手冊...</h2>
+        <p style="font-size: 0.8rem; opacity: 0.7;">如果是初次載入，請稍候</p>
+        <p id="error-message" style="font-size: 0.8rem; color: #ef4444; margin-top: 1rem; display: none;">
+            ⚠️ 系統偵測到網路資源載入異常。<br>請檢查網路連線或稍後再試。
+        </p>
+    </div>
+
     <div id="root"></div>
 
+    <!-- Firebase 模組 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -111,16 +151,22 @@
             measurementId: "G-C51XDYW67W"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const googleProvider = new GoogleAuthProvider();
+        try {
+            const app = initializeApp(firebaseConfig);
+            const auth = getAuth(app);
+            const db = getFirestore(app);
+            const googleProvider = new GoogleAuthProvider();
 
-        window.firebaseServices = { 
-            auth, db, googleProvider, 
-            signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, 
-            collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs, setDoc, arrayUnion, arrayRemove, getDoc, writeBatch 
-        };
+            window.firebaseServices = { 
+                auth, db, googleProvider, 
+                signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, 
+                collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs, setDoc, arrayUnion, arrayRemove, getDoc, writeBatch 
+            };
+        } catch (e) {
+            console.error("Firebase Init Error:", e);
+            document.getElementById('error-message').style.display = 'block';
+            document.getElementById('error-message').innerText = "無法連接資料庫 (Firebase CDN Error)";
+        }
     </script>
 
     <!-- PWA Setup -->
@@ -204,6 +250,42 @@
             }, [name, className]);
             return <span ref={ref} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}></span>;
         };
+
+        // Moved CustomDropdown here to ensure it's defined before usage
+        function CustomDropdown({ value, onChange, options }) { 
+            const [isOpen, setIsOpen] = useState(false); 
+            const dropdownRef = useRef(null); 
+            
+            useEffect(() => { 
+                const handleClickOutside = (event) => { 
+                    if (dropdownRef.current && !dropdownRef.current.contains(event.target)) { 
+                        setIsOpen(false); 
+                    } 
+                }; 
+                document.addEventListener('mousedown', handleClickOutside); 
+                return () => document.removeEventListener('mousedown', handleClickOutside); 
+            }, []); 
+            
+            const selectedLabel = options.find(o => o.value === value)?.label || '排序'; 
+            
+            return ( 
+                <div className="relative" ref={dropdownRef}> 
+                    <button type="button" onClick={() => setIsOpen(!isOpen)} className="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900 font-bold hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm active:scale-95"> 
+                        <span>{selectedLabel}</span> <Icon name="chevron-down" className={`w-3 h-3 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} /> 
+                    </button> 
+                    {isOpen && ( 
+                        <div className="absolute right-0 mt-2 w-48 bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right"> 
+                            {options.map((opt) => ( 
+                                <button key={opt.value} onClick={() => { onChange(opt.value); setIsOpen(false); }} className={`w-full text-left px-4 py-3 text-xs font-bold flex items-center gap-2 transition-colors ${value === opt.value ? 'bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'}`}> 
+                                    {opt.icon && <Icon name={opt.icon} className="w-3.5 h-3.5" />}
+                                    {opt.label} 
+                                </button> 
+                            ))} 
+                        </div> 
+                    )} 
+                </div> 
+            ); 
+        }
 
         const formatCountdown = (ms) => { const totalSeconds = Math.floor(ms / 1000); const hours = Math.floor(totalSeconds / 3600); const minutes = Math.floor((totalSeconds % 3600) / 60); const seconds = totalSeconds % 60; return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`; };
 
@@ -514,8 +596,13 @@
             );
         }
 
-        function BlockScreen({ type, estimatedTime, customMessage, onLogin, user }) {
-            const defaultMessage = type === 'access_denied' ? '抱歉，此網站目前僅限白名單用戶訪問。\n請聯絡管理員開通權限。' : '管理員正在進行系統維護，請稍後再回來。';
+        function BlockScreen({ type, estimatedTime, customMessage, customTitle, onLogin, user }) {
+            const defaultMessage = (type === 'access_denied' || type === 'whitelist_blocked') ? '抱歉，此網站目前僅限白名單用戶訪問。\n請聯絡管理員開通權限。' : '管理員正在進行系統維護，請稍後再回來。';
+            const iconName = (type === 'access_denied' || type === 'whitelist_blocked') ? 'shield-ban' : (type === 'updating' ? 'hammer' : (type === 'restructuring' ? 'database' : 'lock'));
+            
+            // Determine default title based on type
+            const defaultTitle = type === 'access_denied' || type === 'whitelist_blocked' ? '存取被拒' : type === 'updating' ? '網站更新中' : type === 'restructuring' ? '資料重整中' : '系統維護中';
+            
             return (
                 <div className="fixed inset-0 z-40 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900 p-6 text-center overflow-hidden">
                     <div className="absolute inset-0 z-0 opacity-30">
@@ -524,9 +611,11 @@
                     </div>
                     <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl p-8 rounded-3xl shadow-xl border border-white/50 dark:border-slate-700 max-w-md w-full relative z-10">
                         <div className="w-20 h-20 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-6">
-                            {type === 'updating' ? <Icon name="hammer" className="w-10 h-10 text-orange-500" /> : type === 'restructuring' ? <Icon name="database" className="w-10 h-10 text-blue-500" /> : <Icon name="lock" className="w-10 h-10 text-red-500" />}
+                            <Icon name={iconName} className="w-10 h-10 text-red-500" />
                         </div>
-                        <h1 className="text-2xl font-black text-slate-800 dark:text-white mb-2">{type === 'updating' ? '網站更新中' : type === 'restructuring' ? '資料重整中' : '存取被拒'}</h1>
+                        <h1 className="text-2xl font-black text-slate-800 dark:text-white mb-2">
+                            {customTitle || defaultTitle}
+                        </h1>
                         <p className="text-slate-500 dark:text-slate-400 font-medium mb-6 whitespace-pre-wrap">{customMessage || defaultMessage}</p>
                         {estimatedTime && (type === 'updating' || type === 'restructuring') && (
                             <div className="bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800 rounded-xl p-4 flex items-center gap-3">
@@ -680,20 +769,6 @@
                     </div>
                 </div>
             );
-        }
-
-        function CustomDropdown({ value, onChange, options }) { 
-            const [isOpen, setIsOpen] = useState(false); const dropdownRef = useRef(null); 
-            useEffect(() => { const handleClickOutside = (event) => { if (dropdownRef.current && !dropdownRef.current.contains(event.target)) { setIsOpen(false); } }; document.addEventListener('mousedown', handleClickOutside); return () => document.removeEventListener('mousedown', handleClickOutside); }, []); 
-            const selectedLabel = options.find(o => o.value === value)?.label || '排序'; 
-            return ( 
-                <div className="relative" ref={dropdownRef}> 
-                    <button type="button" onClick={() => setIsOpen(!isOpen)} className="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900 font-bold hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm active:scale-95"> 
-                        <span>{selectedLabel}</span> <Icon name="chevron-down" className={`w-3 h-3 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} /> 
-                    </button> 
-                    {isOpen && ( <div className="absolute right-0 mt-2 w-48 bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right"> {options.map((opt) => ( <button key={opt.value} onClick={() => { onChange(opt.value); setIsOpen(false); }} className={`w-full text-left px-4 py-3 text-xs font-bold flex items-center gap-2 transition-colors ${value === opt.value ? 'bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'}`}> {opt.icon && <Icon name={opt.icon} className="w-3.5 h-3.5" />}{opt.label} </button> ))} </div> )} 
-                </div> 
-            ); 
         }
 
         function AuthModal({ isOpen, onClose, triggerAlert }) { 
@@ -1368,37 +1443,40 @@
                                              <input type="text" value={newName} onChange={e => setNewName(e.target.value)} className="flex-1 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white" placeholder="顯示名稱" />
                                              <button onClick={handleUpdateUserName} className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-bold text-sm hover:bg-indigo-700">更新</button>
                                          </div>
-                                         <div className="flex gap-2 pt-2">
-                                             {!allowedEmails.includes(selectedUser.email) && <button onClick={() => updateConfig('allowedEmails', arrayUnion(selectedUser.email))} className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 rounded-lg hover:bg-emerald-100 transition-colors">➕ 加入白名單</button>}
+                                         <div className="flex gap-2 pt-2 flex-wrap">
+                                             {!allowedEmails.includes(selectedUser.email) ? 
+                                                <button onClick={() => updateConfig('allowedEmails', arrayUnion(selectedUser.email))} className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 rounded-lg hover:bg-emerald-100 transition-colors flex items-center gap-1">➕ 加入白名單</button> :
+                                                <button onClick={() => updateConfig('allowedEmails', arrayRemove(selectedUser.email))} className="text-xs font-bold text-amber-600 bg-amber-50 dark:bg-amber-900/20 px-3 py-1.5 rounded-lg hover:bg-amber-100 transition-colors flex items-center gap-1">🚫 移出白名單</button>
+                                             }
                                              <button onClick={() => handleDeleteUser(selectedUser)} className="text-xs font-bold text-red-600 bg-red-50 dark:bg-red-900/20 px-3 py-1.5 rounded-lg hover:bg-red-100 transition-colors flex items-center gap-1"><Icon name="trash-2" className="w-3 h-3" /> 強制刪除帳號</button>
                                          </div>
                                      </div>
                                      <div className="flex gap-4">
-                                        <div className="text-center p-2"><div className="text-2xl font-black">{userHomeworks.length}</div><div className="text-xs font-bold text-slate-400 mt-1">總項目</div></div>
-                                        <div className="text-center p-2"><div className="text-2xl font-black text-emerald-500">{userHomeworks.filter(h=>h.completed).length}</div><div className="text-xs font-bold text-slate-400 mt-1">已完成</div></div>
+                                         <div className="text-center p-2"><div className="text-2xl font-black">{userHomeworks.length}</div><div className="text-xs font-bold text-slate-400 mt-1">總項目</div></div>
+                                         <div className="text-center p-2"><div className="text-2xl font-black text-emerald-500">{userHomeworks.filter(h=>h.completed).length}</div><div className="text-xs font-bold text-slate-400 mt-1">已完成</div></div>
                                      </div>
                                 </div>
 
                                 <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 overflow-hidden p-2">
                                     <div className="max-h-[400px] overflow-y-auto space-y-2 pr-2">
-                                            {userHomeworks.map(h => (
-                                                <div key={h.id} className={`p-4 rounded-xl border text-sm flex justify-between items-start transition-all ${h.completed ? 'bg-slate-50 dark:bg-slate-900/50 border-slate-100 dark:border-slate-800 opacity-60' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-indigo-200'}`}>
-                                                    <div>
-                                                        <div className="flex items-center gap-2 mb-1.5">
-                                                            <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border ${subjects.find(s => s.name === h.subject)?.color || 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600'}`}>{h.subject || '其他'}</span>
-                                                            {h.completed ? <span className="text-[10px] bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded font-bold">已完成</span> : <span className="text-[10px] bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 px-2 py-0.5 rounded font-bold">未完成</span>}
-                                                        </div>
-                                                        <div className={`font-medium ${h.completed ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-700 dark:text-slate-200'}`}>{h.description}</div>
-                                                    </div>
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="text-xs font-mono text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-900 px-2 py-1 rounded border border-slate-100 dark:border-slate-800">{h.dueDate}</div>
-                                                        <div className="flex gap-1">
-                                                            <button onClick={() => setEditingAdminItem(h)} className="p-1.5 text-slate-400 hover:text-indigo-600 bg-slate-100 dark:bg-slate-700 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors"><Icon name="pencil" className="w-3.5 h-3.5" /></button>
-                                                            <button onClick={() => handleAdminDeleteItem(h.id)} className="p-1.5 text-slate-400 hover:text-red-600 bg-slate-100 dark:bg-slate-700 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"><Icon name="trash-2" className="w-3.5 h-3.5" /></button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ))}
+                                             {userHomeworks.map(h => (
+                                                 <div key={h.id} className={`p-4 rounded-xl border text-sm flex justify-between items-start transition-all ${h.completed ? 'bg-slate-50 dark:bg-slate-900/50 border-slate-100 dark:border-slate-800 opacity-60' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-indigo-200'}`}>
+                                                     <div>
+                                                         <div className="flex items-center gap-2 mb-1.5">
+                                                             <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border ${subjects.find(s => s.name === h.subject)?.color || 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600'}`}>{h.subject || '其他'}</span>
+                                                             {h.completed ? <span className="text-[10px] bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded font-bold">已完成</span> : <span className="text-[10px] bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 px-2 py-0.5 rounded font-bold">未完成</span>}
+                                                         </div>
+                                                         <div className={`font-medium ${h.completed ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-700 dark:text-slate-200'}`}>{h.description}</div>
+                                                     </div>
+                                                     <div className="flex items-center gap-3">
+                                                         <div className="text-xs font-mono text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-900 px-2 py-1 rounded border border-slate-100 dark:border-slate-800">{h.dueDate}</div>
+                                                         <div className="flex gap-1">
+                                                             <button onClick={() => setEditingAdminItem(h)} className="p-1.5 text-slate-400 hover:text-indigo-600 bg-slate-100 dark:bg-slate-700 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors"><Icon name="pencil" className="w-3.5 h-3.5" /></button>
+                                                             <button onClick={() => handleAdminDeleteItem(h.id)} className="p-1.5 text-slate-400 hover:text-red-600 bg-slate-100 dark:bg-slate-700 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"><Icon name="trash-2" className="w-3.5 h-3.5" /></button>
+                                                         </div>
+                                                     </div>
+                                                 </div>
+                                             ))}
                                     </div>
                                 </div>
                             </div>
@@ -1425,8 +1503,8 @@
                                                             </td>
                                                             <td className="px-6 py-4">
                                                                 <div className="flex flex-col gap-1 items-start">
-                                                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${subjects.find(s => s.name === task.subject)?.color || 'bg-slate-100 text-slate-600 border-slate-200 dark:border-slate-700'}`}>{task.subject}</span>
-                                                                        <span className="text-[10px] bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 px-2 py-0.5 rounded font-bold max-w-[120px] truncate" title={targetName}>{targetName}</span>
+                                                                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${subjects.find(s => s.name === task.subject)?.color || 'bg-slate-100 text-slate-600 border-slate-200 dark:border-slate-700'}`}>{task.subject}</span>
+                                                                            <span className="text-[10px] bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 px-2 py-0.5 rounded font-bold max-w-[120px] truncate" title={targetName}>{targetName}</span>
                                                                 </div>
                                                             </td>
                                                             <td className="px-6 py-4 text-right">
@@ -1446,6 +1524,48 @@
                         {activeTab === 'settings' && (
                             <div className="space-y-8 animate-fadeIn max-w-2xl">
                                 <div><h3 className="text-2xl font-bold dark:text-white mb-2">核心系統設定</h3></div>
+
+                                {/* 白名單系統設定 */}
+                                <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden p-1">
+                                    <div className="p-5 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 flex justify-between items-center">
+                                        <h4 className="font-bold dark:text-white flex items-center gap-2"><Icon name="shield-check" className="w-5 h-5 text-emerald-500"/> 白名單系統</h4>
+                                        <label className="relative inline-flex items-center cursor-pointer">
+                                            <input type="checkbox" className="sr-only peer" checked={systemConfig?.whitelistEnabled || false} onChange={(e) => updateConfig('whitelistEnabled', e.target.checked)} />
+                                            <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 dark:peer-focus:ring-emerald-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-emerald-600"></div>
+                                            <span className="ml-3 text-sm font-medium text-slate-900 dark:text-slate-300">{systemConfig?.whitelistEnabled ? '已啟用' : '已停用'}</span>
+                                        </label>
+                                    </div>
+                                    <div className="p-5">
+                                        <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">當啟用白名單模式時，只有下列清單中的電郵地址可以登入並使用系統。</p>
+                                        
+                                        <form onSubmit={handleAddWhitelist} className="flex gap-2 mb-4">
+                                            <input type="email" placeholder="輸入電郵地址..." value={newEmail} onChange={e => setNewEmail(e.target.value)} className="flex-1 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-emerald-500 outline-none" required />
+                                            <button type="submit" disabled={isSubmitting} className="bg-emerald-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-emerald-700 transition-colors flex items-center gap-2"><Icon name="plus" className="w-4 h-4"/> 新增</button>
+                                        </form>
+
+                                        <div className="max-h-60 overflow-y-auto border border-slate-100 dark:border-slate-700 rounded-xl">
+                                            {allowedEmails.length === 0 ? (
+                                                <div className="p-8 text-center text-slate-400 text-sm">白名單目前為空</div>
+                                            ) : (
+                                                <table className="w-full text-left text-sm">
+                                                    <thead className="bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400">
+                                                        <tr><th className="px-4 py-2">電郵地址</th><th className="px-4 py-2 text-right">操作</th></tr>
+                                                    </thead>
+                                                    <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                                                        {allowedEmails.map(email => (
+                                                            <tr key={email} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                                                                <td className="px-4 py-3 dark:text-slate-300">{email}</td>
+                                                                <td className="px-4 py-3 text-right">
+                                                                    <button onClick={() => handleRemoveWhitelist(email)} className="text-red-500 hover:text-red-700"><Icon name="trash-2" className="w-4 h-4"/></button>
+                                                                </td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
 
                                 <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden p-1">
                                     <div className="p-5 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50">
@@ -1474,6 +1594,33 @@
                                                 </button>
                                             ))}
                                             </div>
+
+                                            {/* NEW SECTION START: Maintenance Customization */}
+                                            <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700 space-y-3">
+                                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 block mb-2">維護頁面自定義內容</label>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                     <div>
+                                                        <label className="text-[10px] text-slate-400 mb-1 block">維護標題 (留空顯示預設)</label>
+                                                        <input type="text" id="mTitleInput" defaultValue={systemConfig?.maintenanceTitle || ''} className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-indigo-500" placeholder="例如: 系統升級中..." />
+                                                     </div>
+                                                     <div>
+                                                        <label className="text-[10px] text-slate-400 mb-1 block">預計恢復時間</label>
+                                                        <input type="text" id="mTimeInput" defaultValue={systemConfig?.estimatedTime || ''} className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-indigo-500" placeholder="例如: 14:00" />
+                                                     </div>
+                                                </div>
+                                                <div>
+                                                    <label className="text-[10px] text-slate-400 mb-1 block">維護詳細訊息 (支援換行)</label>
+                                                    <textarea id="mMessageInput" rows="3" defaultValue={systemConfig?.message || ''} className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-indigo-500" placeholder="輸入給用戶的詳細說明..."></textarea>
+                                                </div>
+                                                <div className="text-right">
+                                                     <button onClick={() => {
+                                                         updateConfig('maintenanceTitle', document.getElementById('mTitleInput').value);
+                                                         updateConfig('estimatedTime', document.getElementById('mTimeInput').value);
+                                                         updateConfig('message', document.getElementById('mMessageInput').value);
+                                                     }} className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-indigo-700 transition-colors">儲存維護資訊</button>
+                                                </div>
+                                            </div>
+                                            {/* NEW SECTION END */}
                                     </div>
                                 </div>
                             </div>
@@ -1550,7 +1697,16 @@
             // v2.4 Quick View State
             const [quickView, setQuickView] = useState({ isOpen: false, title: '', items: [] });
 
-            useEffect(() => { if ("Notification" in window && Notification.permission === "default") Notification.requestPermission(); }, []);
+            useEffect(() => { 
+                const loadingScreen = document.getElementById('loading-screen');
+                if (loadingScreen) {
+                    loadingScreen.classList.add('hidden-loader');
+                    setTimeout(() => loadingScreen.remove(), 500); // 移除 DOM 避免干擾
+                }
+                
+                if ("Notification" in window && Notification.permission === "default") Notification.requestPermission(); 
+            }, []);
+            
             useEffect(() => { localStorage.setItem('isDarkMode', isDarkMode); if (isDarkMode) document.documentElement.classList.add('dark'); else document.documentElement.classList.remove('dark'); }, [isDarkMode]);
             useEffect(() => localStorage.setItem('themeColor', themeColor), [themeColor]);
             
@@ -1805,8 +1961,17 @@
             };
 
             const maintenanceMode = systemConfig?.maintenanceMode || 'normal';
+            // NEW: Whitelist logic
+            const whitelistEnabled = systemConfig?.whitelistEnabled || false;
+            const isWhitelisted = user && systemConfig?.allowedEmails?.includes(user.email);
+
             if (maintenanceMode !== 'normal' && !isAdmin && (!user || !systemConfig?.allowedEmails?.includes(user.email))) {
-                return ( <div className="min-h-screen bg-slate-50 dark:bg-slate-900"><BlockScreen type={maintenanceMode} estimatedTime={systemConfig?.estimatedTime} customMessage={systemConfig?.message} onLogin={()=>setIsAuthModalOpen(true)} user={user} /></div> );
+                return ( <div className="min-h-screen bg-slate-50 dark:bg-slate-900"><BlockScreen type={maintenanceMode} estimatedTime={systemConfig?.estimatedTime} customMessage={systemConfig?.message} customTitle={systemConfig?.maintenanceTitle} onLogin={()=>setIsAuthModalOpen(true)} user={user} /></div> );
+            }
+
+            // NEW: Explicit Whitelist Block Screen
+            if (whitelistEnabled && !isAdmin && !isWhitelisted) {
+                return ( <div className="min-h-screen bg-slate-50 dark:bg-slate-900"><BlockScreen type="whitelist_blocked" onLogin={()=>setIsAuthModalOpen(true)} user={user} /></div> );
             }
 
             return (
@@ -1824,19 +1989,19 @@
                     )}
 
                     <div className={`max-w-[1200px] mx-auto relative z-10 transition-all duration-500 ${isGuest ? 'guest-blur' : ''}`}>
-                        {/* v2.4 Responsive Header */}
-                        <div className="flex flex-row items-center justify-between mb-4 gap-2 max-w-3xl mx-auto bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl p-3 sm:p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700">
-                            <div className="min-w-0">
-                                <h1 className={`text-lg sm:text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r ${t.gradient} flex items-center gap-1 sm:gap-2 truncate`}>
-                                    {viewMode === 'current' ? (<><Icon name="graduation-cap" className={`w-5 h-5 sm:w-8 sm:h-8 ${t.text}`} />學生小幫手</>) : viewMode === 'admin' ? (<><Icon name="shield-alert" className={`w-5 h-5 sm:w-8 sm:h-8 text-blue-600`} />管理後台</>) : <><Icon name="history" className={`w-5 h-5 sm:w-8 sm:h-8 ${t.text}`} /> {viewMode === 'timetable' ? '上課時間表' : '完成紀錄'}</>}
+                        {/* v2.4 Responsive Header - FIX: Adjusted to flex-col on mobile, row on desktop */}
+                        <div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-4 max-w-3xl mx-auto bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl p-4 sm:p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700">
+                            <div className="w-full md:w-auto text-center md:text-left min-w-0">
+                                <h1 className={`text-xl sm:text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r ${t.gradient} flex items-center justify-center md:justify-start gap-2 truncate`}>
+                                    {viewMode === 'current' ? (<><Icon name="graduation-cap" className={`w-6 h-6 sm:w-8 sm:h-8 ${t.text}`} />學生小幫手</>) : viewMode === 'admin' ? (<><Icon name="shield-alert" className={`w-6 h-6 sm:w-8 sm:h-8 text-blue-600`} />管理後台</>) : <><Icon name="history" className={`w-6 h-6 sm:w-8 sm:h-8 ${t.text}`} /> {viewMode === 'timetable' ? '上課時間表' : '完成紀錄'}</>}
                                 </h1>
-                                <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm font-medium truncate">{new Date().toLocaleDateString('zh-HK', { year: 'numeric', month: 'numeric', day: 'numeric', weekday: 'short' })}</p>
+                                <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm font-medium mt-1">{new Date().toLocaleDateString('zh-HK', { year: 'numeric', month: 'numeric', day: 'numeric', weekday: 'short' })}</p>
                             </div>
-                            <div className="flex gap-2 flex-wrap justify-end shrink-0">
+                            <div className="flex gap-2 flex-wrap justify-center md:justify-end shrink-0 w-full md:w-auto">
                                 {viewMode === 'current' && appMode === 'personal' && (
                                     <button onClick={() => setViewLayout(viewLayout === 'list' ? 'calendar' : 'list')} className="px-3 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold text-xs hover:bg-slate-50 dark:hover:bg-slate-700 transition flex items-center gap-2">
-                                        <Icon name={viewLayout === 'list' ? "calendar" : "list"} className="w-4 h-4" />
-                                        <span className="hidden sm:inline">{viewLayout === 'list' ? '日曆模式' : '列表模式'}</span>
+                                            <Icon name={viewLayout === 'list' ? "calendar" : "list"} className="w-4 h-4" />
+                                            <span className="hidden sm:inline">{viewLayout === 'list' ? '日曆模式' : '列表模式'}</span>
                                     </button>
                                 )}
 
@@ -1857,11 +2022,11 @@
 
                                 {user && (
                                     <div className="flex bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-1">
-                                        <button onClick={() => setIsPreferencesOpen(true)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 transition"><Icon name="palette" className="w-4 h-4" /></button>
-                                        <div className="w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
-                                        <button onClick={() => setIsSubjectManagerOpen(true)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 transition"><Icon name="settings" className="w-4 h-4" /></button>
-                                        <div className="w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
-                                        <button onClick={handleLogout} className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 text-slate-500 hover:text-red-500 transition"><Icon name="log-out" className="w-4 h-4" /></button>
+                                            <button onClick={() => setIsPreferencesOpen(true)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 transition"><Icon name="palette" className="w-4 h-4" /></button>
+                                            <div className="w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
+                                            <button onClick={() => setIsSubjectManagerOpen(true)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 transition"><Icon name="settings" className="w-4 h-4" /></button>
+                                            <div className="w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
+                                            <button onClick={handleLogout} className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 text-slate-500 hover:text-red-500 transition"><Icon name="log-out" className="w-4 h-4" /></button>
                                     </div>
                                 )}
                             </div>
@@ -1964,7 +2129,7 @@
                                                                     </button>
                                                                     {systemClasses.map(c => (
                                                                         <button key={c.code} type="button" onClick={() => setTargetClassInput(c.code)} className={`p-3 rounded-xl border-2 text-left font-bold text-sm transition-all flex items-center gap-2 ${targetClassInput === c.code ? 'border-indigo-500 bg-indigo-50 text-indigo-600' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500'}`}>
-                                                                            <Icon name="school" className="w-4 h-4" /> {c.name}
+                                                                                <Icon name="school" className="w-4 h-4" /> {c.name}
                                                                         </button>
                                                                     ))}
                                                                 </div>
@@ -2166,10 +2331,10 @@
                         setThemeColor={setThemeColor} 
                         isDarkMode={isDarkMode} 
                         setIsDarkMode={setIsDarkMode} 
-                        layoutMode={layoutMode}
-                        setLayoutMode={setLayoutMode}
-                        customLayout={customLayout}
-                        setCustomLayout={setCustomLayout}
+                        layoutMode={layoutMode} 
+                        setLayoutMode={setLayoutMode} 
+                        customLayout={customLayout} 
+                        setCustomLayout={setCustomLayout} 
                     />
                     <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} triggerAlert={triggerAlert} />
                     <JoinClassModal isOpen={isJoinClassOpen} onClose={() => setIsJoinClassOpen(false)} systemClasses={systemClasses} joinedClasses={joinedClasses} onJoin={handleJoinClassSubmit} t={t} />
@@ -2182,7 +2347,7 @@
                         <div className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-slate-100/50 dark:bg-slate-800/50 backdrop-blur-sm border border-white/20">
                             <Icon name="code-2" className="w-3 h-3 text-slate-400" />
                             <span className="text-[10px] font-mono font-bold text-slate-400 tracking-widest uppercase">
-                                @colasonyt1123 製作 2026
+                                Made by @colasonyt112 2026
                             </span>
                         </div>
                     </div>
