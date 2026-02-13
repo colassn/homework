@@ -6,14 +6,32 @@
     <meta name="theme-color" content="#4f46e5">
     <title>電子手冊</title>
 
-    <!-- 引入 React 和 ReactDOM -->
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <!-- 
+        === CDN 備援區 (Mobile GitHub Friendly) === 
+        策略：預設使用 cdnjs (穩定)，如果失敗則自動切換到 unpkg。
+    -->
 
-    <!-- 引入 Babel 用來解析 JSX -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- 1. React 核心 -->
+    <script 
+        src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js" 
+        crossorigin 
+        onerror="this.onerror=null; this.src='https://unpkg.com/react@18/umd/react.production.min.js'">
+    </script>
 
-    <!-- 引入 Tailwind CSS & 設定 Dark Mode -->
+    <!-- 2. React DOM -->
+    <script 
+        src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js" 
+        crossorigin 
+        onerror="this.onerror=null; this.src='https://unpkg.com/react-dom@18/umd/react-dom.production.min.js'">
+    </script>
+
+    <!-- 3. Babel (解析 JSX) -->
+    <script 
+        src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"
+        onerror="this.onerror=null; this.src='https://unpkg.com/@babel/standalone/babel.min.js'">
+    </script>
+
+    <!-- 4. Tailwind CSS (樣式) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -30,14 +48,8 @@
                     },
                     keyframes: {
                         'gradient-x': {
-                            '0%, 100%': {
-                                'background-size': '200% 200%',
-                                'background-position': 'left center'
-                            },
-                            '50%': {
-                                'background-size': '200% 200%',
-                                'background-position': 'right center'
-                            },
+                            '0%, 100%': { 'background-size': '200% 200%', 'background-position': 'left center' },
+                            '50%': { 'background-size': '200% 200%', 'background-position': 'right center' },
                         },
                         'float': {
                             '0%, 100%': { transform: 'translateY(0)' },
@@ -49,8 +61,11 @@
         }
     </script>
 
-    <!-- 引入 Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- 5. Lucide Icons (圖標) -->
+    <script 
+        src="https://unpkg.com/lucide@latest"
+        onerror="this.onerror=null; this.src='https://cdn.jsdelivr.net/npm/lucide@latest'">
+    </script>
 
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; transition: background-color 0.3s ease, color 0.3s ease; }
@@ -91,11 +106,36 @@
             100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
         }
         .pop-in-error { animation: popInError 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+
+        /* Loading Screen Styles */
+        #loading-screen {
+            position: fixed; inset: 0; z-index: 9999;
+            background-color: #f8fafc; color: #475569;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            font-family: sans-serif; transition: opacity 0.5s ease;
+        }
+        .dark #loading-screen { background-color: #0f172a; color: #cbd5e1; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top: 4px solid #4f46e5; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .hidden-loader { opacity: 0; pointer-events: none; }
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100">
+    
+    <!-- 載入畫面 (Fallback UI) -->
+    <!-- 如果 CDN 掛了，React 跑不出來，使用者至少會看到這裡，而不是白畫面 -->
+    <div id="loading-screen">
+        <div class="spinner"></div>
+        <h2 style="font-size: 1.2rem; font-weight: bold; margin-bottom: 0.5rem;">正在啟動電子手冊...</h2>
+        <p style="font-size: 0.8rem; opacity: 0.7;">如果是初次載入，請稍候</p>
+        <p id="error-message" style="font-size: 0.8rem; color: #ef4444; margin-top: 1rem; display: none;">
+            ⚠️ 系統偵測到網路資源載入異常。<br>請檢查網路連線或稍後再試。
+        </p>
+    </div>
+
     <div id="root"></div>
 
+    <!-- Firebase 模組 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -111,16 +151,22 @@
             measurementId: "G-C51XDYW67W"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const googleProvider = new GoogleAuthProvider();
+        try {
+            const app = initializeApp(firebaseConfig);
+            const auth = getAuth(app);
+            const db = getFirestore(app);
+            const googleProvider = new GoogleAuthProvider();
 
-        window.firebaseServices = { 
-            auth, db, googleProvider, 
-            signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, 
-            collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs, setDoc, arrayUnion, arrayRemove, getDoc, writeBatch 
-        };
+            window.firebaseServices = { 
+                auth, db, googleProvider, 
+                signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, 
+                collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs, setDoc, arrayUnion, arrayRemove, getDoc, writeBatch 
+            };
+        } catch (e) {
+            console.error("Firebase Init Error:", e);
+            document.getElementById('error-message').style.display = 'block';
+            document.getElementById('error-message').innerText = "無法連接資料庫 (Firebase CDN Error)";
+        }
     </script>
 
     <!-- PWA Setup -->
@@ -428,13 +474,25 @@
                                 <button 
                                     key={i} 
                                     onClick={() => onSelectDate(isSelected ? null : dateStr)}
-                                    className={`relative aspect-square flex flex-col items-center justify-center rounded-xl sm:rounded-2xl transition-all border-2 ${isSelected ? `${t.border} ${t.lightBg} shadow-sm` : 'border-transparent hover:bg-slate-50 dark:hover:bg-slate-700'} ${isToday && !isSelected ? 'border-slate-200 dark:border-slate-600' : ''}`}
+                                    className={`relative aspect-square flex flex-col items-center justify-center rounded-xl sm:rounded-2xl transition-all border-2 
+                                        ${isSelected 
+                                            ? `${t.border} ${t.lightBg} shadow-sm` 
+                                            : (isToday 
+                                                ? 'border-indigo-400 dark:border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' 
+                                                : 'border-transparent hover:bg-slate-50 dark:hover:bg-slate-700')
+                                        }
+                                    `}
                                 >
-                                    <span className={`text-sm sm:text-base font-bold ${isSelected ? t.text : (isWeekend ? 'text-red-500' : 'text-slate-700 dark:text-slate-300')}`}>{date.getDate()}</span>
+                                    <span className={`text-sm sm:text-base font-bold ${isSelected ? t.text : (isToday ? 'text-indigo-700 dark:text-indigo-300 scale-110' : (isWeekend ? 'text-red-500' : 'text-slate-700 dark:text-slate-300'))}`}>
+                                        {date.getDate()}
+                                    </span>
+                                    
+                                    {isToday && <span className="text-[9px] font-bold text-indigo-500 dark:text-indigo-400 -mt-0.5 mb-0.5">今天</span>}
+
                                     {count > 0 ? (
-                                        <span className={`mt-1 text-[9px] sm:text-[10px] font-bold px-1.5 rounded-full ${badgeColor}`}>{count}</span>
+                                        <span className={`mt-0.5 text-[9px] sm:text-[10px] font-bold px-1.5 rounded-full ${badgeColor}`}>{count}</span>
                                     ) : (
-                                        <div className="h-4"></div>
+                                        !isToday && <div className="h-4"></div>
                                     )}
                                 </button>
                             );
@@ -450,7 +508,7 @@
             );
         }
 
-        // v2.4 Quick View Modal (Enhanced)
+        // v2.4 Quick View Modal (Enhanced) - RESTORED
         function QuickViewModal({ isOpen, onClose, title, items, subjects, onEdit, onDelete, isAdmin, userUid }) {
             if (!isOpen) return null;
 
@@ -486,7 +544,6 @@
                                                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${subjectStyle}`}>{item.subject}</span>
                                                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${statusColor}`}>{statusText}</span>
                                             </div>
-                                            {/* 操作按鈕 */}
                                             <div className="flex gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
                                                 {!item.forceExpired && <button onClick={() => { onEdit(item); onClose(); }} className="p-1.5 text-slate-400 hover:text-blue-500 bg-white dark:bg-slate-800 rounded-lg shadow-sm"><Icon name="pencil" className="w-3.5 h-3.5" /></button>}
                                                 <button onClick={() => { onDelete(item.id); }} className="p-1.5 text-slate-400 hover:text-red-500 bg-white dark:bg-slate-800 rounded-lg shadow-sm"><Icon name="trash-2" className="w-3.5 h-3.5" /></button>
@@ -502,8 +559,6 @@
                 </div>
             );
         }
-
-        // --- Modals ---
 
         function BlockScreen({ type, estimatedTime, customMessage, onLogin, user }) {
             const defaultMessage = type === 'access_denied' ? '抱歉，此網站目前僅限白名單用戶訪問。\n請聯絡管理員開通權限。' : '管理員正在進行系統維護，請稍後再回來。';
@@ -613,11 +668,7 @@
 
         function NameSetupModal({ user, onSave, loading, triggerAlert, t }) {
             const [name, setName] = useState(user?.displayName || '');
-            const handleSubmit = (e) => { 
-                e.preventDefault(); 
-                if (!name.trim()) { triggerAlert("請輸入名字"); return; } 
-                onSave(name.trim()); 
-            };
+            const handleSubmit = (e) => { e.preventDefault(); if (!name.trim()) { triggerAlert("請輸入名字"); return; } onSave(name.trim()); };
             return (
                 <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm"></div>
@@ -641,26 +692,16 @@
 
             if (!isOpen) return null;
 
-            const showError = (msg) => {
-                setFloatingError(msg);
-                setTimeout(() => setFloatingError(''), 3000);
-            };
+            const showError = (msg) => { setFloatingError(msg); setTimeout(() => setFloatingError(''), 3000); };
 
             const handleJoin = async (e) => {
                 e.preventDefault();
                 const upperCode = code.trim().toUpperCase();
                 const targetClass = systemClasses.find(c => c.code === upperCode);
-
                 if (!targetClass) return showError('無效的班級代碼！請確認後再試。');
                 if (joinedClasses.includes(upperCode)) return showError('你已經加入過這個班級了！');
-
                 setLoading(true);
-                try {
-                    await onJoin(upperCode, targetClass.name);
-                    setCode('');
-                } catch (err) {
-                    showError('加入失敗，請重試');
-                }
+                try { await onJoin(upperCode, targetClass.name); setCode(''); } catch (err) { showError('加入失敗，請重試'); }
                 setLoading(false);
             };
 
@@ -668,30 +709,18 @@
                 <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose}></div>
                     <div className="modal-animate bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-sm p-6 relative z-10 text-center">
-
-                        {/* 浮空錯誤提示 */}
                         {floatingError && (
                             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white px-5 py-3 rounded-2xl shadow-[0_10px_30px_rgba(239,68,68,0.4)] z-50 font-bold text-sm whitespace-nowrap pop-in-error flex items-center gap-2">
                                 <Icon name="alert-circle" className="w-5 h-5" />
                                 {floatingError}
                             </div>
                         )}
-
                         <button onClick={onClose} className="absolute top-4 right-4 p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"><Icon name="x" className="w-5 h-5 dark:text-slate-300" /></button>
                         <div className={`w-16 h-16 ${t.lightBg} rounded-full flex items-center justify-center mx-auto mb-4 mt-2 ${t.text}`}><Icon name="school" className="w-8 h-8" /></div>
                         <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-2">加入班級</h2>
                         <p className="text-slate-500 dark:text-slate-400 mb-6 text-sm">請輸入由老師提供的 6 位數班級代碼</p>
                         <form onSubmit={handleJoin}>
-                            <input 
-                                type="text" 
-                                maxLength={6} 
-                                className={`w-full px-4 py-4 rounded-2xl border ${floatingError ? 'border-red-400 bg-red-50 dark:bg-red-900/10 focus:ring-red-400' : `border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:${t.ring}`} dark:text-white text-center font-mono font-bold text-2xl tracking-[0.5em] outline-none mb-4 uppercase placeholder:tracking-normal placeholder:text-base placeholder:font-sans transition-colors`} 
-                                placeholder="輸入代碼" 
-                                value={code} 
-                                onChange={e => {setCode(e.target.value); setFloatingError('');}} 
-                                autoFocus 
-                                required 
-                            />
+                            <input type="text" maxLength={6} className={`w-full px-4 py-4 rounded-2xl border ${floatingError ? 'border-red-400 bg-red-50 dark:bg-red-900/10 focus:ring-red-400' : `border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:${t.ring}`} dark:text-white text-center font-mono font-bold text-2xl tracking-[0.5em] outline-none mb-4 uppercase placeholder:tracking-normal placeholder:text-base placeholder:font-sans transition-colors`} placeholder="輸入代碼" value={code} onChange={e => {setCode(e.target.value); setFloatingError('');}} autoFocus required />
                             <button type="submit" disabled={loading || code.length !== 6} className={`w-full py-3 rounded-xl text-white font-bold transition-all shadow-lg active:scale-95 disabled:opacity-50 ${t.bg}`}>{loading ? '處理中...' : '確認加入'}</button>
                         </form>
                     </div>
@@ -728,17 +757,9 @@
                 e.preventDefault(); if(!email || !password) return;
                 try { 
                     setLoading(true); 
-                    if (isLogin) { 
-                        await signInWithEmailAndPassword(auth, email, password); 
-                    } else { 
-                        await createUserWithEmailAndPassword(auth, email, password); 
-                    } 
+                    if (isLogin) { await signInWithEmailAndPassword(auth, email, password); } else { await createUserWithEmailAndPassword(auth, email, password); } 
                     onClose(); 
-                } catch (error) { 
-                    console.error(error); 
-                    triggerAlert(isLogin ? "登入失敗: " + error.message : "註冊失敗: " + error.message); 
-                    setLoading(false); 
-                } 
+                } catch (error) { console.error(error); triggerAlert(isLogin ? "登入失敗: " + error.message : "註冊失敗: " + error.message); setLoading(false); } 
             };
 
             return ( 
@@ -1143,6 +1164,9 @@
 
             // v2.3 Deep Clean Class Delete (Fixed: Use getDoc/filter for robust deletion)
             const handleDeepDeleteClass = async (classObj) => {
+                // Explicitly get services inside the function to ensure scope
+                const { getDoc, doc, updateDoc, deleteDoc, getDocs, query, where, collection, arrayRemove } = window.firebaseServices;
+
                 triggerConfirm(`⚠️ 警告：確定要刪除班級 ${classObj.name}？\n\n此操作將會：\n1. 刪除班級代碼\n2. 刪除該班級所有廣播功課\n3. 將所有學生踢出該班級\n\n(學生私有記錄將保留但變為孤兒記錄)`, async () => {
                     try {
                         // 1. Delete Public Assignments for this class
@@ -1155,7 +1179,7 @@
                         const usersSnap = await getDocs(usersQ);
                         await Promise.all(usersSnap.docs.map(d => updateDoc(d.ref, { joinedClasses: arrayRemove(classObj.code) })));
 
-                        // 3. Delete Class Config (Fixed logic)
+                        // 3. Delete Class Config (Fixed logic: Read-Filter-Write)
                         const classesRef = doc(db, 'system_settings', 'classes');
                         const classesSnap = await getDoc(classesRef);
                         
@@ -1505,7 +1529,7 @@
             );
         }
 
-        // --- App Component ---
+        // --- App Component (Restored) ---
         function App() {
             const [user, setUser] = useState(null);
             const [authLoading, setAuthLoading] = useState(true);
@@ -1572,7 +1596,16 @@
             // v2.4 Quick View State
             const [quickView, setQuickView] = useState({ isOpen: false, title: '', items: [] });
 
-            useEffect(() => { if ("Notification" in window && Notification.permission === "default") Notification.requestPermission(); }, []);
+            useEffect(() => { 
+                const loadingScreen = document.getElementById('loading-screen');
+                if (loadingScreen) {
+                    loadingScreen.classList.add('hidden-loader');
+                    setTimeout(() => loadingScreen.remove(), 500); // 移除 DOM 避免干擾
+                }
+                
+                if ("Notification" in window && Notification.permission === "default") Notification.requestPermission(); 
+            }, []);
+            
             useEffect(() => { localStorage.setItem('isDarkMode', isDarkMode); if (isDarkMode) document.documentElement.classList.add('dark'); else document.documentElement.classList.remove('dark'); }, [isDarkMode]);
             useEffect(() => localStorage.setItem('themeColor', themeColor), [themeColor]);
             
@@ -1857,8 +1890,8 @@
                             <div className="flex gap-2 flex-wrap justify-end shrink-0">
                                 {viewMode === 'current' && appMode === 'personal' && (
                                     <button onClick={() => setViewLayout(viewLayout === 'list' ? 'calendar' : 'list')} className="px-3 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold text-xs hover:bg-slate-50 dark:hover:bg-slate-700 transition flex items-center gap-2">
-                                        <Icon name={viewLayout === 'list' ? "calendar" : "list"} className="w-4 h-4" />
-                                        <span className="hidden sm:inline">{viewLayout === 'list' ? '日曆模式' : '列表模式'}</span>
+                                            <Icon name={viewLayout === 'list' ? "calendar" : "list"} className="w-4 h-4" />
+                                            <span className="hidden sm:inline">{viewLayout === 'list' ? '日曆模式' : '列表模式'}</span>
                                     </button>
                                 )}
 
@@ -1879,11 +1912,11 @@
 
                                 {user && (
                                     <div className="flex bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-1">
-                                        <button onClick={() => setIsPreferencesOpen(true)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 transition"><Icon name="palette" className="w-4 h-4" /></button>
-                                        <div className="w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
-                                        <button onClick={() => setIsSubjectManagerOpen(true)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 transition"><Icon name="settings" className="w-4 h-4" /></button>
-                                        <div className="w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
-                                        <button onClick={handleLogout} className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 text-slate-500 hover:text-red-500 transition"><Icon name="log-out" className="w-4 h-4" /></button>
+                                            <button onClick={() => setIsPreferencesOpen(true)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 transition"><Icon name="palette" className="w-4 h-4" /></button>
+                                            <div className="w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
+                                            <button onClick={() => setIsSubjectManagerOpen(true)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 transition"><Icon name="settings" className="w-4 h-4" /></button>
+                                            <div className="w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
+                                            <button onClick={handleLogout} className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 text-slate-500 hover:text-red-500 transition"><Icon name="log-out" className="w-4 h-4" /></button>
                                     </div>
                                 )}
                             </div>
@@ -1986,7 +2019,7 @@
                                                                     </button>
                                                                     {systemClasses.map(c => (
                                                                         <button key={c.code} type="button" onClick={() => setTargetClassInput(c.code)} className={`p-3 rounded-xl border-2 text-left font-bold text-sm transition-all flex items-center gap-2 ${targetClassInput === c.code ? 'border-indigo-500 bg-indigo-50 text-indigo-600' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500'}`}>
-                                                                            <Icon name="school" className="w-4 h-4" /> {c.name}
+                                                                                <Icon name="school" className="w-4 h-4" /> {c.name}
                                                                         </button>
                                                                     ))}
                                                                 </div>
@@ -2188,10 +2221,10 @@
                         setThemeColor={setThemeColor} 
                         isDarkMode={isDarkMode} 
                         setIsDarkMode={setIsDarkMode} 
-                        layoutMode={layoutMode}
-                        setLayoutMode={setLayoutMode}
-                        customLayout={customLayout}
-                        setCustomLayout={setCustomLayout}
+                        layoutMode={layoutMode} 
+                        setLayoutMode={setLayoutMode} 
+                        customLayout={customLayout} 
+                        setCustomLayout={setCustomLayout} 
                     />
                     <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} triggerAlert={triggerAlert} />
                     <JoinClassModal isOpen={isJoinClassOpen} onClose={() => setIsJoinClassOpen(false)} systemClasses={systemClasses} joinedClasses={joinedClasses} onJoin={handleJoinClassSubmit} t={t} />
@@ -2204,7 +2237,7 @@
                         <div className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-slate-100/50 dark:bg-slate-800/50 backdrop-blur-sm border border-white/20">
                             <Icon name="code-2" className="w-3 h-3 text-slate-400" />
                             <span className="text-[10px] font-mono font-bold text-slate-400 tracking-widest uppercase">
-                                @colasonyt1123 製作 2026
+                                Made by @colasonyt112 2026
                             </span>
                         </div>
                     </div>
