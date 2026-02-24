@@ -107,6 +107,23 @@
         }
         .pop-in-error { animation: popInError 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
 
+        /* 極光聚焦模式動畫 */
+        @keyframes auroraBorder {
+            0% { box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.85), 0 0 20px 5px rgba(56, 189, 248, 0.6), inset 0 0 20px 2px rgba(56, 189, 248, 0.4); border-color: rgba(56, 189, 248, 0.8); }
+            33% { box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.85), 0 0 30px 10px rgba(167, 139, 250, 0.7), inset 0 0 20px 2px rgba(167, 139, 250, 0.5); border-color: rgba(167, 139, 250, 0.8); }
+            66% { box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.85), 0 0 20px 5px rgba(52, 211, 153, 0.6), inset 0 0 20px 2px rgba(52, 211, 153, 0.4); border-color: rgba(52, 211, 153, 0.8); }
+            100% { box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.85), 0 0 20px 5px rgba(56, 189, 248, 0.6), inset 0 0 20px 2px rgba(56, 189, 248, 0.4); border-color: rgba(56, 189, 248, 0.8); }
+        }
+        .aurora-spotlight {
+            position: fixed;
+            animation: auroraBorder 4s infinite linear;
+            border-radius: 16px;
+            border: 2px solid transparent;
+            transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+            pointer-events: none;
+            z-index: 240;
+        }
+
         /* Loading Screen Styles */
         #loading-screen {
             position: fixed; inset: 0; z-index: 9999;
@@ -361,6 +378,188 @@
         };
 
         // --- View Components ---
+        
+        // 極光聚焦導覽 Modal
+        function TutorialModal({ isOpen, onClose, t }) {
+            const [step, setStep] = useState(0);
+            const [targetRect, setTargetRect] = useState(null);
+            const [dontShowAgain, setDontShowAgain] = useState(false);
+
+            const steps = [
+                { targetId: 'header-spotlight', title: "歡迎使用電子手冊 👋", desc: "這是一個專為學生設計的數位手冊，幫你輕鬆管理功課、測驗與上課時間表。", icon: "sparkles", color: "text-amber-500", bg: "bg-amber-100 dark:bg-amber-900/30" },
+                { targetId: 'mode-toggle-spotlight', title: "兩種實用模式 🔄", desc: "切換【個人模式】記錄自己的私事與作業；或切換【班級模式】接收老師發放的廣播功課！", icon: "layout-dashboard", color: "text-blue-500", bg: "bg-blue-100 dark:bg-blue-900/30" },
+                { targetId: 'quick-cards-spotlight', title: "快捷狀態卡片 📊", desc: "一目了然今天、明天要交的功課數量，點擊卡片還能快速預覽詳細內容喔！", icon: "bar-chart-2", color: "text-rose-500", bg: "bg-rose-100 dark:bg-rose-900/30" },
+                { targetId: 'live-dashboard-spotlight', title: "即時上課動態 ⏳", desc: "自動追蹤目前的課堂進度，顯示「正在上哪一堂課」與精準的「下課倒數計時」！", icon: "activity", color: "text-fuchsia-500", bg: "bg-fuchsia-100 dark:bg-fuchsia-900/30" },
+                { targetId: 'add-task-spotlight', title: "新增任務區域 ✍️", desc: "在這裡輸入你的功課或測驗範圍，選擇日期後點擊「加入清單」即可輕鬆記錄。", icon: "edit-3", color: "text-indigo-500", bg: "bg-indigo-100 dark:bg-indigo-900/30" },
+                { targetId: 'subject-selector-spotlight', title: "科目快速分類 📚", desc: "新增任務時，記得先點選對應的科目標籤，讓未來的清單井然有序！", icon: "tags", color: "text-cyan-500", bg: "bg-cyan-100 dark:bg-cyan-900/30" },
+                { targetId: 'view-toggle-spotlight', title: "切換日曆視圖 📅", desc: "除了列表，你也可以點擊這裡切換成「日曆模式」，用月曆的方式查看每天的任務。", icon: "calendar-days", color: "text-teal-500", bg: "bg-teal-100 dark:bg-teal-900/30" },
+                { targetId: 'filter-sort-spotlight', title: "篩選與排序工具 🔍", desc: "任務太多？用這裡的按鈕快速過濾特定科目的功課，或是依照日期遠近重新排序。", icon: "filter", color: "text-orange-500", bg: "bg-orange-100 dark:bg-orange-900/30" },
+                { targetId: 'task-list-spotlight', title: "任務紀錄卡片 📝", desc: "下方會列出你所有的任務卡片。如果是空空如也，現在就可以馬上新增一筆試試看！", icon: "list-todo", color: "text-pink-500", bg: "bg-pink-100 dark:bg-pink-900/30" },
+                { targetId: 'task-list-spotlight', title: "一鍵標示完成 ✅", desc: "當你完成功課後，點擊卡片左側的「圓形按鈕」就能將任務打勾並隱藏！右下角則有修改與刪除功能。", icon: "check-circle-2", color: "text-green-500", bg: "bg-green-100 dark:bg-green-900/30" },
+                { targetId: 'history-btn-spotlight', title: "查看歷史紀錄 🕰️", desc: "已經打勾的功課會跑到這裡！點擊「歷史紀錄」就能隨時找回任務，如果不小心按錯也能取消完成。", icon: "history", color: "text-purple-500", bg: "bg-purple-100 dark:bg-purple-900/30" },
+                { targetId: 'timetable-btn-spotlight', title: "自訂時間表 🏫", desc: "點擊右上角的「時間表」按鈕，即可編輯每天的節次與上課科目，打造專屬課表。", icon: "clock", color: "text-emerald-500", bg: "bg-emerald-100 dark:bg-emerald-900/30" },
+                { targetId: 'settings-spotlight', title: "個人化與設定 ⚙️", desc: "最後，這裡可以調整主題顏色、管理自訂科目，或是隨時點擊「？」重新觀看本導覽！", icon: "settings", color: "text-slate-500", bg: "bg-slate-200 dark:bg-slate-700" }
+            ];
+
+            useEffect(() => { 
+                if (isOpen) { 
+                    setStep(0); 
+                    setTargetRect(null);
+                    setDontShowAgain(false); 
+                } 
+            }, [isOpen]);
+
+            useEffect(() => {
+                if (!isOpen) {
+                    document.body.style.overflow = 'auto';
+                    return;
+                }
+                
+                let timeout;
+                const updateRect = () => {
+                    const target = document.getElementById(steps[step].targetId);
+                    if (target) {
+                        // 暫時解開背景滾動鎖定，讓 scrollIntoView 能順暢執行
+                        document.body.style.overflow = 'auto';
+                        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        
+                        timeout = setTimeout(() => {
+                            const rect = target.getBoundingClientRect();
+                            setTargetRect({
+                                top: rect.top - 8,
+                                left: rect.left - 8,
+                                width: rect.width + 16,
+                                height: rect.height + 16
+                            });
+                            // 畫面捲動到位後重新鎖定背景
+                            document.body.style.overflow = 'hidden';
+                        }, 400); 
+                    } else {
+                        setTargetRect(null);
+                        document.body.style.overflow = 'hidden';
+                    }
+                };
+                
+                updateRect(); // 初始化位置
+                window.addEventListener('resize', updateRect);
+                
+                return () => {
+                    window.removeEventListener('resize', updateRect);
+                    clearTimeout(timeout);
+                };
+            }, [step, isOpen]);
+
+            if (!isOpen) return null;
+
+            const current = steps[step];
+
+            const handleFinish = () => {
+                if (dontShowAgain) localStorage.setItem('hideTutorial', 'true');
+                else localStorage.removeItem('hideTutorial');
+                onClose();
+            };
+
+            // 智慧計算對話框位置，保證不會超出畫面邊界
+            const dialogStyle = (() => {
+                const defaultStyle = { top: '50%', left: '50%', transform: 'translate(-50%, -50%)', maxHeight: 'calc(100vh - 32px)' };
+                if (!targetRect) return defaultStyle;
+
+                const vw = window.innerWidth;
+                const vh = window.innerHeight;
+
+                const spaceAbove = targetRect.top;
+                const spaceBelow = vh - (targetRect.top + targetRect.height);
+                const isUp = spaceAbove > spaceBelow;
+
+                // 水平：置中於目標，並強制限制在畫面範圍內 (預留兩側 16px，卡片最大寬 340px)
+                let left = targetRect.left + (targetRect.width / 2) - 170;
+                left = Math.max(16, Math.min(vw - 340 - 16, left));
+
+                // 垂直：判斷擺放方向，若空間低於 250px 則強制退回置中模式，避免內容擠壓到無法點擊
+                const minRequiredHeight = 250;
+                const maxH = isUp ? spaceAbove - 32 : spaceBelow - 32;
+
+                if (maxH < minRequiredHeight) {
+                    return defaultStyle;
+                }
+
+                if (isUp) {
+                    return { bottom: `${vh - targetRect.top + 16}px`, left: `${left}px`, maxHeight: `${maxH}px` };
+                } else {
+                    return { top: `${targetRect.top + targetRect.height + 16}px`, left: `${left}px`, maxHeight: `${maxH}px` };
+                }
+            })();
+
+            return (
+                <div className="fixed inset-0 z-[250] modal-animate" style={{ pointerEvents: 'auto' }}>
+                    {/* 攔截所有背景點擊 */}
+                    <div className="absolute inset-0 z-[230]" onClick={(e) => e.stopPropagation()}></div>
+                    
+                    {/* 極光聚焦框 */}
+                    <div 
+                        className="aurora-spotlight"
+                        style={{
+                            top: targetRect ? targetRect.top : '50%',
+                            left: targetRect ? targetRect.left : '50%',
+                            width: targetRect ? targetRect.width : 0,
+                            height: targetRect ? targetRect.height : 0,
+                            transform: targetRect ? 'none' : 'translate(-50%, -50%)',
+                            opacity: targetRect ? 1 : 0
+                        }}
+                    ></div>
+
+                    {/* 提示對話框 Tooltip */}
+                    <div 
+                        className="absolute bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-2xl border border-slate-100 dark:border-slate-700 z-[260] transition-all duration-500 ease-in-out w-[90%] max-w-[340px] flex flex-col overflow-y-auto scrollbar-hide"
+                        style={dialogStyle}
+                    >
+                        {/* 新增：跳過按鈕 */}
+                        <button 
+                            onClick={handleFinish} 
+                            className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs font-bold flex items-center gap-1 transition-colors z-20"
+                            title="跳過導覽"
+                        >
+                            跳過 <Icon name="x" className="w-3.5 h-3.5" />
+                        </button>
+
+                        <div className="flex justify-center mb-4 relative shrink-0 mt-2">
+                            <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 blur-xl rounded-full"></div>
+                            <div className={`w-16 h-16 rounded-full flex items-center justify-center relative z-10 ${current.bg} ${current.color} shadow-inner`}>
+                                <Icon name={current.icon} className="w-8 h-8" />
+                            </div>
+                        </div>
+
+                        <div className="text-center mb-6 shrink-0">
+                            <h2 className="text-xl font-black text-slate-800 dark:text-white mb-2">{current.title}</h2>
+                            <p className="text-slate-600 dark:text-slate-300 text-sm font-medium leading-relaxed whitespace-pre-wrap">{current.desc}</p>
+                        </div>
+
+                        <div className="flex justify-center gap-1.5 mb-5 shrink-0">
+                            {steps.map((_, i) => (
+                                <div key={i} className={`h-2 rounded-full transition-all duration-300 ${i === step ? 'bg-indigo-600 w-5' : 'bg-slate-200 dark:bg-slate-700 w-2'}`}></div>
+                            ))}
+                        </div>
+
+                        <div className="flex justify-center mb-4 shrink-0">
+                            <label className="flex items-center gap-2 cursor-pointer group">
+                                <input type="checkbox" checked={dontShowAgain} onChange={(e) => setDontShowAgain(e.target.checked)} className="w-3.5 h-3.5 rounded text-indigo-600 bg-slate-100 border-slate-300 dark:bg-slate-900 dark:border-slate-600 focus:ring-indigo-500" />
+                                <span className="text-xs text-slate-500 dark:text-slate-400 font-medium group-hover:text-slate-700 dark:group-hover:text-slate-200 transition-colors">之後不再顯示</span>
+                            </label>
+                        </div>
+
+                        <div className="flex gap-2 shrink-0">
+                            {step > 0 && (
+                                <button onClick={() => setStep(step - 1)} className="px-4 py-2.5 rounded-xl font-bold text-sm text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">上一步</button>
+                            )}
+                            <button onClick={() => step < steps.length - 1 ? setStep(step + 1) : handleFinish()} className={`flex-1 py-2.5 rounded-xl text-sm text-white font-bold transition-all shadow-md active:scale-95 ${t.bg}`}>
+                                {step < steps.length - 1 ? '下一步' : '完成導覽'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
         function LessonCountdown({ subject, config }) {
             const [now, setNow] = useState(new Date());
             useEffect(() => { const timer = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(timer); }, []);
@@ -932,7 +1131,7 @@
                                 </button>
                             </div>
 
-                            <form onSubmit={handleAdd} className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-100 dark:border-slate-700 mb-4">
+                            <form onSubmit={handleAdd} className="bg-slate-5 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-100 dark:border-slate-700 mb-4">
                                 <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">新增科目</label>
                                 <div className="flex gap-2 mb-2">
                                     <input type="text" value={newSubjectName} onChange={e => setNewSubjectName(e.target.value)} className="flex-1 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white text-sm outline-none focus:ring-2 focus:ring-indigo-500" placeholder="科目名稱 (例如: 數學)" required />
@@ -1032,8 +1231,8 @@
                                 {timeSlots.map((slot, index) => (
                                     <div key={index} className="flex flex-wrap items-center gap-2 bg-white dark:bg-slate-800 p-3 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm transition-all">
                                         <div className="flex flex-col gap-1 mr-2">
-                                            <button onClick={() => moveSlot(index, 'up')} disabled={index === 0} className="p-1 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 disabled:opacity-20 active:scale-90 transition-transform"><Icon name="chevron-up" className="w-4 h-4" /></button>
-                                            <button onClick={() => moveSlot(index, 'down')} disabled={index === timeSlots.length - 1} className="p-1 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 disabled:opacity-20 active:scale-90 transition-transform"><Icon name="chevron-down" className="w-4 h-4" /></button>
+                                            <button onClick={() => moveSlot(index, 'up')} disabled={index === 0} className="p-1 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 disabled:opacity-20 active:scale-90 transition-transform"><Icon name="chevron-up" className="w-4 h-4"/></button>
+                                            <button onClick={() => moveSlot(index, 'down')} disabled={index === timeSlots.length - 1} className="p-1 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 disabled:opacity-20 active:scale-90 transition-transform"><Icon name="chevron-down" className="w-4 h-4"/></button>
                                         </div>
                                         <input type="time" value={slot.startTime} onChange={(e) => handleSlotChange(index, 'startTime', e.target.value)} className="w-24 p-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-mono bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500" />
                                         <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 px-2 rounded-lg border border-slate-200 dark:border-slate-700">
@@ -1042,7 +1241,7 @@
                                         </div>
                                         <div className="min-w-[180px]"><SlotTypeSelector value={slot.type} onChange={(val) => handleSlotChange(index, 'type', val)} /></div>
                                         <input type="text" value={slot.label} onChange={(e) => handleSlotChange(index, 'label', e.target.value)} className="flex-1 min-w-[100px] p-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-900 text-slate-800 dark:text-white" placeholder="標籤" />
-                                        <button onClick={() => removeSlot(index)} className="p-2 text-slate-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg"><Icon name="trash-2" className="w-4 h-4" /></button>
+                                        <button onClick={() => removeSlot(index)} className="p-2 text-slate-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg"><Icon name="trash-2" className="w-4 h-4"/></button>
                                     </div>
                                 ))}
                                 <button onClick={addSlot} className="w-full py-3 border-2 border-dashed border-indigo-200 dark:border-indigo-800 text-indigo-500 dark:text-indigo-400 rounded-xl font-bold hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-all flex items-center justify-center gap-2"><Icon name="plus" className="w-4 h-4" /> 新增時間段</button>
@@ -1344,9 +1543,9 @@
                                             <thead className="bg-slate-50/80 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 font-bold sticky top-0 backdrop-blur-md z-10 border-b border-slate-100 dark:border-slate-700">
                                                 <tr><th className="px-6 py-4">班級名稱</th><th className="px-6 py-4">加入代碼 (6碼)</th><th className="px-6 py-4 text-right">操作</th></tr>
                                             </thead>
-                                            <tbody className="divide-y divide-slate-50 dark:divide-slate-700">
+                                            <tbody className="divide-y divide-slate-5 dark:divide-slate-700">
                                                 {systemClasses.map(c => (
-                                                    <tr key={c.code} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                                                    <tr key={c.code} className="hover:bg-slate-5 dark:hover:bg-slate-700/50 transition-colors">
                                                         <td className="px-6 py-4 font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2"><Icon name="school" className="w-4 h-4 text-indigo-500"/> {c.name}</td>
                                                         <td className="px-6 py-4"><span className="px-3 py-1 bg-slate-100 dark:bg-slate-900 rounded-lg font-mono font-bold text-indigo-600 dark:text-indigo-400 tracking-widest">{c.code}</span></td>
                                                         <td className="px-6 py-4 text-right">
@@ -1377,7 +1576,7 @@
                                             <thead className="bg-slate-50/80 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 font-bold sticky top-0 backdrop-blur-md z-10 border-b border-slate-100 dark:border-slate-700">
                                                 <tr><th className="px-6 py-4">用戶資訊</th><th className="px-6 py-4">身分權限</th><th className="px-6 py-4">最後上線</th><th className="px-6 py-4 text-right">操作</th></tr>
                                             </thead>
-                                            <tbody className="divide-y divide-slate-50 dark:divide-slate-700">
+                                            <tbody className="divide-y divide-slate-5 dark:divide-slate-700">
                                                 {filteredUsers.map(u => {
                                                     const isAdm = u.email === ADMIN_EMAIL;
                                                     const isWhite = allowedEmails.includes(u.email);
@@ -1459,7 +1658,7 @@
 
                                 <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 overflow-hidden p-2">
                                     <div className="max-h-[400px] overflow-y-auto space-y-2 pr-2">
-                                             {userHomeworks.map(h => (
+                                                {userHomeworks.map(h => (
                                                  <div key={h.id} className={`p-4 rounded-xl border text-sm flex justify-between items-start transition-all ${h.completed ? 'bg-slate-50 dark:bg-slate-900/50 border-slate-100 dark:border-slate-800 opacity-60' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-indigo-200'}`}>
                                                      <div>
                                                          <div className="flex items-center gap-2 mb-1.5">
@@ -1476,7 +1675,7 @@
                                                          </div>
                                                      </div>
                                                  </div>
-                                             ))}
+                                                ))}
                                     </div>
                                 </div>
                             </div>
@@ -1491,20 +1690,20 @@
                                             <thead className="bg-slate-50/80 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 font-bold sticky top-0 backdrop-blur-md z-10 border-b border-slate-100 dark:border-slate-700">
                                                 <tr><th className="px-6 py-4">任務內容</th><th className="px-6 py-4">科目/目標班級</th><th className="px-6 py-4 text-right">操作</th></tr>
                                             </thead>
-                                            <tbody className="divide-y divide-slate-50 dark:divide-slate-700">
+                                            <tbody className="divide-y divide-slate-5 dark:divide-slate-700">
                                                 {publicTasks.map(task => {
                                                     const cls = systemClasses.find(c => c.code === task.targetClass);
                                                     const targetName = cls ? cls.name : (task.targetClass || '全校');
                                                     return (
-                                                        <tr key={task.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                                                        <tr key={task.id} className="hover:bg-slate-5 dark:hover:bg-slate-700/50">
                                                             <td className="px-6 py-4">
                                                                 <div className="font-bold max-w-[200px] truncate dark:text-white" title={task.description}>{task.description}</div>
                                                                 <div className="text-[10px] text-slate-400 mt-1">Due: {task.dueDate} {task.forceExpired && <span className="text-red-500 font-bold ml-2">(強制過期)</span>}</div>
                                                             </td>
                                                             <td className="px-6 py-4">
                                                                 <div className="flex flex-col gap-1 items-start">
-                                                                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${subjects.find(s => s.name === task.subject)?.color || 'bg-slate-100 text-slate-600 border-slate-200 dark:border-slate-700'}`}>{task.subject}</span>
-                                                                            <span className="text-[10px] bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 px-2 py-0.5 rounded font-bold max-w-[120px] truncate" title={targetName}>{targetName}</span>
+                                                                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${subjects.find(s => s.name === task.subject)?.color || 'bg-slate-100 text-slate-600 border-slate-200 dark:border-slate-700'}`}>{task.subject}</span>
+                                                                    <span className="text-[10px] bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 px-2 py-0.5 rounded font-bold max-w-[120px] truncate" title={targetName}>{targetName}</span>
                                                                 </div>
                                                             </td>
                                                             <td className="px-6 py-4 text-right">
@@ -1528,99 +1727,99 @@
                                 {/* 白名單系統設定 */}
                                 <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden p-1">
                                     <div className="p-5 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 flex justify-between items-center">
-                                        <h4 className="font-bold dark:text-white flex items-center gap-2"><Icon name="shield-check" className="w-5 h-5 text-emerald-500"/> 白名單系統</h4>
-                                        <label className="relative inline-flex items-center cursor-pointer">
-                                            <input type="checkbox" className="sr-only peer" checked={systemConfig?.whitelistEnabled || false} onChange={(e) => updateConfig('whitelistEnabled', e.target.checked)} />
-                                            <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 dark:peer-focus:ring-emerald-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-emerald-600"></div>
-                                            <span className="ml-3 text-sm font-medium text-slate-900 dark:text-slate-300">{systemConfig?.whitelistEnabled ? '已啟用' : '已停用'}</span>
-                                        </label>
+                                            <h4 className="font-bold dark:text-white flex items-center gap-2"><Icon name="shield-check" className="w-5 h-5 text-emerald-500"/> 白名單系統</h4>
+                                            <label className="relative inline-flex items-center cursor-pointer">
+                                                <input type="checkbox" className="sr-only peer" checked={systemConfig?.whitelistEnabled || false} onChange={(e) => updateConfig('whitelistEnabled', e.target.checked)} />
+                                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 dark:peer-focus:ring-emerald-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-emerald-600"></div>
+                                                <span className="ml-3 text-sm font-medium text-slate-900 dark:text-slate-300">{systemConfig?.whitelistEnabled ? '已啟用' : '已停用'}</span>
+                                            </label>
                                     </div>
                                     <div className="p-5">
-                                        <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">當啟用白名單模式時，只有下列清單中的電郵地址可以登入並使用系統。</p>
-                                        
-                                        <form onSubmit={handleAddWhitelist} className="flex gap-2 mb-4">
-                                            <input type="email" placeholder="輸入電郵地址..." value={newEmail} onChange={e => setNewEmail(e.target.value)} className="flex-1 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-emerald-500 outline-none" required />
-                                            <button type="submit" disabled={isSubmitting} className="bg-emerald-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-emerald-700 transition-colors flex items-center gap-2"><Icon name="plus" className="w-4 h-4"/> 新增</button>
-                                        </form>
+                                            <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">當啟用白名單模式時，只有下列清單中的電郵地址可以登入並使用系統。</p>
+                                            
+                                            <form onSubmit={handleAddWhitelist} className="flex gap-2 mb-4">
+                                                <input type="email" placeholder="輸入電郵地址..." value={newEmail} onChange={e => setNewEmail(e.target.value)} className="flex-1 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-emerald-500 outline-none" required />
+                                                <button type="submit" disabled={isSubmitting} className="bg-emerald-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-emerald-700 transition-colors flex items-center gap-2"><Icon name="plus" className="w-4 h-4"/> 新增</button>
+                                            </form>
 
-                                        <div className="max-h-60 overflow-y-auto border border-slate-100 dark:border-slate-700 rounded-xl">
-                                            {allowedEmails.length === 0 ? (
-                                                <div className="p-8 text-center text-slate-400 text-sm">白名單目前為空</div>
-                                            ) : (
-                                                <table className="w-full text-left text-sm">
-                                                    <thead className="bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400">
-                                                        <tr><th className="px-4 py-2">電郵地址</th><th className="px-4 py-2 text-right">操作</th></tr>
-                                                    </thead>
-                                                    <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
-                                                        {allowedEmails.map(email => (
-                                                            <tr key={email} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                                                                <td className="px-4 py-3 dark:text-slate-300">{email}</td>
-                                                                <td className="px-4 py-3 text-right">
-                                                                    <button onClick={() => handleRemoveWhitelist(email)} className="text-red-500 hover:text-red-700"><Icon name="trash-2" className="w-4 h-4"/></button>
-                                                                </td>
-                                                            </tr>
-                                                        ))}
-                                                    </tbody>
-                                                </table>
-                                            )}
-                                        </div>
+                                            <div className="max-h-60 overflow-y-auto border border-slate-100 dark:border-slate-700 rounded-xl">
+                                                {allowedEmails.length === 0 ? (
+                                                    <div className="p-8 text-center text-slate-400 text-sm">白名單目前為空</div>
+                                                ) : (
+                                                    <table className="w-full text-left text-sm">
+                                                        <thead className="bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400">
+                                                            <tr><th className="px-4 py-2">電郵地址</th><th className="px-4 py-2 text-right">操作</th></tr>
+                                                        </thead>
+                                                        <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                                                            {allowedEmails.map(email => (
+                                                                <tr key={email} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                                                                    <td className="px-4 py-3 dark:text-slate-300">{email}</td>
+                                                                    <td className="px-4 py-3 text-right">
+                                                                        <button onClick={() => handleRemoveWhitelist(email)} className="text-red-500 hover:text-red-700"><Icon name="trash-2" className="w-4 h-4"/></button>
+                                                                    </td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                )}
+                                            </div>
                                     </div>
                                 </div>
 
                                 <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden p-1">
                                     <div className="p-5 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50">
-                                            <h4 className="font-bold dark:text-white flex items-center gap-2"><Icon name="megaphone" className="w-5 h-5 text-amber-500"/> 系統跑馬燈公告</h4>
+                                                <h4 className="font-bold dark:text-white flex items-center gap-2"><Icon name="megaphone" className="w-5 h-5 text-amber-500"/> 系統跑馬燈公告</h4>
                                     </div>
                                     <div className="p-5 flex flex-col sm:flex-row gap-3">
-                                            <input type="text" id="announcementInput" className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none" placeholder="輸入後點擊發佈..." defaultValue={systemConfig?.announcementText || ''} />
-                                            <div className="flex gap-2">
-                                                <button onClick={() => updateConfig('announcementText', document.getElementById('announcementInput').value)} className="bg-amber-500 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-amber-600 whitespace-nowrap">發佈</button>
-                                                <button onClick={() => { document.getElementById('announcementInput').value = ''; updateConfig('announcementText', ''); }} className="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-4 py-2.5 rounded-xl font-bold text-sm whitespace-nowrap">清空</button>
-                                            </div>
+                                                <input type="text" id="announcementInput" className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none" placeholder="輸入後點擊發佈..." defaultValue={systemConfig?.announcementText || ''} />
+                                                <div className="flex gap-2">
+                                                    <button onClick={() => updateConfig('announcementText', document.getElementById('announcementInput').value)} className="bg-amber-500 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-amber-600 whitespace-nowrap">發佈</button>
+                                                    <button onClick={() => { document.getElementById('announcementInput').value = ''; updateConfig('announcementText', ''); }} className="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-4 py-2.5 rounded-xl font-bold text-sm whitespace-nowrap">清空</button>
+                                                </div>
                                     </div>
                                 </div>
 
                                 <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden p-1">
                                     <div className="p-5 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50">
-                                            <h4 className="font-bold dark:text-white flex items-center gap-2"><Icon name="power" className="w-5 h-5 text-indigo-500"/> 系統維護模式</h4>
+                                                <h4 className="font-bold dark:text-white flex items-center gap-2"><Icon name="power" className="w-5 h-5 text-indigo-500"/> 系統維護模式</h4>
                                     </div>
                                     <div className="p-5 space-y-4">
-                                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                                {[ { id: 'normal', icon: 'check-circle-2', title: '正常運作', colors: { border: 'border-green-500 dark:border-green-400', bg: 'bg-green-50 dark:bg-green-900/30', text: 'text-green-500 dark:text-green-400', textBold: 'text-green-700 dark:text-green-300', dot: 'bg-green-500' } }, { id: 'updating', icon: 'hammer', title: '網站更新', colors: { border: 'border-orange-500 dark:border-orange-400', bg: 'bg-orange-50 dark:bg-orange-900/30', text: 'text-orange-500 dark:text-orange-400', textBold: 'text-orange-700 dark:text-orange-300', dot: 'bg-orange-500' } }, { id: 'restructuring', icon: 'database', title: '資料重整', colors: { border: 'border-blue-500 dark:border-blue-400', bg: 'bg-blue-50 dark:bg-blue-900/30', text: 'text-blue-500 dark:text-blue-400', textBold: 'text-blue-700 dark:text-blue-300', dot: 'bg-blue-500' } } ].map(mode => (
-                                                <button key={mode.id} onClick={() => updateConfig('maintenanceMode', mode.id)} className={`relative flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all group ${systemConfig?.maintenanceMode === mode.id ? `${mode.colors.border} ${mode.colors.bg}` : 'border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800'}`}>
-                                                    <Icon name={mode.icon} className={`w-8 h-8 mb-2 ${systemConfig?.maintenanceMode === mode.id ? mode.colors.text : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300'}`} />
-                                                    <span className={`font-bold text-sm ${systemConfig?.maintenanceMode === mode.id ? mode.colors.textBold : 'text-slate-600 dark:text-slate-400'}`}>{mode.title}</span>
-                                                    {systemConfig?.maintenanceMode === mode.id && <div className={`absolute top-2 right-2 w-2 h-2 rounded-full ${mode.colors.dot} animate-pulse`}></div>}
-                                                </button>
-                                            ))}
-                                            </div>
+                                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                                    {[ { id: 'normal', icon: 'check-circle-2', title: '正常運作', colors: { border: 'border-green-500 dark:border-green-400', bg: 'bg-green-50 dark:bg-green-900/30', text: 'text-green-500 dark:text-green-400', textBold: 'text-green-700 dark:text-green-300', dot: 'bg-green-500' } }, { id: 'updating', icon: 'hammer', title: '網站更新', colors: { border: 'border-orange-500 dark:border-orange-400', bg: 'bg-orange-50 dark:bg-orange-900/30', text: 'text-orange-500 dark:text-orange-400', textBold: 'text-orange-700 dark:text-orange-300', dot: 'bg-orange-500' } }, { id: 'restructuring', icon: 'database', title: '資料重整', colors: { border: 'border-blue-500 dark:border-blue-400', bg: 'bg-blue-50 dark:bg-blue-900/30', text: 'text-blue-500 dark:text-blue-400', textBold: 'text-blue-700 dark:text-blue-300', dot: 'bg-blue-500' } } ].map(mode => (
+                                                        <button key={mode.id} onClick={() => updateConfig('maintenanceMode', mode.id)} className={`relative flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all group ${systemConfig?.maintenanceMode === mode.id ? `${mode.colors.border} ${mode.colors.bg}` : 'border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800'}`}>
+                                                            <Icon name={mode.icon} className={`w-8 h-8 mb-2 ${systemConfig?.maintenanceMode === mode.id ? mode.colors.text : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300'}`} />
+                                                            <span className={`font-bold text-sm ${systemConfig?.maintenanceMode === mode.id ? mode.colors.textBold : 'text-slate-600 dark:text-slate-400'}`}>{mode.title}</span>
+                                                            {systemConfig?.maintenanceMode === mode.id && <div className={`absolute top-2 right-2 w-2 h-2 rounded-full ${mode.colors.dot} animate-pulse`}></div>}
+                                                        </button>
+                                                    ))}
+                                                </div>
 
-                                            {/* NEW SECTION START: Maintenance Customization */}
-                                            <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700 space-y-3">
-                                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 block mb-2">維護頁面自定義內容</label>
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                                     <div>
-                                                        <label className="text-[10px] text-slate-400 mb-1 block">維護標題 (留空顯示預設)</label>
-                                                        <input type="text" id="mTitleInput" defaultValue={systemConfig?.maintenanceTitle || ''} className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-indigo-500" placeholder="例如: 系統升級中..." />
-                                                     </div>
-                                                     <div>
-                                                        <label className="text-[10px] text-slate-400 mb-1 block">預計恢復時間</label>
-                                                        <input type="text" id="mTimeInput" defaultValue={systemConfig?.estimatedTime || ''} className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-indigo-500" placeholder="例如: 14:00" />
-                                                     </div>
+                                                {/* NEW SECTION START: Maintenance Customization */}
+                                                <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700 space-y-3">
+                                                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 block mb-2">維護頁面自定義內容</label>
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                         <div>
+                                                            <label className="text-[10px] text-slate-400 mb-1 block">維護標題 (留空顯示預設)</label>
+                                                            <input type="text" id="mTitleInput" defaultValue={systemConfig?.maintenanceTitle || ''} className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-indigo-500" placeholder="例如: 系統升級中..." />
+                                                         </div>
+                                                         <div>
+                                                            <label className="text-[10px] text-slate-400 mb-1 block">預計恢復時間</label>
+                                                            <input type="text" id="mTimeInput" defaultValue={systemConfig?.estimatedTime || ''} className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-indigo-500" placeholder="例如: 14:00" />
+                                                         </div>
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-[10px] text-slate-400 mb-1 block">維護詳細訊息 (支援換行)</label>
+                                                        <textarea id="mMessageInput" rows="3" defaultValue={systemConfig?.message || ''} className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-indigo-500" placeholder="輸入給用戶的詳細說明..."></textarea>
+                                                    </div>
+                                                    <div className="text-right">
+                                                         <button onClick={() => {
+                                                             updateConfig('maintenanceTitle', document.getElementById('mTitleInput').value);
+                                                             updateConfig('estimatedTime', document.getElementById('mTimeInput').value);
+                                                             updateConfig('message', document.getElementById('mMessageInput').value);
+                                                         }} className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-indigo-700 transition-colors">儲存維護資訊</button>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <label className="text-[10px] text-slate-400 mb-1 block">維護詳細訊息 (支援換行)</label>
-                                                    <textarea id="mMessageInput" rows="3" defaultValue={systemConfig?.message || ''} className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-indigo-500" placeholder="輸入給用戶的詳細說明..."></textarea>
-                                                </div>
-                                                <div className="text-right">
-                                                     <button onClick={() => {
-                                                         updateConfig('maintenanceTitle', document.getElementById('mTitleInput').value);
-                                                         updateConfig('estimatedTime', document.getElementById('mTimeInput').value);
-                                                         updateConfig('message', document.getElementById('mMessageInput').value);
-                                                     }} className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-indigo-700 transition-colors">儲存維護資訊</button>
-                                                </div>
-                                            </div>
-                                            {/* NEW SECTION END */}
+                                                {/* NEW SECTION END */}
                                     </div>
                                 </div>
                             </div>
@@ -1669,6 +1868,10 @@
             const [exitingIds, setExitingIds] = useState([]);
             const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
             const [isSubjectManagerOpen, setIsSubjectManagerOpen] = useState(false);
+            
+            // Tutorial State (新增的狀態)
+            const [isTutorialOpen, setIsTutorialOpen] = useState(false);
+
             const [systemConfig, setSystemConfig] = useState(null);
             const [systemClasses, setSystemClasses] = useState([]);
 
@@ -1762,6 +1965,17 @@
                 });
                 return () => unsubscribe();
             }, []);
+
+            // 新增: 處理首次登入自動跳出導覽的邏輯
+            useEffect(() => {
+                if (user && !authLoading) {
+                    const hideTut = localStorage.getItem('hideTutorial');
+                    if (hideTut !== 'true') {
+                        // 稍微延遲一點開啟，讓頁面先加載完成
+                        setTimeout(() => setIsTutorialOpen(true), 800);
+                    }
+                }
+            }, [user, authLoading]);
 
             useEffect(() => {
                 if (!user || !db) return;
@@ -1965,13 +2179,44 @@
             const whitelistEnabled = systemConfig?.whitelistEnabled || false;
             const isWhitelisted = user && systemConfig?.allowedEmails?.includes(user.email);
 
+            // 觸發導覽功能 (切換回主畫面後開啟)
+            const startTutorial = () => {
+                setViewMode('current');
+                setAppMode('personal');
+                // 延遲一點開啟，讓 React 有時間渲染 Current / Personal 視圖的 DOM (確保 ID 存在)
+                setTimeout(() => {
+                    setIsTutorialOpen(true);
+                }, 100);
+            };
+
             if (maintenanceMode !== 'normal' && !isAdmin && (!user || !systemConfig?.allowedEmails?.includes(user.email))) {
-                return ( <div className="min-h-screen bg-slate-50 dark:bg-slate-900"><BlockScreen type={maintenanceMode} estimatedTime={systemConfig?.estimatedTime} customMessage={systemConfig?.message} customTitle={systemConfig?.maintenanceTitle} onLogin={()=>setIsAuthModalOpen(true)} user={user} /></div> );
+                return ( 
+                    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+                        <BlockScreen 
+                            type={maintenanceMode} 
+                            estimatedTime={systemConfig?.estimatedTime} 
+                            customMessage={systemConfig?.message} 
+                            customTitle={systemConfig?.maintenanceTitle} 
+                            onLogin={()=>setIsAuthModalOpen(true)} 
+                            user={user} 
+                        />
+                        <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} triggerAlert={triggerAlert} />
+                    </div> 
+                );
             }
 
             // NEW: Explicit Whitelist Block Screen
             if (whitelistEnabled && !isAdmin && !isWhitelisted) {
-                return ( <div className="min-h-screen bg-slate-50 dark:bg-slate-900"><BlockScreen type="whitelist_blocked" onLogin={()=>setIsAuthModalOpen(true)} user={user} /></div> );
+                return ( 
+                    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+                        <BlockScreen 
+                            type="whitelist_blocked" 
+                            onLogin={()=>setIsAuthModalOpen(true)} 
+                            user={user} 
+                        />
+                        <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} triggerAlert={triggerAlert} />
+                    </div> 
+                );
             }
 
             return (
@@ -1989,9 +2234,9 @@
                     )}
 
                     <div className={`max-w-[1200px] mx-auto relative z-10 transition-all duration-500 ${isGuest ? 'guest-blur' : ''}`}>
-                        {/* v2.4 Responsive Header - FIX: Adjusted to flex-col on mobile, row on desktop */}
+                        {/* v2.4 Responsive Header */}
                         <div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-4 max-w-3xl mx-auto bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl p-4 sm:p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700">
-                            <div className="w-full md:w-auto text-center md:text-left min-w-0">
+                            <div className="w-full md:w-auto text-center md:text-left min-w-0" id="header-spotlight">
                                 <h1 className={`text-xl sm:text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r ${t.gradient} flex items-center justify-center md:justify-start gap-2 truncate`}>
                                     {viewMode === 'current' ? (<><Icon name="graduation-cap" className={`w-6 h-6 sm:w-8 sm:h-8 ${t.text}`} />學生小幫手</>) : viewMode === 'admin' ? (<><Icon name="shield-alert" className={`w-6 h-6 sm:w-8 sm:h-8 text-blue-600`} />管理後台</>) : <><Icon name="history" className={`w-6 h-6 sm:w-8 sm:h-8 ${t.text}`} /> {viewMode === 'timetable' ? '上課時間表' : '完成紀錄'}</>}
                                 </h1>
@@ -1999,7 +2244,7 @@
                             </div>
                             <div className="flex gap-2 flex-wrap justify-center md:justify-end shrink-0 w-full md:w-auto">
                                 {viewMode === 'current' && appMode === 'personal' && (
-                                    <button onClick={() => setViewLayout(viewLayout === 'list' ? 'calendar' : 'list')} className="px-3 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold text-xs hover:bg-slate-50 dark:hover:bg-slate-700 transition flex items-center gap-2">
+                                    <button id="view-toggle-spotlight" onClick={() => setViewLayout(viewLayout === 'list' ? 'calendar' : 'list')} className="px-3 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold text-xs hover:bg-slate-50 dark:hover:bg-slate-700 transition flex items-center gap-2">
                                             <Icon name={viewLayout === 'list' ? "calendar" : "list"} className="w-4 h-4" />
                                             <span className="hidden sm:inline">{viewLayout === 'list' ? '日曆模式' : '列表模式'}</span>
                                     </button>
@@ -2009,19 +2254,23 @@
                                     <button onClick={() => setViewMode('timetable_edit')} className={`px-3 py-2 rounded-xl font-bold text-xs bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 shadow-sm transition-all flex items-center gap-2`}><Icon name="edit" className="w-4 h-4" /><span className="hidden sm:inline">編輯</span></button>
                                 )}
 
-                                <button onClick={() => !user ? setIsAuthModalOpen(true) : setViewMode('timetable')} className={`px-3 py-2 rounded-xl font-bold text-xs transition flex items-center gap-2 ${viewMode === 'timetable' || viewMode === 'timetable_edit' ? 'bg-orange-500 text-white' : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50'}`}><Icon name="calendar-days" className="w-4 h-4" /><span className="hidden sm:inline">時間表</span></button>
+                                <button id="timetable-btn-spotlight" onClick={() => !user ? setIsAuthModalOpen(true) : setViewMode('timetable')} className={`px-3 py-2 rounded-xl font-bold text-xs transition flex items-center gap-2 ${viewMode === 'timetable' || viewMode === 'timetable_edit' ? 'bg-orange-500 text-white' : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50'}`}><Icon name="calendar-days" className="w-4 h-4" /><span className="hidden sm:inline">時間表</span></button>
 
                                 {isAdmin && (
                                     <button onClick={() => setViewMode('admin')} className={`px-3 py-2 rounded-xl font-bold text-xs transition flex items-center gap-2 ${viewMode === 'admin' ? 'bg-slate-800 text-white' : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'}`}><Icon name="shield-alert" className="w-4 h-4" /><span className="hidden sm:inline">後台</span></button>
                                 )}
 
-                                <button onClick={() => !user ? setIsAuthModalOpen(true) : setViewMode(viewMode === 'current' ? 'history' : 'current')} className={`px-3 py-2 rounded-xl font-bold text-xs transition flex items-center gap-2 ${viewMode === 'history' ? 'bg-indigo-600 text-white shadow-md' : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50'}`}>
+                                <button id="history-btn-spotlight" onClick={() => !user ? setIsAuthModalOpen(true) : setViewMode(viewMode === 'current' ? 'history' : 'current')} className={`px-3 py-2 rounded-xl font-bold text-xs transition flex items-center gap-2 ${viewMode === 'history' ? 'bg-indigo-600 text-white shadow-md' : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50'}`}>
                                     <Icon name={viewMode === 'current' ? "history" : "arrow-left"} className="w-4 h-4" />
                                     <span>{viewMode === 'current' ? '歷史紀錄' : '返回列表'}</span>
                                 </button>
 
                                 {user && (
-                                    <div className="flex bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-1">
+                                    <div id="settings-spotlight" className="flex bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-1">
+                                            {/* 新增: 重新開啟導覽的按鈕，綁定 startTutorial */}
+                                            <button onClick={startTutorial} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 transition" title="使用導覽"><Icon name="help-circle" className="w-4 h-4" /></button>
+                                            <div className="w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
+
                                             <button onClick={() => setIsPreferencesOpen(true)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 transition"><Icon name="palette" className="w-4 h-4" /></button>
                                             <div className="w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
                                             <button onClick={() => setIsSubjectManagerOpen(true)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 transition"><Icon name="settings" className="w-4 h-4" /></button>
@@ -2039,7 +2288,7 @@
 
                             {/* --- 雙模式切換器 --- */}
                             {viewMode === 'current' && (
-                                <div className="flex bg-slate-200/50 dark:bg-slate-800/50 p-1.5 rounded-2xl w-full sm:w-fit mx-auto mb-6 shadow-inner border border-white/20 dark:border-slate-700">
+                                <div id="mode-toggle-spotlight" className="flex bg-slate-200/50 dark:bg-slate-800/50 p-1.5 rounded-2xl w-full sm:w-fit mx-auto mb-6 shadow-inner border border-white/20 dark:border-slate-700">
                                     <button onClick={() => setAppMode('personal')} className={`flex-1 sm:flex-none px-8 py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${appMode === 'personal' ? `bg-white dark:bg-slate-700 shadow-sm ${t.text}` : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>
                                         <Icon name="user" className="w-4 h-4" /> 個人模式
                                     </button>
@@ -2051,7 +2300,7 @@
 
                             {/* v2.4 Feature Cards */}
                             {viewMode === 'current' && isVisible('cards') && (
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6 animate-fadeIn">
+                                <div id="quick-cards-spotlight" className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6 animate-fadeIn">
                                     <button onClick={() => openQuickView('today')} className="relative overflow-hidden bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-4 rounded-2xl flex flex-col items-start justify-center gap-1 hover:shadow-md hover:-translate-y-1 transition-all group">
                                         <div className="absolute -right-3 -top-3 text-red-50 dark:text-red-900/20 group-hover:scale-110 transition-transform"><Icon name="calendar-clock" className="w-20 h-20" /></div>
                                         <div className="text-red-500 font-black text-3xl z-10">{counts.today}</div>
@@ -2076,19 +2325,23 @@
                             )}
 
                             {/* v2.4 Live Dashboard Widget (Clickable & Flowing) */}
-                            {viewMode === 'current' && isVisible('timetable') && <CurrentLessonWidget config={timetableConfig} t={t} onClick={() => setViewMode('timetable')} />}
+                            {viewMode === 'current' && isVisible('timetable') && (
+                                <div id="live-dashboard-spotlight">
+                                    <CurrentLessonWidget config={timetableConfig} t={t} onClick={() => setViewMode('timetable')} />
+                                </div>
+                            )}
 
                             {/* Fixed History View Logic: Allows rendering in history mode */}
                             {(viewMode === 'current' || viewMode === 'history') && appMode === 'personal' && (
                                 <>
                                     {isVisible('input') && (
-                                        <div className={`relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl shadow-lg p-5 sm:p-8 mb-10 border border-slate-100 dark:border-slate-700 z-20`}>
+                                        <div id="add-task-spotlight" className={`relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl shadow-lg p-5 sm:p-8 mb-10 border border-slate-100 dark:border-slate-700 z-20`}>
                                             <div className="flex bg-slate-100 dark:bg-slate-900/50 p-1.5 rounded-xl mb-6">
                                                 <button onClick={() => setInputType('homework')} className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-all ${inputType === 'homework' ? `bg-white dark:bg-slate-700 shadow-sm ${t.text}` : 'text-slate-500 dark:text-slate-400'}`}><Icon name="book-open" className="w-4 h-4" /> 新增功課</button>
                                                 <button onClick={() => setInputType('assessment')} className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-all ${inputType === 'assessment' ? `bg-white dark:bg-slate-700 shadow-sm text-purple-600 dark:text-purple-400` : 'text-slate-500 dark:text-slate-400'}`}><Icon name="file-question" className="w-4 h-4" /> 新增測驗</button>
                                             </div>
                                             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                                                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                                                <div id="subject-selector-spotlight" className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                                                     {subjects.map(sub => (
                                                         <button 
                                                             key={sub.name} 
@@ -2129,7 +2382,7 @@
                                                                     </button>
                                                                     {systemClasses.map(c => (
                                                                         <button key={c.code} type="button" onClick={() => setTargetClassInput(c.code)} className={`p-3 rounded-xl border-2 text-left font-bold text-sm transition-all flex items-center gap-2 ${targetClassInput === c.code ? 'border-indigo-500 bg-indigo-50 text-indigo-600' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500'}`}>
-                                                                                <Icon name="school" className="w-4 h-4" /> {c.name}
+                                                                            <Icon name="school" className="w-4 h-4" /> {c.name}
                                                                         </button>
                                                                     ))}
                                                                 </div>
@@ -2145,7 +2398,7 @@
                                         <>
                                             {viewLayout === 'calendar' && <CalendarWidget items={activeItems} selectedDate={calendarSelectedDate} onSelectDate={setCalendarSelectedDate} t={t} />}
 
-                                            <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mb-6 relative">
+                                            <div id="filter-sort-spotlight" className="flex flex-col sm:flex-row justify-between items-center gap-3 mb-6 relative">
                                                 <div className={`flex items-center gap-2 w-full sm:w-auto overflow-x-auto scrollbar-hide pb-1 transition-opacity duration-300 ${!isListVisible ? 'opacity-50' : 'opacity-100'}`}>
                                                     <span className="text-slate-400 text-xs font-bold whitespace-nowrap flex items-center gap-1"><Icon name="filter" className="w-3 h-3" />篩選:</span>
                                                     <button onClick={() => handleFilterChange('全部')} className={`flex-shrink-0 px-2.5 py-1 rounded text-[10px] font-bold border transition-all ${filterSubject === '全部' ? 'bg-slate-800 dark:bg-slate-600 text-white border-slate-800 dark:border-slate-600' : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'}`}>全部</button>
@@ -2159,7 +2412,7 @@
                                                 </div>
                                             </div>
 
-                                            <div className={`space-y-4 pb-20 transition-opacity duration-300 ${!isListVisible ? 'opacity-0' : 'opacity-100'}`}>
+                                            <div id="task-list-spotlight" className={`space-y-4 pb-20 transition-opacity duration-300 ${!isListVisible ? 'opacity-0' : 'opacity-100'}`}>
                                                 {displayedItems.length === 0 ? (
                                                     <div className="text-center py-20">
                                                         <div className={`inline-flex p-6 rounded-full ${t.lightBg} mb-4`}><Icon name="sparkles" className={`w-12 h-12 ${t.text}`} /></div>
@@ -2311,6 +2564,13 @@
                             </div>
                         </div>
                     )}
+
+                    {/* 新增: 導覽對話框 */}
+                    <TutorialModal 
+                        isOpen={isTutorialOpen} 
+                        onClose={() => setIsTutorialOpen(false)} 
+                        t={t} 
+                    />
 
                     <QuickViewModal 
                         isOpen={quickView.isOpen} 
