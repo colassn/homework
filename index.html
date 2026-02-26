@@ -123,7 +123,6 @@
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100">
     
     <!-- 載入畫面 (Fallback UI) -->
-    <!-- 如果 CDN 掛了，React 跑不出來，使用者至少會看到這裡，而不是白畫面 -->
     <div id="loading-screen">
         <div class="spinner"></div>
         <h2 style="font-size: 1.2rem; font-weight: bold; margin-bottom: 0.5rem;">正在啟動電子手冊...</h2>
@@ -251,7 +250,6 @@
             return <span ref={ref} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}></span>;
         };
 
-        // Moved CustomDropdown here to ensure it's defined before usage
         function CustomDropdown({ value, onChange, options }) { 
             const [isOpen, setIsOpen] = useState(false); 
             const dropdownRef = useRef(null); 
@@ -296,7 +294,6 @@
             } catch(e) { return '--:--'; }
         };
 
-        // v2.3 Helper: Relative Time
         const formatRelativeTime = (lastSeen) => {
             if (!lastSeen || typeof lastSeen.toDate !== 'function') return '無紀錄';
             const date = lastSeen.toDate();
@@ -375,7 +372,6 @@
             return null;
         }
 
-        // v2.4 Updated Current Lesson Widget with Flowing Gradient
         function CurrentLessonWidget({ config, t, onClick }) {
             const [now, setNow] = useState(new Date());
             useEffect(() => { const timer = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(timer); }, []);
@@ -411,11 +407,9 @@
 
             return (
                 <div onClick={onClick} className="cursor-pointer mb-6 relative overflow-hidden rounded-2xl p-[2px] shadow-lg hover:scale-[1.01] transition-transform duration-300">
-                    {/* Flowing Gradient Border/Background */}
                     <div className="absolute inset-0 bg-gradient-to-r from-violet-500 via-fuchsia-500 to-cyan-500 animate-gradient-x"></div>
                     
                     <div className="relative bg-white/95 dark:bg-slate-900/95 backdrop-blur-3xl rounded-2xl p-4 flex items-center justify-between h-full">
-                        {/* Progress Bar within card */}
                         <div className="absolute top-0 left-0 h-[2px] bg-gradient-to-r from-violet-500 to-cyan-500 opacity-50 w-full"></div>
                         <div className={`absolute top-0 left-0 h-[2px] transition-all duration-1000 ${status === 'current' ? 'bg-fuchsia-500 shadow-[0_0_10px_rgba(217,70,239,0.8)]' : 'bg-transparent'}`} style={{ width: currentSlot ? `${100 - (diff / (currentSlot.end - currentSlot.start)) * 100}%` : '0%' }}></div>
 
@@ -447,7 +441,6 @@
                             </div>
                         </div>
                         
-                        {/* Decorative Sparkles */}
                         <Icon name="sparkles" className="absolute -bottom-2 -right-2 w-12 h-12 text-fuchsia-500/10 animate-float pointer-events-none" />
                     </div>
                 </div>
@@ -469,7 +462,6 @@
             const nextMonth = () => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
             const prevMonth = () => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
 
-            // Fix: Add today weekday info
             const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
             const today = new Date();
             const todayWeekday = weekDays[today.getDay()];
@@ -544,7 +536,6 @@
             );
         }
 
-        // v2.4 Quick View Modal (Enhanced) - RESTORED
         function QuickViewModal({ isOpen, onClose, title, items, subjects, onEdit, onDelete, isAdmin, userUid }) {
             if (!isOpen) return null;
 
@@ -597,10 +588,9 @@
         }
 
         function BlockScreen({ type, estimatedTime, customMessage, customTitle, onLogin, user }) {
-            const defaultMessage = (type === 'access_denied' || type === 'whitelist_blocked') ? '抱歉，此網站目前僅限白名單用戶訪問。\n請聯絡管理員開通權限。' : '管理員正在進行系統維護，請稍後再回來。';
+            const defaultMessage = (type === 'access_denied' || type === 'whitelist_blocked') ? '抱歉，此系統目前已限制您的存取權限。\n請聯絡管理員了解詳情。' : '管理員正在進行系統維護，請稍後再回來。';
             const iconName = (type === 'access_denied' || type === 'whitelist_blocked') ? 'shield-ban' : (type === 'updating' ? 'hammer' : (type === 'restructuring' ? 'database' : 'lock'));
             
-            // Determine default title based on type
             const defaultTitle = type === 'access_denied' || type === 'whitelist_blocked' ? '存取被拒' : type === 'updating' ? '網站更新中' : type === 'restructuring' ? '資料重整中' : '系統維護中';
             
             return (
@@ -633,7 +623,6 @@
             );
         }
 
-        // Updated AppearanceModal for Layout Settings
         function AppearanceModal({ isOpen, onClose, t, themeColor, setThemeColor, isDarkMode, setIsDarkMode, layoutMode, setLayoutMode, customLayout, setCustomLayout }) {
             if (!isOpen) return null;
             
@@ -1142,16 +1131,21 @@
             const [searchQuery, setSearchQuery] = useState('');
             const [selectedUser, setSelectedUser] = useState(null);
             const [userHomeworks, setUserHomeworks] = useState([]);
+            
+            // Whitelist states
             const [newEmail, setNewEmail] = useState('');
+            // Blacklist states
+            const [newBlacklistEmail, setNewBlacklistEmail] = useState('');
+            
             const [newClassName, setNewClassName] = useState('');
             const [isSubmitting, setIsSubmitting] = useState(false);
             const [newName, setNewName] = useState('');
             
             const [editingAdminItem, setEditingAdminItem] = useState(null);
 
-            // Added getDoc to destructuring
             const { collection, getDocs, query, orderBy, onSnapshot, doc, updateDoc, arrayUnion, arrayRemove, deleteDoc, setDoc, getDoc } = window.firebaseServices || {};
             const allowedEmails = systemConfig?.allowedEmails || [];
+            const blacklistedEmails = systemConfig?.blacklistedEmails || [];
 
             useEffect(() => {
                 if (!db || !collection) return;
@@ -1176,8 +1170,15 @@
             }, [selectedUser, db, collection]);
 
             const updateConfig = async (key, value) => { try { await setDoc(doc(db, "system_settings", "config"), { [key]: value }, { merge: true }); triggerAlert("設定已更新"); } catch (e) { triggerAlert("設定更新失敗"); } };
+            
+            // Whitelist Handlers
             const handleAddWhitelist = async (e) => { e.preventDefault(); if (!newEmail.trim()) return; setIsSubmitting(true); try { await updateDoc(doc(db, "system_settings", "config"), { allowedEmails: arrayUnion(newEmail.trim()) }); setNewEmail(''); triggerAlert("已新增至白名單"); } catch (e) { triggerAlert("新增失敗"); } setIsSubmitting(false); };
             const handleRemoveWhitelist = async (email) => { triggerConfirm(`確定要移除白名單 ${email} 嗎？`, async () => { try { await updateDoc(doc(db, "system_settings", "config"), { allowedEmails: arrayRemove(email) }); triggerAlert("已移除"); } catch (e) { } }); };
+
+            // Blacklist Handlers
+            const handleAddBlacklist = async (e) => { e.preventDefault(); if (!newBlacklistEmail.trim()) return; setIsSubmitting(true); try { await updateDoc(doc(db, "system_settings", "config"), { blacklistedEmails: arrayUnion(newBlacklistEmail.trim()) }); setNewBlacklistEmail(''); triggerAlert("已新增至黑名單"); } catch (e) { triggerAlert("新增失敗"); } setIsSubmitting(false); };
+            const handleRemoveBlacklist = async (email) => { triggerConfirm(`確定要解除封鎖 ${email} 嗎？`, async () => { try { await updateDoc(doc(db, "system_settings", "config"), { blacklistedEmails: arrayRemove(email) }); triggerAlert("已解除封鎖"); } catch (e) { } }); };
+
 
             const handleCreateClass = async (e) => {
                 e.preventDefault(); const name = newClassName.trim(); if (!name) return;
@@ -1191,30 +1192,24 @@
                 }
             };
 
-            // v2.3 Deep Clean Class Delete (Fixed: Use getDoc/filter for robust deletion)
             const handleDeepDeleteClass = async (classObj) => {
-                // Explicitly get services inside the function to ensure scope
                 const { getDoc, doc, updateDoc, deleteDoc, getDocs, query, where, collection, arrayRemove } = window.firebaseServices;
 
                 triggerConfirm(`⚠️ 警告：確定要刪除班級 ${classObj.name}？\n\n此操作將會：\n1. 刪除班級代碼\n2. 刪除該班級所有廣播功課\n3. 將所有學生踢出該班級\n\n(學生私有記錄將保留但變為孤兒記錄)`, async () => {
                     try {
-                        // 1. Delete Public Assignments for this class
                         const tasksQ = query(collection(db, "public_assignments"), where("targetClass", "==", classObj.code));
                         const tasksSnap = await getDocs(tasksQ);
                         await Promise.all(tasksSnap.docs.map(d => deleteDoc(d.ref)));
 
-                        // 2. Remove class from all users
                         const usersQ = query(collection(db, "users_public"), where("joinedClasses", "array-contains", classObj.code));
                         const usersSnap = await getDocs(usersQ);
                         await Promise.all(usersSnap.docs.map(d => updateDoc(d.ref, { joinedClasses: arrayRemove(classObj.code) })));
 
-                        // 3. Delete Class Config (Fixed logic: Read-Filter-Write)
                         const classesRef = doc(db, 'system_settings', 'classes');
                         const classesSnap = await getDoc(classesRef);
                         
                         if (classesSnap.exists()) {
                             const currentList = classesSnap.data().list || [];
-                            // Filter out the class by unique code instead of object equality
                             const newList = currentList.filter(c => c.code !== classObj.code);
                             await updateDoc(classesRef, { list: newList });
                         }
@@ -1270,9 +1265,26 @@
                 });
             };
 
+            // Fix: Improved sync deletion of public tasks
             const handleDeletePublicTask = (taskId) => {
                 triggerConfirm("確定要撤回這份廣播功課嗎？這會同時從所有同學的清單中移除。", async () => {
-                    try { await deleteDoc(doc(db, "public_assignments", taskId)); triggerAlert("廣播功課已撤回"); } catch (e) { triggerAlert("撤回失敗"); }
+                    try { 
+                        // 1. Delete the public assignment
+                        await deleteDoc(doc(db, "public_assignments", taskId)); 
+                        
+                        // 2. Iterate through all users and delete matching private items
+                        const deletePromises = [];
+                        for (const u of users) {
+                            const dupQ = query(collection(db, "users", u.uid, "items"), where("publicRefId", "==", taskId));
+                            const snap = await getDocs(dupQ);
+                            snap.forEach(d => deletePromises.push(deleteDoc(d.ref)));
+                        }
+                        await Promise.all(deletePromises);
+
+                        triggerAlert("廣播功課已撤回並同步清理所有學生紀錄"); 
+                    } catch (e) { 
+                        triggerAlert("撤回失敗: " + e.message); 
+                    }
                 });
             };
             
@@ -1381,27 +1393,29 @@
                                                 {filteredUsers.map(u => {
                                                     const isAdm = u.email === ADMIN_EMAIL;
                                                     const isWhite = allowedEmails.includes(u.email);
+                                                    const isBlack = blacklistedEmails.includes(u.email);
                                                     const userClassesNames = (u.joinedClasses || []).map(code => { const cls = systemClasses.find(c => c.code === code); return cls ? cls.name : code; }).join(', ');
                                                     const onlineStatus = getUserStatus(u.lastSeen);
 
                                                     return (
-                                                        <tr key={u.uid} className="hover:bg-indigo-50/30 dark:hover:bg-slate-700/50 transition-colors group cursor-pointer" onClick={() => setSelectedUser(u)}>
+                                                        <tr key={u.uid} className={`hover:bg-indigo-50/30 dark:hover:bg-slate-700/50 transition-colors group cursor-pointer ${isBlack ? 'opacity-60' : ''}`} onClick={() => setSelectedUser(u)}>
                                                             <td className="px-6 py-4">
                                                                 <div className="flex items-center gap-3">
-                                                                    <div className={`relative w-9 h-9 rounded-full flex items-center justify-center font-bold text-white shadow-sm shrink-0 ${isAdm ? 'bg-purple-500' : isWhite ? 'bg-emerald-500' : 'bg-slate-400 dark:bg-slate-600'}`}>
+                                                                    <div className={`relative w-9 h-9 rounded-full flex items-center justify-center font-bold text-white shadow-sm shrink-0 ${isBlack ? 'bg-red-800' : isAdm ? 'bg-purple-500' : isWhite ? 'bg-emerald-500' : 'bg-slate-400 dark:bg-slate-600'}`}>
                                                                         {u.displayName?.[0]?.toUpperCase() || 'U'}
-                                                                        {onlineStatus === 'online' && <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white dark:border-slate-800 rounded-full"></span>}
-                                                                        {onlineStatus === 'idle' && <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-yellow-400 border-2 border-white dark:border-slate-800 rounded-full"></span>}
+                                                                        {!isBlack && onlineStatus === 'online' && <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white dark:border-slate-800 rounded-full"></span>}
+                                                                        {!isBlack && onlineStatus === 'idle' && <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-yellow-400 border-2 border-white dark:border-slate-800 rounded-full"></span>}
                                                                     </div>
                                                                     <div>
-                                                                        <div className="font-bold dark:text-white flex items-center gap-2">{u.displayName || '未命名'}</div>
+                                                                        <div className="font-bold dark:text-white flex items-center gap-2">{u.displayName || '未命名'} {isBlack && <Icon name="shield-ban" className="w-3 h-3 text-red-500"/>}</div>
                                                                         <div className="text-xs text-slate-400">{u.email}</div>
                                                                         {userClassesNames && <div className="text-[10px] text-indigo-500 dark:text-indigo-400 mt-1 truncate max-w-[150px]" title={userClassesNames}>班級: {userClassesNames}</div>}
                                                                     </div>
                                                                 </div>
                                                             </td>
                                                             <td className="px-6 py-4">
-                                                                {isAdm ? <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 text-[10px] font-bold">管理員</span> :
+                                                                {isBlack ? <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-[10px] font-bold">黑名單 (已封鎖)</span> :
+                                                                 isAdm ? <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 text-[10px] font-bold">管理員</span> :
                                                                  isWhite ? <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold">白名單</span> :
                                                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-bold">普通用戶</span>}
                                                             </td>
@@ -1448,7 +1462,13 @@
                                                 <button onClick={() => updateConfig('allowedEmails', arrayUnion(selectedUser.email))} className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 rounded-lg hover:bg-emerald-100 transition-colors flex items-center gap-1">➕ 加入白名單</button> :
                                                 <button onClick={() => updateConfig('allowedEmails', arrayRemove(selectedUser.email))} className="text-xs font-bold text-amber-600 bg-amber-50 dark:bg-amber-900/20 px-3 py-1.5 rounded-lg hover:bg-amber-100 transition-colors flex items-center gap-1">🚫 移出白名單</button>
                                              }
-                                             <button onClick={() => handleDeleteUser(selectedUser)} className="text-xs font-bold text-red-600 bg-red-50 dark:bg-red-900/20 px-3 py-1.5 rounded-lg hover:bg-red-100 transition-colors flex items-center gap-1"><Icon name="trash-2" className="w-3 h-3" /> 強制刪除帳號</button>
+
+                                             {!blacklistedEmails.includes(selectedUser.email) ? 
+                                                <button onClick={() => updateConfig('blacklistedEmails', arrayUnion(selectedUser.email))} className="text-xs font-bold text-red-600 bg-red-50 dark:bg-red-900/20 px-3 py-1.5 rounded-lg hover:bg-red-100 transition-colors flex items-center gap-1"><Icon name="shield-ban" className="w-3 h-3" /> 加入黑名單 (封鎖)</button> :
+                                                <button onClick={() => updateConfig('blacklistedEmails', arrayRemove(selectedUser.email))} className="text-xs font-bold text-green-600 bg-green-50 dark:bg-green-900/20 px-3 py-1.5 rounded-lg hover:bg-green-100 transition-colors flex items-center gap-1"><Icon name="shield-check" className="w-3 h-3" /> 解除黑名單</button>
+                                             }
+
+                                             <button onClick={() => handleDeleteUser(selectedUser)} className="text-xs font-bold text-slate-500 bg-slate-200 dark:bg-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-300 transition-colors flex items-center gap-1 ml-auto"><Icon name="trash-2" className="w-3 h-3" /> 徹底刪除帳號</button>
                                          </div>
                                      </div>
                                      <div className="flex gap-4">
@@ -1476,7 +1496,7 @@
                                                          </div>
                                                      </div>
                                                  </div>
-                                               ))}
+                                                ))}
                                     </div>
                                 </div>
                             </div>
@@ -1503,8 +1523,8 @@
                                                             </td>
                                                             <td className="px-6 py-4">
                                                                 <div className="flex flex-col gap-1 items-start">
-                                                                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${subjects.find(s => s.name === task.subject)?.color || 'bg-slate-100 text-slate-600 border-slate-200 dark:border-slate-700'}`}>{task.subject}</span>
-                                                                            <span className="text-[10px] bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 px-2 py-0.5 rounded font-bold max-w-[120px] truncate" title={targetName}>{targetName}</span>
+                                                                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${subjects.find(s => s.name === task.subject)?.color || 'bg-slate-100 text-slate-600 border-slate-200 dark:border-slate-700'}`}>{task.subject}</span>
+                                                                    <span className="text-[10px] bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 px-2 py-0.5 rounded font-bold max-w-[120px] truncate" title={targetName}>{targetName}</span>
                                                                 </div>
                                                             </td>
                                                             <td className="px-6 py-4 text-right">
@@ -1567,6 +1587,48 @@
                                     </div>
                                 </div>
 
+                                {/* 黑名單系統設定 (NEW) */}
+                                <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden p-1">
+                                    <div className="p-5 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 flex justify-between items-center">
+                                            <h4 className="font-bold dark:text-white flex items-center gap-2"><Icon name="shield-ban" className="w-5 h-5 text-red-500"/> 黑名單系統</h4>
+                                            <label className="relative inline-flex items-center cursor-pointer">
+                                                <input type="checkbox" className="sr-only peer" checked={systemConfig?.blacklistEnabled || false} onChange={(e) => updateConfig('blacklistEnabled', e.target.checked)} />
+                                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                                                <span className="ml-3 text-sm font-medium text-slate-900 dark:text-slate-300">{systemConfig?.blacklistEnabled ? '已啟用' : '已停用'}</span>
+                                            </label>
+                                    </div>
+                                    <div className="p-5">
+                                            <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">當啟用黑名單模式時，下列清單中的電郵地址將被<strong>強制停權</strong>，無法登入使用。</p>
+                                            
+                                            <form onSubmit={handleAddBlacklist} className="flex gap-2 mb-4">
+                                                <input type="email" placeholder="輸入要封鎖的電郵地址..." value={newBlacklistEmail} onChange={e => setNewBlacklistEmail(e.target.value)} className="flex-1 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-red-500 outline-none" required />
+                                                <button type="submit" disabled={isSubmitting} className="bg-red-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-red-700 transition-colors flex items-center gap-2"><Icon name="ban" className="w-4 h-4"/> 封鎖</button>
+                                            </form>
+
+                                            <div className="max-h-60 overflow-y-auto border border-slate-100 dark:border-slate-700 rounded-xl">
+                                                {blacklistedEmails.length === 0 ? (
+                                                    <div className="p-8 text-center text-slate-400 text-sm">黑名單目前為空</div>
+                                                ) : (
+                                                    <table className="w-full text-left text-sm">
+                                                        <thead className="bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400">
+                                                            <tr><th className="px-4 py-2">被封鎖的電郵地址</th><th className="px-4 py-2 text-right">操作</th></tr>
+                                                        </thead>
+                                                        <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                                                            {blacklistedEmails.map(email => (
+                                                                <tr key={email} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                                                                    <td className="px-4 py-3 dark:text-slate-300">{email}</td>
+                                                                    <td className="px-4 py-3 text-right">
+                                                                        <button onClick={() => handleRemoveBlacklist(email)} className="text-slate-400 hover:text-green-500 font-bold">解除封鎖</button>
+                                                                    </td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                )}
+                                            </div>
+                                    </div>
+                                </div>
+
                                 <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden p-1">
                                     <div className="p-5 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50">
                                                 <h4 className="font-bold dark:text-white flex items-center gap-2"><Icon name="megaphone" className="w-5 h-5 text-amber-500"/> 系統跑馬燈公告</h4>
@@ -1595,7 +1657,6 @@
                                                 ))}
                                                 </div>
 
-                                                {/* NEW SECTION START: Maintenance Customization */}
                                                 <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700 space-y-3">
                                                     <label className="text-xs font-bold text-slate-500 dark:text-slate-400 block mb-2">維護頁面自定義內容</label>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -1620,7 +1681,6 @@
                                                          }} className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-indigo-700 transition-colors">儲存維護資訊</button>
                                                     </div>
                                                 </div>
-                                                {/* NEW SECTION END */}
                                     </div>
                                 </div>
                             </div>
@@ -1630,7 +1690,7 @@
             );
         }
 
-        // --- App Component (Restored) ---
+        // --- App Component ---
         function App() {
             const [user, setUser] = useState(null);
             const [authLoading, setAuthLoading] = useState(true);
@@ -1701,7 +1761,7 @@
                 const loadingScreen = document.getElementById('loading-screen');
                 if (loadingScreen) {
                     loadingScreen.classList.add('hidden-loader');
-                    setTimeout(() => loadingScreen.remove(), 500); // 移除 DOM 避免干擾
+                    setTimeout(() => loadingScreen.remove(), 500);
                 }
                 
                 if ("Notification" in window && Notification.permission === "default") Notification.requestPermission(); 
@@ -1876,7 +1936,34 @@
             const handleUpdateItem = async (id, updatedData) => { if (isGuest) return; try { await updateDoc(doc(db, "users", user.uid, "items", id), updatedData); triggerAlert("更新成功！"); } catch (e) { triggerAlert("更新失敗"); throw e; } };
             const deleteItem = (id) => { if (isGuest) return; triggerConfirm('確定要刪除這項紀錄？', async () => { try { await deleteDoc(doc(db, "users", user.uid, "items", id)); } catch (e) { triggerAlert("刪除失敗"); } }); };
             const deletePublicItem = (publicId, privateId) => { if (isGuest) return; triggerConfirm('⚠️ 確定要刪除全班的這份功課？', async () => { try { await deleteDoc(doc(db, "public_assignments", publicId)); if (privateId) await deleteDoc(doc(db, "users", user.uid, "items", privateId)); triggerAlert("已刪除"); } catch (e) { triggerAlert("刪除失敗"); } }); };
-            const handleForceExpire = (publicId, currentStatus) => { if (isGuest) return; const action = currentStatus ? "取消過期" : "標記為過期"; triggerConfirm(`確定要將此功課${action}？(全班都會更新)`, async () => { try { await updateDoc(doc(db, "public_assignments", publicId), { forceExpired: !currentStatus }); triggerAlert(`已${action}`); } catch (e) { triggerAlert("操作失敗"); } }); };
+            
+            const handleClearExpired = () => {
+                if (isGuest) { setIsAuthModalOpen(true); return; }
+                
+                const expiredItems = items.filter(item => {
+                    if (item.completed) return false; // Optional: 已經完成的不在這裡刪除
+                    if (item.forceExpired) return true;
+                    
+                    const today = new Date(); today.setHours(0,0,0,0);
+                    const due = new Date(item.dueDate); due.setHours(0,0,0,0);
+                    return due < today;
+                });
+
+                if (expiredItems.length === 0) {
+                    triggerAlert("目前沒有過期的未完成功課！🎉");
+                    return;
+                }
+
+                triggerConfirm(`確定要一鍵清理 ${expiredItems.length} 個過期項目嗎？`, async () => {
+                    try {
+                        const promises = expiredItems.map(item => deleteDoc(doc(db, "users", user.uid, "items", item.id)));
+                        await Promise.all(promises);
+                        triggerAlert(`成功刪除了 ${expiredItems.length} 個過期項目！`);
+                    } catch(e) {
+                        triggerAlert("清理過程發生錯誤");
+                    }
+                });
+            };
 
             const saveTimetableConfig = async (newConfig) => { if (!user) return; try { await setDoc(doc(db, 'users', user.uid, 'settings', 'timetable'), JSON.parse(JSON.stringify(newConfig))); triggerAlert("時間表已儲存"); setViewMode('timetable'); } catch (e) { triggerAlert("儲存失敗"); } };
             const saveSubjects = async (newSubjects) => { if (!user) return; try { await setDoc(doc(db, 'users', user.uid, 'settings', 'subjects'), { list: JSON.parse(JSON.stringify(newSubjects)) }); triggerAlert("科目已更新"); } catch (e) { triggerAlert("儲存失敗"); } };
@@ -1961,10 +2048,10 @@
             };
 
             const maintenanceMode = systemConfig?.maintenanceMode || 'normal';
-            // NEW: Whitelist logic
             const whitelistEnabled = systemConfig?.whitelistEnabled || false;
-            const isWhitelisted = user && systemConfig?.allowedEmails?.includes(user.email);
-
+            const blacklistEnabled = systemConfig?.blacklistEnabled || false;
+            
+            // Check Access Permissions
             if (maintenanceMode !== 'normal' && !isAdmin && (!user || !systemConfig?.allowedEmails?.includes(user.email))) {
                 return ( 
                     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
@@ -1981,8 +2068,7 @@
                 );
             }
 
-            // NEW: Explicit Whitelist Block Screen
-            if (whitelistEnabled && !isAdmin && !isWhitelisted) {
+            if (whitelistEnabled && !isAdmin && (!user || !systemConfig?.allowedEmails?.includes(user.email))) {
                 return ( 
                     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
                         <BlockScreen 
@@ -1994,6 +2080,22 @@
                     </div> 
                 );
             }
+
+            if (blacklistEnabled && !isAdmin && user && systemConfig?.blacklistedEmails?.includes(user.email)) {
+                return ( 
+                    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+                        <BlockScreen 
+                            type="access_denied" 
+                            customTitle="帳號停權"
+                            customMessage="您的帳號已被管理員列入黑名單，無法存取本系統。"
+                            onLogin={()=>setIsAuthModalOpen(true)} 
+                            user={user} 
+                        />
+                        <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} triggerAlert={triggerAlert} />
+                    </div> 
+                );
+            }
+
 
             return (
                 <div className={`min-h-screen transition-colors duration-500 bg-slate-50 dark:bg-slate-900 font-sans relative overflow-hidden p-4 sm:p-6 md:p-8 ${systemConfig?.announcementText ? 'pt-14 sm:pt-16 md:pt-20' : ''}`}>
@@ -2010,7 +2112,6 @@
                     )}
 
                     <div className={`max-w-[1200px] mx-auto relative z-10 transition-all duration-500 ${isGuest ? 'guest-blur' : ''}`}>
-                        {/* v2.4 Responsive Header - FIX: Adjusted to flex-col on mobile, row on desktop */}
                         <div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-4 max-w-3xl mx-auto bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl p-4 sm:p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700">
                             <div className="w-full md:w-auto text-center md:text-left min-w-0">
                                 <h1 className={`text-xl sm:text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r ${t.gradient} flex items-center justify-center md:justify-start gap-2 truncate`}>
@@ -2096,10 +2197,9 @@
                                 </div>
                             )}
 
-                            {/* v2.4 Live Dashboard Widget (Clickable & Flowing) */}
+                            {/* v2.4 Live Dashboard Widget */}
                             {viewMode === 'current' && isVisible('timetable') && <CurrentLessonWidget config={timetableConfig} t={t} onClick={() => setViewMode('timetable')} />}
 
-                            {/* Fixed History View Logic: Allows rendering in history mode */}
                             {(viewMode === 'current' || viewMode === 'history') && appMode === 'personal' && (
                                 <>
                                     {isVisible('input') && (
@@ -2150,7 +2250,7 @@
                                                                     </button>
                                                                     {systemClasses.map(c => (
                                                                         <button key={c.code} type="button" onClick={() => setTargetClassInput(c.code)} className={`p-3 rounded-xl border-2 text-left font-bold text-sm transition-all flex items-center gap-2 ${targetClassInput === c.code ? 'border-indigo-500 bg-indigo-50 text-indigo-600' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500'}`}>
-                                                                                <Icon name="school" className="w-4 h-4" /> {c.name}
+                                                                            <Icon name="school" className="w-4 h-4" /> {c.name}
                                                                         </button>
                                                                     ))}
                                                                 </div>
@@ -2175,7 +2275,12 @@
                                                     ))}
                                                 </div>
                                                 <div className="flex items-center gap-2 w-full sm:w-auto z-30">
-                                                    <span className="text-slate-400 text-xs font-bold whitespace-nowrap flex items-center gap-1"><Icon name="arrow-up-down" className="w-3 h-3" />排序:</span>
+                                                    {viewMode !== 'history' && (
+                                                        <button onClick={handleClearExpired} className="flex-shrink-0 text-xs font-bold bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400 px-3 py-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors flex items-center gap-1">
+                                                            <Icon name="trash-2" className="w-3 h-3" /> 清理過期
+                                                        </button>
+                                                    )}
+                                                    <span className="text-slate-400 text-xs font-bold whitespace-nowrap flex items-center gap-1 ml-1"><Icon name="arrow-up-down" className="w-3 h-3" />排序:</span>
                                                     <CustomDropdown value={sortOption} onChange={handleSortChange} options={[{ value: 'date_asc', label: '日期 (趕急先)' }, { value: 'date_desc', label: '日期 (長遠先)' }]} />
                                                 </div>
                                             </div>
