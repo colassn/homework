@@ -750,10 +750,10 @@
                         <button onClick={onClose} className="absolute top-4 right-4 p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"><Icon name="x" className="w-5 h-5 dark:text-slate-300" /></button>
                         <div className={`w-16 h-16 ${t.lightBg} rounded-full flex items-center justify-center mx-auto mb-4 mt-2 ${t.text}`}><Icon name="school" className="w-8 h-8" /></div>
                         <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-2">加入班級</h2>
-                        <p className="text-slate-500 dark:text-slate-400 mb-6 text-sm">請輸入由老師提供的 6 位數班級代碼</p>
+                        <p className="text-slate-500 dark:text-slate-400 mb-6 text-sm">請輸入由老師提供的班級代碼</p>
                         <form onSubmit={handleJoin}>
-                            <input type="text" maxLength={6} className={`w-full px-4 py-4 rounded-2xl border ${floatingError ? 'border-red-400 bg-red-50 dark:bg-red-900/10 focus:ring-red-400' : `border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:${t.ring}`} dark:text-white text-center font-mono font-bold text-2xl tracking-[0.5em] outline-none mb-4 uppercase placeholder:tracking-normal placeholder:text-base placeholder:font-sans transition-colors`} placeholder="輸入代碼" value={code} onChange={e => {setCode(e.target.value); setFloatingError('');}} autoFocus required />
-                            <button type="submit" disabled={loading || code.length !== 6} className={`w-full py-3 rounded-xl text-white font-bold transition-all shadow-lg active:scale-95 disabled:opacity-50 ${t.bg}`}>{loading ? '處理中...' : '確認加入'}</button>
+                            <input type="text" className={`w-full px-4 py-4 rounded-2xl border ${floatingError ? 'border-red-400 bg-red-50 dark:bg-red-900/10 focus:ring-red-400' : `border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:${t.ring}`} dark:text-white text-center font-mono font-bold text-2xl tracking-[0.2em] outline-none mb-4 uppercase placeholder:tracking-normal placeholder:text-base placeholder:font-sans transition-colors`} placeholder="輸入代碼" value={code} onChange={e => {setCode(e.target.value); setFloatingError('');}} autoFocus required />
+                            <button type="submit" disabled={loading || code.length === 0} className={`w-full py-3 rounded-xl text-white font-bold transition-all shadow-lg active:scale-95 disabled:opacity-50 ${t.bg}`}>{loading ? '處理中...' : '確認加入'}</button>
                         </form>
                     </div>
                 </div>
@@ -1137,7 +1137,10 @@
             // Blacklist states
             const [newBlacklistEmail, setNewBlacklistEmail] = useState('');
             
+            // Class creation states
             const [newClassName, setNewClassName] = useState('');
+            const [newClassCode, setNewClassCode] = useState(''); // NEW: state for custom code
+
             const [isSubmitting, setIsSubmitting] = useState(false);
             const [newName, setNewName] = useState('');
             
@@ -1182,13 +1185,26 @@
 
             const handleCreateClass = async (e) => {
                 e.preventDefault(); const name = newClassName.trim(); if (!name) return;
-                const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+                
+                // --- NEW: Custom Class Code Logic ---
+                let code = newClassCode.trim().toUpperCase();
+                if (!code) {
+                    code = Math.random().toString(36).substring(2, 8).toUpperCase();
+                } else if (code.length < 3 || code.length > 10) {
+                    triggerAlert("自定義代碼長度建議為 3-10 位字元"); return;
+                }
+
+                if (systemClasses.some(c => c.code === code)) {
+                    triggerAlert("此班級代碼已被使用，請更換一個"); return;
+                }
+                // ------------------------------------
+
                 try {
                     await updateDoc(doc(db, 'system_settings', 'classes'), { list: arrayUnion({ code, name, createdAt: new Date().toISOString() }) });
-                    setNewClassName(''); triggerAlert(`成功建立班級：${name} (代碼: ${code})`);
+                    setNewClassName(''); setNewClassCode(''); triggerAlert(`成功建立班級：${name} (代碼: ${code})`);
                 } catch(e) { 
                     await setDoc(doc(db, 'system_settings', 'classes'), { list: arrayUnion({ code, name, createdAt: new Date().toISOString() }) }, { merge: true });
-                    setNewClassName(''); triggerAlert(`成功建立班級：${name} (代碼: ${code})`);
+                    setNewClassName(''); setNewClassCode(''); triggerAlert(`成功建立班級：${name} (代碼: ${code})`);
                 }
             };
 
@@ -1343,18 +1359,20 @@
                         {activeTab === 'classes' && (
                             <div className="space-y-6 animate-fadeIn h-full flex flex-col">
                                 <h3 className="text-2xl font-bold dark:text-white">班級代碼管理</h3>
-                                <p className="text-sm text-slate-500 dark:text-slate-400 -mt-2">建立班級群組，系統會自動生成隨機代碼。學生憑代碼加入後，即可接收該班級專屬的廣播功課。</p>
+                                <p className="text-sm text-slate-500 dark:text-slate-400 -mt-2">建立班級群組，學生憑代碼加入後，即可接收該班級專屬的廣播功課。</p>
 
-                                <form onSubmit={handleCreateClass} className="flex gap-3 mt-4">
+                                <form onSubmit={handleCreateClass} className="flex flex-col sm:flex-row gap-3 mt-4">
                                     <input type="text" placeholder="輸入班級名稱 (例如: 3A 班)..." value={newClassName} onChange={e => setNewClassName(e.target.value)} className="flex-1 px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-sm" required />
-                                    <button type="submit" className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-md active:scale-95 flex items-center gap-2 whitespace-nowrap"><Icon name="plus" className="w-4 h-4" /> 建立班級</button>
+                                    {/* NEW: Custom Code Input (Fixed Comment Syntax) */}
+                                    <input type="text" placeholder="自定義代碼 (留空則自動生成)" value={newClassCode} onChange={e => setNewClassCode(e.target.value.toUpperCase())} maxLength={10} className="w-full sm:w-56 px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-mono focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-sm" />
+                                    <button type="submit" className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 whitespace-nowrap"><Icon name="plus" className="w-4 h-4" /> 建立班級</button>
                                 </form>
 
                                 <div className="flex-1 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col mt-4">
                                     <div className="overflow-y-auto flex-1">
                                         <table className="w-full text-left text-sm whitespace-nowrap">
                                             <thead className="bg-slate-50/80 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 font-bold sticky top-0 backdrop-blur-md z-10 border-b border-slate-100 dark:border-slate-700">
-                                                <tr><th className="px-6 py-4">班級名稱</th><th className="px-6 py-4">加入代碼 (6碼)</th><th className="px-6 py-4 text-right">操作</th></tr>
+                                                <tr><th className="px-6 py-4">班級名稱</th><th className="px-6 py-4">加入代碼</th><th className="px-6 py-4 text-right">操作</th></tr>
                                             </thead>
                                             <tbody className="divide-y divide-slate-5 dark:divide-slate-700">
                                                 {systemClasses.map(c => (
@@ -1712,7 +1730,11 @@
             const [targetClassInput, setTargetClassInput] = useState('全校');
 
             const [viewMode, setViewMode] = useState('current'); 
+            
+            // --- NEW: Mode Selection States ---
             const [appMode, setAppMode] = useState('personal'); // 'personal' | 'class'
+            const [hasSelectedMode, setHasSelectedMode] = useState(false); // Controls the mode selection screen
+
             const [viewLayout, setViewLayout] = useState('list'); 
             const [calendarSelectedDate, setCalendarSelectedDate] = useState(null);
 
@@ -1817,6 +1839,7 @@
                             return () => unsubProfile();
                         } else { 
                             setItems([]); setIsAdmin(false); setShowNameSetup(false); setUserProfile(null); setTimetableConfig({ timeSlots: DEFAULT_TIME_SLOTS, schedule: DEFAULT_SCHEDULE }); setSubjects(DEFAULT_SUBJECTS);
+                            setHasSelectedMode(false); // Reset mode selection on logout
                         }
                     } catch (e) { console.warn("Auth err:", e); }
                 });
@@ -2112,296 +2135,341 @@
                     )}
 
                     <div className={`max-w-[1200px] mx-auto relative z-10 transition-all duration-500 ${isGuest ? 'guest-blur' : ''}`}>
-                        <div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-4 max-w-3xl mx-auto bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl p-4 sm:p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700">
-                            <div className="w-full md:w-auto text-center md:text-left min-w-0">
-                                <h1 className={`text-xl sm:text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r ${t.gradient} flex items-center justify-center md:justify-start gap-2 truncate`}>
-                                    {viewMode === 'current' ? (<><Icon name="graduation-cap" className={`w-6 h-6 sm:w-8 sm:h-8 ${t.text}`} />學生小幫手</>) : viewMode === 'admin' ? (<><Icon name="shield-alert" className={`w-6 h-6 sm:w-8 sm:h-8 text-blue-600`} />管理後台</>) : <><Icon name="history" className={`w-6 h-6 sm:w-8 sm:h-8 ${t.text}`} /> {viewMode === 'timetable' ? '上課時間表' : '完成紀錄'}</>}
-                                </h1>
-                                <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm font-medium mt-1">{new Date().toLocaleDateString('zh-HK', { year: 'numeric', month: 'numeric', day: 'numeric', weekday: 'short' })}</p>
-                            </div>
-                            <div className="flex gap-2 flex-wrap justify-center md:justify-end shrink-0 w-full md:w-auto">
-                                {viewMode === 'current' && appMode === 'personal' && (
-                                    <button onClick={() => setViewLayout(viewLayout === 'list' ? 'calendar' : 'list')} className="px-3 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold text-xs hover:bg-slate-50 dark:hover:bg-slate-700 transition flex items-center gap-2">
-                                            <Icon name={viewLayout === 'list' ? "calendar" : "list"} className="w-4 h-4" />
-                                            <span className="hidden sm:inline">{viewLayout === 'list' ? '日曆模式' : '列表模式'}</span>
+                        
+                        {/* --- 模式選擇畫面 (登入後首頁) --- */}
+                        {user && !hasSelectedMode && !showNameSetup && viewMode === 'current' ? (
+                            <div className="flex flex-col items-center justify-center min-h-[70vh] animate-fadeIn">
+                                <h2 className="text-3xl font-black text-slate-800 dark:text-white mb-8 text-center">你想以什麼身分開始？</h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl px-4">
+                                    <button 
+                                        onClick={() => { setAppMode('personal'); setHasSelectedMode(true); }}
+                                        className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-xl hover:shadow-2xl border-2 border-transparent hover:border-indigo-500 dark:hover:border-indigo-400 transition-all transform hover:-translate-y-2 flex flex-col items-center gap-4 group"
+                                    >
+                                        <div className={`w-20 h-20 rounded-full flex items-center justify-center bg-indigo-50 dark:bg-indigo-900/30 group-hover:scale-110 transition-transform ${t.text}`}>
+                                            <Icon name="user" className="w-10 h-10" />
+                                        </div>
+                                        <div className="text-center">
+                                            <h3 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">個人模式</h3>
+                                            <p className="text-slate-500 dark:text-slate-400 text-sm">管理我的個人功課、測驗與上課時間表</p>
+                                        </div>
                                     </button>
-                                )}
 
-                                {viewMode === 'timetable' && (
-                                    <button onClick={() => setViewMode('timetable_edit')} className={`px-3 py-2 rounded-xl font-bold text-xs bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 shadow-sm transition-all flex items-center gap-2`}><Icon name="edit" className="w-4 h-4" /><span className="hidden sm:inline">編輯</span></button>
-                                )}
-
-                                <button onClick={() => !user ? setIsAuthModalOpen(true) : setViewMode('timetable')} className={`px-3 py-2 rounded-xl font-bold text-xs transition flex items-center gap-2 ${viewMode === 'timetable' || viewMode === 'timetable_edit' ? 'bg-orange-500 text-white' : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50'}`}><Icon name="calendar-days" className="w-4 h-4" /><span className="hidden sm:inline">時間表</span></button>
-
-                                {isAdmin && (
-                                    <button onClick={() => setViewMode('admin')} className={`px-3 py-2 rounded-xl font-bold text-xs transition flex items-center gap-2 ${viewMode === 'admin' ? 'bg-slate-800 text-white' : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'}`}><Icon name="shield-alert" className="w-4 h-4" /><span className="hidden sm:inline">後台</span></button>
-                                )}
-
-                                <button onClick={() => !user ? setIsAuthModalOpen(true) : setViewMode(viewMode === 'current' ? 'history' : 'current')} className={`px-3 py-2 rounded-xl font-bold text-xs transition flex items-center gap-2 ${viewMode === 'history' ? 'bg-indigo-600 text-white shadow-md' : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50'}`}>
-                                    <Icon name={viewMode === 'current' ? "history" : "arrow-left"} className="w-4 h-4" />
-                                    <span>{viewMode === 'current' ? '歷史紀錄' : '返回列表'}</span>
-                                </button>
-
-                                {user && (
-                                    <div className="flex bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-1">
-                                            <button onClick={() => setIsPreferencesOpen(true)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 transition"><Icon name="palette" className="w-4 h-4" /></button>
-                                            <div className="w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
-                                            <button onClick={() => setIsSubjectManagerOpen(true)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 transition"><Icon name="settings" className="w-4 h-4" /></button>
-                                            <div className="w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
-                                            <button onClick={handleLogout} className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 text-slate-500 hover:text-red-500 transition"><Icon name="log-out" className="w-4 h-4" /></button>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        {viewMode === 'admin' ? ( <AdminConsole db={db} systemConfig={systemConfig} systemClasses={systemClasses} onBack={() => setViewMode('current')} subjects={subjects} triggerAlert={triggerAlert} triggerConfirm={triggerConfirm} /> ) : 
-                         viewMode === 'timetable' ? ( <div className="max-w-3xl mx-auto"><Timetable currentDay={currentTimetableDay} config={timetableConfig} onDayChange={setCurrentTimetableDay} subjects={subjects} /></div> ) : 
-                         viewMode === 'timetable_edit' ? ( <TimetableEditor initialConfig={timetableConfig} onSave={saveTimetableConfig} onCancel={() => setViewMode('timetable')} subjects={subjects} triggerConfirm={triggerConfirm} /> ) : (
-                        <div className="max-w-3xl mx-auto">
-
-                            {/* --- 雙模式切換器 --- */}
-                            {viewMode === 'current' && (
-                                <div className="flex bg-slate-200/50 dark:bg-slate-800/50 p-1.5 rounded-2xl w-full sm:w-fit mx-auto mb-6 shadow-inner border border-white/20 dark:border-slate-700">
-                                    <button onClick={() => setAppMode('personal')} className={`flex-1 sm:flex-none px-8 py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${appMode === 'personal' ? `bg-white dark:bg-slate-700 shadow-sm ${t.text}` : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>
-                                        <Icon name="user" className="w-4 h-4" /> 個人模式
-                                    </button>
-                                    <button onClick={() => setAppMode('class')} className={`flex-1 sm:flex-none px-8 py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${appMode === 'class' ? `bg-white dark:bg-slate-700 shadow-sm ${t.text}` : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>
-                                        <Icon name="school" className="w-4 h-4" /> 班級模式
+                                    <button 
+                                        onClick={() => { setAppMode('class'); setHasSelectedMode(true); }}
+                                        className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-xl hover:shadow-2xl border-2 border-transparent hover:border-emerald-500 dark:hover:border-emerald-400 transition-all transform hover:-translate-y-2 flex flex-col items-center gap-4 group"
+                                    >
+                                        <div className="w-20 h-20 rounded-full flex items-center justify-center bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform">
+                                            <Icon name="school" className="w-10 h-10" />
+                                        </div>
+                                        <div className="text-center">
+                                            <h3 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">班級模式</h3>
+                                            <p className="text-slate-500 dark:text-slate-400 text-sm">查看老師發放的班級廣播任務</p>
+                                        </div>
                                     </button>
                                 </div>
-                            )}
-
-                            {/* v2.4 Feature Cards */}
-                            {viewMode === 'current' && isVisible('cards') && (
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6 animate-fadeIn">
-                                    <button onClick={() => openQuickView('today')} className="relative overflow-hidden bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-4 rounded-2xl flex flex-col items-start justify-center gap-1 hover:shadow-md hover:-translate-y-1 transition-all group">
-                                        <div className="absolute -right-3 -top-3 text-red-50 dark:text-red-900/20 group-hover:scale-110 transition-transform"><Icon name="calendar-clock" className="w-20 h-20" /></div>
-                                        <div className="text-red-500 font-black text-3xl z-10">{counts.today}</div>
-                                        <div className="text-slate-500 dark:text-slate-400 text-xs font-bold z-10 flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>今日到期</div>
-                                    </button>
-                                    <button onClick={() => openQuickView('tomorrow')} className="relative overflow-hidden bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-4 rounded-2xl flex flex-col items-start justify-center gap-1 hover:shadow-md hover:-translate-y-1 transition-all group">
-                                        <div className="absolute -right-3 -top-3 text-orange-50 dark:text-orange-900/20 group-hover:scale-110 transition-transform"><Icon name="sun" className="w-20 h-20" /></div>
-                                        <div className="text-orange-500 font-black text-3xl z-10">{counts.tomorrow}</div>
-                                        <div className="text-slate-500 dark:text-slate-400 text-xs font-bold z-10 flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-orange-500"></div>明日到期</div>
-                                    </button>
-                                    <button onClick={() => openQuickView('future')} className="relative overflow-hidden bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-4 rounded-2xl flex flex-col items-start justify-center gap-1 hover:shadow-md hover:-translate-y-1 transition-all group">
-                                        <div className="absolute -right-3 -top-3 text-emerald-50 dark:text-emerald-900/20 group-hover:scale-110 transition-transform"><Icon name="calendar-range" className="w-20 h-20" /></div>
-                                        <div className="text-emerald-500 font-black text-3xl z-10">{counts.future}</div>
-                                        <div className="text-slate-500 dark:text-slate-400 text-xs font-bold z-10 flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>日後要交</div>
-                                    </button>
-                                    <button onClick={() => openQuickView('test')} className="relative overflow-hidden bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-4 rounded-2xl flex flex-col items-start justify-center gap-1 hover:shadow-md hover:-translate-y-1 transition-all group">
-                                        <div className="absolute -right-3 -top-3 text-violet-50 dark:text-violet-900/20 group-hover:scale-110 transition-transform"><Icon name="file-question" className="w-20 h-20" /></div>
-                                        <div className="text-violet-500 font-black text-3xl z-10">{counts.test}</div>
-                                        <div className="text-slate-500 dark:text-slate-400 text-xs font-bold z-10 flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-violet-500"></div>默書測驗</div>
-                                    </button>
+                            </div>
+                        ) : (
+                        
+                        <div>
+                            {/* --- 頂部導覽列 --- */}
+                            <div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-4 max-w-3xl mx-auto bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl p-4 sm:p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700">
+                                <div className="w-full md:w-auto text-center md:text-left min-w-0">
+                                    <h1 className={`text-xl sm:text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r ${t.gradient} flex items-center justify-center md:justify-start gap-2 truncate`}>
+                                        {viewMode === 'current' ? (
+                                            appMode === 'personal' ? <><Icon name="user" className={`w-6 h-6 sm:w-8 sm:h-8 ${t.text}`} />個人小幫手</> : <><Icon name="school" className={`w-6 h-6 sm:w-8 sm:h-8 ${t.text}`} />班級任務板</>
+                                        ) : viewMode === 'admin' ? (<><Icon name="shield-alert" className={`w-6 h-6 sm:w-8 sm:h-8 text-blue-600`} />管理後台</>) : <><Icon name="history" className={`w-6 h-6 sm:w-8 sm:h-8 ${t.text}`} /> {viewMode === 'timetable' ? '上課時間表' : '完成紀錄'}</>}
+                                    </h1>
+                                    <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm font-medium mt-1">{new Date().toLocaleDateString('zh-HK', { year: 'numeric', month: 'numeric', day: 'numeric', weekday: 'short' })}</p>
                                 </div>
-                            )}
+                                <div className="flex gap-2 flex-wrap justify-center md:justify-end shrink-0 w-full md:w-auto">
+                                    
+                                    {/* 切換模式按鈕 */}
+                                    {hasSelectedMode && viewMode === 'current' && (
+                                        <button onClick={() => setHasSelectedMode(false)} className="px-3 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold text-xs hover:bg-slate-50 dark:hover:bg-slate-700 transition flex items-center gap-2">
+                                            <Icon name="arrow-left-right" className="w-4 h-4" /> <span className="hidden sm:inline">切換模式</span>
+                                        </button>
+                                    )}
 
-                            {/* v2.4 Live Dashboard Widget */}
-                            {viewMode === 'current' && isVisible('timetable') && <CurrentLessonWidget config={timetableConfig} t={t} onClick={() => setViewMode('timetable')} />}
+                                    {viewMode === 'current' && appMode === 'personal' && (
+                                        <button onClick={() => setViewLayout(viewLayout === 'list' ? 'calendar' : 'list')} className="px-3 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold text-xs hover:bg-slate-50 dark:hover:bg-slate-700 transition flex items-center gap-2">
+                                                <Icon name={viewLayout === 'list' ? "calendar" : "list"} className="w-4 h-4" />
+                                                <span className="hidden sm:inline">{viewLayout === 'list' ? '日曆模式' : '列表模式'}</span>
+                                        </button>
+                                    )}
 
-                            {(viewMode === 'current' || viewMode === 'history') && appMode === 'personal' && (
-                                <>
-                                    {isVisible('input') && (
-                                        <div className={`relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl shadow-lg p-5 sm:p-8 mb-10 border border-slate-100 dark:border-slate-700 z-20`}>
-                                            <div className="flex bg-slate-100 dark:bg-slate-900/50 p-1.5 rounded-xl mb-6">
-                                                <button onClick={() => setInputType('homework')} className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-all ${inputType === 'homework' ? `bg-white dark:bg-slate-700 shadow-sm ${t.text}` : 'text-slate-500 dark:text-slate-400'}`}><Icon name="book-open" className="w-4 h-4" /> 新增功課</button>
-                                                <button onClick={() => setInputType('assessment')} className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-all ${inputType === 'assessment' ? `bg-white dark:bg-slate-700 shadow-sm text-purple-600 dark:text-purple-400` : 'text-slate-500 dark:text-slate-400'}`}><Icon name="file-question" className="w-4 h-4" /> 新增測驗</button>
-                                            </div>
-                                            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                                                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                                                    {subjects.map(sub => (
-                                                        <button 
-                                                            key={sub.name} 
-                                                            type="button" 
-                                                            onClick={() => setSubject(sub.name)} 
-                                                            className={`flex-shrink-0 px-4 py-2 rounded-xl text-xs font-bold border-2 transition-all shadow-sm ${
-                                                                subject === sub.name 
-                                                                ? `${t.border} ${t.lightBg} ${t.text} scale-105` 
-                                                                : `${sub.color} opacity-60 hover:opacity-100 grayscale hover:grayscale-0`
-                                                            }`}
-                                                        >
-                                                            {sub.name}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                    <div className="md:col-span-2 space-y-3">
-                                                        <textarea placeholder={inputType === 'homework' ? "打返功課內容..." : "輸入範圍 (例如: 第3課 / P.20-25)"} value={description} onChange={(e) => setDescription(e.target.value)} rows="2" className={`w-full min-h-[100px] rounded-2xl border-2 border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 focus:bg-white dark:focus:bg-slate-800 focus:${t.border} focus:ring-4 focus:${t.ring} transition-all p-4 text-slate-700 dark:text-slate-100 placeholder-slate-400 outline-none resize-none text-base`} />
-                                                    </div>
-                                                    <div className="flex flex-col gap-3 md:col-span-1">
-                                                        <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className={`w-full h-12 rounded-xl border-2 border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 focus:bg-white dark:focus:bg-slate-800 focus:${t.border} focus:ring-4 focus:${t.ring} transition-all px-4 text-slate-700 dark:text-slate-100 font-medium outline-none`} required />
-                                                        <button type="submit" className={`w-full h-12 text-white font-bold rounded-xl transition-all shadow-lg active:scale-95 text-base flex items-center justify-center gap-2 ${t.bg} ${t.shadow}`}><Icon name="plus" className="w-5 h-5" />{isAdmin && isBroadcast ? '廣播發放' : '加入清單'}</button>
-                                                    </div>
-                                                </div>
-                                                {isAdmin && (
-                                                    <div className="mt-2 pt-4 border-t border-slate-100 dark:border-slate-700">
-                                                        <label className="flex items-center cursor-pointer mb-2">
-                                                            <input type="checkbox" className="sr-only peer" checked={isBroadcast} onChange={e => setIsBroadcast(e.target.checked)} />
-                                                            <div className={`w-11 h-6 bg-slate-200 dark:bg-slate-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${t.bg} peer-checked:bg-orange-500 relative`}></div>
-                                                            <span className="ml-3 text-sm font-bold text-slate-600 dark:text-slate-300">📢 作為管理員廣播發放</span>
-                                                        </label>
-                                                        {isBroadcast && (
-                                                            <div className="mt-3 animate-fadeIn">
-                                                                <label className="text-xs font-bold text-slate-400 mb-2 block">選擇發送對象</label>
-                                                                <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
-                                                                    <button type="button" onClick={() => setTargetClassInput('全校')} className={`p-3 rounded-xl border-2 text-left font-bold text-sm transition-all flex items-center gap-2 ${targetClassInput === '全校' ? 'border-orange-500 bg-orange-50 text-orange-600' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500'}`}>
-                                                                        <Icon name="users" className="w-4 h-4" /> 全校廣播
-                                                                    </button>
-                                                                    {systemClasses.map(c => (
-                                                                        <button key={c.code} type="button" onClick={() => setTargetClassInput(c.code)} className={`p-3 rounded-xl border-2 text-left font-bold text-sm transition-all flex items-center gap-2 ${targetClassInput === c.code ? 'border-indigo-500 bg-indigo-50 text-indigo-600' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500'}`}>
-                                                                            <Icon name="school" className="w-4 h-4" /> {c.name}
-                                                                        </button>
-                                                                    ))}
-                                                                </div>
-                                                            </div>
-                                                        )}
-                                                    </div>
+                                    {viewMode === 'timetable' && (
+                                        <button onClick={() => setViewMode('timetable_edit')} className={`px-3 py-2 rounded-xl font-bold text-xs bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 shadow-sm transition-all flex items-center gap-2`}><Icon name="edit" className="w-4 h-4" /><span className="hidden sm:inline">編輯</span></button>
+                                    )}
+
+                                    {appMode === 'personal' && (
+                                        <button onClick={() => !user ? setIsAuthModalOpen(true) : setViewMode('timetable')} className={`px-3 py-2 rounded-xl font-bold text-xs transition flex items-center gap-2 ${viewMode === 'timetable' || viewMode === 'timetable_edit' ? 'bg-orange-500 text-white' : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50'}`}><Icon name="calendar-days" className="w-4 h-4" /><span className="hidden sm:inline">時間表</span></button>
+                                    )}
+
+                                    {isAdmin && (
+                                        <button onClick={() => setViewMode('admin')} className={`px-3 py-2 rounded-xl font-bold text-xs transition flex items-center gap-2 ${viewMode === 'admin' ? 'bg-slate-800 text-white' : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'}`}><Icon name="shield-alert" className="w-4 h-4" /><span className="hidden sm:inline">後台</span></button>
+                                    )}
+
+                                    {appMode === 'personal' && (
+                                        <button onClick={() => !user ? setIsAuthModalOpen(true) : setViewMode(viewMode === 'current' ? 'history' : 'current')} className={`px-3 py-2 rounded-xl font-bold text-xs transition flex items-center gap-2 ${viewMode === 'history' ? 'bg-indigo-600 text-white shadow-md' : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50'}`}>
+                                            <Icon name={viewMode === 'current' ? "history" : "arrow-left"} className="w-4 h-4" />
+                                            <span>{viewMode === 'current' ? '歷史紀錄' : '返回列表'}</span>
+                                        </button>
+                                    )}
+
+                                    {user && (
+                                        <div className="flex bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-1">
+                                                <button onClick={() => setIsPreferencesOpen(true)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 transition"><Icon name="palette" className="w-4 h-4" /></button>
+                                                {appMode === 'personal' && (
+                                                    <>
+                                                        <div className="w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
+                                                        <button onClick={() => setIsSubjectManagerOpen(true)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 transition"><Icon name="settings" className="w-4 h-4" /></button>
+                                                    </>
                                                 )}
-                                            </form>
+                                                <div className="w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
+                                                <button onClick={handleLogout} className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 text-slate-500 hover:text-red-500 transition"><Icon name="log-out" className="w-4 h-4" /></button>
                                         </div>
                                     )}
+                                </div>
+                            </div>
 
-                                    {isVisible('list') && (
-                                        <>
-                                            {viewLayout === 'calendar' && <CalendarWidget items={activeItems} selectedDate={calendarSelectedDate} onSelectDate={setCalendarSelectedDate} t={t} />}
+                            {viewMode === 'admin' ? ( <AdminConsole db={db} systemConfig={systemConfig} systemClasses={systemClasses} onBack={() => setViewMode('current')} subjects={subjects} triggerAlert={triggerAlert} triggerConfirm={triggerConfirm} /> ) : 
+                             viewMode === 'timetable' ? ( <div className="max-w-3xl mx-auto"><Timetable currentDay={currentTimetableDay} config={timetableConfig} onDayChange={setCurrentTimetableDay} subjects={subjects} /></div> ) : 
+                             viewMode === 'timetable_edit' ? ( <TimetableEditor initialConfig={timetableConfig} onSave={saveTimetableConfig} onCancel={() => setViewMode('timetable')} subjects={subjects} triggerConfirm={triggerConfirm} /> ) : (
+                            <div className="max-w-3xl mx-auto">
 
-                                            <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mb-6 relative">
-                                                <div className={`flex items-center gap-2 w-full sm:w-auto overflow-x-auto scrollbar-hide pb-1 transition-opacity duration-300 ${!isListVisible ? 'opacity-50' : 'opacity-100'}`}>
-                                                    <span className="text-slate-400 text-xs font-bold whitespace-nowrap flex items-center gap-1"><Icon name="filter" className="w-3 h-3" />篩選:</span>
-                                                    <button onClick={() => handleFilterChange('全部')} className={`flex-shrink-0 px-2.5 py-1 rounded text-[10px] font-bold border transition-all ${filterSubject === '全部' ? 'bg-slate-800 dark:bg-slate-600 text-white border-slate-800 dark:border-slate-600' : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'}`}>全部</button>
-                                                    {subjects.map(sub => (
-                                                        <button key={sub.name} onClick={() => handleFilterChange(sub.name)} className={`flex-shrink-0 px-2.5 py-1 rounded text-[10px] font-bold border transition-all ${filterSubject === sub.name ? `${t.border} ${t.lightBg} ${t.text}` : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'}`}>{sub.name}</button>
-                                                    ))}
-                                                </div>
-                                                <div className="flex items-center gap-2 w-full sm:w-auto z-30">
-                                                    {viewMode !== 'history' && (
-                                                        <button onClick={handleClearExpired} className="flex-shrink-0 text-xs font-bold bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400 px-3 py-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors flex items-center gap-1">
-                                                            <Icon name="trash-2" className="w-3 h-3" /> 清理過期
-                                                        </button>
-                                                    )}
-                                                    <span className="text-slate-400 text-xs font-bold whitespace-nowrap flex items-center gap-1 ml-1"><Icon name="arrow-up-down" className="w-3 h-3" />排序:</span>
-                                                    <CustomDropdown value={sortOption} onChange={handleSortChange} options={[{ value: 'date_asc', label: '日期 (趕急先)' }, { value: 'date_desc', label: '日期 (長遠先)' }]} />
-                                                </div>
-                                            </div>
-
-                                            <div className={`space-y-4 pb-20 transition-opacity duration-300 ${!isListVisible ? 'opacity-0' : 'opacity-100'}`}>
-                                                {displayedItems.length === 0 ? (
-                                                    <div className="text-center py-20">
-                                                        <div className={`inline-flex p-6 rounded-full ${t.lightBg} mb-4`}><Icon name="sparkles" className={`w-12 h-12 ${t.text}`} /></div>
-                                                        <h3 className="text-xl font-bold text-slate-700 dark:text-slate-300">{calendarSelectedDate ? '這天沒有任何任務' : (viewMode === 'history' ? '沒有已完成的紀錄' : '太好了！任務清單空空如也')}</h3>
-                                                    </div>
-                                                ) : displayedItems.map((item, index) => {
-                                                    const isExiting = exitingIds.includes(item.id);
-                                                    const isCompleted = item.completed || isExiting;
-                                                    const dl = getDaysRemaining(item.dueDate);
-                                                    let statusNode = <span className="text-emerald-600 bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 px-2 py-0.5 rounded text-xs font-bold">{dl} 天後</span>;
-                                                    if(dl < 0) statusNode = <span className="text-red-600 bg-red-100 dark:bg-red-900/30 dark:text-red-400 px-2 py-0.5 rounded text-xs font-bold">過期 {Math.abs(dl)} 天</span>;
-                                                    if(dl === 0) statusNode = <span className="text-orange-600 bg-orange-100 dark:bg-orange-900/30 dark:text-orange-400 px-2 py-0.5 rounded text-xs font-bold animate-pulse">今日到期!</span>;
-                                                    const subjectStyle = subjects.find(s => s.name === item.subject)?.color || 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600';
-
-                                                    return (
-                                                        <div key={item.id} style={{ animationDelay: `${index * 0.05}s` }} className={`animate-item relative bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 transition-all ${isExiting ? 'scale-95 opacity-0' : ''}`}>
-                                                            <div className="flex items-start gap-4">
-                                                                <button onClick={() => handleToggle(item.id, item.completed)} className={`mt-1 w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${isCompleted ? 'bg-emerald-500 border-emerald-500 text-white scale-110' : 'border-slate-300 dark:border-slate-600 hover:border-emerald-400'}`}>
-                                                                    <Icon name="check" className={`w-4 h-4 ${isCompleted ? 'opacity-100' : 'opacity-0'}`} />
-                                                                </button>
-                                                                <div className="flex-1 min-w-0">
-                                                                    <div className="flex justify-between items-start mb-2">
-                                                                        <div className="flex gap-2 items-center flex-wrap">
-                                                                            <span className={`text-[10px] font-bold px-2 py-1 rounded border ${subjectStyle}`}>{item.subject || '其他'}</span>
-                                                                            {item.publicRefId && <span className={`text-[10px] font-bold px-2 py-1 rounded ${t.lightBg} ${t.text}`}>廣播</span>}
-                                                                            {item.type !== 'homework' && <span className="text-[10px] font-bold px-2 py-1 rounded bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">測驗</span>}
-                                                                        </div>
-                                                                        {statusNode}
-                                                                    </div>
-                                                                    <div className={`text-base font-bold mb-2 break-words ${isCompleted ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100'}`}>{item.description}</div>
-                                                                    {item.image && <div className="mt-2"><img src={item.image} alt="附件" className={`max-h-32 rounded-lg border border-slate-200 dark:border-slate-700 object-cover ${isCompleted ? 'opacity-50 grayscale' : ''}`} /></div>}
-                                                                    <div className="flex items-center justify-between mt-2">
-                                                                        <div className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1 font-mono"><Icon name="calendar" className="w-3 h-3"/> {item.dueDate}</div>
-                                                                        <div className="flex gap-2">
-                                                                            {!item.forceExpired && <button onClick={() => setEditingItem(item)} className="p-1.5 text-slate-400 hover:text-blue-500 dark:hover:text-blue-400 transition" title="編輯"><Icon name="pencil" className="w-4 h-4" /></button>}
-                                                                            {isAdmin && item.publicRefId ? (
-                                                                                <>
-                                                                                    <button onClick={() => deleteItem(item.id)} className="p-1.5 text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition" title="刪除 (自己)"><Icon name="trash-2" className="w-4 h-4" /></button>
-                                                                                    <button onClick={() => deletePublicItem(item.publicRefId, item.id)} className="p-1.5 text-indigo-400 hover:text-indigo-600 transition" title="刪除 (全班)"><Icon name="globe" className="w-4 h-4" /></button>
-                                                                                </>
-                                                                            ) : (
-                                                                                <button onClick={() => deleteItem(item.id)} className="p-1.5 text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition"><Icon name="trash-2" className="w-4 h-4" /></button>
-                                                                            )}
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    )
-                                                })}
-                                            </div>
-                                        </>
-                                    )}
-                                </>
-                            )}
-
-                            {viewMode === 'current' && appMode === 'class' && (
-                                <div className="space-y-6 animate-fadeIn pb-20">
-                                    <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 flex justify-between items-center">
-                                        <div>
-                                            <h3 className="text-xl font-bold dark:text-white flex items-center gap-2"><Icon name="school" className={t.text} /> 我的班級</h3>
-                                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">查看專屬的廣播任務</p>
-                                        </div>
-                                        <button onClick={() => setIsJoinClassOpen(true)} className={`px-4 py-2.5 rounded-xl font-bold text-sm text-white shadow-md active:scale-95 transition-all flex items-center gap-2 ${t.bg}`}>
-                                            <Icon name="plus" className="w-4 h-4" /> 加入班級
+                                {/* v2.4 Feature Cards */}
+                                {viewMode === 'current' && appMode === 'personal' && isVisible('cards') && (
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6 animate-fadeIn">
+                                        <button onClick={() => openQuickView('today')} className="relative overflow-hidden bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-4 rounded-2xl flex flex-col items-start justify-center gap-1 hover:shadow-md hover:-translate-y-1 transition-all group">
+                                            <div className="absolute -right-3 -top-3 text-red-50 dark:text-red-900/20 group-hover:scale-110 transition-transform"><Icon name="calendar-clock" className="w-20 h-20" /></div>
+                                            <div className="text-red-500 font-black text-3xl z-10">{counts.today}</div>
+                                            <div className="text-slate-500 dark:text-slate-400 text-xs font-bold z-10 flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>今日到期</div>
+                                        </button>
+                                        <button onClick={() => openQuickView('tomorrow')} className="relative overflow-hidden bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-4 rounded-2xl flex flex-col items-start justify-center gap-1 hover:shadow-md hover:-translate-y-1 transition-all group">
+                                            <div className="absolute -right-3 -top-3 text-orange-50 dark:text-orange-900/20 group-hover:scale-110 transition-transform"><Icon name="sun" className="w-20 h-20" /></div>
+                                            <div className="text-orange-500 font-black text-3xl z-10">{counts.tomorrow}</div>
+                                            <div className="text-slate-500 dark:text-slate-400 text-xs font-bold z-10 flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-orange-500"></div>明日到期</div>
+                                        </button>
+                                        <button onClick={() => openQuickView('future')} className="relative overflow-hidden bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-4 rounded-2xl flex flex-col items-start justify-center gap-1 hover:shadow-md hover:-translate-y-1 transition-all group">
+                                            <div className="absolute -right-3 -top-3 text-emerald-50 dark:text-emerald-900/20 group-hover:scale-110 transition-transform"><Icon name="calendar-range" className="w-20 h-20" /></div>
+                                            <div className="text-emerald-500 font-black text-3xl z-10">{counts.future}</div>
+                                            <div className="text-slate-500 dark:text-slate-400 text-xs font-bold z-10 flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>日後要交</div>
+                                        </button>
+                                        <button onClick={() => openQuickView('test')} className="relative overflow-hidden bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-4 rounded-2xl flex flex-col items-start justify-center gap-1 hover:shadow-md hover:-translate-y-1 transition-all group">
+                                            <div className="absolute -right-3 -top-3 text-violet-50 dark:text-violet-900/20 group-hover:scale-110 transition-transform"><Icon name="file-question" className="w-20 h-20" /></div>
+                                            <div className="text-violet-500 font-black text-3xl z-10">{counts.test}</div>
+                                            <div className="text-slate-500 dark:text-slate-400 text-xs font-bold z-10 flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-violet-500"></div>默書測驗</div>
                                         </button>
                                     </div>
+                                )}
 
-                                    {joinedClasses.length === 0 ? (
-                                        <div className="text-center py-20 bg-white dark:bg-slate-800 rounded-3xl border border-dashed border-slate-200 dark:border-slate-700">
-                                            <Icon name="school" className="w-16 h-16 mx-auto text-slate-300 dark:text-slate-600 mb-4" />
-                                            <h4 className="text-lg font-bold text-slate-600 dark:text-slate-300 mb-2">尚未加入任何班級</h4>
-                                            <p className="text-sm text-slate-400 mb-6">請向老師索取 6 位數班級代碼</p>
-                                            <button onClick={() => setIsJoinClassOpen(true)} className={`px-8 py-3 rounded-xl font-bold text-sm text-white shadow-md transition-all active:scale-95 ${t.bg}`}>立即加入</button>
-                                        </div>
-                                    ) : (
-                                        <>
-                                            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                                                {joinedClasses.map(code => {
-                                                    const cls = systemClasses.find(c => c.code === code);
-                                                    const name = cls ? cls.name : code;
-                                                    return (
-                                                        <button key={code} onClick={() => setSelectedClassBoard(code)} className={`shrink-0 px-5 py-2.5 rounded-xl text-sm font-bold border-2 transition-all ${selectedClassBoard === code ? `${t.border} ${t.lightBg} ${t.text}` : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-100 dark:border-slate-700'}`}>
-                                                            {name}
-                                                        </button>
-                                                    )
-                                                })}
-                                            </div>
+                                {/* v2.4 Live Dashboard Widget */}
+                                {viewMode === 'current' && appMode === 'personal' && isVisible('timetable') && <CurrentLessonWidget config={timetableConfig} t={t} onClick={() => setViewMode('timetable')} />}
 
-                                            <div className="space-y-4">
-                                                {publicTasks.filter(task => task.targetClass === selectedClassBoard).length === 0 ? (
-                                                    <div className="text-center py-10"><p className="text-slate-500 dark:text-slate-400 font-medium">此班級目前沒有廣播任務 🎉</p></div>
-                                                ) : publicTasks.filter(task => task.targetClass === selectedClassBoard).map((task, idx) => {
-                                                    const subjectStyle = subjects.find(s => s.name === task.subject)?.color || 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600';
-                                                    return (
-                                                    <div key={task.id} style={{ animationDelay: `${idx * 0.05}s` }} className="animate-item bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 relative overflow-hidden">
-                                                        {task.forceExpired && <div className="absolute inset-0 bg-white/50 dark:bg-slate-800/50 backdrop-blur-[1px] z-10 flex items-center justify-center pointer-events-none"><span className="bg-red-500 text-white font-bold px-4 py-2 rounded-xl shadow-lg rotate-[-10deg]">已強制過期</span></div>}
-                                                        <div className="flex justify-between items-start mb-3">
-                                                            <div className="flex gap-2 items-center">
-                                                                <span className={`text-[10px] font-bold px-2.5 py-1 rounded border ${subjectStyle}`}>{task.subject}</span>
-                                                                <span className="text-[10px] bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 px-2 py-1 rounded font-bold">{task.type === 'homework' ? '功課' : '測驗'}</span>
-                                                            </div>
-                                                            <span className="text-xs text-slate-400 dark:text-slate-500 font-mono font-bold bg-slate-50 dark:bg-slate-900 px-2 py-1 rounded border border-slate-100 dark:border-slate-800">Due: {task.dueDate}</span>
+                                {(viewMode === 'current' || viewMode === 'history') && appMode === 'personal' && (
+                                    <>
+                                        {isVisible('input') && (
+                                            <div className={`relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl shadow-lg p-5 sm:p-8 mb-10 border border-slate-100 dark:border-slate-700 z-20`}>
+                                                <div className="flex bg-slate-100 dark:bg-slate-900/50 p-1.5 rounded-xl mb-6">
+                                                    <button onClick={() => setInputType('homework')} className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-all ${inputType === 'homework' ? `bg-white dark:bg-slate-700 shadow-sm ${t.text}` : 'text-slate-500 dark:text-slate-400'}`}><Icon name="book-open" className="w-4 h-4" /> 新增功課</button>
+                                                    <button onClick={() => setInputType('assessment')} className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-all ${inputType === 'assessment' ? `bg-white dark:bg-slate-700 shadow-sm text-purple-600 dark:text-purple-400` : 'text-slate-500 dark:text-slate-400'}`}><Icon name="file-question" className="w-4 h-4" /> 新增測驗</button>
+                                                </div>
+                                                <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                                                    <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                                                        {subjects.map(sub => (
+                                                            <button 
+                                                                key={sub.name} 
+                                                                type="button" 
+                                                                onClick={() => setSubject(sub.name)} 
+                                                                className={`flex-shrink-0 px-4 py-2 rounded-xl text-xs font-bold border-2 transition-all shadow-sm ${
+                                                                    subject === sub.name 
+                                                                    ? `${t.border} ${t.lightBg} ${t.text} scale-105` 
+                                                                    : `${sub.color} opacity-60 hover:opacity-100 grayscale hover:grayscale-0`
+                                                                }`}
+                                                            >
+                                                                {sub.name}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                        <div className="md:col-span-2 space-y-3">
+                                                            <textarea placeholder={inputType === 'homework' ? "打返功課內容..." : "輸入範圍 (例如: 第3課 / P.20-25)"} value={description} onChange={(e) => setDescription(e.target.value)} rows="2" className={`w-full min-h-[100px] rounded-2xl border-2 border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 focus:bg-white dark:focus:bg-slate-800 focus:${t.border} focus:ring-4 focus:${t.ring} transition-all p-4 text-slate-700 dark:text-slate-100 placeholder-slate-400 outline-none resize-none text-base`} />
                                                         </div>
-                                                        <p className="font-bold text-lg text-slate-800 dark:text-slate-100 mb-3 break-words">{task.description}</p>
-                                                        {task.image && <div className="mb-3"><img src={task.image} alt="附件" className={`max-h-32 rounded-xl border border-slate-200 dark:border-slate-700 object-cover`} /></div>}
-                                                        <div className="text-xs text-slate-400 dark:text-slate-500 flex justify-between items-center border-t border-slate-50 dark:border-slate-700/50 pt-3">
-                                                            <span className="flex items-center gap-1"><Icon name="user" className="w-3 h-3"/> 發佈人: {task.senderName || '老師'}</span>
-                                                            <span>{new Date(task.createdAt).toLocaleString('zh-HK')}</span>
+                                                        <div className="flex flex-col gap-3 md:col-span-1">
+                                                            <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className={`w-full h-12 rounded-xl border-2 border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 focus:bg-white dark:focus:bg-slate-800 focus:${t.border} focus:ring-4 focus:${t.ring} transition-all px-4 text-slate-700 dark:text-slate-100 font-medium outline-none`} required />
+                                                            <button type="submit" className={`w-full h-12 text-white font-bold rounded-xl transition-all shadow-lg active:scale-95 text-base flex items-center justify-center gap-2 ${t.bg} ${t.shadow}`}><Icon name="plus" className="w-5 h-5" />{isAdmin && isBroadcast ? '廣播發放' : '加入清單'}</button>
                                                         </div>
                                                     </div>
-                                                )})}
+                                                    {isAdmin && (
+                                                        <div className="mt-2 pt-4 border-t border-slate-100 dark:border-slate-700">
+                                                            <label className="flex items-center cursor-pointer mb-2">
+                                                                <input type="checkbox" className="sr-only peer" checked={isBroadcast} onChange={e => setIsBroadcast(e.target.checked)} />
+                                                                <div className={`w-11 h-6 bg-slate-200 dark:bg-slate-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${t.bg} peer-checked:bg-orange-500 relative`}></div>
+                                                                <span className="ml-3 text-sm font-bold text-slate-600 dark:text-slate-300">📢 作為管理員廣播發放</span>
+                                                            </label>
+                                                            {isBroadcast && (
+                                                                <div className="mt-3 animate-fadeIn">
+                                                                    <label className="text-xs font-bold text-slate-400 mb-2 block">選擇發送對象</label>
+                                                                    <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
+                                                                        <button type="button" onClick={() => setTargetClassInput('全校')} className={`p-3 rounded-xl border-2 text-left font-bold text-sm transition-all flex items-center gap-2 ${targetClassInput === '全校' ? 'border-orange-500 bg-orange-50 text-orange-600' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500'}`}>
+                                                                            <Icon name="users" className="w-4 h-4" /> 全校廣播
+                                                                        </button>
+                                                                        {systemClasses.map(c => (
+                                                                            <button key={c.code} type="button" onClick={() => setTargetClassInput(c.code)} className={`p-3 rounded-xl border-2 text-left font-bold text-sm transition-all flex items-center gap-2 ${targetClassInput === c.code ? 'border-indigo-500 bg-indigo-50 text-indigo-600' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500'}`}>
+                                                                                <Icon name="school" className="w-4 h-4" /> {c.name}
+                                                                            </button>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </form>
                                             </div>
-                                        </>
-                                    )}
-                                </div>
+                                        )}
+
+                                        {isVisible('list') && (
+                                            <>
+                                                {viewLayout === 'calendar' && <CalendarWidget items={activeItems} selectedDate={calendarSelectedDate} onSelectDate={setCalendarSelectedDate} t={t} />}
+
+                                                <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mb-6 relative">
+                                                    <div className={`flex items-center gap-2 w-full sm:w-auto overflow-x-auto scrollbar-hide pb-1 transition-opacity duration-300 ${!isListVisible ? 'opacity-50' : 'opacity-100'}`}>
+                                                        <span className="text-slate-400 text-xs font-bold whitespace-nowrap flex items-center gap-1"><Icon name="filter" className="w-3 h-3" />篩選:</span>
+                                                        <button onClick={() => handleFilterChange('全部')} className={`flex-shrink-0 px-2.5 py-1 rounded text-[10px] font-bold border transition-all ${filterSubject === '全部' ? 'bg-slate-800 dark:bg-slate-600 text-white border-slate-800 dark:border-slate-600' : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'}`}>全部</button>
+                                                        {subjects.map(sub => (
+                                                            <button key={sub.name} onClick={() => handleFilterChange(sub.name)} className={`flex-shrink-0 px-2.5 py-1 rounded text-[10px] font-bold border transition-all ${filterSubject === sub.name ? `${t.border} ${t.lightBg} ${t.text}` : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'}`}>{sub.name}</button>
+                                                        ))}
+                                                    </div>
+                                                    <div className="flex items-center gap-2 w-full sm:w-auto z-30">
+                                                        {viewMode !== 'history' && (
+                                                            <button onClick={handleClearExpired} className="flex-shrink-0 text-xs font-bold bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400 px-3 py-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors flex items-center gap-1">
+                                                                <Icon name="trash-2" className="w-3 h-3" /> 清理過期
+                                                            </button>
+                                                        )}
+                                                        <span className="text-slate-400 text-xs font-bold whitespace-nowrap flex items-center gap-1 ml-1"><Icon name="arrow-up-down" className="w-3 h-3" />排序:</span>
+                                                        <CustomDropdown value={sortOption} onChange={handleSortChange} options={[{ value: 'date_asc', label: '日期 (趕急先)' }, { value: 'date_desc', label: '日期 (長遠先)' }]} />
+                                                    </div>
+                                                </div>
+
+                                                <div className={`space-y-4 pb-20 transition-opacity duration-300 ${!isListVisible ? 'opacity-0' : 'opacity-100'}`}>
+                                                    {displayedItems.length === 0 ? (
+                                                        <div className="text-center py-20">
+                                                            <div className={`inline-flex p-6 rounded-full ${t.lightBg} mb-4`}><Icon name="sparkles" className={`w-12 h-12 ${t.text}`} /></div>
+                                                            <h3 className="text-xl font-bold text-slate-700 dark:text-slate-300">{calendarSelectedDate ? '這天沒有任何任務' : (viewMode === 'history' ? '沒有已完成的紀錄' : '太好了！任務清單空空如也')}</h3>
+                                                        </div>
+                                                    ) : displayedItems.map((item, index) => {
+                                                        const isExiting = exitingIds.includes(item.id);
+                                                        const isCompleted = item.completed || isExiting;
+                                                        const dl = getDaysRemaining(item.dueDate);
+                                                        let statusNode = <span className="text-emerald-600 bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 px-2 py-0.5 rounded text-xs font-bold">{dl} 天後</span>;
+                                                        if(dl < 0) statusNode = <span className="text-red-600 bg-red-100 dark:bg-red-900/30 dark:text-red-400 px-2 py-0.5 rounded text-xs font-bold">過期 {Math.abs(dl)} 天</span>;
+                                                        if(dl === 0) statusNode = <span className="text-orange-600 bg-orange-100 dark:bg-orange-900/30 dark:text-orange-400 px-2 py-0.5 rounded text-xs font-bold animate-pulse">今日到期!</span>;
+                                                        const subjectStyle = subjects.find(s => s.name === item.subject)?.color || 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600';
+
+                                                        return (
+                                                            <div key={item.id} style={{ animationDelay: `${index * 0.05}s` }} className={`animate-item relative bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 transition-all ${isExiting ? 'scale-95 opacity-0' : ''}`}>
+                                                                <div className="flex items-start gap-4">
+                                                                    <button onClick={() => handleToggle(item.id, item.completed)} className={`mt-1 w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${isCompleted ? 'bg-emerald-500 border-emerald-500 text-white scale-110' : 'border-slate-300 dark:border-slate-600 hover:border-emerald-400'}`}>
+                                                                        <Icon name="check" className={`w-4 h-4 ${isCompleted ? 'opacity-100' : 'opacity-0'}`} />
+                                                                    </button>
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <div className="flex justify-between items-start mb-2">
+                                                                            <div className="flex gap-2 items-center flex-wrap">
+                                                                                <span className={`text-[10px] font-bold px-2 py-1 rounded border ${subjectStyle}`}>{item.subject || '其他'}</span>
+                                                                                {item.publicRefId && <span className={`text-[10px] font-bold px-2 py-1 rounded ${t.lightBg} ${t.text}`}>廣播</span>}
+                                                                                {item.type !== 'homework' && <span className="text-[10px] font-bold px-2 py-1 rounded bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">測驗</span>}
+                                                                            </div>
+                                                                            {statusNode}
+                                                                        </div>
+                                                                        <div className={`text-base font-bold mb-2 break-words ${isCompleted ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100'}`}>{item.description}</div>
+                                                                        {item.image && <div className="mt-2"><img src={item.image} alt="附件" className={`max-h-32 rounded-lg border border-slate-200 dark:border-slate-700 object-cover ${isCompleted ? 'opacity-50 grayscale' : ''}`} /></div>}
+                                                                        <div className="flex items-center justify-between mt-2">
+                                                                            <div className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1 font-mono"><Icon name="calendar" className="w-3 h-3"/> {item.dueDate}</div>
+                                                                            <div className="flex gap-2">
+                                                                                {!item.forceExpired && <button onClick={() => setEditingItem(item)} className="p-1.5 text-slate-400 hover:text-blue-500 dark:hover:text-blue-400 transition" title="編輯"><Icon name="pencil" className="w-4 h-4" /></button>}
+                                                                                {isAdmin && item.publicRefId ? (
+                                                                                    <>
+                                                                                        <button onClick={() => deleteItem(item.id)} className="p-1.5 text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition" title="刪除 (自己)"><Icon name="trash-2" className="w-4 h-4" /></button>
+                                                                                        <button onClick={() => deletePublicItem(item.publicRefId, item.id)} className="p-1.5 text-indigo-400 hover:text-indigo-600 transition" title="刪除 (全班)"><Icon name="globe" className="w-4 h-4" /></button>
+                                                                                    </>
+                                                                                ) : (
+                                                                                    <button onClick={() => deleteItem(item.id)} className="p-1.5 text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition"><Icon name="trash-2" className="w-4 h-4" /></button>
+                                                                                )}
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        )
+                                                    })}
+                                                </div>
+                                            </>
+                                        )}
+                                    </>
+                                )}
+
+                                {viewMode === 'current' && appMode === 'class' && (
+                                    <div className="space-y-6 animate-fadeIn pb-20">
+                                        <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 flex justify-between items-center">
+                                            <div>
+                                                <h3 className="text-xl font-bold dark:text-white flex items-center gap-2"><Icon name="school" className={t.text} /> 我的班級</h3>
+                                                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">查看專屬的廣播任務</p>
+                                            </div>
+                                            <button onClick={() => setIsJoinClassOpen(true)} className={`px-4 py-2.5 rounded-xl font-bold text-sm text-white shadow-md active:scale-95 transition-all flex items-center gap-2 ${t.bg}`}>
+                                                <Icon name="plus" className="w-4 h-4" /> 加入班級
+                                            </button>
+                                        </div>
+
+                                        {joinedClasses.length === 0 ? (
+                                            <div className="text-center py-20 bg-white dark:bg-slate-800 rounded-3xl border border-dashed border-slate-200 dark:border-slate-700">
+                                                <Icon name="school" className="w-16 h-16 mx-auto text-slate-300 dark:text-slate-600 mb-4" />
+                                                <h4 className="text-lg font-bold text-slate-600 dark:text-slate-300 mb-2">尚未加入任何班級</h4>
+                                                <p className="text-sm text-slate-400 mb-6">請向老師索取 6 位數班級代碼</p>
+                                                <button onClick={() => setIsJoinClassOpen(true)} className={`px-8 py-3 rounded-xl font-bold text-sm text-white shadow-md transition-all active:scale-95 ${t.bg}`}>立即加入</button>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                                                    {joinedClasses.map(code => {
+                                                        const cls = systemClasses.find(c => c.code === code);
+                                                        const name = cls ? cls.name : code;
+                                                        return (
+                                                            <button key={code} onClick={() => setSelectedClassBoard(code)} className={`shrink-0 px-5 py-2.5 rounded-xl text-sm font-bold border-2 transition-all ${selectedClassBoard === code ? `${t.border} ${t.lightBg} ${t.text}` : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-100 dark:border-slate-700'}`}>
+                                                                {name}
+                                                            </button>
+                                                        )
+                                                    })}
+                                                </div>
+
+                                                <div className="space-y-4">
+                                                    {publicTasks.filter(task => task.targetClass === selectedClassBoard).length === 0 ? (
+                                                        <div className="text-center py-10"><p className="text-slate-500 dark:text-slate-400 font-medium">此班級目前沒有廣播任務 🎉</p></div>
+                                                    ) : publicTasks.filter(task => task.targetClass === selectedClassBoard).map((task, idx) => {
+                                                        const subjectStyle = subjects.find(s => s.name === task.subject)?.color || 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600';
+                                                        return (
+                                                        <div key={task.id} style={{ animationDelay: `${idx * 0.05}s` }} className="animate-item bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 relative overflow-hidden">
+                                                            {task.forceExpired && <div className="absolute inset-0 bg-white/50 dark:bg-slate-800/50 backdrop-blur-[1px] z-10 flex items-center justify-center pointer-events-none"><span className="bg-red-500 text-white font-bold px-4 py-2 rounded-xl shadow-lg rotate-[-10deg]">已強制過期</span></div>}
+                                                            <div className="flex justify-between items-start mb-3">
+                                                                <div className="flex gap-2 items-center">
+                                                                    <span className={`text-[10px] font-bold px-2.5 py-1 rounded border ${subjectStyle}`}>{task.subject}</span>
+                                                                    <span className="text-[10px] bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 px-2 py-1 rounded font-bold">{task.type === 'homework' ? '功課' : '測驗'}</span>
+                                                                </div>
+                                                                <span className="text-xs text-slate-400 dark:text-slate-500 font-mono font-bold bg-slate-50 dark:bg-slate-900 px-2 py-1 rounded border border-slate-100 dark:border-slate-800">Due: {task.dueDate}</span>
+                                                            </div>
+                                                            <p className="font-bold text-lg text-slate-800 dark:text-slate-100 mb-3 break-words">{task.description}</p>
+                                                            {task.image && <div className="mb-3"><img src={task.image} alt="附件" className={`max-h-32 rounded-xl border border-slate-200 dark:border-slate-700 object-cover`} /></div>}
+                                                            <div className="text-xs text-slate-400 dark:text-slate-500 flex justify-between items-center border-t border-slate-50 dark:border-slate-700/50 pt-3">
+                                                                <span className="flex items-center gap-1"><Icon name="user" className="w-3 h-3"/> 發佈人: {task.senderName || '老師'}</span>
+                                                                <span>{new Date(task.createdAt).toLocaleString('zh-HK')}</span>
+                                                            </div>
+                                                        </div>
+                                                    )})}
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
                             )}
                         </div>
                         )}
