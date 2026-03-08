@@ -1,37 +1,45 @@
 <!DOCTYPE html>
 <html lang="zh-HK">
 <head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-8VCPLTE2QT"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-8VCPLTE2QT');
+    </script>
+
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4156749891284054"
+     crossorigin="anonymous"></script>
+    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#4f46e5">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="電子手冊">
+    
     <title>電子手冊</title>
 
-    <!-- 
-        === CDN 備援區 (Mobile GitHub Friendly) === 
-        策略：預設使用 cdnjs (穩定)，如果失敗則自動切換到 unpkg。
-    -->
-
-    <!-- 1. React 核心 -->
     <script 
         src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js" 
         crossorigin 
         onerror="this.onerror=null; this.src='https://unpkg.com/react@18/umd/react.production.min.js'">
     </script>
 
-    <!-- 2. React DOM -->
     <script 
         src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js" 
         crossorigin 
         onerror="this.onerror=null; this.src='https://unpkg.com/react-dom@18/umd/react-dom.production.min.js'">
     </script>
 
-    <!-- 3. Babel (解析 JSX) -->
     <script 
         src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"
         onerror="this.onerror=null; this.src='https://unpkg.com/@babel/standalone/babel.min.js'">
     </script>
 
-    <!-- 4. Tailwind CSS (樣式) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -61,7 +69,6 @@
         }
     </script>
 
-    <!-- 5. Lucide Icons (圖標) -->
     <script 
         src="https://unpkg.com/lucide@latest"
         onerror="this.onerror=null; this.src='https://cdn.jsdelivr.net/npm/lucide@latest'">
@@ -107,23 +114,6 @@
         }
         .pop-in-error { animation: popInError 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
 
-        /* 極光聚焦模式動畫 */
-        @keyframes auroraBorder {
-            0% { box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.85), 0 0 20px 5px rgba(56, 189, 248, 0.6), inset 0 0 20px 2px rgba(56, 189, 248, 0.4); border-color: rgba(56, 189, 248, 0.8); }
-            33% { box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.85), 0 0 30px 10px rgba(167, 139, 250, 0.7), inset 0 0 20px 2px rgba(167, 139, 250, 0.5); border-color: rgba(167, 139, 250, 0.8); }
-            66% { box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.85), 0 0 20px 5px rgba(52, 211, 153, 0.6), inset 0 0 20px 2px rgba(52, 211, 153, 0.4); border-color: rgba(52, 211, 153, 0.8); }
-            100% { box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.85), 0 0 20px 5px rgba(56, 189, 248, 0.6), inset 0 0 20px 2px rgba(56, 189, 248, 0.4); border-color: rgba(56, 189, 248, 0.8); }
-        }
-        .aurora-spotlight {
-            position: fixed;
-            animation: auroraBorder 4s infinite linear;
-            border-radius: 16px;
-            border: 2px solid transparent;
-            transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
-            pointer-events: none;
-            z-index: 240;
-        }
-
         /* Loading Screen Styles */
         #loading-screen {
             position: fixed; inset: 0; z-index: 9999;
@@ -139,8 +129,6 @@
 </head>
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100">
     
-    <!-- 載入畫面 (Fallback UI) -->
-    <!-- 如果 CDN 掛了，React 跑不出來，使用者至少會看到這裡，而不是白畫面 -->
     <div id="loading-screen">
         <div class="spinner"></div>
         <h2 style="font-size: 1.2rem; font-weight: bold; margin-bottom: 0.5rem;">正在啟動電子手冊...</h2>
@@ -152,7 +140,6 @@
 
     <div id="root"></div>
 
-    <!-- Firebase 模組 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -186,7 +173,6 @@
         }
     </script>
 
-    <!-- PWA Setup -->
     <script>
         (function setupPWA() {
             const manifest = {
@@ -198,6 +184,15 @@
             const manifestURL = URL.createObjectURL(blob);
             document.querySelector('head').insertAdjacentHTML('beforeend', `<link rel="manifest" href="${manifestURL}">`);
         })();
+
+        // 【新增】註冊 Service Worker，這是讓瀏覽器允許安裝 PWA 的關鍵
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker 註冊成功!', reg.scope))
+                    .catch(err => console.log('Service Worker 註冊失敗:', err));
+            });
+        }
     </script>
 
     <script type="text/babel">
@@ -268,7 +263,6 @@
             return <span ref={ref} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}></span>;
         };
 
-        // Moved CustomDropdown here to ensure it's defined before usage
         function CustomDropdown({ value, onChange, options }) { 
             const [isOpen, setIsOpen] = useState(false); 
             const dropdownRef = useRef(null); 
@@ -313,7 +307,6 @@
             } catch(e) { return '--:--'; }
         };
 
-        // v2.3 Helper: Relative Time
         const formatRelativeTime = (lastSeen) => {
             if (!lastSeen || typeof lastSeen.toDate !== 'function') return '無紀錄';
             const date = lastSeen.toDate();
@@ -377,204 +370,6 @@
             return null;
         };
 
-        // --- View Components ---
-        
-        // 極光聚焦導覽 Modal
-        function TutorialModal({ isOpen, onClose, t }) {
-            const [step, setStep] = useState(0);
-            const [targetRect, setTargetRect] = useState(null);
-            const [dontShowAgain, setDontShowAgain] = useState(false);
-
-            const steps = [
-                { targetId: 'header-spotlight', title: "歡迎使用電子手冊 👋", desc: "這是一個專為學生設計的數位手冊，幫你輕鬆管理功課、測驗與上課時間表。", icon: "sparkles", color: "text-amber-500", bg: "bg-amber-100 dark:bg-amber-900/30" },
-                { targetId: 'mode-toggle-spotlight', title: "兩種實用模式 🔄", desc: "切換【個人模式】記錄自己的私事與作業；或切換【班級模式】接收老師發放的廣播功課！", icon: "layout-dashboard", color: "text-blue-500", bg: "bg-blue-100 dark:bg-blue-900/30" },
-                { targetId: 'quick-cards-spotlight', title: "快捷狀態卡片 📊", desc: "一目了然今天、明天要交的功課數量，點擊卡片還能快速預覽詳細內容喔！", icon: "bar-chart-2", color: "text-rose-500", bg: "bg-rose-100 dark:bg-rose-900/30" },
-                { targetId: 'live-dashboard-spotlight', title: "即時上課動態 ⏳", desc: "自動追蹤目前的課堂進度，顯示「正在上哪一堂課」與精準的「下課倒數計時」！", icon: "activity", color: "text-fuchsia-500", bg: "bg-fuchsia-100 dark:bg-fuchsia-900/30" },
-                { targetId: 'add-task-spotlight', title: "新增任務區域 ✍️", desc: "在這裡輸入你的功課或測驗範圍，選擇日期後點擊「加入清單」即可輕鬆記錄。", icon: "edit-3", color: "text-indigo-500", bg: "bg-indigo-100 dark:bg-indigo-900/30" },
-                { targetId: 'subject-selector-spotlight', title: "科目快速分類 📚", desc: "新增任務時，記得先點選對應的科目標籤，讓未來的清單井然有序！", icon: "tags", color: "text-cyan-500", bg: "bg-cyan-100 dark:bg-cyan-900/30" },
-                { targetId: 'view-toggle-spotlight', title: "切換日曆視圖 📅", desc: "除了列表，你也可以點擊這裡切換成「日曆模式」，用月曆的方式查看每天的任務。", icon: "calendar-days", color: "text-teal-500", bg: "bg-teal-100 dark:bg-teal-900/30" },
-                { targetId: 'filter-sort-spotlight', title: "篩選與排序工具 🔍", desc: "任務太多？用這裡的按鈕快速過濾特定科目的功課，或是依照日期遠近重新排序。", icon: "filter", color: "text-orange-500", bg: "bg-orange-100 dark:bg-orange-900/30" },
-                { targetId: 'task-list-spotlight', title: "任務紀錄卡片 📝", desc: "下方會列出你所有的任務卡片。如果是空空如也，現在就可以馬上新增一筆試試看！", icon: "list-todo", color: "text-pink-500", bg: "bg-pink-100 dark:bg-pink-900/30" },
-                { targetId: 'task-list-spotlight', title: "一鍵標示完成 ✅", desc: "當你完成功課後，點擊卡片左側的「圓形按鈕」就能將任務打勾並隱藏！右下角則有修改與刪除功能。", icon: "check-circle-2", color: "text-green-500", bg: "bg-green-100 dark:bg-green-900/30" },
-                { targetId: 'history-btn-spotlight', title: "查看歷史紀錄 🕰️", desc: "已經打勾的功課會跑到這裡！點擊「歷史紀錄」就能隨時找回任務，如果不小心按錯也能取消完成。", icon: "history", color: "text-purple-500", bg: "bg-purple-100 dark:bg-purple-900/30" },
-                { targetId: 'timetable-btn-spotlight', title: "自訂時間表 🏫", desc: "點擊右上角的「時間表」按鈕，即可編輯每天的節次與上課科目，打造專屬課表。", icon: "clock", color: "text-emerald-500", bg: "bg-emerald-100 dark:bg-emerald-900/30" },
-                { targetId: 'settings-spotlight', title: "個人化與設定 ⚙️", desc: "最後，這裡可以調整主題顏色、管理自訂科目，或是隨時點擊「？」重新觀看本導覽！", icon: "settings", color: "text-slate-500", bg: "bg-slate-200 dark:bg-slate-700" }
-            ];
-
-            useEffect(() => { 
-                if (isOpen) { 
-                    setStep(0); 
-                    setTargetRect(null);
-                    setDontShowAgain(false); 
-                } 
-            }, [isOpen]);
-
-            useEffect(() => {
-                if (!isOpen) {
-                    document.body.style.overflow = 'auto';
-                    return;
-                }
-                
-                let timeout;
-                const updateRect = () => {
-                    const target = document.getElementById(steps[step].targetId);
-                    if (target) {
-                        // 暫時解開背景滾動鎖定，讓 scrollIntoView 能順暢執行
-                        document.body.style.overflow = 'auto';
-                        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        
-                        timeout = setTimeout(() => {
-                            const rect = target.getBoundingClientRect();
-                            setTargetRect({
-                                top: rect.top - 8,
-                                left: rect.left - 8,
-                                width: rect.width + 16,
-                                height: rect.height + 16
-                            });
-                            // 畫面捲動到位後重新鎖定背景
-                            document.body.style.overflow = 'hidden';
-                        }, 400); 
-                    } else {
-                        setTargetRect(null);
-                        document.body.style.overflow = 'hidden';
-                    }
-                };
-                
-                updateRect(); // 初始化位置
-                window.addEventListener('resize', updateRect);
-                
-                return () => {
-                    window.removeEventListener('resize', updateRect);
-                    clearTimeout(timeout);
-                };
-            }, [step, isOpen]);
-
-            if (!isOpen) return null;
-
-            const current = steps[step];
-
-            const handleFinish = () => {
-                if (dontShowAgain) localStorage.setItem('hideTutorial', 'true');
-                else localStorage.removeItem('hideTutorial');
-                onClose();
-            };
-
-            // 智慧計算對話框位置，保證不會超出畫面邊界
-            const dialogStyle = (() => {
-                const defaultStyle = { top: '50%', left: '50%', transform: 'translate(-50%, -50%)', maxHeight: 'calc(100vh - 32px)' };
-                if (!targetRect) return defaultStyle;
-
-                const vw = window.innerWidth;
-                const vh = window.innerHeight;
-
-                const spaceAbove = targetRect.top;
-                const spaceBelow = vh - (targetRect.top + targetRect.height);
-                const isUp = spaceAbove > spaceBelow;
-
-                // 水平：置中於目標，並強制限制在畫面範圍內 (預留兩側 16px，卡片最大寬 340px)
-                let left = targetRect.left + (targetRect.width / 2) - 170;
-                left = Math.max(16, Math.min(vw - 340 - 16, left));
-
-                // 垂直：判斷擺放方向，若空間低於 250px 則強制退回置中模式，避免內容擠壓到無法點擊
-                const minRequiredHeight = 250;
-                const maxH = isUp ? spaceAbove - 32 : spaceBelow - 32;
-
-                if (maxH < minRequiredHeight) {
-                    return defaultStyle;
-                }
-
-                if (isUp) {
-                    return { bottom: `${vh - targetRect.top + 16}px`, left: `${left}px`, maxHeight: `${maxH}px` };
-                } else {
-                    return { top: `${targetRect.top + targetRect.height + 16}px`, left: `${left}px`, maxHeight: `${maxH}px` };
-                }
-            })();
-
-            return (
-                <div className="fixed inset-0 z-[250] modal-animate" style={{ pointerEvents: 'auto' }}>
-                    {/* 攔截所有背景點擊 */}
-                    <div className="absolute inset-0 z-[230]" onClick={(e) => e.stopPropagation()}></div>
-                    
-                    {/* 極光聚焦框 */}
-                    <div 
-                        className="aurora-spotlight"
-                        style={{
-                            top: targetRect ? targetRect.top : '50%',
-                            left: targetRect ? targetRect.left : '50%',
-                            width: targetRect ? targetRect.width : 0,
-                            height: targetRect ? targetRect.height : 0,
-                            transform: targetRect ? 'none' : 'translate(-50%, -50%)',
-                            opacity: targetRect ? 1 : 0
-                        }}
-                    ></div>
-
-                    {/* 提示對話框 Tooltip */}
-                    <div 
-                        className="absolute bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-2xl border border-slate-100 dark:border-slate-700 z-[260] transition-all duration-500 ease-in-out w-[90%] max-w-[340px] flex flex-col overflow-y-auto scrollbar-hide"
-                        style={dialogStyle}
-                    >
-                        {/* 新增：跳過按鈕 */}
-                        <button 
-                            onClick={handleFinish} 
-                            className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs font-bold flex items-center gap-1 transition-colors z-20"
-                            title="跳過導覽"
-                        >
-                            跳過 <Icon name="x" className="w-3.5 h-3.5" />
-                        </button>
-
-                        <div className="flex justify-center mb-4 relative shrink-0 mt-2">
-                            <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 blur-xl rounded-full"></div>
-                            <div className={`w-16 h-16 rounded-full flex items-center justify-center relative z-10 ${current.bg} ${current.color} shadow-inner`}>
-                                <Icon name={current.icon} className="w-8 h-8" />
-                            </div>
-                        </div>
-
-                        <div className="text-center mb-6 shrink-0">
-                            <h2 className="text-xl font-black text-slate-800 dark:text-white mb-2">{current.title}</h2>
-                            <p className="text-slate-600 dark:text-slate-300 text-sm font-medium leading-relaxed whitespace-pre-wrap">{current.desc}</p>
-                        </div>
-
-                        <div className="flex justify-center gap-1.5 mb-5 shrink-0">
-                            {steps.map((_, i) => (
-                                <div key={i} className={`h-2 rounded-full transition-all duration-300 ${i === step ? 'bg-indigo-600 w-5' : 'bg-slate-200 dark:bg-slate-700 w-2'}`}></div>
-                            ))}
-                        </div>
-
-                        <div className="flex justify-center mb-4 shrink-0">
-                            <label className="flex items-center gap-2 cursor-pointer group">
-                                <input type="checkbox" checked={dontShowAgain} onChange={(e) => setDontShowAgain(e.target.checked)} className="w-3.5 h-3.5 rounded text-indigo-600 bg-slate-100 border-slate-300 dark:bg-slate-900 dark:border-slate-600 focus:ring-indigo-500" />
-                                <span className="text-xs text-slate-500 dark:text-slate-400 font-medium group-hover:text-slate-700 dark:group-hover:text-slate-200 transition-colors">之後不再顯示</span>
-                            </label>
-                        </div>
-
-                        <div className="flex gap-2 shrink-0">
-                            {step > 0 && (
-                                <button onClick={() => setStep(step - 1)} className="px-4 py-2.5 rounded-xl font-bold text-sm text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">上一步</button>
-                            )}
-                            <button onClick={() => step < steps.length - 1 ? setStep(step + 1) : handleFinish()} className={`flex-1 py-2.5 rounded-xl text-sm text-white font-bold transition-all shadow-md active:scale-95 ${t.bg}`}>
-                                {step < steps.length - 1 ? '下一步' : '完成導覽'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            );
-        }
-
-        function LessonCountdown({ subject, config }) {
-            const [now, setNow] = useState(new Date());
-            useEffect(() => { const timer = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(timer); }, []);
-
-            const nextLesson = getNextLesson(subject, now, config);
-            if (!nextLesson) return null;
-            if (nextLesson.type === 'now') {
-                return <div className="text-[10px] font-bold text-red-600 flex items-center gap-1 mt-1 animate-pulse"><Icon name="flame" className="w-3 h-3" /> 上課中</div>;
-            } else if (nextLesson.diff < 24 * 60 * 60 * 1000) { 
-                return <div className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1 mt-1"><Icon name="alarm-clock" className="w-3 h-3" /> 距離上課 {formatCountdown(nextLesson.diff)}</div>;
-            }
-            return null;
-        }
-
-        // v2.4 Updated Current Lesson Widget with Flowing Gradient
         function CurrentLessonWidget({ config, t, onClick }) {
             const [now, setNow] = useState(new Date());
             useEffect(() => { const timer = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(timer); }, []);
@@ -610,11 +405,9 @@
 
             return (
                 <div onClick={onClick} className="cursor-pointer mb-6 relative overflow-hidden rounded-2xl p-[2px] shadow-lg hover:scale-[1.01] transition-transform duration-300">
-                    {/* Flowing Gradient Border/Background */}
                     <div className="absolute inset-0 bg-gradient-to-r from-violet-500 via-fuchsia-500 to-cyan-500 animate-gradient-x"></div>
                     
                     <div className="relative bg-white/95 dark:bg-slate-900/95 backdrop-blur-3xl rounded-2xl p-4 flex items-center justify-between h-full">
-                        {/* Progress Bar within card */}
                         <div className="absolute top-0 left-0 h-[2px] bg-gradient-to-r from-violet-500 to-cyan-500 opacity-50 w-full"></div>
                         <div className={`absolute top-0 left-0 h-[2px] transition-all duration-1000 ${status === 'current' ? 'bg-fuchsia-500 shadow-[0_0_10px_rgba(217,70,239,0.8)]' : 'bg-transparent'}`} style={{ width: currentSlot ? `${100 - (diff / (currentSlot.end - currentSlot.start)) * 100}%` : '0%' }}></div>
 
@@ -646,7 +439,6 @@
                             </div>
                         </div>
                         
-                        {/* Decorative Sparkles */}
                         <Icon name="sparkles" className="absolute -bottom-2 -right-2 w-12 h-12 text-fuchsia-500/10 animate-float pointer-events-none" />
                     </div>
                 </div>
@@ -668,7 +460,6 @@
             const nextMonth = () => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
             const prevMonth = () => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
 
-            // Fix: Add today weekday info
             const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
             const today = new Date();
             const todayWeekday = weekDays[today.getDay()];
@@ -743,7 +534,6 @@
             );
         }
 
-        // v2.4 Quick View Modal (Enhanced) - RESTORED
         function QuickViewModal({ isOpen, onClose, title, items, subjects, onEdit, onDelete, isAdmin, userUid }) {
             if (!isOpen) return null;
 
@@ -796,10 +586,9 @@
         }
 
         function BlockScreen({ type, estimatedTime, customMessage, customTitle, onLogin, user }) {
-            const defaultMessage = (type === 'access_denied' || type === 'whitelist_blocked') ? '抱歉，此網站目前僅限白名單用戶訪問。\n請聯絡管理員開通權限。' : '管理員正在進行系統維護，請稍後再回來。';
+            const defaultMessage = (type === 'access_denied' || type === 'whitelist_blocked') ? '抱歉，此系統目前已限制您的存取權限。\n請聯絡管理員了解詳情。' : '管理員正在進行系統維護，請稍後再回來。';
             const iconName = (type === 'access_denied' || type === 'whitelist_blocked') ? 'shield-ban' : (type === 'updating' ? 'hammer' : (type === 'restructuring' ? 'database' : 'lock'));
             
-            // Determine default title based on type
             const defaultTitle = type === 'access_denied' || type === 'whitelist_blocked' ? '存取被拒' : type === 'updating' ? '網站更新中' : type === 'restructuring' ? '資料重整中' : '系統維護中';
             
             return (
@@ -832,7 +621,6 @@
             );
         }
 
-        // Updated AppearanceModal for Layout Settings
         function AppearanceModal({ isOpen, onClose, t, themeColor, setThemeColor, isDarkMode, setIsDarkMode, layoutMode, setLayoutMode, customLayout, setCustomLayout }) {
             if (!isOpen) return null;
             
@@ -1244,13 +1032,13 @@
                                         <button onClick={() => removeSlot(index)} className="p-2 text-slate-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg"><Icon name="trash-2" className="w-4 h-4"/></button>
                                     </div>
                                 ))}
-                                <button onClick={addSlot} className="w-full py-3 border-2 border-dashed border-indigo-200 dark:border-indigo-800 text-indigo-500 dark:text-indigo-400 rounded-xl font-bold hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-all flex items-center justify-center gap-2"><Icon name="plus" className="w-4 h-4" /> 新增時間段</button>
+                                <button onClick={addSlot} className="w-full py-3 border-2 border-dashed border-indigo-200 dark:border-slate-700 text-indigo-500 dark:text-indigo-400 rounded-xl font-bold hover:bg-indigo-50 dark:hover:bg-slate-800 transition-all flex items-center justify-center gap-2"><Icon name="plus" className="w-4 h-4" /> 新增時間段</button>
                             </div>
                         ) : (
                             <div className="space-y-4">
                                 <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                                     {['一','二','三','四','五'].map((d, i) => (
-                                        <button key={i} onClick={() => setEditDay(i + 1)} className={`px-4 py-2 rounded-lg font-bold text-sm whitespace-nowrap transition-all ${editDay === i + 1 ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 dark:shadow-none' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'}`}>星期{d}</button>
+                                        <button key={i} onClick={() => setEditDay(i + 1)} className={`px-4 py-2 rounded-lg font-bold text-sm whitespace-nowrap transition-all ${editDay === i + 1 ? 'bg-indigo-600 text-white shadow-lg' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'}`}>星期{d}</button>
                                     ))}
                                 </div>
                                 <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-3">
@@ -1334,23 +1122,28 @@
         }
 
         // --- 全新超級管理控制台 AdminConsole ---
-        function AdminConsole({ db, systemConfig, systemClasses, onBack, subjects, triggerAlert, triggerConfirm }) {
+        function AdminConsole({ db, systemConfig, systemClasses, onBack, subjects, triggerAlert, triggerConfirm, adminTimetableConfig, user }) {
             const [activeTab, setActiveTab] = useState('overview');
             const [users, setUsers] = useState([]);
             const [publicTasks, setPublicTasks] = useState([]);
             const [searchQuery, setSearchQuery] = useState('');
             const [selectedUser, setSelectedUser] = useState(null);
             const [userHomeworks, setUserHomeworks] = useState([]);
+            
+            // Whitelist states
             const [newEmail, setNewEmail] = useState('');
+            // Blacklist states
+            const [newBlacklistEmail, setNewBlacklistEmail] = useState('');
+            
             const [newClassName, setNewClassName] = useState('');
             const [isSubmitting, setIsSubmitting] = useState(false);
             const [newName, setNewName] = useState('');
             
             const [editingAdminItem, setEditingAdminItem] = useState(null);
 
-            // Added getDoc to destructuring
             const { collection, getDocs, query, orderBy, onSnapshot, doc, updateDoc, arrayUnion, arrayRemove, deleteDoc, setDoc, getDoc } = window.firebaseServices || {};
             const allowedEmails = systemConfig?.allowedEmails || [];
+            const blacklistedEmails = systemConfig?.blacklistedEmails || [];
 
             useEffect(() => {
                 if (!db || !collection) return;
@@ -1375,8 +1168,28 @@
             }, [selectedUser, db, collection]);
 
             const updateConfig = async (key, value) => { try { await setDoc(doc(db, "system_settings", "config"), { [key]: value }, { merge: true }); triggerAlert("設定已更新"); } catch (e) { triggerAlert("設定更新失敗"); } };
+            
+            // Whitelist Handlers
             const handleAddWhitelist = async (e) => { e.preventDefault(); if (!newEmail.trim()) return; setIsSubmitting(true); try { await updateDoc(doc(db, "system_settings", "config"), { allowedEmails: arrayUnion(newEmail.trim()) }); setNewEmail(''); triggerAlert("已新增至白名單"); } catch (e) { triggerAlert("新增失敗"); } setIsSubmitting(false); };
             const handleRemoveWhitelist = async (email) => { triggerConfirm(`確定要移除白名單 ${email} 嗎？`, async () => { try { await updateDoc(doc(db, "system_settings", "config"), { allowedEmails: arrayRemove(email) }); triggerAlert("已移除"); } catch (e) { } }); };
+
+            // Blacklist Handlers
+            const handleAddBlacklist = async (e) => { e.preventDefault(); if (!newBlacklistEmail.trim()) return; setIsSubmitting(true); try { await updateDoc(doc(db, "system_settings", "config"), { blacklistedEmails: arrayUnion(newBlacklistEmail.trim()) }); setNewBlacklistEmail(''); triggerAlert("已新增至黑名單"); } catch (e) { triggerAlert("新增失敗"); } setIsSubmitting(false); };
+            const handleRemoveBlacklist = async (email) => { triggerConfirm(`確定要解除封鎖 ${email} 嗎？`, async () => { try { await updateDoc(doc(db, "system_settings", "config"), { blacklistedEmails: arrayRemove(email) }); triggerAlert("已解除封鎖"); } catch (e) { } }); };
+
+            // 新增：強制同步時間表給特定用戶
+            const handlePushTimetable = async () => {
+                if (!selectedUser || !adminTimetableConfig) return;
+                triggerConfirm(`確定要將您目前的時間表強制覆蓋並同步給 ${selectedUser.displayName} 嗎？`, async () => {
+                    try {
+                        const { setDoc, doc } = window.firebaseServices;
+                        await setDoc(doc(db, 'users', selectedUser.uid, 'settings', 'timetable'), JSON.parse(JSON.stringify(adminTimetableConfig)));
+                        triggerAlert(`成功同步時間表給 ${selectedUser.displayName}`);
+                    } catch (e) {
+                        triggerAlert("推送時間表失敗: " + e.message);
+                    }
+                });
+            };
 
             const handleCreateClass = async (e) => {
                 e.preventDefault(); const name = newClassName.trim(); if (!name) return;
@@ -1390,30 +1203,24 @@
                 }
             };
 
-            // v2.3 Deep Clean Class Delete (Fixed: Use getDoc/filter for robust deletion)
             const handleDeepDeleteClass = async (classObj) => {
-                // Explicitly get services inside the function to ensure scope
                 const { getDoc, doc, updateDoc, deleteDoc, getDocs, query, where, collection, arrayRemove } = window.firebaseServices;
 
                 triggerConfirm(`⚠️ 警告：確定要刪除班級 ${classObj.name}？\n\n此操作將會：\n1. 刪除班級代碼\n2. 刪除該班級所有廣播功課\n3. 將所有學生踢出該班級\n\n(學生私有記錄將保留但變為孤兒記錄)`, async () => {
                     try {
-                        // 1. Delete Public Assignments for this class
                         const tasksQ = query(collection(db, "public_assignments"), where("targetClass", "==", classObj.code));
                         const tasksSnap = await getDocs(tasksQ);
                         await Promise.all(tasksSnap.docs.map(d => deleteDoc(d.ref)));
 
-                        // 2. Remove class from all users
                         const usersQ = query(collection(db, "users_public"), where("joinedClasses", "array-contains", classObj.code));
                         const usersSnap = await getDocs(usersQ);
                         await Promise.all(usersSnap.docs.map(d => updateDoc(d.ref, { joinedClasses: arrayRemove(classObj.code) })));
 
-                        // 3. Delete Class Config (Fixed logic: Read-Filter-Write)
                         const classesRef = doc(db, 'system_settings', 'classes');
                         const classesSnap = await getDoc(classesRef);
                         
                         if (classesSnap.exists()) {
                             const currentList = classesSnap.data().list || [];
-                            // Filter out the class by unique code instead of object equality
                             const newList = currentList.filter(c => c.code !== classObj.code);
                             await updateDoc(classesRef, { list: newList });
                         }
@@ -1471,7 +1278,21 @@
 
             const handleDeletePublicTask = (taskId) => {
                 triggerConfirm("確定要撤回這份廣播功課嗎？這會同時從所有同學的清單中移除。", async () => {
-                    try { await deleteDoc(doc(db, "public_assignments", taskId)); triggerAlert("廣播功課已撤回"); } catch (e) { triggerAlert("撤回失敗"); }
+                    try { 
+                        await deleteDoc(doc(db, "public_assignments", taskId)); 
+                        
+                        const deletePromises = [];
+                        for (const u of users) {
+                            const dupQ = query(collection(db, "users", u.uid, "items"), where("publicRefId", "==", taskId));
+                            const snap = await getDocs(dupQ);
+                            snap.forEach(d => deletePromises.push(deleteDoc(d.ref)));
+                        }
+                        await Promise.all(deletePromises);
+
+                        triggerAlert("廣播功課已撤回並同步清理所有學生紀錄"); 
+                    } catch (e) { 
+                        triggerAlert("撤回失敗: " + e.message); 
+                    }
                 });
             };
             
@@ -1580,27 +1401,29 @@
                                                 {filteredUsers.map(u => {
                                                     const isAdm = u.email === ADMIN_EMAIL;
                                                     const isWhite = allowedEmails.includes(u.email);
+                                                    const isBlack = blacklistedEmails.includes(u.email);
                                                     const userClassesNames = (u.joinedClasses || []).map(code => { const cls = systemClasses.find(c => c.code === code); return cls ? cls.name : code; }).join(', ');
                                                     const onlineStatus = getUserStatus(u.lastSeen);
 
                                                     return (
-                                                        <tr key={u.uid} className="hover:bg-indigo-50/30 dark:hover:bg-slate-700/50 transition-colors group cursor-pointer" onClick={() => setSelectedUser(u)}>
+                                                        <tr key={u.uid} className={`hover:bg-indigo-50/30 dark:hover:bg-slate-700/50 transition-colors group cursor-pointer ${isBlack ? 'opacity-60' : ''}`} onClick={() => setSelectedUser(u)}>
                                                             <td className="px-6 py-4">
                                                                 <div className="flex items-center gap-3">
-                                                                    <div className={`relative w-9 h-9 rounded-full flex items-center justify-center font-bold text-white shadow-sm shrink-0 ${isAdm ? 'bg-purple-500' : isWhite ? 'bg-emerald-500' : 'bg-slate-400 dark:bg-slate-600'}`}>
+                                                                    <div className={`relative w-9 h-9 rounded-full flex items-center justify-center font-bold text-white shadow-sm shrink-0 ${isBlack ? 'bg-red-800' : isAdm ? 'bg-purple-500' : isWhite ? 'bg-emerald-500' : 'bg-slate-400 dark:bg-slate-600'}`}>
                                                                         {u.displayName?.[0]?.toUpperCase() || 'U'}
-                                                                        {onlineStatus === 'online' && <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white dark:border-slate-800 rounded-full"></span>}
-                                                                        {onlineStatus === 'idle' && <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-yellow-400 border-2 border-white dark:border-slate-800 rounded-full"></span>}
+                                                                        {!isBlack && onlineStatus === 'online' && <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white dark:border-slate-800 rounded-full"></span>}
+                                                                        {!isBlack && onlineStatus === 'idle' && <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-yellow-400 border-2 border-white dark:border-slate-800 rounded-full"></span>}
                                                                     </div>
                                                                     <div>
-                                                                        <div className="font-bold dark:text-white flex items-center gap-2">{u.displayName || '未命名'}</div>
+                                                                        <div className="font-bold dark:text-white flex items-center gap-2">{u.displayName || '未命名'} {isBlack && <Icon name="shield-ban" className="w-3 h-3 text-red-500"/>}</div>
                                                                         <div className="text-xs text-slate-400">{u.email}</div>
                                                                         {userClassesNames && <div className="text-[10px] text-indigo-500 dark:text-indigo-400 mt-1 truncate max-w-[150px]" title={userClassesNames}>班級: {userClassesNames}</div>}
                                                                     </div>
                                                                 </div>
                                                             </td>
                                                             <td className="px-6 py-4">
-                                                                {isAdm ? <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 text-[10px] font-bold">管理員</span> :
+                                                                {isBlack ? <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-[10px] font-bold">黑名單 (已封鎖)</span> :
+                                                                 isAdm ? <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 text-[10px] font-bold">管理員</span> :
                                                                  isWhite ? <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold">白名單</span> :
                                                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-bold">普通用戶</span>}
                                                             </td>
@@ -1647,7 +1470,18 @@
                                                 <button onClick={() => updateConfig('allowedEmails', arrayUnion(selectedUser.email))} className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 rounded-lg hover:bg-emerald-100 transition-colors flex items-center gap-1">➕ 加入白名單</button> :
                                                 <button onClick={() => updateConfig('allowedEmails', arrayRemove(selectedUser.email))} className="text-xs font-bold text-amber-600 bg-amber-50 dark:bg-amber-900/20 px-3 py-1.5 rounded-lg hover:bg-amber-100 transition-colors flex items-center gap-1">🚫 移出白名單</button>
                                              }
-                                             <button onClick={() => handleDeleteUser(selectedUser)} className="text-xs font-bold text-red-600 bg-red-50 dark:bg-red-900/20 px-3 py-1.5 rounded-lg hover:bg-red-100 transition-colors flex items-center gap-1"><Icon name="trash-2" className="w-3 h-3" /> 強制刪除帳號</button>
+
+                                             {!blacklistedEmails.includes(selectedUser.email) ? 
+                                                <button onClick={() => updateConfig('blacklistedEmails', arrayUnion(selectedUser.email))} className="text-xs font-bold text-red-600 bg-red-50 dark:bg-red-900/20 px-3 py-1.5 rounded-lg hover:bg-red-100 transition-colors flex items-center gap-1"><Icon name="shield-ban" className="w-3 h-3" /> 加入黑名單 (封鎖)</button> :
+                                                <button onClick={() => updateConfig('blacklistedEmails', arrayRemove(selectedUser.email))} className="text-xs font-bold text-green-600 bg-green-50 dark:bg-green-900/20 px-3 py-1.5 rounded-lg hover:bg-green-100 transition-colors flex items-center gap-1"><Icon name="shield-check" className="w-3 h-3" /> 解除黑名單</button>
+                                             }
+
+                                             {/* 【新增】強制同步時間表 */}
+                                             <button onClick={handlePushTimetable} className="text-xs font-bold text-indigo-600 bg-indigo-50 dark:text-indigo-400 dark:bg-indigo-900/30 px-3 py-1.5 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors flex items-center gap-1">
+                                                 <Icon name="send" className="w-3 h-3" /> 強制同步時間表
+                                             </button>
+
+                                             <button onClick={() => handleDeleteUser(selectedUser)} className="text-xs font-bold text-slate-500 bg-slate-200 dark:bg-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-300 transition-colors flex items-center gap-1 ml-auto"><Icon name="trash-2" className="w-3 h-3" /> 徹底刪除帳號</button>
                                          </div>
                                      </div>
                                      <div className="flex gap-4">
@@ -1766,6 +1600,48 @@
                                     </div>
                                 </div>
 
+                                {/* 黑名單系統設定 (NEW) */}
+                                <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden p-1">
+                                    <div className="p-5 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 flex justify-between items-center">
+                                            <h4 className="font-bold dark:text-white flex items-center gap-2"><Icon name="shield-ban" className="w-5 h-5 text-red-500"/> 黑名單系統</h4>
+                                            <label className="relative inline-flex items-center cursor-pointer">
+                                                <input type="checkbox" className="sr-only peer" checked={systemConfig?.blacklistEnabled || false} onChange={(e) => updateConfig('blacklistEnabled', e.target.checked)} />
+                                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                                                <span className="ml-3 text-sm font-medium text-slate-900 dark:text-slate-300">{systemConfig?.blacklistEnabled ? '已啟用' : '已停用'}</span>
+                                            </label>
+                                    </div>
+                                    <div className="p-5">
+                                            <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">當啟用黑名單模式時，下列清單中的電郵地址將被<strong>強制停權</strong>，無法登入使用。</p>
+                                            
+                                            <form onSubmit={handleAddBlacklist} className="flex gap-2 mb-4">
+                                                <input type="email" placeholder="輸入要封鎖的電郵地址..." value={newBlacklistEmail} onChange={e => setNewBlacklistEmail(e.target.value)} className="flex-1 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-red-500 outline-none" required />
+                                                <button type="submit" disabled={isSubmitting} className="bg-red-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-red-700 transition-colors flex items-center gap-2"><Icon name="ban" className="w-4 h-4"/> 封鎖</button>
+                                            </form>
+
+                                            <div className="max-h-60 overflow-y-auto border border-slate-100 dark:border-slate-700 rounded-xl">
+                                                {blacklistedEmails.length === 0 ? (
+                                                    <div className="p-8 text-center text-slate-400 text-sm">黑名單目前為空</div>
+                                                ) : (
+                                                    <table className="w-full text-left text-sm">
+                                                        <thead className="bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400">
+                                                            <tr><th className="px-4 py-2">被封鎖的電郵地址</th><th className="px-4 py-2 text-right">操作</th></tr>
+                                                        </thead>
+                                                        <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                                                            {blacklistedEmails.map(email => (
+                                                                <tr key={email} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                                                                    <td className="px-4 py-3 dark:text-slate-300">{email}</td>
+                                                                    <td className="px-4 py-3 text-right">
+                                                                        <button onClick={() => handleRemoveBlacklist(email)} className="text-slate-400 hover:text-green-500 font-bold">解除封鎖</button>
+                                                                    </td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                )}
+                                            </div>
+                                    </div>
+                                </div>
+
                                 <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden p-1">
                                     <div className="p-5 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50">
                                                 <h4 className="font-bold dark:text-white flex items-center gap-2"><Icon name="megaphone" className="w-5 h-5 text-amber-500"/> 系統跑馬燈公告</h4>
@@ -1786,15 +1662,14 @@
                                     <div className="p-5 space-y-4">
                                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                                     {[ { id: 'normal', icon: 'check-circle-2', title: '正常運作', colors: { border: 'border-green-500 dark:border-green-400', bg: 'bg-green-50 dark:bg-green-900/30', text: 'text-green-500 dark:text-green-400', textBold: 'text-green-700 dark:text-green-300', dot: 'bg-green-500' } }, { id: 'updating', icon: 'hammer', title: '網站更新', colors: { border: 'border-orange-500 dark:border-orange-400', bg: 'bg-orange-50 dark:bg-orange-900/30', text: 'text-orange-500 dark:text-orange-400', textBold: 'text-orange-700 dark:text-orange-300', dot: 'bg-orange-500' } }, { id: 'restructuring', icon: 'database', title: '資料重整', colors: { border: 'border-blue-500 dark:border-blue-400', bg: 'bg-blue-50 dark:bg-blue-900/30', text: 'text-blue-500 dark:text-blue-400', textBold: 'text-blue-700 dark:text-blue-300', dot: 'bg-blue-500' } } ].map(mode => (
-                                                        <button key={mode.id} onClick={() => updateConfig('maintenanceMode', mode.id)} className={`relative flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all group ${systemConfig?.maintenanceMode === mode.id ? `${mode.colors.border} ${mode.colors.bg}` : 'border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800'}`}>
-                                                            <Icon name={mode.icon} className={`w-8 h-8 mb-2 ${systemConfig?.maintenanceMode === mode.id ? mode.colors.text : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300'}`} />
-                                                            <span className={`font-bold text-sm ${systemConfig?.maintenanceMode === mode.id ? mode.colors.textBold : 'text-slate-600 dark:text-slate-400'}`}>{mode.title}</span>
-                                                            {systemConfig?.maintenanceMode === mode.id && <div className={`absolute top-2 right-2 w-2 h-2 rounded-full ${mode.colors.dot} animate-pulse`}></div>}
-                                                        </button>
-                                                    ))}
+                                                    <button key={mode.id} onClick={() => updateConfig('maintenanceMode', mode.id)} className={`relative flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all group ${systemConfig?.maintenanceMode === mode.id ? `${mode.colors.border} ${mode.colors.bg}` : 'border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800'}`}>
+                                                        <Icon name={mode.icon} className={`w-8 h-8 mb-2 ${systemConfig?.maintenanceMode === mode.id ? mode.colors.text : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300'}`} />
+                                                        <span className={`font-bold text-sm ${systemConfig?.maintenanceMode === mode.id ? mode.colors.textBold : 'text-slate-600 dark:text-slate-400'}`}>{mode.title}</span>
+                                                        {systemConfig?.maintenanceMode === mode.id && <div className={`absolute top-2 right-2 w-2 h-2 rounded-full ${mode.colors.dot} animate-pulse`}></div>}
+                                                    </button>
+                                                ))}
                                                 </div>
 
-                                                {/* NEW SECTION START: Maintenance Customization */}
                                                 <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700 space-y-3">
                                                     <label className="text-xs font-bold text-slate-500 dark:text-slate-400 block mb-2">維護頁面自定義內容</label>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -1819,797 +1694,10 @@
                                                          }} className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-indigo-700 transition-colors">儲存維護資訊</button>
                                                     </div>
                                                 </div>
-                                                {/* NEW SECTION END */}
                                     </div>
                                 </div>
                             </div>
                         )}
-                    </div>
-                </div>
-            );
-        }
-
-        // --- App Component (Restored) ---
-        function App() {
-            const [user, setUser] = useState(null);
-            const [authLoading, setAuthLoading] = useState(true);
-            const [configLoading, setConfigLoading] = useState(true); 
-            const [items, setItems] = useState([]);
-            const [timetableConfig, setTimetableConfig] = useState({ timeSlots: DEFAULT_TIME_SLOTS, schedule: DEFAULT_SCHEDULE });
-            const [subjects, setSubjects] = useState(DEFAULT_SUBJECTS);
-
-            const { auth, db, signOut, onAuthStateChanged, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs, setDoc, updateProfile, arrayUnion } = window.firebaseServices || {};
-
-            const [inputType, setInputType] = useState('homework');
-            const [subject, setSubject] = useState('中文');
-            const [description, setDescription] = useState('');
-            const [dueDate, setDueDate] = useState(''); 
-            const [selectedImage, setSelectedImage] = useState(null);
-
-            // Broadcast states
-            const [isBroadcast, setIsBroadcast] = useState(false);
-            const [targetClassInput, setTargetClassInput] = useState('全校');
-
-            const [viewMode, setViewMode] = useState('current'); 
-            const [appMode, setAppMode] = useState('personal'); // 'personal' | 'class'
-            const [viewLayout, setViewLayout] = useState('list'); 
-            const [calendarSelectedDate, setCalendarSelectedDate] = useState(null);
-
-            const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('isDarkMode') === 'true');
-            const [themeColor, setThemeColor] = useState(() => localStorage.getItem('themeColor') || 'indigo');
-            const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
-            
-            // New Layout State
-            const [layoutMode, setLayoutMode] = useState(() => localStorage.getItem('layoutMode') || 'normal');
-            const [customLayout, setCustomLayout] = useState(() => JSON.parse(localStorage.getItem('customLayout')) || { cards: true, timetable: true, input: true, list: true });
-
-            const t = THEME_CONFIG[themeColor] || THEME_CONFIG.indigo;
-
-            const [exitingIds, setExitingIds] = useState([]);
-            const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-            const [isSubjectManagerOpen, setIsSubjectManagerOpen] = useState(false);
-            
-            // Tutorial State (新增的狀態)
-            const [isTutorialOpen, setIsTutorialOpen] = useState(false);
-
-            const [systemConfig, setSystemConfig] = useState(null);
-            const [systemClasses, setSystemClasses] = useState([]);
-
-            const [filterSubject, setFilterSubject] = useState('全部');
-            const [sortOption, setSortOption] = useState('date_asc');
-            const [isListVisible, setIsListVisible] = useState(true);
-            const [editingItem, setEditingItem] = useState(null);
-            const [isAdmin, setIsAdmin] = useState(false);
-            const [notification, setNotification] = useState({ isOpen: false, type: 'alert', message: '', onConfirm: null });
-
-            const [showNameSetup, setShowNameSetup] = useState(false);
-            const [nameSetupLoading, setNameSetupLoading] = useState(false);
-
-            const [userProfile, setUserProfile] = useState(null);
-            const joinedClasses = userProfile?.joinedClasses || [];
-            const joinedClassesStr = joinedClasses.join(',');
-
-            const [isJoinClassOpen, setIsJoinClassOpen] = useState(false);
-            const [selectedClassBoard, setSelectedClassBoard] = useState(null);
-            const [publicTasks, setPublicTasks] = useState([]);
-
-            const [pageLoadTime] = useState(Date.now());
-            const fileInputRef = useRef(null);
-            const [currentTimetableDay, setCurrentTimetableDay] = useState(new Date().getDay() || 1); 
-
-            // v2.4 Quick View State
-            const [quickView, setQuickView] = useState({ isOpen: false, title: '', items: [] });
-
-            useEffect(() => { 
-                const loadingScreen = document.getElementById('loading-screen');
-                if (loadingScreen) {
-                    loadingScreen.classList.add('hidden-loader');
-                    setTimeout(() => loadingScreen.remove(), 500); // 移除 DOM 避免干擾
-                }
-                
-                if ("Notification" in window && Notification.permission === "default") Notification.requestPermission(); 
-            }, []);
-            
-            useEffect(() => { localStorage.setItem('isDarkMode', isDarkMode); if (isDarkMode) document.documentElement.classList.add('dark'); else document.documentElement.classList.remove('dark'); }, [isDarkMode]);
-            useEffect(() => localStorage.setItem('themeColor', themeColor), [themeColor]);
-            
-            // Persist layout settings
-            useEffect(() => {
-                localStorage.setItem('layoutMode', layoutMode);
-                localStorage.setItem('customLayout', JSON.stringify(customLayout));
-            }, [layoutMode, customLayout]);
-
-            useEffect(() => {
-                if(!user || !db) return;
-                updateDoc(doc(db, "users_public", user.uid), { lastSeen: serverTimestamp() }).catch(e=>{});
-                const interval = setInterval(() => {
-                     updateDoc(doc(db, "users_public", user.uid), { lastSeen: serverTimestamp() }).catch(e=>{});
-                }, 60000);
-                return () => clearInterval(interval);
-            }, [user, db]);
-
-            useEffect(() => {
-                if (!db) return;
-                const unsubConfig = onSnapshot(doc(db, "system_settings", "config"), (docSnap) => { setSystemConfig(docSnap.exists() ? docSnap.data() : null); setConfigLoading(false); }, (err) => { console.warn("Config err:", err); setConfigLoading(false); });
-                const unsubClasses = onSnapshot(doc(db, "system_settings", "classes"), (docSnap) => setSystemClasses(docSnap.exists() && docSnap.data().list ? docSnap.data().list : []), (err) => console.warn("Classes err:", err));
-                return () => { unsubConfig(); unsubClasses(); };
-            }, [db, user]);
-
-            useEffect(() => {
-                if (!window.firebaseServices) return;
-                const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-                    try {
-                        setUser(currentUser); setAuthLoading(false);
-                        if (currentUser) {
-                            const d = new Date(); d.setDate(d.getDate() + (d.getDay()===5?3:d.getDay()===6?2:1));
-                            setDueDate(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`); 
-                            setIsAuthModalOpen(false); setIsAdmin(currentUser.email === ADMIN_EMAIL);
-
-                            const unsubProfile = onSnapshot(doc(db, "users_public", currentUser.uid), async (docSnap) => {
-                                try {
-                                    if (docSnap.exists()) {
-                                        setUserProfile(docSnap.data());
-                                        if (!currentUser.displayName) setShowNameSetup(true);
-                                    } else {
-                                        if (!currentUser.displayName) setShowNameSetup(true);
-                                        else await setDoc(doc(db, "users_public", currentUser.uid), { email: currentUser.email, displayName: currentUser.displayName, joinedClasses: [], lastSeen: serverTimestamp() }, { merge: true });
-                                    }
-                                } catch (e) { console.warn("Profile inner err:", e); }
-                            }, (err) => console.warn("Profile err:", err));
-
-                            return () => unsubProfile();
-                        } else { 
-                            setItems([]); setIsAdmin(false); setShowNameSetup(false); setUserProfile(null); setTimetableConfig({ timeSlots: DEFAULT_TIME_SLOTS, schedule: DEFAULT_SCHEDULE }); setSubjects(DEFAULT_SUBJECTS);
-                        }
-                    } catch (e) { console.warn("Auth err:", e); }
-                });
-                return () => unsubscribe();
-            }, []);
-
-            // 新增: 處理首次登入自動跳出導覽的邏輯
-            useEffect(() => {
-                if (user && !authLoading) {
-                    const hideTut = localStorage.getItem('hideTutorial');
-                    if (hideTut !== 'true') {
-                        // 稍微延遲一點開啟，讓頁面先加載完成
-                        setTimeout(() => setIsTutorialOpen(true), 800);
-                    }
-                }
-            }, [user, authLoading]);
-
-            useEffect(() => {
-                if (!user || !db) return;
-                const unsubItems = onSnapshot(query(collection(db, "users", user.uid, "items"), orderBy("dueDate")), (snapshot) => setItems(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))), (err) => console.warn("Items err:", err));
-                const unsubTimetable = onSnapshot(doc(db, 'users', user.uid, 'settings', 'timetable'), (docSnap) => setTimetableConfig(docSnap.exists() && docSnap.data().timeSlots ? docSnap.data() : { timeSlots: DEFAULT_TIME_SLOTS, schedule: DEFAULT_SCHEDULE }), (err) => console.warn("Timetable err:", err));
-                const unsubSubjects = onSnapshot(doc(db, 'users', user.uid, 'settings', 'subjects'), (docSnap) => setSubjects(docSnap.exists() && docSnap.data().list ? docSnap.data().list : DEFAULT_SUBJECTS), (err) => console.warn("Subjects err:", err));
-                return () => { unsubItems(); unsubTimetable(); unsubSubjects(); };
-            }, [user, db]);
-
-            useEffect(() => {
-                const currentClasses = joinedClassesStr ? joinedClassesStr.split(',') : [];
-                if (currentClasses.length > 0 && !selectedClassBoard) {
-                    setSelectedClassBoard(currentClasses[0]);
-                } else if (currentClasses.length === 0) {
-                    setSelectedClassBoard(null);
-                }
-            }, [joinedClassesStr, selectedClassBoard]);
-
-            useEffect(() => {
-                if (!user || !db) return;
-                const q = query(collection(db, "public_assignments"), orderBy("createdAt", "desc"));
-                const unsubscribe = onSnapshot(q, (snapshot) => { 
-                    try {
-                        setPublicTasks(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-                        const currentClasses = joinedClassesStr ? joinedClassesStr.split(',') : [];
-
-                        snapshot.docChanges().forEach(async (change) => { 
-                            try {
-                                const publicData = change.doc.data(); const publicId = change.doc.id; 
-                                const target = publicData.targetClass || '全校';
-                                const isForMe = isAdmin || target === '全校' || currentClasses.includes(target); 
-
-                                if (change.type === "added" && isForMe) { 
-                                    const userItemsRef = collection(db, "users", user.uid, "items"); const dupQuery = query(userItemsRef, where("publicRefId", "==", publicId)); 
-                                    const dupSnapshot = await getDocs(dupQuery); 
-                                    if (dupSnapshot.empty) { 
-                                        await addDoc(userItemsRef, { ...publicData, publicRefId: publicId, completed: false, forceExpired: publicData.forceExpired || false }); 
-                                        const createdTime = publicData.createdAt ? new Date(publicData.createdAt).getTime() : 0;
-                                        if (createdTime > pageLoadTime && "Notification" in window && Notification.permission === "granted") new Notification(`📢 新廣播任務 (${target})`, { body: `[${publicData.subject}] ${publicData.description}` });
-                                        else if (createdTime > pageLoadTime) triggerAlert(`收到新功課：[${publicData.subject || '其他'}] ${publicData.description}`); 
-                                    } 
-                                } 
-                                if (change.type === "removed") { 
-                                    const dupSnapshot = await getDocs(query(collection(db, "users", user.uid, "items"), where("publicRefId", "==", publicId))); 
-                                    for (const docSnap of dupSnapshot.docs) await deleteDoc(docSnap.ref); 
-                                } 
-                                if (change.type === "modified") { 
-                                    const dupSnapshot = await getDocs(query(collection(db, "users", user.uid, "items"), where("publicRefId", "==", publicId))); 
-                                    for (const docSnap of dupSnapshot.docs) await updateDoc(docSnap.ref, { forceExpired: publicData.forceExpired === true }); 
-                                } 
-                            } catch (e) { console.warn("Task process err:", e); }
-                        }); 
-                    } catch (e) { console.warn("Public tasks wrapper err:", e); }
-                }, (err) => console.warn("Public tasks err:", err)); 
-                return () => unsubscribe(); 
-            }, [user, db, joinedClassesStr, pageLoadTime, isAdmin]);
-
-            const triggerAlert = (message) => setNotification({ isOpen: true, type: 'alert', message, onConfirm: null });
-            const triggerConfirm = (message, onConfirmAction) => setNotification({ isOpen: true, type: 'confirm', message, onConfirm: onConfirmAction });
-            const closeNotification = () => setNotification(prev => ({ ...prev, isOpen: false }));
-            const handleNotificationConfirm = () => { if (notification.onConfirm) notification.onConfirm(); closeNotification(); };
-            const handleFilterChange = (f) => { setIsListVisible(false); setTimeout(() => { setFilterSubject(f); setIsListVisible(true); }, 200); };
-            const handleSortChange = (newSort) => { setIsListVisible(false); setTimeout(() => { setSortOption(newSort); setIsListVisible(true); }, 200); };
-            const isGuest = !user;
-
-            const handleNameSetupSave = async (name) => { 
-                if (!user) return; setNameSetupLoading(true); 
-                try { await updateProfile(user, { displayName: name }); await setDoc(doc(db, "users_public", user.uid), { email: user.email, displayName: name, lastSeen: serverTimestamp() }, { merge: true }); setShowNameSetup(false); triggerAlert(`歡迎, ${name}!`); } 
-                catch (e) { triggerAlert("設定失敗，請重試"); } finally { setNameSetupLoading(false); } 
-            };
-
-            const handleJoinClassSubmit = async (code, name) => {
-                try {
-                    await updateDoc(doc(db, "users_public", user.uid), { joinedClasses: arrayUnion(code) });
-                    triggerAlert(`成功加入班級：${name}`);
-                    setIsJoinClassOpen(false);
-                } catch(e) { triggerAlert("加入失敗，請重試"); }
-            };
-
-            const handleSubmit = async (e) => { 
-                e.preventDefault(); if (isGuest) { setIsAuthModalOpen(true); return; }
-                if ((!description.trim() && !selectedImage) || !dueDate) { triggerAlert("請輸入功課內容！"); return; }
-                
-                const performSubmit = async () => {
-                    const newItem = { type: inputType, subject, description: description.trim(), image: selectedImage, dueDate, completed: false, createdAt: new Date().toISOString() }; 
-                    try { 
-                        if (isBroadcast && isAdmin) { 
-                            newItem.senderName = user.displayName || '老師'; newItem.targetClass = targetClassInput;
-                            await addDoc(collection(db, "public_assignments"), newItem); 
-                            const className = targetClassInput === '全校' ? '全校' : (systemClasses.find(c => c.code === targetClassInput)?.name || targetClassInput);
-                            triggerAlert(`已發放功課給 ${className}！`); 
-                        } else { await addDoc(collection(db, "users", user.uid, "items"), newItem); triggerAlert("已新增紀錄"); } 
-                        setDescription(''); setSelectedImage(null); if (fileInputRef.current) fileInputRef.current.value = ""; setAppMode('personal'); setIsBroadcast(false); setTargetClassInput('全校');
-                    } catch (error) { triggerAlert("新增失敗"); } 
-                };
-
-                if (isBroadcast && isAdmin) {
-                    const targetName = targetClassInput === '全校' ? '全校' : (systemClasses.find(c => c.code === targetClassInput)?.name || targetClassInput);
-                    triggerConfirm(`確定要發送廣播功課給【${targetName}】嗎？`, performSubmit);
-                } else {
-                    performSubmit();
-                }
-            };
-
-            const handleToggle = (id, currentCompletedStatus) => { 
-                if (isGuest) { setIsAuthModalOpen(true); return; }
-                if (!currentCompletedStatus) { 
-                    setExitingIds(prev => [...prev, id]); setTimeout(async () => { try { await updateDoc(doc(db, "users", user.uid, "items", id), { completed: true }); } catch (e) {} setExitingIds(prev => prev.filter(eid => eid !== id)); }, 500); 
-                } else { updateDoc(doc(db, "users", user.uid, "items", id), { completed: false }).catch(()=>{}); } 
-            };
-
-            const handleUpdateItem = async (id, updatedData) => { if (isGuest) return; try { await updateDoc(doc(db, "users", user.uid, "items", id), updatedData); triggerAlert("更新成功！"); } catch (e) { triggerAlert("更新失敗"); throw e; } };
-            const deleteItem = (id) => { if (isGuest) return; triggerConfirm('確定要刪除這項紀錄？', async () => { try { await deleteDoc(doc(db, "users", user.uid, "items", id)); } catch (e) { triggerAlert("刪除失敗"); } }); };
-            const deletePublicItem = (publicId, privateId) => { if (isGuest) return; triggerConfirm('⚠️ 確定要刪除全班的這份功課？', async () => { try { await deleteDoc(doc(db, "public_assignments", publicId)); if (privateId) await deleteDoc(doc(db, "users", user.uid, "items", privateId)); triggerAlert("已刪除"); } catch (e) { triggerAlert("刪除失敗"); } }); };
-            const handleForceExpire = (publicId, currentStatus) => { if (isGuest) return; const action = currentStatus ? "取消過期" : "標記為過期"; triggerConfirm(`確定要將此功課${action}？(全班都會更新)`, async () => { try { await updateDoc(doc(db, "public_assignments", publicId), { forceExpired: !currentStatus }); triggerAlert(`已${action}`); } catch (e) { triggerAlert("操作失敗"); } }); };
-
-            const saveTimetableConfig = async (newConfig) => { if (!user) return; try { await setDoc(doc(db, 'users', user.uid, 'settings', 'timetable'), JSON.parse(JSON.stringify(newConfig))); triggerAlert("時間表已儲存"); setViewMode('timetable'); } catch (e) { triggerAlert("儲存失敗"); } };
-            const saveSubjects = async (newSubjects) => { if (!user) return; try { await setDoc(doc(db, 'users', user.uid, 'settings', 'subjects'), { list: JSON.parse(JSON.stringify(newSubjects)) }); triggerAlert("科目已更新"); } catch (e) { triggerAlert("儲存失敗"); } };
-
-            const handleLogout = () => { triggerConfirm("確定要登出系統嗎？", () => window.firebaseServices.signOut(auth)); };
-
-            const activeItems = items.filter(i => !i.completed && !i.forceExpired);
-            const getDaysRemaining = (dString) => { const today = new Date(); today.setHours(0,0,0,0); const due = new Date(dString); due.setHours(0,0,0,0); return Math.ceil((due - today) / 86400000); };
-
-            const displayedItems = items.filter(item => {
-                if (viewMode === 'history' && !item.completed) return false;
-                if (viewMode === 'current' && item.completed) return false;
-                
-                if (filterSubject !== '全部' && (item.subject || '其他') !== filterSubject) return false;
-                if (calendarSelectedDate && viewLayout === 'calendar' && item.dueDate !== calendarSelectedDate) return false;
-                return true;
-            }).sort((a, b) => {
-                const dateA = new Date(a.dueDate); const dateB = new Date(b.dueDate);
-                if (a.forceExpired !== b.forceExpired) return a.forceExpired ? 1 : -1;
-                return sortOption === 'date_desc' ? dateB - dateA : dateA - dateB;
-            });
-
-            // v2.4 Quick View Logic
-            const openQuickView = (type) => {
-                const today = new Date();
-                const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
-                const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-                const tomorrowStr = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
-
-                let title = '';
-                let filteredItems = [];
-
-                if (type === 'today') {
-                    title = '今天到期的功課';
-                    filteredItems = activeItems.filter(i => i.dueDate === todayStr);
-                } else if (type === 'tomorrow') {
-                    title = '明天到期的功課';
-                    filteredItems = activeItems.filter(i => i.dueDate === tomorrowStr);
-                } else if (type === 'future') {
-                    title = '日後要交的功課';
-                    filteredItems = activeItems.filter(i => i.dueDate > tomorrowStr);
-                } else if (type === 'test') {
-                    title = '默書測驗考試';
-                    filteredItems = activeItems.filter(i => i.type !== 'homework');
-                }
-                setQuickView({ isOpen: true, title, items: filteredItems });
-            };
-
-            // v2.4 Counts for badges
-            const getCounts = () => {
-                const today = new Date();
-                const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
-                const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-                const tomorrowStr = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
-                
-                return {
-                    today: activeItems.filter(i => i.dueDate === todayStr).length,
-                    tomorrow: activeItems.filter(i => i.dueDate === tomorrowStr).length,
-                    future: activeItems.filter(i => i.dueDate > tomorrowStr).length,
-                    test: activeItems.filter(i => i.type !== 'homework').length
-                };
-            };
-            const counts = getCounts();
-
-            // Helper to check visibility based on layout settings
-            const isVisible = (componentName) => {
-                if (viewMode === 'history') {
-                    // In history mode, hide input/widgets, just show list by default
-                    if (componentName === 'list') return true;
-                    return false;
-                }
-                
-                if (layoutMode === 'normal') return true;
-                if (layoutMode === 'minimal') {
-                    if (componentName === 'cards' || componentName === 'list') return true;
-                    return false;
-                }
-                if (layoutMode === 'custom') {
-                    return customLayout[componentName];
-                }
-                return true;
-            };
-
-            const maintenanceMode = systemConfig?.maintenanceMode || 'normal';
-            // NEW: Whitelist logic
-            const whitelistEnabled = systemConfig?.whitelistEnabled || false;
-            const isWhitelisted = user && systemConfig?.allowedEmails?.includes(user.email);
-
-            // 觸發導覽功能 (切換回主畫面後開啟)
-            const startTutorial = () => {
-                setViewMode('current');
-                setAppMode('personal');
-                // 延遲一點開啟，讓 React 有時間渲染 Current / Personal 視圖的 DOM (確保 ID 存在)
-                setTimeout(() => {
-                    setIsTutorialOpen(true);
-                }, 100);
-            };
-
-            if (maintenanceMode !== 'normal' && !isAdmin && (!user || !systemConfig?.allowedEmails?.includes(user.email))) {
-                return ( 
-                    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
-                        <BlockScreen 
-                            type={maintenanceMode} 
-                            estimatedTime={systemConfig?.estimatedTime} 
-                            customMessage={systemConfig?.message} 
-                            customTitle={systemConfig?.maintenanceTitle} 
-                            onLogin={()=>setIsAuthModalOpen(true)} 
-                            user={user} 
-                        />
-                        <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} triggerAlert={triggerAlert} />
-                    </div> 
-                );
-            }
-
-            // NEW: Explicit Whitelist Block Screen
-            if (whitelistEnabled && !isAdmin && !isWhitelisted) {
-                return ( 
-                    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
-                        <BlockScreen 
-                            type="whitelist_blocked" 
-                            onLogin={()=>setIsAuthModalOpen(true)} 
-                            user={user} 
-                        />
-                        <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} triggerAlert={triggerAlert} />
-                    </div> 
-                );
-            }
-
-            return (
-                <div className={`min-h-screen transition-colors duration-500 bg-slate-50 dark:bg-slate-900 font-sans relative overflow-hidden p-4 sm:p-6 md:p-8 ${systemConfig?.announcementText ? 'pt-14 sm:pt-16 md:pt-20' : ''}`}>
-                    <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-                        <div className={`absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full mix-blend-multiply filter blur-[100px] opacity-20 dark:opacity-10 animate-blob ${t.bg}`}></div>
-                        <div className={`absolute top-[20%] -right-[10%] w-[40%] h-[60%] rounded-full mix-blend-multiply filter blur-[100px] opacity-20 dark:opacity-10 animate-blob animation-delay-2000 bg-purple-500`}></div>
-                    </div>
-
-                    {systemConfig?.announcementText && (
-                        <div className="fixed top-0 left-0 w-full bg-gradient-to-r from-amber-400 to-orange-500 text-white overflow-hidden shadow-md z-40 flex items-center h-10 sm:h-12">
-                            <div className="px-3 sm:px-4 h-full bg-amber-500 z-20 shrink-0 flex items-center gap-2 font-bold text-xs sm:text-sm shadow-[5px_0_15px_rgba(245,158,11,0.5)]"><Icon name="megaphone" className="w-4 h-4 animate-bounce" /> 最新公告</div>
-                            <div className="flex-1 overflow-hidden h-full flex items-center group"><div className="animate-marquee whitespace-nowrap text-xs sm:text-sm font-bold tracking-wider">{systemConfig.announcementText}</div></div>
-                        </div>
-                    )}
-
-                    <div className={`max-w-[1200px] mx-auto relative z-10 transition-all duration-500 ${isGuest ? 'guest-blur' : ''}`}>
-                        {/* v2.4 Responsive Header */}
-                        <div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-4 max-w-3xl mx-auto bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl p-4 sm:p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700">
-                            <div className="w-full md:w-auto text-center md:text-left min-w-0" id="header-spotlight">
-                                <h1 className={`text-xl sm:text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r ${t.gradient} flex items-center justify-center md:justify-start gap-2 truncate`}>
-                                    {viewMode === 'current' ? (<><Icon name="graduation-cap" className={`w-6 h-6 sm:w-8 sm:h-8 ${t.text}`} />學生小幫手</>) : viewMode === 'admin' ? (<><Icon name="shield-alert" className={`w-6 h-6 sm:w-8 sm:h-8 text-blue-600`} />管理後台</>) : <><Icon name="history" className={`w-6 h-6 sm:w-8 sm:h-8 ${t.text}`} /> {viewMode === 'timetable' ? '上課時間表' : '完成紀錄'}</>}
-                                </h1>
-                                <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm font-medium mt-1">{new Date().toLocaleDateString('zh-HK', { year: 'numeric', month: 'numeric', day: 'numeric', weekday: 'short' })}</p>
-                            </div>
-                            <div className="flex gap-2 flex-wrap justify-center md:justify-end shrink-0 w-full md:w-auto">
-                                {viewMode === 'current' && appMode === 'personal' && (
-                                    <button id="view-toggle-spotlight" onClick={() => setViewLayout(viewLayout === 'list' ? 'calendar' : 'list')} className="px-3 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold text-xs hover:bg-slate-50 dark:hover:bg-slate-700 transition flex items-center gap-2">
-                                            <Icon name={viewLayout === 'list' ? "calendar" : "list"} className="w-4 h-4" />
-                                            <span className="hidden sm:inline">{viewLayout === 'list' ? '日曆模式' : '列表模式'}</span>
-                                    </button>
-                                )}
-
-                                {viewMode === 'timetable' && (
-                                    <button onClick={() => setViewMode('timetable_edit')} className={`px-3 py-2 rounded-xl font-bold text-xs bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 shadow-sm transition-all flex items-center gap-2`}><Icon name="edit" className="w-4 h-4" /><span className="hidden sm:inline">編輯</span></button>
-                                )}
-
-                                <button id="timetable-btn-spotlight" onClick={() => !user ? setIsAuthModalOpen(true) : setViewMode('timetable')} className={`px-3 py-2 rounded-xl font-bold text-xs transition flex items-center gap-2 ${viewMode === 'timetable' || viewMode === 'timetable_edit' ? 'bg-orange-500 text-white' : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50'}`}><Icon name="calendar-days" className="w-4 h-4" /><span className="hidden sm:inline">時間表</span></button>
-
-                                {isAdmin && (
-                                    <button onClick={() => setViewMode('admin')} className={`px-3 py-2 rounded-xl font-bold text-xs transition flex items-center gap-2 ${viewMode === 'admin' ? 'bg-slate-800 text-white' : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'}`}><Icon name="shield-alert" className="w-4 h-4" /><span className="hidden sm:inline">後台</span></button>
-                                )}
-
-                                <button id="history-btn-spotlight" onClick={() => !user ? setIsAuthModalOpen(true) : setViewMode(viewMode === 'current' ? 'history' : 'current')} className={`px-3 py-2 rounded-xl font-bold text-xs transition flex items-center gap-2 ${viewMode === 'history' ? 'bg-indigo-600 text-white shadow-md' : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50'}`}>
-                                    <Icon name={viewMode === 'current' ? "history" : "arrow-left"} className="w-4 h-4" />
-                                    <span>{viewMode === 'current' ? '歷史紀錄' : '返回列表'}</span>
-                                </button>
-
-                                {user && (
-                                    <div id="settings-spotlight" className="flex bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-1">
-                                            {/* 新增: 重新開啟導覽的按鈕，綁定 startTutorial */}
-                                            <button onClick={startTutorial} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 transition" title="使用導覽"><Icon name="help-circle" className="w-4 h-4" /></button>
-                                            <div className="w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
-
-                                            <button onClick={() => setIsPreferencesOpen(true)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 transition"><Icon name="palette" className="w-4 h-4" /></button>
-                                            <div className="w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
-                                            <button onClick={() => setIsSubjectManagerOpen(true)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 transition"><Icon name="settings" className="w-4 h-4" /></button>
-                                            <div className="w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
-                                            <button onClick={handleLogout} className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 text-slate-500 hover:text-red-500 transition"><Icon name="log-out" className="w-4 h-4" /></button>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        {viewMode === 'admin' ? ( <AdminConsole db={db} systemConfig={systemConfig} systemClasses={systemClasses} onBack={() => setViewMode('current')} subjects={subjects} triggerAlert={triggerAlert} triggerConfirm={triggerConfirm} /> ) : 
-                         viewMode === 'timetable' ? ( <div className="max-w-3xl mx-auto"><Timetable currentDay={currentTimetableDay} config={timetableConfig} onDayChange={setCurrentTimetableDay} subjects={subjects} /></div> ) : 
-                         viewMode === 'timetable_edit' ? ( <TimetableEditor initialConfig={timetableConfig} onSave={saveTimetableConfig} onCancel={() => setViewMode('timetable')} subjects={subjects} triggerConfirm={triggerConfirm} /> ) : (
-                        <div className="max-w-3xl mx-auto">
-
-                            {/* --- 雙模式切換器 --- */}
-                            {viewMode === 'current' && (
-                                <div id="mode-toggle-spotlight" className="flex bg-slate-200/50 dark:bg-slate-800/50 p-1.5 rounded-2xl w-full sm:w-fit mx-auto mb-6 shadow-inner border border-white/20 dark:border-slate-700">
-                                    <button onClick={() => setAppMode('personal')} className={`flex-1 sm:flex-none px-8 py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${appMode === 'personal' ? `bg-white dark:bg-slate-700 shadow-sm ${t.text}` : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>
-                                        <Icon name="user" className="w-4 h-4" /> 個人模式
-                                    </button>
-                                    <button onClick={() => setAppMode('class')} className={`flex-1 sm:flex-none px-8 py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${appMode === 'class' ? `bg-white dark:bg-slate-700 shadow-sm ${t.text}` : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>
-                                        <Icon name="school" className="w-4 h-4" /> 班級模式
-                                    </button>
-                                </div>
-                            )}
-
-                            {/* v2.4 Feature Cards */}
-                            {viewMode === 'current' && isVisible('cards') && (
-                                <div id="quick-cards-spotlight" className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6 animate-fadeIn">
-                                    <button onClick={() => openQuickView('today')} className="relative overflow-hidden bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-4 rounded-2xl flex flex-col items-start justify-center gap-1 hover:shadow-md hover:-translate-y-1 transition-all group">
-                                        <div className="absolute -right-3 -top-3 text-red-50 dark:text-red-900/20 group-hover:scale-110 transition-transform"><Icon name="calendar-clock" className="w-20 h-20" /></div>
-                                        <div className="text-red-500 font-black text-3xl z-10">{counts.today}</div>
-                                        <div className="text-slate-500 dark:text-slate-400 text-xs font-bold z-10 flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>今日到期</div>
-                                    </button>
-                                    <button onClick={() => openQuickView('tomorrow')} className="relative overflow-hidden bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-4 rounded-2xl flex flex-col items-start justify-center gap-1 hover:shadow-md hover:-translate-y-1 transition-all group">
-                                        <div className="absolute -right-3 -top-3 text-orange-50 dark:text-orange-900/20 group-hover:scale-110 transition-transform"><Icon name="sun" className="w-20 h-20" /></div>
-                                        <div className="text-orange-500 font-black text-3xl z-10">{counts.tomorrow}</div>
-                                        <div className="text-slate-500 dark:text-slate-400 text-xs font-bold z-10 flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-orange-500"></div>明日到期</div>
-                                    </button>
-                                    <button onClick={() => openQuickView('future')} className="relative overflow-hidden bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-4 rounded-2xl flex flex-col items-start justify-center gap-1 hover:shadow-md hover:-translate-y-1 transition-all group">
-                                        <div className="absolute -right-3 -top-3 text-emerald-50 dark:text-emerald-900/20 group-hover:scale-110 transition-transform"><Icon name="calendar-range" className="w-20 h-20" /></div>
-                                        <div className="text-emerald-500 font-black text-3xl z-10">{counts.future}</div>
-                                        <div className="text-slate-500 dark:text-slate-400 text-xs font-bold z-10 flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>日後要交</div>
-                                    </button>
-                                    <button onClick={() => openQuickView('test')} className="relative overflow-hidden bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-4 rounded-2xl flex flex-col items-start justify-center gap-1 hover:shadow-md hover:-translate-y-1 transition-all group">
-                                        <div className="absolute -right-3 -top-3 text-violet-50 dark:text-violet-900/20 group-hover:scale-110 transition-transform"><Icon name="file-question" className="w-20 h-20" /></div>
-                                        <div className="text-violet-500 font-black text-3xl z-10">{counts.test}</div>
-                                        <div className="text-slate-500 dark:text-slate-400 text-xs font-bold z-10 flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-violet-500"></div>默書測驗</div>
-                                    </button>
-                                </div>
-                            )}
-
-                            {/* v2.4 Live Dashboard Widget (Clickable & Flowing) */}
-                            {viewMode === 'current' && isVisible('timetable') && (
-                                <div id="live-dashboard-spotlight">
-                                    <CurrentLessonWidget config={timetableConfig} t={t} onClick={() => setViewMode('timetable')} />
-                                </div>
-                            )}
-
-                            {/* Fixed History View Logic: Allows rendering in history mode */}
-                            {(viewMode === 'current' || viewMode === 'history') && appMode === 'personal' && (
-                                <>
-                                    {isVisible('input') && (
-                                        <div id="add-task-spotlight" className={`relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl shadow-lg p-5 sm:p-8 mb-10 border border-slate-100 dark:border-slate-700 z-20`}>
-                                            <div className="flex bg-slate-100 dark:bg-slate-900/50 p-1.5 rounded-xl mb-6">
-                                                <button onClick={() => setInputType('homework')} className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-all ${inputType === 'homework' ? `bg-white dark:bg-slate-700 shadow-sm ${t.text}` : 'text-slate-500 dark:text-slate-400'}`}><Icon name="book-open" className="w-4 h-4" /> 新增功課</button>
-                                                <button onClick={() => setInputType('assessment')} className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-all ${inputType === 'assessment' ? `bg-white dark:bg-slate-700 shadow-sm text-purple-600 dark:text-purple-400` : 'text-slate-500 dark:text-slate-400'}`}><Icon name="file-question" className="w-4 h-4" /> 新增測驗</button>
-                                            </div>
-                                            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                                                <div id="subject-selector-spotlight" className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                                                    {subjects.map(sub => (
-                                                        <button 
-                                                            key={sub.name} 
-                                                            type="button" 
-                                                            onClick={() => setSubject(sub.name)} 
-                                                            className={`flex-shrink-0 px-4 py-2 rounded-xl text-xs font-bold border-2 transition-all shadow-sm ${
-                                                                subject === sub.name 
-                                                                ? `${t.border} ${t.lightBg} ${t.text} scale-105` 
-                                                                : `${sub.color} opacity-60 hover:opacity-100 grayscale hover:grayscale-0`
-                                                            }`}
-                                                        >
-                                                            {sub.name}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                    <div className="md:col-span-2 space-y-3">
-                                                        <textarea placeholder={inputType === 'homework' ? "打返功課內容..." : "輸入範圍 (例如: 第3課 / P.20-25)"} value={description} onChange={(e) => setDescription(e.target.value)} rows="2" className={`w-full min-h-[100px] rounded-2xl border-2 border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 focus:bg-white dark:focus:bg-slate-800 focus:${t.border} focus:ring-4 focus:${t.ring} transition-all p-4 text-slate-700 dark:text-slate-100 placeholder-slate-400 outline-none resize-none text-base`} />
-                                                    </div>
-                                                    <div className="flex flex-col gap-3 md:col-span-1">
-                                                        <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className={`w-full h-12 rounded-xl border-2 border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 focus:bg-white dark:focus:bg-slate-800 focus:${t.border} focus:ring-4 focus:${t.ring} transition-all px-4 text-slate-700 dark:text-slate-100 font-medium outline-none`} required />
-                                                        <button type="submit" className={`w-full h-12 text-white font-bold rounded-xl transition-all shadow-lg active:scale-95 text-base flex items-center justify-center gap-2 ${t.bg} ${t.shadow}`}><Icon name="plus" className="w-5 h-5" />{isAdmin && isBroadcast ? '廣播發放' : '加入清單'}</button>
-                                                    </div>
-                                                </div>
-                                                {isAdmin && (
-                                                    <div className="mt-2 pt-4 border-t border-slate-100 dark:border-slate-700">
-                                                        <label className="flex items-center cursor-pointer mb-2">
-                                                            <input type="checkbox" className="sr-only peer" checked={isBroadcast} onChange={e => setIsBroadcast(e.target.checked)} />
-                                                            <div className={`w-11 h-6 bg-slate-200 dark:bg-slate-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${t.bg} peer-checked:bg-orange-500 relative`}></div>
-                                                            <span className="ml-3 text-sm font-bold text-slate-600 dark:text-slate-300">📢 作為管理員廣播發放</span>
-                                                        </label>
-                                                        {isBroadcast && (
-                                                            <div className="mt-3 animate-fadeIn">
-                                                                <label className="text-xs font-bold text-slate-400 mb-2 block">選擇發送對象</label>
-                                                                <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
-                                                                    <button type="button" onClick={() => setTargetClassInput('全校')} className={`p-3 rounded-xl border-2 text-left font-bold text-sm transition-all flex items-center gap-2 ${targetClassInput === '全校' ? 'border-orange-500 bg-orange-50 text-orange-600' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500'}`}>
-                                                                        <Icon name="users" className="w-4 h-4" /> 全校廣播
-                                                                    </button>
-                                                                    {systemClasses.map(c => (
-                                                                        <button key={c.code} type="button" onClick={() => setTargetClassInput(c.code)} className={`p-3 rounded-xl border-2 text-left font-bold text-sm transition-all flex items-center gap-2 ${targetClassInput === c.code ? 'border-indigo-500 bg-indigo-50 text-indigo-600' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500'}`}>
-                                                                            <Icon name="school" className="w-4 h-4" /> {c.name}
-                                                                        </button>
-                                                                    ))}
-                                                                </div>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                )}
-                                            </form>
-                                        </div>
-                                    )}
-
-                                    {isVisible('list') && (
-                                        <>
-                                            {viewLayout === 'calendar' && <CalendarWidget items={activeItems} selectedDate={calendarSelectedDate} onSelectDate={setCalendarSelectedDate} t={t} />}
-
-                                            <div id="filter-sort-spotlight" className="flex flex-col sm:flex-row justify-between items-center gap-3 mb-6 relative">
-                                                <div className={`flex items-center gap-2 w-full sm:w-auto overflow-x-auto scrollbar-hide pb-1 transition-opacity duration-300 ${!isListVisible ? 'opacity-50' : 'opacity-100'}`}>
-                                                    <span className="text-slate-400 text-xs font-bold whitespace-nowrap flex items-center gap-1"><Icon name="filter" className="w-3 h-3" />篩選:</span>
-                                                    <button onClick={() => handleFilterChange('全部')} className={`flex-shrink-0 px-2.5 py-1 rounded text-[10px] font-bold border transition-all ${filterSubject === '全部' ? 'bg-slate-800 dark:bg-slate-600 text-white border-slate-800 dark:border-slate-600' : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'}`}>全部</button>
-                                                    {subjects.map(sub => (
-                                                        <button key={sub.name} onClick={() => handleFilterChange(sub.name)} className={`flex-shrink-0 px-2.5 py-1 rounded text-[10px] font-bold border transition-all ${filterSubject === sub.name ? `${t.border} ${t.lightBg} ${t.text}` : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'}`}>{sub.name}</button>
-                                                    ))}
-                                                </div>
-                                                <div className="flex items-center gap-2 w-full sm:w-auto z-30">
-                                                    <span className="text-slate-400 text-xs font-bold whitespace-nowrap flex items-center gap-1"><Icon name="arrow-up-down" className="w-3 h-3" />排序:</span>
-                                                    <CustomDropdown value={sortOption} onChange={handleSortChange} options={[{ value: 'date_asc', label: '日期 (趕急先)' }, { value: 'date_desc', label: '日期 (長遠先)' }]} />
-                                                </div>
-                                            </div>
-
-                                            <div id="task-list-spotlight" className={`space-y-4 pb-20 transition-opacity duration-300 ${!isListVisible ? 'opacity-0' : 'opacity-100'}`}>
-                                                {displayedItems.length === 0 ? (
-                                                    <div className="text-center py-20">
-                                                        <div className={`inline-flex p-6 rounded-full ${t.lightBg} mb-4`}><Icon name="sparkles" className={`w-12 h-12 ${t.text}`} /></div>
-                                                        <h3 className="text-xl font-bold text-slate-700 dark:text-slate-300">{calendarSelectedDate ? '這天沒有任何任務' : (viewMode === 'history' ? '沒有已完成的紀錄' : '太好了！任務清單空空如也')}</h3>
-                                                    </div>
-                                                ) : displayedItems.map((item, index) => {
-                                                    const isExiting = exitingIds.includes(item.id);
-                                                    const isCompleted = item.completed || isExiting;
-                                                    const dl = getDaysRemaining(item.dueDate);
-                                                    let statusNode = <span className="text-emerald-600 bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 px-2 py-0.5 rounded text-xs font-bold">{dl} 天後</span>;
-                                                    if(dl < 0) statusNode = <span className="text-red-600 bg-red-100 dark:bg-red-900/30 dark:text-red-400 px-2 py-0.5 rounded text-xs font-bold">過期 {Math.abs(dl)} 天</span>;
-                                                    if(dl === 0) statusNode = <span className="text-orange-600 bg-orange-100 dark:bg-orange-900/30 dark:text-orange-400 px-2 py-0.5 rounded text-xs font-bold animate-pulse">今日到期!</span>;
-                                                    const subjectStyle = subjects.find(s => s.name === item.subject)?.color || 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600';
-
-                                                    return (
-                                                        <div key={item.id} style={{ animationDelay: `${index * 0.05}s` }} className={`animate-item relative bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 transition-all ${isExiting ? 'scale-95 opacity-0' : ''}`}>
-                                                            <div className="flex items-start gap-4">
-                                                                <button onClick={() => handleToggle(item.id, item.completed)} className={`mt-1 w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${isCompleted ? 'bg-emerald-500 border-emerald-500 text-white scale-110' : 'border-slate-300 dark:border-slate-600 hover:border-emerald-400'}`}>
-                                                                    <Icon name="check" className={`w-4 h-4 ${isCompleted ? 'opacity-100' : 'opacity-0'}`} />
-                                                                </button>
-                                                                <div className="flex-1 min-w-0">
-                                                                    <div className="flex justify-between items-start mb-2">
-                                                                        <div className="flex gap-2 items-center flex-wrap">
-                                                                            <span className={`text-[10px] font-bold px-2 py-1 rounded border ${subjectStyle}`}>{item.subject || '其他'}</span>
-                                                                            {item.publicRefId && <span className={`text-[10px] font-bold px-2 py-1 rounded ${t.lightBg} ${t.text}`}>廣播</span>}
-                                                                            {item.type !== 'homework' && <span className="text-[10px] font-bold px-2 py-1 rounded bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">測驗</span>}
-                                                                        </div>
-                                                                        {statusNode}
-                                                                    </div>
-                                                                    <div className={`text-base font-bold mb-2 break-words ${isCompleted ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100'}`}>{item.description}</div>
-                                                                    {item.image && <div className="mt-2"><img src={item.image} alt="附件" className={`max-h-32 rounded-lg border border-slate-200 dark:border-slate-700 object-cover ${isCompleted ? 'opacity-50 grayscale' : ''}`} /></div>}
-                                                                    <div className="flex items-center justify-between mt-2">
-                                                                        <div className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1 font-mono"><Icon name="calendar" className="w-3 h-3"/> {item.dueDate}</div>
-                                                                        <div className="flex gap-2">
-                                                                            {!item.forceExpired && <button onClick={() => setEditingItem(item)} className="p-1.5 text-slate-400 hover:text-blue-500 dark:hover:text-blue-400 transition" title="編輯"><Icon name="pencil" className="w-4 h-4" /></button>}
-                                                                            {isAdmin && item.publicRefId ? (
-                                                                                <>
-                                                                                    <button onClick={() => deleteItem(item.id)} className="p-1.5 text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition" title="刪除 (自己)"><Icon name="trash-2" className="w-4 h-4" /></button>
-                                                                                    <button onClick={() => deletePublicItem(item.publicRefId, item.id)} className="p-1.5 text-indigo-400 hover:text-indigo-600 transition" title="刪除 (全班)"><Icon name="globe" className="w-4 h-4" /></button>
-                                                                                </>
-                                                                            ) : (
-                                                                                <button onClick={() => deleteItem(item.id)} className="p-1.5 text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition"><Icon name="trash-2" className="w-4 h-4" /></button>
-                                                                            )}
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    )
-                                                })}
-                                            </div>
-                                        </>
-                                    )}
-                                </>
-                            )}
-
-                            {viewMode === 'current' && appMode === 'class' && (
-                                <div className="space-y-6 animate-fadeIn pb-20">
-                                    <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 flex justify-between items-center">
-                                        <div>
-                                            <h3 className="text-xl font-bold dark:text-white flex items-center gap-2"><Icon name="school" className={t.text} /> 我的班級</h3>
-                                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">查看專屬的廣播任務</p>
-                                        </div>
-                                        <button onClick={() => setIsJoinClassOpen(true)} className={`px-4 py-2.5 rounded-xl font-bold text-sm text-white shadow-md active:scale-95 transition-all flex items-center gap-2 ${t.bg}`}>
-                                            <Icon name="plus" className="w-4 h-4" /> 加入班級
-                                        </button>
-                                    </div>
-
-                                    {joinedClasses.length === 0 ? (
-                                        <div className="text-center py-20 bg-white dark:bg-slate-800 rounded-3xl border border-dashed border-slate-200 dark:border-slate-700">
-                                            <Icon name="school" className="w-16 h-16 mx-auto text-slate-300 dark:text-slate-600 mb-4" />
-                                            <h4 className="text-lg font-bold text-slate-600 dark:text-slate-300 mb-2">尚未加入任何班級</h4>
-                                            <p className="text-sm text-slate-400 mb-6">請向老師索取 6 位數班級代碼</p>
-                                            <button onClick={() => setIsJoinClassOpen(true)} className={`px-8 py-3 rounded-xl font-bold text-sm text-white shadow-md transition-all active:scale-95 ${t.bg}`}>立即加入</button>
-                                        </div>
-                                    ) : (
-                                        <>
-                                            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                                                {joinedClasses.map(code => {
-                                                    const cls = systemClasses.find(c => c.code === code);
-                                                    const name = cls ? cls.name : code;
-                                                    return (
-                                                        <button key={code} onClick={() => setSelectedClassBoard(code)} className={`shrink-0 px-5 py-2.5 rounded-xl text-sm font-bold border-2 transition-all ${selectedClassBoard === code ? `${t.border} ${t.lightBg} ${t.text}` : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-100 dark:border-slate-700'}`}>
-                                                            {name}
-                                                        </button>
-                                                    )
-                                                })}
-                                            </div>
-
-                                            <div className="space-y-4">
-                                                {publicTasks.filter(task => task.targetClass === selectedClassBoard).length === 0 ? (
-                                                    <div className="text-center py-10"><p className="text-slate-500 dark:text-slate-400 font-medium">此班級目前沒有廣播任務 🎉</p></div>
-                                                ) : publicTasks.filter(task => task.targetClass === selectedClassBoard).map((task, idx) => {
-                                                    const subjectStyle = subjects.find(s => s.name === task.subject)?.color || 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600';
-                                                    return (
-                                                    <div key={task.id} style={{ animationDelay: `${idx * 0.05}s` }} className="animate-item bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 relative overflow-hidden">
-                                                        {task.forceExpired && <div className="absolute inset-0 bg-white/50 dark:bg-slate-800/50 backdrop-blur-[1px] z-10 flex items-center justify-center pointer-events-none"><span className="bg-red-500 text-white font-bold px-4 py-2 rounded-xl shadow-lg rotate-[-10deg]">已強制過期</span></div>}
-                                                        <div className="flex justify-between items-start mb-3">
-                                                            <div className="flex gap-2 items-center">
-                                                                <span className={`text-[10px] font-bold px-2.5 py-1 rounded border ${subjectStyle}`}>{task.subject}</span>
-                                                                <span className="text-[10px] bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 px-2 py-1 rounded font-bold">{task.type === 'homework' ? '功課' : '測驗'}</span>
-                                                            </div>
-                                                            <span className="text-xs text-slate-400 dark:text-slate-500 font-mono font-bold bg-slate-50 dark:bg-slate-900 px-2 py-1 rounded border border-slate-100 dark:border-slate-800">Due: {task.dueDate}</span>
-                                                        </div>
-                                                        <p className="font-bold text-lg text-slate-800 dark:text-slate-100 mb-3 break-words">{task.description}</p>
-                                                        {task.image && <div className="mb-3"><img src={task.image} alt="附件" className={`max-h-32 rounded-xl border border-slate-200 dark:border-slate-700 object-cover`} /></div>}
-                                                        <div className="text-xs text-slate-400 dark:text-slate-500 flex justify-between items-center border-t border-slate-50 dark:border-slate-700/50 pt-3">
-                                                            <span className="flex items-center gap-1"><Icon name="user" className="w-3 h-3"/> 發佈人: {task.senderName || '老師'}</span>
-                                                            <span>{new Date(task.createdAt).toLocaleString('zh-HK')}</span>
-                                                        </div>
-                                                    </div>
-                                                )})}
-                                            </div>
-                                        </>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                        )}
-                    </div>
-
-                    {isGuest && (
-                        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/20 backdrop-blur-sm">
-                            <button onClick={() => setIsAuthModalOpen(true)} className={`btn-glow px-8 py-4 ${t.bg} text-white rounded-full font-bold text-xl shadow-2xl hover:scale-105 transition-transform flex items-center gap-3`}>
-                                <Icon name="log-in" className="w-6 h-6" /> 登入系統
-                            </button>
-                        </div>
-                    )}
-
-                    {notification.isOpen && (
-                        <div className="fixed inset-0 z-[200] flex items-center justify-center px-4">
-                            <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" onClick={closeNotification}></div>
-                            <div className="dialog-animate relative bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-sm p-6 text-center border border-slate-100 dark:border-slate-700">
-                                <div className={`mx-auto w-14 h-14 rounded-full flex items-center justify-center mb-4 ${notification.type === 'confirm' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400' : 'bg-slate-50 dark:bg-slate-700 text-slate-500 dark:text-slate-300'}`}>
-                                    {notification.type === 'confirm' ? <Icon name="help-circle" className="w-8 h-8" /> : <Icon name="info" className="w-8 h-8" />}
-                                </div>
-                                <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2">{notification.type === 'confirm' ? '確認操作' : '提示'}</h3>
-                                <p className="text-slate-600 dark:text-slate-300 mb-8 font-medium leading-relaxed">{notification.message}</p>
-                                <div className="flex gap-3 justify-center">
-                                    {notification.type === 'confirm' ? (
-                                        <>
-                                            <button onClick={closeNotification} className="flex-1 py-3 px-4 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">取消</button>
-                                            <button onClick={handleNotificationConfirm} className="flex-1 py-3 px-4 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-200 dark:shadow-none transition-all active:scale-95">確認</button>
-                                        </>
-                                    ) : (
-                                        <button onClick={closeNotification} className="w-full py-3 px-4 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-200 dark:shadow-none transition-all active:scale-95">知道了</button>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* 新增: 導覽對話框 */}
-                    <TutorialModal 
-                        isOpen={isTutorialOpen} 
-                        onClose={() => setIsTutorialOpen(false)} 
-                        t={t} 
-                    />
-
-                    <QuickViewModal 
-                        isOpen={quickView.isOpen} 
-                        onClose={() => setQuickView({ ...quickView, isOpen: false })} 
-                        title={quickView.title} 
-                        items={quickView.items} 
-                        subjects={subjects} 
-                        onEdit={(item) => setEditingItem(item)}
-                        onDelete={(id) => deleteItem(id)}
-                        isAdmin={isAdmin}
-                        userUid={user?.uid}
-                    />
-                    <AppearanceModal 
-                        isOpen={isPreferencesOpen} 
-                        onClose={() => setIsPreferencesOpen(false)} 
-                        t={t} 
-                        themeColor={themeColor} 
-                        setThemeColor={setThemeColor} 
-                        isDarkMode={isDarkMode} 
-                        setIsDarkMode={setIsDarkMode} 
-                        layoutMode={layoutMode} 
-                        setLayoutMode={setLayoutMode} 
-                        customLayout={customLayout} 
-                        setCustomLayout={setCustomLayout} 
-                    />
-                    <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} triggerAlert={triggerAlert} />
-                    <JoinClassModal isOpen={isJoinClassOpen} onClose={() => setIsJoinClassOpen(false)} systemClasses={systemClasses} joinedClasses={joinedClasses} onJoin={handleJoinClassSubmit} t={t} />
-                    {showNameSetup && <NameSetupModal user={user} onSave={handleNameSetupSave} loading={nameSetupLoading} triggerAlert={triggerAlert} t={t} />}
-                    {editingItem && <EditModal item={editingItem} onClose={() => setEditingItem(null)} onSave={handleUpdateItem} triggerAlert={triggerAlert} subjects={subjects} />}
-                    <SubjectManagerModal isOpen={isSubjectManagerOpen} onClose={() => setIsSubjectManagerOpen(false)} currentSubjects={subjects} onSave={saveSubjects} triggerConfirm={triggerConfirm} />
-                    
-                    {/* Footer Watermark */}
-                    <div className="mt-12 mb-6 text-center">
-                        <div className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-slate-100/50 dark:bg-slate-800/50 backdrop-blur-sm border border-white/20">
-                            <Icon name="code-2" className="w-3 h-3 text-slate-400" />
-                            <span className="text-[10px] font-mono font-bold text-slate-400 tracking-widest uppercase">
-                                Made by @colasonyt112 2026
-                            </span>
-                        </div>
                     </div>
                 </div>
             );
