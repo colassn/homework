@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-HK">
 <head>
-    <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-8VCPLTE2QT"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -17,34 +16,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#4f46e5">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="電子手冊">
+    
     <title>電子手冊</title>
 
-    <!-- 
-        === CDN 備援區 (Mobile GitHub Friendly) === 
-        策略：預設使用 cdnjs (穩定)，如果失敗則自動切換到 unpkg。
-    -->
-
-    <!-- 1. React 核心 -->
     <script 
         src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js" 
         crossorigin 
         onerror="this.onerror=null; this.src='https://unpkg.com/react@18/umd/react.production.min.js'">
     </script>
 
-    <!-- 2. React DOM -->
     <script 
         src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js" 
         crossorigin 
         onerror="this.onerror=null; this.src='https://unpkg.com/react-dom@18/umd/react-dom.production.min.js'">
     </script>
 
-    <!-- 3. Babel (解析 JSX) -->
     <script 
         src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"
         onerror="this.onerror=null; this.src='https://unpkg.com/@babel/standalone/babel.min.js'">
     </script>
 
-    <!-- 4. Tailwind CSS (樣式) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -74,7 +69,6 @@
         }
     </script>
 
-    <!-- 5. Lucide Icons (圖標) -->
     <script 
         src="https://unpkg.com/lucide@latest"
         onerror="this.onerror=null; this.src='https://cdn.jsdelivr.net/npm/lucide@latest'">
@@ -135,7 +129,6 @@
 </head>
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100">
     
-    <!-- 載入畫面 (Fallback UI) -->
     <div id="loading-screen">
         <div class="spinner"></div>
         <h2 style="font-size: 1.2rem; font-weight: bold; margin-bottom: 0.5rem;">正在啟動電子手冊...</h2>
@@ -147,7 +140,6 @@
 
     <div id="root"></div>
 
-    <!-- Firebase 模組 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -181,7 +173,6 @@
         }
     </script>
 
-    <!-- PWA Setup -->
     <script>
         (function setupPWA() {
             const manifest = {
@@ -193,6 +184,15 @@
             const manifestURL = URL.createObjectURL(blob);
             document.querySelector('head').insertAdjacentHTML('beforeend', `<link rel="manifest" href="${manifestURL}">`);
         })();
+
+        // 【新增】註冊 Service Worker，這是讓瀏覽器允許安裝 PWA 的關鍵
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker 註冊成功!', reg.scope))
+                    .catch(err => console.log('Service Worker 註冊失敗:', err));
+            });
+        }
     </script>
 
     <script type="text/babel">
