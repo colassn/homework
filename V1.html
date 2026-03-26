@@ -1660,6 +1660,7 @@
 
             // Reference 用於避免 public_assignments snapshot 引發的 Read Storm
             const itemsRef = useRef([]);
+            const autoDeleteRan = useRef(false);
 
             useEffect(() => { 
                 const loadingScreen = document.getElementById('loading-screen');
@@ -1741,6 +1742,37 @@
                 const unsubSubjects = onSnapshot(doc(db, 'users', user.uid, 'settings', 'subjects'), (docSnap) => setSubjects(docSnap.exists() && docSnap.data().list ? docSnap.data().list : DEFAULT_SUBJECTS), (err) => console.warn("Subjects err:", err));
                 return () => { unsubItems(); unsubTimetable(); unsubSubjects(); };
             }, [user, db]);
+
+            // 背景自動清理：超過兩日的舊任務
+            useEffect(() => {
+                if (!user || !db || items.length === 0) return;
+                
+                // 確保每次重整網頁只執行一次清理檢查
+                if (autoDeleteRan.current) return;
+
+                const today = new Date();
+                today.setHours(0,0,0,0);
+                
+                const toDelete = items.filter(item => {
+                    const due = new Date(item.dueDate);
+                    due.setHours(0,0,0,0);
+                    const diffDays = Math.floor((today - due) / 86400000);
+                    return diffDays >= 2; // 過期兩天或歷史記錄已放置超過兩天
+                });
+
+                if (toDelete.length > 0) {
+                    autoDeleteRan.current = true;
+                    const batch = writeBatch(db);
+                    toDelete.forEach(item => {
+                        batch.delete(doc(db, "users", user.uid, "items", item.id));
+                    });
+                    batch.commit().then(() => {
+                        triggerAlert(`🧹 系統已為您自動清理了 ${toDelete.length} 項超過兩天的舊紀錄！`);
+                    }).catch(e => console.warn("Auto delete failed", e));
+                } else {
+                    autoDeleteRan.current = true;
+                }
+            }, [user, items, db]);
 
             useEffect(() => {
                 const currentClasses = joinedClassesStr ? joinedClassesStr.split(',') : [];
