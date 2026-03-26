@@ -326,13 +326,23 @@
 
         const formatDueDate = (dateStr) => {
             if (!dateStr) return '';
+            // 防呆機制：如果 dateStr 是物件 (例如 Firebase Timestamp)，強制轉換以防 React 白畫面崩潰
+            if (typeof dateStr !== 'string') {
+                if (dateStr.toDate && typeof dateStr.toDate === 'function') {
+                    const d = dateStr.toDate();
+                    const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
+                    const dateString = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                    return `${dateString} (星期${weekDays[d.getDay()]})`;
+                }
+                return String(dateStr); 
+            }
             try {
                 const d = new Date(dateStr);
-                if (isNaN(d.getTime())) return dateStr;
+                if (isNaN(d.getTime())) return String(dateStr); // 如果日期無效，安全返回字串
                 const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
                 return `${dateStr} (星期${weekDays[d.getDay()]})`;
             } catch (e) {
-                return dateStr;
+                return String(dateStr);
             }
         };
 
@@ -1037,6 +1047,10 @@
             
             const [editingAdminItem, setEditingAdminItem] = useState(null);
 
+            // Scanner states
+            const [isScanning, setIsScanning] = useState(false);
+            const [expiredReport, setExpiredReport] = useState(null);
+
             const { collection, getDocs, query, orderBy, onSnapshot, doc, updateDoc, arrayUnion, arrayRemove, deleteDoc, setDoc, getDoc, writeBatch, limit } = window.firebaseServices || {};
             const allowedEmails = systemConfig?.allowedEmails || [];
             const blacklistedEmails = systemConfig?.blacklistedEmails || [];
@@ -1186,6 +1200,38 @@
                     }
                 });
             };
+
+            const handleScanExpired = async () => {
+                setIsScanning(true);
+                const today = new Date();
+                today.setHours(0,0,0,0);
+                
+                const report = [];
+                try {
+                    // 掃描所有學生的私有資料庫
+                    for (const u of users) {
+                        const q = query(collection(db, "users", u.uid, "items"));
+                        const snap = await getDocs(q);
+                        const userItems = snap.docs.map(d => d.data());
+                        
+                        const expired = userItems.filter(item => {
+                            if (item.completed) return false; // 排除已完成的
+                            const due = new Date(item.dueDate);
+                            due.setHours(0,0,0,0);
+                            return due < today; // 揪出過期的
+                        });
+
+                        if (expired.length > 0) {
+                            report.push({ user: u, expiredCount: expired.length, items: expired });
+                        }
+                    }
+                    setExpiredReport(report.sort((a,b) => b.expiredCount - a.expiredCount));
+                    if (report.length === 0) triggerAlert("太棒了！所有學生都沒有未清理的過期功課。");
+                } catch(e) {
+                    triggerAlert("掃描失敗: " + e.message);
+                }
+                setIsScanning(false);
+            };
             
             const getUserStatus = (lastSeen) => {
                 if (!lastSeen || typeof lastSeen.toDate !== 'function') return 'offline';
@@ -1277,8 +1323,6 @@
                             <div className="space-y-6 animate-fadeIn h-full flex flex-col">
                                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                                     <h3 className="text-2xl font-bold dark:text-white">用戶數據管理</h3>
-                                    
-                                    {/* --- 升級這裡：加入掃描按鈕 --- */}
                                     <div className="flex gap-2 w-full sm:w-auto flex-col sm:flex-row">
                                         <button onClick={handleScanExpired} disabled={isScanning} className="bg-orange-500 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-sm hover:bg-orange-600 transition flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-50">
                                             {isScanning ? <Icon name="loader" className="w-4 h-4 animate-spin" /> : <Icon name="search" className="w-4 h-4" />}
@@ -1291,7 +1335,6 @@
                                     </div>
                                 </div>
 
-                                {/* --- 新增這裡：過期報告清單區塊 --- */}
                                 {expiredReport && (
                                     <div className="p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800/50 rounded-2xl animate-fadeIn shrink-0">
                                         <div className="flex justify-between items-center mb-3">
@@ -1773,7 +1816,7 @@
                 return () => { unsubItems(); unsubTimetable(); unsubSubjects(); };
             }, [user, db]);
 
-            // 背景自動清理：超過兩日的舊任務
+            // 背景自動清理：超過兩日的舊任務 (升級為無聲靜默清理，不打擾用戶)
             useEffect(() => {
                 if (!user || !db || items.length === 0) return;
                 
@@ -1796,9 +1839,8 @@
                     toDelete.forEach(item => {
                         batch.delete(doc(db, "users", user.uid, "items", item.id));
                     });
-                    batch.commit().then(() => {
-                        triggerAlert(`🧹 系統已為您自動清理了 ${toDelete.length} 項超過兩天的舊紀錄！`);
-                    }).catch(e => console.warn("Auto delete failed", e));
+                    // 默默在背景刪除，不再彈出 triggerAlert 煩人視窗
+                    batch.commit().catch(e => console.warn("Auto delete failed", e));
                 } else {
                     autoDeleteRan.current = true;
                 }
