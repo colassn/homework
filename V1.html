@@ -1922,6 +1922,28 @@
                 });
             };
 
+            const handleClearHistory = () => {
+                if (isGuest) { setIsAuthModalOpen(true); return; }
+                
+                const completedItems = items.filter(item => item.completed);
+
+                if (completedItems.length === 0) {
+                    triggerAlert("目前沒有任何已完成的歷史紀錄！");
+                    return;
+                }
+
+                triggerConfirm(`確定要一鍵清理全部 ${completedItems.length} 個歷史紀錄嗎？（此操作無法復原）`, async () => {
+                    try {
+                        const batch = writeBatch(db);
+                        completedItems.forEach(item => batch.delete(doc(db, "users", user.uid, "items", item.id)));
+                        await batch.commit();
+                        triggerAlert(`成功刪除了 ${completedItems.length} 個歷史紀錄！`);
+                    } catch(e) {
+                        triggerAlert("清理過程發生錯誤");
+                    }
+                });
+            };
+
             const saveTimetableConfig = async (newConfig) => { if (!user) return; try { await setDoc(doc(db, 'users', user.uid, 'settings', 'timetable'), JSON.parse(JSON.stringify(newConfig))); triggerAlert("時間表已儲存"); setViewMode('timetable'); } catch (e) { triggerAlert("儲存失敗"); } };
             const saveSubjects = async (newSubjects) => { if (!user) return; try { await setDoc(doc(db, 'users', user.uid, 'settings', 'subjects'), { list: JSON.parse(JSON.stringify(newSubjects)) }); triggerAlert("科目已更新"); } catch (e) { triggerAlert("儲存失敗"); } };
 
