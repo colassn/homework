@@ -1277,11 +1277,41 @@
                             <div className="space-y-6 animate-fadeIn h-full flex flex-col">
                                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                                     <h3 className="text-2xl font-bold dark:text-white">用戶數據管理</h3>
-                                    <div className="relative w-full sm:w-64">
-                                        <Icon name="search" className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                                        <input type="text" placeholder="搜尋用戶名字或 Email..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full pl-9 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-sm" />
+                                    
+                                    {/* --- 升級這裡：加入掃描按鈕 --- */}
+                                    <div className="flex gap-2 w-full sm:w-auto flex-col sm:flex-row">
+                                        <button onClick={handleScanExpired} disabled={isScanning} className="bg-orange-500 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-sm hover:bg-orange-600 transition flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-50">
+                                            {isScanning ? <Icon name="loader" className="w-4 h-4 animate-spin" /> : <Icon name="search" className="w-4 h-4" />}
+                                            掃描未清過期
+                                        </button>
+                                        <div className="relative w-full sm:w-auto flex-1">
+                                            <Icon name="search" className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                                            <input type="text" placeholder="搜尋用戶名字或 Email..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full pl-9 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-sm" />
+                                        </div>
                                     </div>
                                 </div>
+
+                                {/* --- 新增這裡：過期報告清單區塊 --- */}
+                                {expiredReport && (
+                                    <div className="p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800/50 rounded-2xl animate-fadeIn shrink-0">
+                                        <div className="flex justify-between items-center mb-3">
+                                            <h4 className="font-bold text-orange-800 dark:text-orange-300 flex items-center gap-2"><Icon name="alert-triangle" className="w-5 h-5"/> 未清理過期功課的學生名單 ({expiredReport.length} 人)</h4>
+                                            <button onClick={() => setExpiredReport(null)} className="text-orange-500 hover:text-orange-700 dark:hover:text-orange-400"><Icon name="x" className="w-5 h-5"/></button>
+                                        </div>
+                                        <div className="max-h-40 overflow-y-auto space-y-2 pr-2 scrollbar-hide">
+                                            {expiredReport.map(r => (
+                                                <div key={r.user.uid} className="flex justify-between items-center bg-white dark:bg-slate-800 p-3 rounded-xl border border-orange-100 dark:border-orange-800/50 cursor-pointer hover:border-orange-300 dark:hover:border-orange-600 transition-colors shadow-sm" onClick={() => setSelectedUser(r.user)}>
+                                                    <span className="font-bold text-sm dark:text-white flex items-center gap-2">
+                                                        <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs">{r.user.displayName?.[0]?.toUpperCase() || 'U'}</div>
+                                                        {r.user.displayName} <span className="text-xs text-slate-400 font-normal hidden sm:inline-block ml-1">{r.user.email}</span>
+                                                    </span>
+                                                    <span className="bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 px-3 py-1 rounded-lg font-bold text-xs">{r.expiredCount} 項未清</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
                                 <div className="flex-1 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col">
                                     <div className="overflow-y-auto flex-1">
                                         <table className="w-full text-left text-sm whitespace-nowrap">
