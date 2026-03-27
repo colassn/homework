@@ -143,7 +143,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs, setDoc, arrayUnion, arrayRemove, getDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs, setDoc, arrayUnion, arrayRemove, getDoc, writeBatch, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyB3gYuwnyoTUwO7PFh4Nuue-Ud8GTruuRk",
@@ -164,7 +164,7 @@
             window.firebaseServices = { 
                 auth, db, googleProvider, 
                 signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, 
-                collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs, setDoc, arrayUnion, arrayRemove, getDoc, writeBatch 
+                collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs, setDoc, arrayUnion, arrayRemove, getDoc, writeBatch, limit
             };
         } catch (e) {
             console.error("Firebase Init Error:", e);
@@ -185,7 +185,6 @@
             document.querySelector('head').insertAdjacentHTML('beforeend', `<link rel="manifest" href="${manifestURL}">`);
         })();
 
-        // 【新增】註冊 Service Worker，這是讓瀏覽器允許安裝 PWA 的關鍵
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
@@ -228,7 +227,7 @@
             { label: '石板', value: 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700' },
         ];
 
-        // --- Theme Configuration (v2.3 Expanded) ---
+        // --- Theme Configuration ---
         const THEME_CONFIG = {
             indigo: { name: '靛藍', text: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-600 hover:bg-indigo-700', ring: 'ring-indigo-100 dark:ring-indigo-900', gradient: 'from-indigo-600 to-blue-600', lightBg: 'bg-indigo-50 dark:bg-indigo-900/20', border: 'border-indigo-200 dark:border-indigo-800', shadow: 'shadow-indigo-200/50 dark:shadow-indigo-900/20' },
             rose: { name: '櫻粉', text: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-600 hover:bg-rose-700', ring: 'ring-rose-100 dark:ring-rose-900', gradient: 'from-rose-600 to-pink-600', lightBg: 'bg-rose-50 dark:bg-rose-900/20', border: 'border-rose-200 dark:border-rose-800', shadow: 'shadow-rose-200/50 dark:shadow-rose-900/20' },
@@ -263,32 +262,33 @@
             return <span ref={ref} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}></span>;
         };
 
-        function CustomDropdown({ value, onChange, options }) { 
+        function CustomDropdown({ value, onChange, options, customClasses }) { 
             const [isOpen, setIsOpen] = useState(false); 
             const dropdownRef = useRef(null); 
             
             useEffect(() => { 
                 const handleClickOutside = (event) => { 
-                    if (dropdownRef.current && !dropdownRef.current.contains(event.target)) { 
-                        setIsOpen(false); 
-                    } 
+                    if (dropdownRef.current && !dropdownRef.current.contains(event.target)) { setIsOpen(false); } 
                 }; 
                 document.addEventListener('mousedown', handleClickOutside); 
                 return () => document.removeEventListener('mousedown', handleClickOutside); 
             }, []); 
             
-            const selectedLabel = options.find(o => o.value === value)?.label || '排序'; 
+            const selectedOption = options.find(o => o.value === value);
+            const selectedLabel = selectedOption?.label || '排序'; 
             
             return ( 
                 <div className="relative" ref={dropdownRef}> 
-                    <button type="button" onClick={() => setIsOpen(!isOpen)} className="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900 font-bold hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm active:scale-95"> 
-                        <span>{selectedLabel}</span> <Icon name="chevron-down" className={`w-3 h-3 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} /> 
+                    <button type="button" onClick={() => setIsOpen(!isOpen)} className={customClasses || "flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900 font-bold hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm active:scale-95"}> 
+                        {selectedOption?.icon && <Icon name={selectedOption.icon} className="w-4 h-4" />}
+                        <span className="hidden sm:inline">{selectedLabel}</span> 
+                        <Icon name="chevron-down" className={`w-3 h-3 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} /> 
                     </button> 
                     {isOpen && ( 
-                        <div className="absolute right-0 mt-2 w-48 bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right"> 
+                        <div className="absolute right-0 mt-2 min-w-[140px] bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 z-50 overflow-hidden py-1.5 animate-in fade-in zoom-in-95 duration-200 origin-top-right"> 
                             {options.map((opt) => ( 
-                                <button key={opt.value} onClick={() => { onChange(opt.value); setIsOpen(false); }} className={`w-full text-left px-4 py-3 text-xs font-bold flex items-center gap-2 transition-colors ${value === opt.value ? 'bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'}`}> 
-                                    {opt.icon && <Icon name={opt.icon} className="w-3.5 h-3.5" />}
+                                <button key={opt.value} onClick={() => { onChange(opt.value); setIsOpen(false); }} className={`w-full text-left px-4 py-2.5 text-sm font-bold flex items-center gap-3 transition-colors ${value === opt.value ? 'bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'}`}> 
+                                    {opt.icon && <Icon name={opt.icon} className="w-4 h-4" />}
                                     {opt.label} 
                                 </button> 
                             ))} 
@@ -324,6 +324,28 @@
             return date.toLocaleDateString('zh-HK');
         };
 
+        const formatDueDate = (dateStr) => {
+            if (!dateStr) return '';
+            // 防呆機制：如果 dateStr 是物件 (例如 Firebase Timestamp)，強制轉換以防 React 白畫面崩潰
+            if (typeof dateStr !== 'string') {
+                if (dateStr.toDate && typeof dateStr.toDate === 'function') {
+                    const d = dateStr.toDate();
+                    const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
+                    const dateString = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                    return `${dateString} (星期${weekDays[d.getDay()]})`;
+                }
+                return String(dateStr); 
+            }
+            try {
+                const d = new Date(dateStr);
+                if (isNaN(d.getTime())) return String(dateStr); // 如果日期無效，安全返回字串
+                const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
+                return `${dateStr} (星期${weekDays[d.getDay()]})`;
+            } catch (e) {
+                return String(dateStr);
+            }
+        };
+
         const generateFullSchedule = (config, now, dayOverride = null) => {
             if (!config || !Array.isArray(config.timeSlots)) return [];
             const day = dayOverride !== null ? dayOverride : now.getDay();
@@ -347,48 +369,9 @@
             });
         };
 
-        const getNextLesson = (subjectName, now, config) => {
-            if (!subjectName || subjectName === '其他') return null;
-            const schedule = generateFullSchedule(config, now);
-            const currentMinutes = now.getHours() * 60 + now.getMinutes();
-            const currentSeconds = now.getSeconds();
-
-            for (let slot of schedule) {
-                if (slot.type === 'lesson' && (slot.subjectName.includes(subjectName) || subjectName.includes(slot.subjectName))) {
-                    const startH = slot.start.getHours();
-                    const startM = slot.start.getMinutes();
-                    const startTotalMins = startH * 60 + startM;
-                    const endTotalMins = startTotalMins + slot.duration;
-
-                    if (currentMinutes >= startTotalMins && currentMinutes < endTotalMins) return { type: 'now', diff: 0 };
-                    if (currentMinutes < startTotalMins) {
-                        const diffMs = ((startTotalMins * 60) - (currentMinutes * 60 + currentSeconds)) * 1000;
-                        return { type: 'future', diff: diffMs };
-                    }
-                }
-            }
-            return null;
-        };
-
         // --- View Components ---
-        function LessonCountdown({ subject, config }) {
-            const [now, setNow] = useState(new Date());
-            useEffect(() => { const timer = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(timer); }, []);
-
-            const nextLesson = getNextLesson(subject, now, config);
-            if (!nextLesson) return null;
-            if (nextLesson.type === 'now') {
-                return <div className="text-[10px] font-bold text-red-600 flex items-center gap-1 mt-1 animate-pulse"><Icon name="flame" className="w-3 h-3" /> 上課中</div>;
-            } else if (nextLesson.diff < 24 * 60 * 60 * 1000) { 
-                return <div className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1 mt-1"><Icon name="alarm-clock" className="w-3 h-3" /> 距離上課 {formatCountdown(nextLesson.diff)}</div>;
-            }
-            return null;
-        }
-
-        function CurrentLessonWidget({ config, t, onClick }) {
-            const [now, setNow] = useState(new Date());
-            useEffect(() => { const timer = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(timer); }, []);
-
+        function CurrentLessonWidget({ config, t, onClick, globalNow }) {
+            const now = globalNow || new Date();
             const day = now.getDay();
             if (day === 0 || day === 6) return <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-700 mb-6 text-center"><div className="font-bold text-slate-500 dark:text-slate-400 flex items-center justify-center gap-2"><Icon name="coffee" className="w-5 h-5 text-orange-500"/> 放假啦！好好休息</div></div>;
 
@@ -415,7 +398,6 @@
             }
 
             if (!currentSlot && !nextSlot) status = 'ended';
-
             const diff = currentSlot ? (currentSlot.end.getTime() - currentMs) : (nextSlot ? (nextSlot.start.getTime() - currentMs) : 0);
 
             return (
@@ -456,95 +438,6 @@
                         
                         <Icon name="sparkles" className="absolute -bottom-2 -right-2 w-12 h-12 text-fuchsia-500/10 animate-float pointer-events-none" />
                     </div>
-                </div>
-            );
-        }
-
-        function CalendarWidget({ items, selectedDate, onSelectDate, t }) {
-            const [currentMonth, setCurrentMonth] = useState(new Date());
-
-            const startOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
-            const endOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
-            const startDate = startOfMonth.getDay(); 
-            const daysInMonth = endOfMonth.getDate();
-
-            const days = [];
-            for (let i = 0; i < startDate; i++) days.push(null);
-            for (let i = 1; i <= daysInMonth; i++) days.push(new Date(currentMonth.getFullYear(), currentMonth.getMonth(), i));
-
-            const nextMonth = () => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
-            const prevMonth = () => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
-
-            const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
-            const today = new Date();
-            const todayWeekday = weekDays[today.getDay()];
-
-            return (
-                <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 p-4 sm:p-6 mb-6">
-                    <div className="flex justify-between items-center mb-4">
-                        <div className="flex flex-col">
-                            <h3 className="font-bold text-lg dark:text-white flex items-center gap-2">
-                                <Icon name="calendar" className={`w-5 h-5 ${t.text}`} />
-                                {currentMonth.getFullYear()}年 {currentMonth.getMonth() + 1}月
-                            </h3>
-                            <span className="text-xs text-slate-400 font-bold ml-7 mt-0.5">今天是 星期{todayWeekday}</span>
-                        </div>
-                        <div className="flex gap-2">
-                            <button onClick={prevMonth} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition"><Icon name="chevron-left" className="w-5 h-5 dark:text-white" /></button>
-                            <button onClick={nextMonth} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition"><Icon name="chevron-right" className="w-5 h-5 dark:text-white" /></button>
-                        </div>
-                    </div>
-                    <div className="calendar-grid text-center text-xs font-bold text-slate-400 dark:text-slate-500 mb-2">
-                        {['日','一','二','三','四','五','六'].map((d, i) => <div key={d} className={`py-1 ${i===0||i===6 ? 'text-red-500' : ''}`}>{d}</div>)}
-                    </div>
-                    <div className="calendar-grid">
-                        {days.map((date, i) => {
-                            if (!date) return <div key={`empty-${i}`} className="p-2"></div>;
-                            const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-                            const dayItems = items.filter(item => item.dueDate === dateStr && !item.forceExpired && !item.completed);
-                            const isSelected = selectedDate === dateStr;
-                            const isToday = new Date().toDateString() === date.toDateString();
-                            const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-                            const count = dayItems.length;
-
-                            let badgeColor = 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300';
-                            if (count >= 3) badgeColor = 'bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300';
-                            if (count >= 6) badgeColor = 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300';
-
-                            return (
-                                <button 
-                                    key={i} 
-                                    onClick={() => onSelectDate(isSelected ? null : dateStr)}
-                                    className={`relative aspect-square flex flex-col items-center justify-center rounded-xl sm:rounded-2xl transition-all border-2 
-                                        ${isSelected 
-                                            ? `${t.border} ${t.lightBg} shadow-sm` 
-                                            : (isToday 
-                                                ? 'border-indigo-400 dark:border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' 
-                                                : 'border-transparent hover:bg-slate-50 dark:hover:bg-slate-700')
-                                        }
-                                    `}
-                                >
-                                    <span className={`text-sm sm:text-base font-bold ${isSelected ? t.text : (isToday ? 'text-indigo-700 dark:text-indigo-300 scale-110' : (isWeekend ? 'text-red-500' : 'text-slate-700 dark:text-slate-300'))}`}>
-                                        {date.getDate()}
-                                    </span>
-                                    
-                                    {isToday && <span className="text-[9px] font-bold text-indigo-500 dark:text-indigo-400 -mt-0.5 mb-0.5">今天</span>}
-
-                                    {count > 0 ? (
-                                        <span className={`mt-0.5 text-[9px] sm:text-[10px] font-bold px-1.5 rounded-full ${badgeColor}`}>{count}</span>
-                                    ) : (
-                                        !isToday && <div className="h-4"></div>
-                                    )}
-                                </button>
-                            );
-                        })}
-                    </div>
-                    {selectedDate && (
-                        <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700 flex justify-between items-center text-sm">
-                            <span className="font-bold dark:text-white">篩選: {selectedDate}</span>
-                            <button onClick={() => onSelectDate(null)} className="text-slate-400 hover:text-red-500 font-bold">清除篩選</button>
-                        </div>
-                    )}
                 </div>
             );
         }
@@ -590,7 +483,7 @@
                                             </div>
                                         </div>
                                         <div className="font-bold text-slate-800 dark:text-slate-200 text-sm break-words">{item.description}</div>
-                                        <div className="text-xs text-slate-400 font-mono text-right">{item.dueDate}</div>
+                                        <div className="text-xs text-slate-400 font-mono text-right">{formatDueDate(item.dueDate)}</div>
                                     </div>
                                 )
                             })}
@@ -1094,11 +987,9 @@
         }
 
         // --- Timetable Component ---
-        function Timetable({ currentDay, config, onDayChange, subjects }) { 
+        function Timetable({ currentDay, config, onDayChange, subjects, globalNow }) { 
             const weekDays = ['日', '一', '二', '三', '四', '五', '六']; 
-            const [now, setNow] = useState(new Date());
-            useEffect(() => { const timer = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(timer); }, []);
-
+            const now = globalNow || new Date();
             const scheduleData = generateFullSchedule(config, now, currentDay); 
             const formatTimeStr = (date) => { 
                 try {
@@ -1156,13 +1047,18 @@
             
             const [editingAdminItem, setEditingAdminItem] = useState(null);
 
-            const { collection, getDocs, query, orderBy, onSnapshot, doc, updateDoc, arrayUnion, arrayRemove, deleteDoc, setDoc, getDoc } = window.firebaseServices || {};
+            // Scanner states
+            const [isScanning, setIsScanning] = useState(false);
+            const [expiredReport, setExpiredReport] = useState(null);
+
+            const { collection, getDocs, query, orderBy, onSnapshot, doc, updateDoc, arrayUnion, arrayRemove, deleteDoc, setDoc, getDoc, writeBatch, limit } = window.firebaseServices || {};
             const allowedEmails = systemConfig?.allowedEmails || [];
             const blacklistedEmails = systemConfig?.blacklistedEmails || [];
 
             useEffect(() => {
                 if (!db || !collection) return;
-                const q = query(collection(db, "users_public"), orderBy("lastSeen", "desc"));
+                // 添加 limit(300) 防止人數過多時拖垮系統及用盡讀取配額
+                const q = query(collection(db, "users_public"), orderBy("lastSeen", "desc"), limit(300));
                 const unsubscribe = onSnapshot(q, (snapshot) => setUsers(snapshot.docs.map(d => ({ uid: d.id, ...d.data() }))), (err) => console.warn("Admin users err:", err));
                 return () => unsubscribe();
             }, [db, collection]);
@@ -1206,17 +1102,17 @@
             };
 
             const handleDeepDeleteClass = async (classObj) => {
-                const { getDoc, doc, updateDoc, deleteDoc, getDocs, query, where, collection, arrayRemove } = window.firebaseServices;
-
                 triggerConfirm(`⚠️ 警告：確定要刪除班級 ${classObj.name}？\n\n此操作將會：\n1. 刪除班級代碼\n2. 刪除該班級所有廣播功課\n3. 將所有學生踢出該班級\n\n(學生私有記錄將保留但變為孤兒記錄)`, async () => {
                     try {
+                        const batch = writeBatch(db);
+                        
                         const tasksQ = query(collection(db, "public_assignments"), where("targetClass", "==", classObj.code));
                         const tasksSnap = await getDocs(tasksQ);
-                        await Promise.all(tasksSnap.docs.map(d => deleteDoc(d.ref)));
+                        tasksSnap.forEach(d => batch.delete(d.ref));
 
                         const usersQ = query(collection(db, "users_public"), where("joinedClasses", "array-contains", classObj.code));
                         const usersSnap = await getDocs(usersQ);
-                        await Promise.all(usersSnap.docs.map(d => updateDoc(d.ref, { joinedClasses: arrayRemove(classObj.code) })));
+                        usersSnap.forEach(d => batch.update(d.ref, { joinedClasses: arrayRemove(classObj.code) }));
 
                         const classesRef = doc(db, 'system_settings', 'classes');
                         const classesSnap = await getDoc(classesRef);
@@ -1224,9 +1120,10 @@
                         if (classesSnap.exists()) {
                             const currentList = classesSnap.data().list || [];
                             const newList = currentList.filter(c => c.code !== classObj.code);
-                            await updateDoc(classesRef, { list: newList });
+                            batch.update(classesRef, { list: newList });
                         }
                         
+                        await batch.commit();
                         triggerAlert("班級已徹底刪除及清理");
                     } catch (e) { 
                         console.error(e);
@@ -1238,12 +1135,16 @@
             const handleDeleteUser = async (targetUser) => {
                 triggerConfirm(`⚠️ 危險操作！確定要刪除用戶 ${targetUser.displayName} (${targetUser.email}) 的所有資料？此操作無法復原！`, async () => {
                     try {
+                        const batch = writeBatch(db);
                         const itemsQ = query(collection(db, "users", targetUser.uid, "items"));
                         const itemsSnap = await getDocs(itemsQ);
-                        await Promise.all(itemsSnap.docs.map(d => deleteDoc(d.ref)));
-                        await deleteDoc(doc(db, "users", targetUser.uid, "settings", "timetable"));
-                        await deleteDoc(doc(db, "users", targetUser.uid, "settings", "subjects"));
-                        await deleteDoc(doc(db, "users_public", targetUser.uid));
+                        
+                        itemsSnap.forEach(d => batch.delete(d.ref));
+                        batch.delete(doc(db, "users", targetUser.uid, "settings", "timetable"));
+                        batch.delete(doc(db, "users", targetUser.uid, "settings", "subjects"));
+                        batch.delete(doc(db, "users_public", targetUser.uid));
+                        
+                        await batch.commit();
                         triggerAlert("用戶資料已徹底刪除");
                         if (selectedUser?.uid === targetUser.uid) setSelectedUser(null);
                     } catch (e) { triggerAlert("刪除失敗: " + e.message); }
@@ -1278,27 +1179,58 @@
                 });
             };
 
-            // Fix: Improved sync deletion of public tasks
             const handleDeletePublicTask = (taskId) => {
                 triggerConfirm("確定要撤回這份廣播功課嗎？這會同時從所有同學的清單中移除。", async () => {
                     try { 
-                        // 1. Delete the public assignment
-                        await deleteDoc(doc(db, "public_assignments", taskId)); 
+                        // 改用 batch 處理大量刪除以確保完整性
+                        const batch = writeBatch(db);
+                        batch.delete(doc(db, "public_assignments", taskId));
                         
-                        // 2. Iterate through all users and delete matching private items
-                        const deletePromises = [];
+                        // 注意：如果用戶數量超過 500 人，batch 寫入需要分段。此處先以 500 內為預設情境
                         for (const u of users) {
                             const dupQ = query(collection(db, "users", u.uid, "items"), where("publicRefId", "==", taskId));
                             const snap = await getDocs(dupQ);
-                            snap.forEach(d => deletePromises.push(deleteDoc(d.ref)));
+                            snap.forEach(d => batch.delete(d.ref));
                         }
-                        await Promise.all(deletePromises);
-
+                        
+                        await batch.commit();
                         triggerAlert("廣播功課已撤回並同步清理所有學生紀錄"); 
                     } catch (e) { 
                         triggerAlert("撤回失敗: " + e.message); 
                     }
                 });
+            };
+
+            const handleScanExpired = async () => {
+                setIsScanning(true);
+                const today = new Date();
+                today.setHours(0,0,0,0);
+                
+                const report = [];
+                try {
+                    // 掃描所有學生的私有資料庫
+                    for (const u of users) {
+                        const q = query(collection(db, "users", u.uid, "items"));
+                        const snap = await getDocs(q);
+                        const userItems = snap.docs.map(d => d.data());
+                        
+                        const expired = userItems.filter(item => {
+                            if (item.completed) return false; // 排除已完成的
+                            const due = new Date(item.dueDate);
+                            due.setHours(0,0,0,0);
+                            return due < today; // 揪出過期的
+                        });
+
+                        if (expired.length > 0) {
+                            report.push({ user: u, expiredCount: expired.length, items: expired });
+                        }
+                    }
+                    setExpiredReport(report.sort((a,b) => b.expiredCount - a.expiredCount));
+                    if (report.length === 0) triggerAlert("太棒了！所有學生都沒有未清理的過期功課。");
+                } catch(e) {
+                    triggerAlert("掃描失敗: " + e.message);
+                }
+                setIsScanning(false);
             };
             
             const getUserStatus = (lastSeen) => {
@@ -1391,11 +1323,38 @@
                             <div className="space-y-6 animate-fadeIn h-full flex flex-col">
                                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                                     <h3 className="text-2xl font-bold dark:text-white">用戶數據管理</h3>
-                                    <div className="relative w-full sm:w-64">
-                                        <Icon name="search" className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                                        <input type="text" placeholder="搜尋用戶名字或 Email..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full pl-9 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-sm" />
+                                    <div className="flex gap-2 w-full sm:w-auto flex-col sm:flex-row">
+                                        <button onClick={handleScanExpired} disabled={isScanning} className="bg-orange-500 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-sm hover:bg-orange-600 transition flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-50">
+                                            {isScanning ? <Icon name="loader" className="w-4 h-4 animate-spin" /> : <Icon name="search" className="w-4 h-4" />}
+                                            掃描未清過期
+                                        </button>
+                                        <div className="relative w-full sm:w-auto flex-1">
+                                            <Icon name="search" className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                                            <input type="text" placeholder="搜尋用戶名字或 Email..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full pl-9 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-sm" />
+                                        </div>
                                     </div>
                                 </div>
+
+                                {expiredReport && (
+                                    <div className="p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800/50 rounded-2xl animate-fadeIn shrink-0">
+                                        <div className="flex justify-between items-center mb-3">
+                                            <h4 className="font-bold text-orange-800 dark:text-orange-300 flex items-center gap-2"><Icon name="alert-triangle" className="w-5 h-5"/> 未清理過期功課的學生名單 ({expiredReport.length} 人)</h4>
+                                            <button onClick={() => setExpiredReport(null)} className="text-orange-500 hover:text-orange-700 dark:hover:text-orange-400"><Icon name="x" className="w-5 h-5"/></button>
+                                        </div>
+                                        <div className="max-h-40 overflow-y-auto space-y-2 pr-2 scrollbar-hide">
+                                            {expiredReport.map(r => (
+                                                <div key={r.user.uid} className="flex justify-between items-center bg-white dark:bg-slate-800 p-3 rounded-xl border border-orange-100 dark:border-orange-800/50 cursor-pointer hover:border-orange-300 dark:hover:border-orange-600 transition-colors shadow-sm" onClick={() => setSelectedUser(r.user)}>
+                                                    <span className="font-bold text-sm dark:text-white flex items-center gap-2">
+                                                        <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs">{r.user.displayName?.[0]?.toUpperCase() || 'U'}</div>
+                                                        {r.user.displayName} <span className="text-xs text-slate-400 font-normal hidden sm:inline-block ml-1">{r.user.email}</span>
+                                                    </span>
+                                                    <span className="bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 px-3 py-1 rounded-lg font-bold text-xs">{r.expiredCount} 項未清</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
                                 <div className="flex-1 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col">
                                     <div className="overflow-y-auto flex-1">
                                         <table className="w-full text-left text-sm whitespace-nowrap">
@@ -1502,7 +1461,7 @@
                                                          <div className={`font-medium ${h.completed ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-700 dark:text-slate-200'}`}>{h.description}</div>
                                                      </div>
                                                      <div className="flex items-center gap-3">
-                                                         <div className="text-xs font-mono text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-900 px-2 py-1 rounded border border-slate-100 dark:border-slate-800">{h.dueDate}</div>
+                                                         <div className="text-xs font-mono text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-900 px-2 py-1 rounded border border-slate-100 dark:border-slate-800">{formatDueDate(h.dueDate)}</div>
                                                          <div className="flex gap-1">
                                                              <button onClick={() => setEditingAdminItem(h)} className="p-1.5 text-slate-400 hover:text-indigo-600 bg-slate-100 dark:bg-slate-700 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors"><Icon name="pencil" className="w-3.5 h-3.5" /></button>
                                                              <button onClick={() => handleAdminDeleteItem(h.id)} className="p-1.5 text-slate-400 hover:text-red-600 bg-slate-100 dark:bg-slate-700 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"><Icon name="trash-2" className="w-3.5 h-3.5" /></button>
@@ -1532,7 +1491,7 @@
                                                         <tr key={task.id} className="hover:bg-slate-5 dark:hover:bg-slate-700/50">
                                                             <td className="px-6 py-4">
                                                                 <div className="font-bold max-w-[200px] truncate dark:text-white" title={task.description}>{task.description}</div>
-                                                                <div className="text-[10px] text-slate-400 mt-1">Due: {task.dueDate} {task.forceExpired && <span className="text-red-500 font-bold ml-2">(強制過期)</span>}</div>
+                                                                <div className="text-[10px] text-slate-400 mt-1">Due: {formatDueDate(task.dueDate)} {task.forceExpired && <span className="text-red-500 font-bold ml-2">(強制過期)</span>}</div>
                                                             </td>
                                                             <td className="px-6 py-4">
                                                                 <div className="flex flex-col gap-1 items-start">
@@ -1712,7 +1671,7 @@
             const [timetableConfig, setTimetableConfig] = useState({ timeSlots: DEFAULT_TIME_SLOTS, schedule: DEFAULT_SCHEDULE });
             const [subjects, setSubjects] = useState(DEFAULT_SUBJECTS);
 
-            const { auth, db, signOut, onAuthStateChanged, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs, setDoc, updateProfile, arrayUnion } = window.firebaseServices || {};
+            const { auth, db, signOut, onAuthStateChanged, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs, setDoc, updateProfile, arrayUnion, writeBatch } = window.firebaseServices || {};
 
             const [inputType, setInputType] = useState('homework');
             const [subject, setSubject] = useState('中文');
@@ -1727,7 +1686,6 @@
             const [viewMode, setViewMode] = useState('current'); 
             const [appMode, setAppMode] = useState('personal'); // 'personal' | 'class'
             const [viewLayout, setViewLayout] = useState('list'); 
-            const [calendarSelectedDate, setCalendarSelectedDate] = useState(null);
 
             const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('isDarkMode') === 'true');
             const [themeColor, setThemeColor] = useState(() => localStorage.getItem('themeColor') || 'indigo');
@@ -1769,6 +1727,13 @@
 
             // v2.4 Quick View State
             const [quickView, setQuickView] = useState({ isOpen: false, title: '', items: [] });
+            
+            // 全局計時器，減少重複渲染
+            const [globalNow, setGlobalNow] = useState(new Date());
+
+            // Reference 用於避免 public_assignments snapshot 引發的 Read Storm
+            const itemsRef = useRef([]);
+            const autoDeleteRan = useRef(false);
 
             useEffect(() => { 
                 const loadingScreen = document.getElementById('loading-screen');
@@ -1778,6 +1743,9 @@
                 }
                 
                 if ("Notification" in window && Notification.permission === "default") Notification.requestPermission(); 
+                
+                const timer = setInterval(() => setGlobalNow(new Date()), 1000);
+                return () => clearInterval(timer);
             }, []);
             
             useEffect(() => { localStorage.setItem('isDarkMode', isDarkMode); if (isDarkMode) document.documentElement.classList.add('dark'); else document.documentElement.classList.remove('dark'); }, [isDarkMode]);
@@ -1838,11 +1806,45 @@
 
             useEffect(() => {
                 if (!user || !db) return;
-                const unsubItems = onSnapshot(query(collection(db, "users", user.uid, "items"), orderBy("dueDate")), (snapshot) => setItems(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))), (err) => console.warn("Items err:", err));
+                const unsubItems = onSnapshot(query(collection(db, "users", user.uid, "items"), orderBy("dueDate")), (snapshot) => {
+                    const loadedItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    setItems(loadedItems);
+                    itemsRef.current = loadedItems; // 同步儲存至 Ref 以供其他 Effect 讀取
+                }, (err) => console.warn("Items err:", err));
                 const unsubTimetable = onSnapshot(doc(db, 'users', user.uid, 'settings', 'timetable'), (docSnap) => setTimetableConfig(docSnap.exists() && docSnap.data().timeSlots ? docSnap.data() : { timeSlots: DEFAULT_TIME_SLOTS, schedule: DEFAULT_SCHEDULE }), (err) => console.warn("Timetable err:", err));
                 const unsubSubjects = onSnapshot(doc(db, 'users', user.uid, 'settings', 'subjects'), (docSnap) => setSubjects(docSnap.exists() && docSnap.data().list ? docSnap.data().list : DEFAULT_SUBJECTS), (err) => console.warn("Subjects err:", err));
                 return () => { unsubItems(); unsubTimetable(); unsubSubjects(); };
             }, [user, db]);
+
+            // 背景自動清理：超過兩日的舊任務 (升級為無聲靜默清理，不打擾用戶)
+            useEffect(() => {
+                if (!user || !db || items.length === 0) return;
+                
+                // 確保每次重整網頁只執行一次清理檢查
+                if (autoDeleteRan.current) return;
+
+                const today = new Date();
+                today.setHours(0,0,0,0);
+                
+                const toDelete = items.filter(item => {
+                    const due = new Date(item.dueDate);
+                    due.setHours(0,0,0,0);
+                    const diffDays = Math.floor((today - due) / 86400000);
+                    return diffDays >= 2; // 過期兩天或歷史記錄已放置超過兩天
+                });
+
+                if (toDelete.length > 0) {
+                    autoDeleteRan.current = true;
+                    const batch = writeBatch(db);
+                    toDelete.forEach(item => {
+                        batch.delete(doc(db, "users", user.uid, "items", item.id));
+                    });
+                    // 默默在背景刪除，不再彈出 triggerAlert 煩人視窗
+                    batch.commit().catch(e => console.warn("Auto delete failed", e));
+                } else {
+                    autoDeleteRan.current = true;
+                }
+            }, [user, items, db]);
 
             useEffect(() => {
                 const currentClasses = joinedClassesStr ? joinedClassesStr.split(',') : [];
@@ -1853,40 +1855,53 @@
                 }
             }, [joinedClassesStr, selectedClassBoard]);
 
+            // [架構修復] 處理廣播任務同步機制，移除依賴 items，改用 itemsRef 解決 Read Storm 效能問題
             useEffect(() => {
                 if (!user || !db) return;
                 const q = query(collection(db, "public_assignments"), orderBy("createdAt", "desc"));
-                const unsubscribe = onSnapshot(q, (snapshot) => { 
+                const unsubscribe = onSnapshot(q, async (snapshot) => { 
                     try {
                         setPublicTasks(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
                         const currentClasses = joinedClassesStr ? joinedClassesStr.split(',') : [];
 
-                        snapshot.docChanges().forEach(async (change) => { 
+                        // 取得當前使用者既有的功課列表中所有的 publicRefId
+                        const existingItems = itemsRef.current;
+                        const existingPublicIds = new Set(existingItems.map(i => i.publicRefId).filter(Boolean));
+
+                        const addPromises = [];
+                        const batch = writeBatch(db);
+                        let hasBatchOp = false;
+
+                        for (const change of snapshot.docChanges()) { 
                             try {
                                 const publicData = change.doc.data(); const publicId = change.doc.id; 
                                 const target = publicData.targetClass || '全校';
                                 const isForMe = isAdmin || target === '全校' || currentClasses.includes(target); 
 
                                 if (change.type === "added" && isForMe) { 
-                                    const userItemsRef = collection(db, "users", user.uid, "items"); const dupQuery = query(userItemsRef, where("publicRefId", "==", publicId)); 
-                                    const dupSnapshot = await getDocs(dupQuery); 
-                                    if (dupSnapshot.empty) { 
-                                        await addDoc(userItemsRef, { ...publicData, publicRefId: publicId, completed: false, forceExpired: publicData.forceExpired || false }); 
+                                    // 只有當本機的現有項目中「沒有」這個廣播 ID 時，才觸發寫入，省去大量 getDocs 消耗
+                                    if (!existingPublicIds.has(publicId)) { 
+                                        addPromises.push(addDoc(collection(db, "users", user.uid, "items"), { ...publicData, publicRefId: publicId, completed: false, forceExpired: publicData.forceExpired || false })); 
                                         const createdTime = publicData.createdAt ? new Date(publicData.createdAt).getTime() : 0;
                                         if (createdTime > pageLoadTime && "Notification" in window && Notification.permission === "granted") new Notification(`📢 新廣播任務 (${target})`, { body: `[${publicData.subject}] ${publicData.description}` });
                                         else if (createdTime > pageLoadTime) triggerAlert(`收到新功課：[${publicData.subject || '其他'}] ${publicData.description}`); 
                                     } 
                                 } 
                                 if (change.type === "removed") { 
-                                    const dupSnapshot = await getDocs(query(collection(db, "users", user.uid, "items"), where("publicRefId", "==", publicId))); 
-                                    for (const docSnap of dupSnapshot.docs) await deleteDoc(docSnap.ref); 
+                                    const toDelete = existingItems.filter(i => i.publicRefId === publicId);
+                                    toDelete.forEach(item => { batch.delete(doc(db, "users", user.uid, "items", item.id)); hasBatchOp = true; });
                                 } 
                                 if (change.type === "modified") { 
-                                    const dupSnapshot = await getDocs(query(collection(db, "users", user.uid, "items"), where("publicRefId", "==", publicId))); 
-                                    for (const docSnap of dupSnapshot.docs) await updateDoc(docSnap.ref, { forceExpired: publicData.forceExpired === true }); 
+                                    const toUpdate = existingItems.filter(i => i.publicRefId === publicId);
+                                    toUpdate.forEach(item => { batch.update(doc(db, "users", user.uid, "items", item.id), { forceExpired: publicData.forceExpired === true }); hasBatchOp = true; });
                                 } 
                             } catch (e) { console.warn("Task process err:", e); }
-                        }); 
+                        }
+                        
+                        // 統一執行
+                        if (addPromises.length > 0) await Promise.all(addPromises);
+                        if (hasBatchOp) await batch.commit();
+
                     } catch (e) { console.warn("Public tasks wrapper err:", e); }
                 }, (err) => console.warn("Public tasks err:", err)); 
                 return () => unsubscribe(); 
@@ -1954,7 +1969,7 @@
                 if (isGuest) { setIsAuthModalOpen(true); return; }
                 
                 const expiredItems = items.filter(item => {
-                    if (item.completed) return false; // Optional: 已經完成的不在這裡刪除
+                    if (item.completed) return false; 
                     if (item.forceExpired) return true;
                     
                     const today = new Date(); today.setHours(0,0,0,0);
@@ -1969,9 +1984,32 @@
 
                 triggerConfirm(`確定要一鍵清理 ${expiredItems.length} 個過期項目嗎？`, async () => {
                     try {
-                        const promises = expiredItems.map(item => deleteDoc(doc(db, "users", user.uid, "items", item.id)));
-                        await Promise.all(promises);
+                        const batch = writeBatch(db);
+                        expiredItems.forEach(item => batch.delete(doc(db, "users", user.uid, "items", item.id)));
+                        await batch.commit();
                         triggerAlert(`成功刪除了 ${expiredItems.length} 個過期項目！`);
+                    } catch(e) {
+                        triggerAlert("清理過程發生錯誤");
+                    }
+                });
+            };
+
+            const handleClearHistory = () => {
+                if (isGuest) { setIsAuthModalOpen(true); return; }
+                
+                const completedItems = items.filter(item => item.completed);
+
+                if (completedItems.length === 0) {
+                    triggerAlert("目前沒有任何已完成的歷史紀錄！");
+                    return;
+                }
+
+                triggerConfirm(`確定要一鍵清理全部 ${completedItems.length} 個歷史紀錄嗎？（此操作無法復原）`, async () => {
+                    try {
+                        const batch = writeBatch(db);
+                        completedItems.forEach(item => batch.delete(doc(db, "users", user.uid, "items", item.id)));
+                        await batch.commit();
+                        triggerAlert(`成功刪除了 ${completedItems.length} 個歷史紀錄！`);
                     } catch(e) {
                         triggerAlert("清理過程發生錯誤");
                     }
@@ -1991,7 +2029,6 @@
                 if (viewMode === 'current' && item.completed) return false;
                 
                 if (filterSubject !== '全部' && (item.subject || '其他') !== filterSubject) return false;
-                if (calendarSelectedDate && viewLayout === 'calendar' && item.dueDate !== calendarSelectedDate) return false;
                 return true;
             }).sort((a, b) => {
                 const dateA = new Date(a.dueDate); const dateB = new Date(b.dueDate);
@@ -2044,7 +2081,6 @@
             // Helper to check visibility based on layout settings
             const isVisible = (componentName) => {
                 if (viewMode === 'history') {
-                    // In history mode, hide input/widgets, just show list by default
                     if (componentName === 'list') return true;
                     return false;
                 }
@@ -2130,14 +2166,19 @@
                                 <h1 className={`text-xl sm:text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r ${t.gradient} flex items-center justify-center md:justify-start gap-2 truncate`}>
                                     {viewMode === 'current' ? (<><Icon name="graduation-cap" className={`w-6 h-6 sm:w-8 sm:h-8 ${t.text}`} />學生小幫手</>) : viewMode === 'admin' ? (<><Icon name="shield-alert" className={`w-6 h-6 sm:w-8 sm:h-8 text-blue-600`} />管理後台</>) : <><Icon name="history" className={`w-6 h-6 sm:w-8 sm:h-8 ${t.text}`} /> {viewMode === 'timetable' ? '上課時間表' : '完成紀錄'}</>}
                                 </h1>
-                                <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm font-medium mt-1">{new Date().toLocaleDateString('zh-HK', { year: 'numeric', month: 'numeric', day: 'numeric', weekday: 'short' })}</p>
+                                <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm font-medium mt-1">{globalNow.toLocaleDateString('zh-HK', { year: 'numeric', month: 'numeric', day: 'numeric', weekday: 'short' })}</p>
                             </div>
                             <div className="flex gap-2 flex-wrap justify-center md:justify-end shrink-0 w-full md:w-auto">
                                 {viewMode === 'current' && appMode === 'personal' && (
-                                    <button onClick={() => setViewLayout(viewLayout === 'list' ? 'calendar' : 'list')} className="px-3 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold text-xs hover:bg-slate-50 dark:hover:bg-slate-700 transition flex items-center gap-2">
-                                            <Icon name={viewLayout === 'list' ? "calendar" : "list"} className="w-4 h-4" />
-                                            <span className="hidden sm:inline">{viewLayout === 'list' ? '日曆模式' : '列表模式'}</span>
-                                    </button>
+                                    <CustomDropdown 
+                                        value={viewLayout} 
+                                        onChange={setViewLayout} 
+                                        options={[
+                                            { value: 'list', label: '列表模式', icon: 'layout-list' },
+                                            { value: 'table', label: '表格模式', icon: 'table' }
+                                        ]} 
+                                        customClasses={`px-3 py-2 rounded-xl font-bold text-xs transition flex items-center gap-2 ${viewLayout === 'table' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 shadow-sm' : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-sm'} focus:outline-none focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900 active:scale-95`}
+                                    />
                                 )}
 
                                 {viewMode === 'timetable' && (
@@ -2168,7 +2209,7 @@
                         </div>
 
                         {viewMode === 'admin' ? ( <AdminConsole db={db} systemConfig={systemConfig} systemClasses={systemClasses} onBack={() => setViewMode('current')} subjects={subjects} triggerAlert={triggerAlert} triggerConfirm={triggerConfirm} /> ) : 
-                         viewMode === 'timetable' ? ( <div className="max-w-3xl mx-auto"><Timetable currentDay={currentTimetableDay} config={timetableConfig} onDayChange={setCurrentTimetableDay} subjects={subjects} /></div> ) : 
+                         viewMode === 'timetable' ? ( <div className="max-w-3xl mx-auto"><Timetable currentDay={currentTimetableDay} config={timetableConfig} onDayChange={setCurrentTimetableDay} subjects={subjects} globalNow={globalNow} /></div> ) : 
                          viewMode === 'timetable_edit' ? ( <TimetableEditor initialConfig={timetableConfig} onSave={saveTimetableConfig} onCancel={() => setViewMode('timetable')} subjects={subjects} triggerConfirm={triggerConfirm} /> ) : (
                         <div className="max-w-3xl mx-auto">
 
@@ -2211,7 +2252,7 @@
                             )}
 
                             {/* v2.4 Live Dashboard Widget */}
-                            {viewMode === 'current' && isVisible('timetable') && <CurrentLessonWidget config={timetableConfig} t={t} onClick={() => setViewMode('timetable')} />}
+                            {viewMode === 'current' && isVisible('timetable') && <CurrentLessonWidget config={timetableConfig} t={t} onClick={() => setViewMode('timetable')} globalNow={globalNow} />}
 
                             {(viewMode === 'current' || viewMode === 'history') && appMode === 'personal' && (
                                 <>
@@ -2277,8 +2318,6 @@
 
                                     {isVisible('list') && (
                                         <>
-                                            {viewLayout === 'calendar' && <CalendarWidget items={activeItems} selectedDate={calendarSelectedDate} onSelectDate={setCalendarSelectedDate} t={t} />}
-
                                             <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mb-6 relative">
                                                 <div className={`flex items-center gap-2 w-full sm:w-auto overflow-x-auto scrollbar-hide pb-1 transition-opacity duration-300 ${!isListVisible ? 'opacity-50' : 'opacity-100'}`}>
                                                     <span className="text-slate-400 text-xs font-bold whitespace-nowrap flex items-center gap-1"><Icon name="filter" className="w-3 h-3" />篩選:</span>
@@ -2288,9 +2327,13 @@
                                                     ))}
                                                 </div>
                                                 <div className="flex items-center gap-2 w-full sm:w-auto z-30">
-                                                    {viewMode !== 'history' && (
+                                                    {viewMode !== 'history' ? (
                                                         <button onClick={handleClearExpired} className="flex-shrink-0 text-xs font-bold bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400 px-3 py-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors flex items-center gap-1">
                                                             <Icon name="trash-2" className="w-3 h-3" /> 清理過期
+                                                        </button>
+                                                    ) : (
+                                                        <button onClick={handleClearHistory} className="flex-shrink-0 text-xs font-bold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 px-3 py-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center gap-1">
+                                                            <Icon name="trash-2" className="w-3 h-3" /> 清理歷史
                                                         </button>
                                                     )}
                                                     <span className="text-slate-400 text-xs font-bold whitespace-nowrap flex items-center gap-1 ml-1"><Icon name="arrow-up-down" className="w-3 h-3" />排序:</span>
@@ -2302,7 +2345,76 @@
                                                 {displayedItems.length === 0 ? (
                                                     <div className="text-center py-20">
                                                         <div className={`inline-flex p-6 rounded-full ${t.lightBg} mb-4`}><Icon name="sparkles" className={`w-12 h-12 ${t.text}`} /></div>
-                                                        <h3 className="text-xl font-bold text-slate-700 dark:text-slate-300">{calendarSelectedDate ? '這天沒有任何任務' : (viewMode === 'history' ? '沒有已完成的紀錄' : '太好了！任務清單空空如也')}</h3>
+                                                        <h3 className="text-xl font-bold text-slate-700 dark:text-slate-300">{viewMode === 'history' ? '沒有已完成的紀錄' : '太好了！任務清單空空如也'}</h3>
+                                                    </div>
+                                                ) : viewLayout === 'table' ? (
+                                                    <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] border border-white/50 dark:border-slate-700/50 overflow-hidden animate-fadeIn p-2 sm:p-4">
+                                                        <div className="overflow-x-auto rounded-2xl border border-slate-100 dark:border-slate-700/50 bg-white dark:bg-slate-900/50">
+                                                            <table className="w-full text-left text-sm border-collapse">
+                                                                <thead className="bg-slate-50/80 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 font-bold text-[11px] uppercase tracking-widest border-b border-slate-100 dark:border-slate-700/80">
+                                                                    <tr>
+                                                                        <th className="px-5 py-4 whitespace-nowrap">狀態 / 科目</th>
+                                                                        <th className="px-5 py-4 min-w-[200px]">功課內容</th>
+                                                                        <th className="px-5 py-4 whitespace-nowrap">幾時交 (Due Date)</th>
+                                                                        <th className="px-5 py-4 text-right whitespace-nowrap">操作</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
+                                                                    {displayedItems.map((item, index) => {
+                                                                        const isExiting = exitingIds.includes(item.id);
+                                                                        const isCompleted = item.completed || isExiting;
+                                                                        const dl = getDaysRemaining(item.dueDate);
+                                                                        
+                                                                        let statusColor = "text-emerald-600 dark:text-emerald-400";
+                                                                        let statusDot = "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]";
+                                                                        let statusText = `${dl} 天後`;
+                                                                        
+                                                                        if(dl < 0) { statusColor = "text-red-500"; statusDot = "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"; statusText = `已過期`; }
+                                                                        if(dl === 0) { statusColor = "text-orange-500"; statusDot = "bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.8)] animate-pulse"; statusText = "今日到期"; }
+                                                                        if(isCompleted) { statusColor = "text-slate-400"; statusDot = "bg-slate-300 dark:bg-slate-600 shadow-none"; statusText = "已完成"; }
+
+                                                                        const subjectStyle = subjects.find(s => s.name === item.subject)?.color || 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600';
+                                                                        
+                                                                        return (
+                                                                            <tr key={item.id} style={{ animationDelay: `${index * 0.05}s` }} className={`animate-item hover:bg-slate-50/80 dark:hover:bg-slate-700/40 transition-all duration-300 group ${isCompleted ? 'opacity-50 grayscale hover:grayscale-0' : ''} ${isExiting ? 'scale-y-0 opacity-0 translate-x-4' : ''}`}>
+                                                                                <td className="px-5 py-4 whitespace-nowrap">
+                                                                                    <div className="flex items-center gap-3">
+                                                                                        <div className={`w-2.5 h-2.5 rounded-full transition-transform duration-300 group-hover:scale-125 ${statusDot}`}></div>
+                                                                                        <span className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border shadow-sm ${subjectStyle}`}>{item.subject || '其他'}</span>
+                                                                                    </div>
+                                                                                    <div className={`text-[11px] font-bold mt-2 ml-5 flex items-center gap-1.5 ${statusColor}`}>
+                                                                                        {dl === 0 ? <Icon name="alert-circle" className="w-3 h-3" /> : <Icon name="clock" className="w-3 h-3" />}
+                                                                                        {statusText}
+                                                                                    </div>
+                                                                                </td>
+                                                                                <td className="px-5 py-4">
+                                                                                    <div className={`text-base font-bold transition-colors duration-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 ${isCompleted ? 'line-through text-slate-400' : 'text-slate-800 dark:text-slate-100'}`}>{item.description}</div>
+                                                                                    <div className="flex gap-2 mt-2">
+                                                                                        {item.publicRefId && <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md ${t.lightBg} ${t.text}`}><Icon name="radio" className="w-3 h-3" /> 廣播任務</span>}
+                                                                                        {item.type !== 'homework' && <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400"><Icon name="file-question" className="w-3 h-3" /> 測驗</span>}
+                                                                                    </div>
+                                                                                </td>
+                                                                                <td className="px-5 py-4 whitespace-nowrap">
+                                                                                    <div className="font-mono text-sm font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-900/80 px-3 py-1.5 rounded-lg inline-flex items-center gap-2 border border-slate-200 dark:border-slate-700 shadow-inner group-hover:border-indigo-300 dark:group-hover:border-indigo-600 transition-colors">
+                                                                                        <Icon name="calendar-days" className="w-4 h-4 text-slate-400" />
+                                                                                        {formatDueDate(item.dueDate)}
+                                                                                    </div>
+                                                                                </td>
+                                                                                <td className="px-5 py-4 text-right whitespace-nowrap">
+                                                                                    <div className="flex items-center justify-end gap-2 opacity-90 group-hover:opacity-100 transition-opacity">
+                                                                                        <button onClick={() => handleToggle(item.id, item.completed)} className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all hover:scale-110 active:scale-95 ${isCompleted ? 'bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-500/30' : 'border-slate-300 dark:border-slate-500 hover:border-emerald-400 dark:hover:border-emerald-500 bg-white/50 dark:bg-slate-800/50'}`}>
+                                                                                            <Icon name="check" className={`w-4 h-4 ${isCompleted ? 'opacity-100' : 'opacity-0 text-emerald-500 group-hover:opacity-40 transition-opacity'}`} />
+                                                                                        </button>
+                                                                                        {!item.forceExpired && <button onClick={() => setEditingItem(item)} className="p-2 text-slate-400 hover:text-blue-500 transition hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-xl hover:scale-105"><Icon name="pencil" className="w-4 h-4" /></button>}
+                                                                                        <button onClick={() => deleteItem(item.id)} className="p-2 text-slate-400 hover:text-red-500 transition hover:bg-red-50 dark:hover:bg-red-900/30 rounded-xl hover:scale-105"><Icon name="trash-2" className="w-4 h-4" /></button>
+                                                                                    </div>
+                                                                                </td>
+                                                                            </tr>
+                                                                        );
+                                                                    })}
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
                                                     </div>
                                                 ) : displayedItems.map((item, index) => {
                                                     const isExiting = exitingIds.includes(item.id);
@@ -2312,11 +2424,21 @@
                                                     if(dl < 0) statusNode = <span className="text-red-600 bg-red-100 dark:bg-red-900/30 dark:text-red-400 px-2 py-0.5 rounded text-xs font-bold">過期 {Math.abs(dl)} 天</span>;
                                                     if(dl === 0) statusNode = <span className="text-orange-600 bg-orange-100 dark:bg-orange-900/30 dark:text-orange-400 px-2 py-0.5 rounded text-xs font-bold animate-pulse">今日到期!</span>;
                                                     const subjectStyle = subjects.find(s => s.name === item.subject)?.color || 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600';
+                                                    
+                                                    // 動態提取科目顏色作為光暈
+                                                    const glowColorClasses = subjectStyle.split(' ').filter(c => c.startsWith('text-') || c.startsWith('dark:text-')).join(' ');
 
                                                     return (
-                                                        <div key={item.id} style={{ animationDelay: `${index * 0.05}s` }} className={`animate-item relative bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 transition-all ${isExiting ? 'scale-95 opacity-0' : ''}`}>
-                                                            <div className="flex items-start gap-4">
-                                                                <button onClick={() => handleToggle(item.id, item.completed)} className={`mt-1 w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${isCompleted ? 'bg-emerald-500 border-emerald-500 text-white scale-110' : 'border-slate-300 dark:border-slate-600 hover:border-emerald-400'}`}>
+                                                        <div key={item.id} style={{ animationDelay: `${index * 0.05}s` }} className={`animate-item relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] border border-white/50 dark:border-slate-700/50 transition-all hover:-translate-y-1 hover:shadow-lg overflow-hidden group ${isExiting ? 'scale-95 opacity-0' : ''}`}>
+                                                            
+                                                            {/* 背景模糊光暈 */}
+                                                            <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.12] dark:opacity-[0.25] transition-opacity group-hover:opacity-[0.2] dark:group-hover:opacity-[0.35]">
+                                                                 <div className={`absolute -right-8 -top-8 w-40 h-40 rounded-full blur-3xl ${glowColorClasses}`} style={{ backgroundColor: 'currentColor' }}></div>
+                                                                 <div className={`absolute -left-8 -bottom-8 w-32 h-32 rounded-full blur-2xl ${glowColorClasses}`} style={{ backgroundColor: 'currentColor' }}></div>
+                                                            </div>
+
+                                                            <div className="relative z-10 flex items-start gap-4">
+                                                                <button onClick={() => handleToggle(item.id, item.completed)} className={`mt-1 w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 transition-all shadow-sm ${isCompleted ? 'bg-emerald-500 border-emerald-500 text-white scale-110 shadow-emerald-500/30' : 'border-slate-300 dark:border-slate-500 bg-white/50 dark:bg-slate-800/50 hover:border-emerald-400 dark:hover:border-emerald-500'}`}>
                                                                     <Icon name="check" className={`w-4 h-4 ${isCompleted ? 'opacity-100' : 'opacity-0'}`} />
                                                                 </button>
                                                                 <div className="flex-1 min-w-0">
@@ -2331,7 +2453,7 @@
                                                                     <div className={`text-base font-bold mb-2 break-words ${isCompleted ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100'}`}>{item.description}</div>
                                                                     {item.image && <div className="mt-2"><img src={item.image} alt="附件" className={`max-h-32 rounded-lg border border-slate-200 dark:border-slate-700 object-cover ${isCompleted ? 'opacity-50 grayscale' : ''}`} /></div>}
                                                                     <div className="flex items-center justify-between mt-2">
-                                                                        <div className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1 font-mono"><Icon name="calendar" className="w-3 h-3"/> {item.dueDate}</div>
+                                                                        <div className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1 font-mono"><Icon name="calendar" className="w-3 h-3"/> {formatDueDate(item.dueDate)}</div>
                                                                         <div className="flex gap-2">
                                                                             {!item.forceExpired && <button onClick={() => setEditingItem(item)} className="p-1.5 text-slate-400 hover:text-blue-500 dark:hover:text-blue-400 transition" title="編輯"><Icon name="pencil" className="w-4 h-4" /></button>}
                                                                             {isAdmin && item.publicRefId ? (
@@ -2393,21 +2515,35 @@
                                                     <div className="text-center py-10"><p className="text-slate-500 dark:text-slate-400 font-medium">此班級目前沒有廣播任務 🎉</p></div>
                                                 ) : publicTasks.filter(task => task.targetClass === selectedClassBoard).map((task, idx) => {
                                                     const subjectStyle = subjects.find(s => s.name === task.subject)?.color || 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600';
+                                                    
+                                                    // 動態提取科目顏色作為光暈
+                                                    const glowColorClasses = subjectStyle.split(' ').filter(c => c.startsWith('text-') || c.startsWith('dark:text-')).join(' ');
+                                                    
                                                     return (
-                                                    <div key={task.id} style={{ animationDelay: `${idx * 0.05}s` }} className="animate-item bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 relative overflow-hidden">
-                                                        {task.forceExpired && <div className="absolute inset-0 bg-white/50 dark:bg-slate-800/50 backdrop-blur-[1px] z-10 flex items-center justify-center pointer-events-none"><span className="bg-red-500 text-white font-bold px-4 py-2 rounded-xl shadow-lg rotate-[-10deg]">已強制過期</span></div>}
-                                                        <div className="flex justify-between items-start mb-3">
-                                                            <div className="flex gap-2 items-center">
-                                                                <span className={`text-[10px] font-bold px-2.5 py-1 rounded border ${subjectStyle}`}>{task.subject}</span>
-                                                                <span className="text-[10px] bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 px-2 py-1 rounded font-bold">{task.type === 'homework' ? '功課' : '測驗'}</span>
-                                                            </div>
-                                                            <span className="text-xs text-slate-400 dark:text-slate-500 font-mono font-bold bg-slate-50 dark:bg-slate-900 px-2 py-1 rounded border border-slate-100 dark:border-slate-800">Due: {task.dueDate}</span>
+                                                    <div key={task.id} style={{ animationDelay: `${idx * 0.05}s` }} className="animate-item bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl p-5 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] border border-white/50 dark:border-slate-700/50 relative overflow-hidden transition-all hover:-translate-y-1 hover:shadow-lg group">
+                                                        
+                                                        {/* 背景模糊光暈 */}
+                                                        <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.12] dark:opacity-[0.25] transition-opacity group-hover:opacity-[0.2] dark:group-hover:opacity-[0.35]">
+                                                             <div className={`absolute -right-8 -top-8 w-40 h-40 rounded-full blur-3xl ${glowColorClasses}`} style={{ backgroundColor: 'currentColor' }}></div>
+                                                             <div className={`absolute -left-8 -bottom-8 w-32 h-32 rounded-full blur-2xl ${glowColorClasses}`} style={{ backgroundColor: 'currentColor' }}></div>
                                                         </div>
-                                                        <p className="font-bold text-lg text-slate-800 dark:text-slate-100 mb-3 break-words">{task.description}</p>
-                                                        {task.image && <div className="mb-3"><img src={task.image} alt="附件" className={`max-h-32 rounded-xl border border-slate-200 dark:border-slate-700 object-cover`} /></div>}
-                                                        <div className="text-xs text-slate-400 dark:text-slate-500 flex justify-between items-center border-t border-slate-50 dark:border-slate-700/50 pt-3">
-                                                            <span className="flex items-center gap-1"><Icon name="user" className="w-3 h-3"/> 發佈人: {task.senderName || '老師'}</span>
-                                                            <span>{new Date(task.createdAt).toLocaleString('zh-HK')}</span>
+
+                                                        {task.forceExpired && <div className="absolute inset-0 bg-white/50 dark:bg-slate-800/50 backdrop-blur-[1px] z-20 flex items-center justify-center pointer-events-none"><span className="bg-red-500 text-white font-bold px-4 py-2 rounded-xl shadow-lg rotate-[-10deg]">已強制過期</span></div>}
+                                                        
+                                                        <div className="relative z-10">
+                                                            <div className="flex justify-between items-start mb-3">
+                                                                <div className="flex gap-2 items-center">
+                                                                    <span className={`text-[10px] font-bold px-2.5 py-1 rounded border ${subjectStyle}`}>{task.subject}</span>
+                                                                    <span className="text-[10px] bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 px-2 py-1 rounded font-bold">{task.type === 'homework' ? '功課' : '測驗'}</span>
+                                                                </div>
+                                                                <span className="text-xs text-slate-400 dark:text-slate-500 font-mono font-bold bg-slate-50 dark:bg-slate-900 px-2 py-1 rounded border border-slate-100 dark:border-slate-800">Due: {formatDueDate(task.dueDate)}</span>
+                                                            </div>
+                                                            <p className="font-bold text-lg text-slate-800 dark:text-slate-100 mb-3 break-words">{task.description}</p>
+                                                            {task.image && <div className="mb-3"><img src={task.image} alt="附件" className={`max-h-32 rounded-xl border border-slate-200 dark:border-slate-700 object-cover`} /></div>}
+                                                            <div className="text-xs text-slate-400 dark:text-slate-500 flex justify-between items-center border-t border-slate-50 dark:border-slate-700/50 pt-3">
+                                                                <span className="flex items-center gap-1"><Icon name="user" className="w-3 h-3"/> 發佈人: {task.senderName || '老師'}</span>
+                                                                <span>{new Date(task.createdAt).toLocaleString('zh-HK')}</span>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 )})}
