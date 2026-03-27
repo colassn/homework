@@ -1,6 +1,22 @@
 <!DOCTYPE html>
 <html lang="zh-HK">
 <head>
+    <script>
+      // 攔截並顯示嚴重的語法錯誤 (Babel Syntax Error)
+      var originalConsoleError = console.error;
+      console.error = function() {
+        var msg = Array.from(arguments).join(" ");
+        if (msg.includes("SyntaxError") || msg.includes("Unexpected token")) {
+            alert("💥 抓到兇手了！語法錯誤：\n\n" + msg.substring(0, 200));
+        }
+        originalConsoleError.apply(console, arguments);
+      };
+      
+      // 攔截一般執行錯誤
+      window.onerror = function(msg, url, line) {
+        alert("💥 系統崩潰！\n\n錯誤：" + msg + "\n大約在第 " + line + " 行附近");
+      };
+    </script>
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-8VCPLTE2QT"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
