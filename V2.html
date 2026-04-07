@@ -291,7 +291,7 @@
                         <Icon name="chevron-down" className={`w-3 h-3 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} /> 
                     </button> 
                     {isOpen && ( 
-                        <div className="absolute right-0 mt-2 min-w-[140px] bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 z-50 overflow-hidden py-1.5 animate-in fade-in zoom-in-95 duration-200 origin-top-right"> 
+                        <div className="absolute right-0 mt-2 min-w-[140px] bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-lg shadow-xl border border-slate-100 dark:border-slate-700 z-50 overflow-hidden py-1.5 animate-in fade-in zoom-in-95 duration-200 origin-top-right"> 
                             {options.map((opt) => ( 
                                 <button key={opt.value} onClick={() => { onChange(opt.value); setIsOpen(false); }} className={`w-full text-left px-4 py-2.5 text-sm font-bold flex items-center gap-3 transition-colors ${value === opt.value ? 'bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'}`}> 
                                     {opt.icon && <Icon name={opt.icon} className="w-4 h-4" />}
@@ -379,7 +379,7 @@
         function CurrentLessonWidget({ config, t, onClick, globalNow }) {
             const now = globalNow || new Date();
             const day = now.getDay();
-            if (day === 0 || day === 6) return <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-700 mb-6 text-center"><div className="font-bold text-slate-500 dark:text-slate-400 flex items-center justify-center gap-2"><Icon name="coffee" className="w-5 h-5 text-orange-500"/> 放假啦！好好休息</div></div>;
+            if (day === 0 || day === 6) return <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-lg p-4 shadow-sm border border-slate-100 dark:border-slate-700 mb-6 text-center"><div className="font-bold text-slate-500 dark:text-slate-400 flex items-center justify-center gap-2"><Icon name="coffee" className="w-5 h-5 text-orange-500"/> 放假啦！好好休息</div></div>;
 
             const schedule = generateFullSchedule(config, now);
             const currentMs = now.getTime();
@@ -407,16 +407,16 @@
             const diff = currentSlot ? (currentSlot.end.getTime() - currentMs) : (nextSlot ? (nextSlot.start.getTime() - currentMs) : 0);
 
             return (
-                <div onClick={onClick} className="cursor-pointer mb-6 relative overflow-hidden rounded-2xl p-[2px] shadow-lg hover:scale-[1.01] transition-transform duration-300">
+                <div onClick={onClick} className="cursor-pointer mb-6 relative overflow-hidden rounded-lg p-[2px] shadow-lg hover:scale-[1.01] transition-transform duration-300">
                     <div className="absolute inset-0 bg-gradient-to-r from-violet-500 via-fuchsia-500 to-cyan-500 animate-gradient-x"></div>
                     
-                    <div className="relative bg-white/95 dark:bg-slate-900/95 backdrop-blur-3xl rounded-2xl p-4 flex items-center justify-between h-full">
+                    <div className="relative bg-white/95 dark:bg-slate-900/95 backdrop-blur-3xl rounded-lg p-4 flex items-center justify-between h-full">
                         <div className="absolute top-0 left-0 h-[2px] bg-gradient-to-r from-violet-500 to-cyan-500 opacity-50 w-full"></div>
                         <div className={`absolute top-0 left-0 h-[2px] transition-all duration-1000 ${status === 'current' ? 'bg-fuchsia-500 shadow-[0_0_10px_rgba(217,70,239,0.8)]' : 'bg-transparent'}`} style={{ width: currentSlot ? `${100 - (diff / (currentSlot.end - currentSlot.start)) * 100}%` : '0%' }}></div>
 
                         <div className="flex-1 text-left min-w-0 z-10">
                             <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-0.5 flex items-center gap-1">
-                                {status === 'current' ? <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> : <Icon name="clock" className="w-3 h-3"/>}
+                                {status === 'current' ? <span className="w-2 h-2 rounded-md bg-green-500 animate-pulse"></span> : <Icon name="clock" className="w-3 h-3"/>}
                                 {status === 'current' ? '正在上課' : status === 'break' ? '小息時間' : status === 'not-started' ? '準備上課' : '放學'}
                             </div>
                             <div className="font-black text-xl text-transparent bg-clip-text bg-gradient-to-r from-slate-800 to-slate-600 dark:from-white dark:to-slate-300 truncate">
@@ -460,10 +460,10 @@
             return (
                 <div className="fixed inset-0 z-[160] flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
-                    <div className="modal-animate bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-md p-6 relative z-10 flex flex-col max-h-[80vh]">
+                    <div className="modal-animate bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-md p-6 relative z-10 flex flex-col max-h-[80vh]">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-xl font-bold text-slate-800 dark:text-white">{title}</h3>
-                            <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"><Icon name="x" className="w-5 h-5 text-slate-500 dark:text-slate-400" /></button>
+                            <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md transition-colors"><Icon name="x" className="w-5 h-5 text-slate-500 dark:text-slate-400" /></button>
                         </div>
                         <div className="overflow-y-auto flex-1 pr-1 space-y-3">
                             {items.length === 0 ? (
@@ -477,7 +477,7 @@
                                 if(dl === 0) { statusText = "今日到期"; statusColor = "text-orange-600 bg-orange-100 dark:bg-orange-900/30 animate-pulse"; }
 
                                 return (
-                                    <div key={item.id} className="p-4 rounded-2xl border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 flex flex-col gap-2 group hover:border-indigo-300 transition-colors">
+                                    <div key={item.id} className="p-4 rounded-lg border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 flex flex-col gap-2 group hover:border-indigo-300 transition-colors">
                                         <div className="flex justify-between items-start">
                                             <div className="flex gap-2 items-center">
                                                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${subjectStyle}`}>{item.subject}</span>
@@ -508,11 +508,11 @@
             return (
                 <div className="fixed inset-0 z-40 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900 p-6 text-center overflow-hidden">
                     <div className="absolute inset-0 z-0 opacity-30">
-                        <div className="absolute top-10 left-10 w-64 h-64 bg-indigo-300 dark:bg-indigo-900 rounded-full mix-blend-multiply filter blur-3xl animate-blob"></div>
-                        <div className="absolute bottom-10 right-10 w-64 h-64 bg-pink-300 dark:bg-pink-900 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000"></div>
+                        <div className="absolute top-10 left-10 w-64 h-64 bg-indigo-300 dark:bg-indigo-900 rounded-md mix-blend-multiply filter blur-3xl animate-blob"></div>
+                        <div className="absolute bottom-10 right-10 w-64 h-64 bg-pink-300 dark:bg-pink-900 rounded-md mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000"></div>
                     </div>
-                    <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl p-8 rounded-3xl shadow-xl border border-white/50 dark:border-slate-700 max-w-md w-full relative z-10">
-                        <div className="w-20 h-20 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl p-8 rounded-xl shadow-xl border border-white/50 dark:border-slate-700 max-w-md w-full relative z-10">
+                        <div className="w-20 h-20 bg-slate-100 dark:bg-slate-700 rounded-md flex items-center justify-center mx-auto mb-6">
                             <Icon name={iconName} className="w-10 h-10 text-red-500" />
                         </div>
                         <h1 className="text-2xl font-black text-slate-800 dark:text-white mb-2">
@@ -545,10 +545,10 @@
             return (
                 <div className="fixed inset-0 z-[160] flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
-                    <div className="modal-animate bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-sm p-6 relative z-10 max-h-[85vh] overflow-y-auto">
+                    <div className="modal-animate bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-sm p-6 relative z-10 max-h-[85vh] overflow-y-auto">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2"><Icon name="palette" className={`w-5 h-5 ${t.text}`} /> 外觀設定</h3>
-                            <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"><Icon name="x" className="w-5 h-5 dark:text-slate-300" /></button>
+                            <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md transition-colors"><Icon name="x" className="w-5 h-5 dark:text-slate-300" /></button>
                         </div>
 
                         <div className="space-y-6">
@@ -573,7 +573,7 @@
                                                 <span className="text-sm font-bold text-slate-600 dark:text-slate-400">{item.label}</span>
                                                 <div className="relative">
                                                     <input type="checkbox" className="sr-only peer" checked={customLayout[item.key]} onChange={() => handleCustomToggle(item.key)} />
-                                                    <div className={`w-9 h-5 bg-slate-200 dark:bg-slate-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-4 after:w-4 after:transition-all ${t.bg} peer-checked:bg-indigo-500`}></div>
+                                                    <div className={`w-9 h-5 bg-slate-200 dark:bg-slate-700 rounded-md peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-md after:h-4 after:w-4 after:transition-all ${t.bg} peer-checked:bg-indigo-500`}></div>
                                                 </div>
                                             </label>
                                         ))}
@@ -586,7 +586,7 @@
                                 <div className="grid grid-cols-4 gap-3">
                                     {Object.entries(THEME_CONFIG).map(([key, config]) => (
                                         <button key={key} onClick={() => setThemeColor(key)} className={`flex flex-col items-center gap-2 p-2 rounded-xl border-2 transition-all ${themeColor === key ? `${config.border} ${config.lightBg}` : 'border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'}`}>
-                                            <div className={`w-6 h-6 rounded-full bg-gradient-to-br ${config.gradient}`}></div>
+                                            <div className={`w-6 h-6 rounded-md bg-gradient-to-br ${config.gradient}`}></div>
                                             <span className={`text-[10px] font-bold ${themeColor === key ? config.text : 'dark:text-slate-300'}`}>{config.name}</span>
                                         </button>
                                     ))}
@@ -616,8 +616,8 @@
             return (
                 <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm"></div>
-                    <div className="modal-animate bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-sm p-8 relative z-10 text-center border border-slate-100 dark:border-slate-700">
-                        <div className={`w-16 h-16 ${t.lightBg} rounded-full flex items-center justify-center mx-auto mb-4 ${t.text}`}><Icon name="user" className="w-8 h-8" /></div>
+                    <div className="modal-animate bg-white dark:bg-slate-800 rounded-lg shadow-2xl w-full max-w-sm p-8 relative z-10 text-center border border-slate-100 dark:border-slate-700">
+                        <div className={`w-16 h-16 ${t.lightBg} rounded-md flex items-center justify-center mx-auto mb-4 ${t.text}`}><Icon name="user" className="w-8 h-8" /></div>
                         <h2 className="text-2xl font-black text-slate-800 dark:text-white mb-2">個人模式設定</h2>
                         <p className="text-slate-500 dark:text-slate-400 mb-6 text-sm">請輸入你的<strong>英文短名</strong>，方便老師辨識</p>
                         <form onSubmit={handleSubmit}>
@@ -652,19 +652,19 @@
             return (
                 <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose}></div>
-                    <div className="modal-animate bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-sm p-6 relative z-10 text-center">
+                    <div className="modal-animate bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-sm p-6 relative z-10 text-center">
                         {floatingError && (
-                            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white px-5 py-3 rounded-2xl shadow-[0_10px_30px_rgba(239,68,68,0.4)] z-50 font-bold text-sm whitespace-nowrap pop-in-error flex items-center gap-2">
+                            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white px-5 py-3 rounded-lg shadow-[0_10px_30px_rgba(239,68,68,0.4)] z-50 font-bold text-sm whitespace-nowrap pop-in-error flex items-center gap-2">
                                 <Icon name="alert-circle" className="w-5 h-5" />
                                 {floatingError}
                             </div>
                         )}
-                        <button onClick={onClose} className="absolute top-4 right-4 p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"><Icon name="x" className="w-5 h-5 dark:text-slate-300" /></button>
-                        <div className={`w-16 h-16 ${t.lightBg} rounded-full flex items-center justify-center mx-auto mb-4 mt-2 ${t.text}`}><Icon name="school" className="w-8 h-8" /></div>
+                        <button onClick={onClose} className="absolute top-4 right-4 p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md transition-colors"><Icon name="x" className="w-5 h-5 dark:text-slate-300" /></button>
+                        <div className={`w-16 h-16 ${t.lightBg} rounded-md flex items-center justify-center mx-auto mb-4 mt-2 ${t.text}`}><Icon name="school" className="w-8 h-8" /></div>
                         <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-2">加入班級</h2>
                         <p className="text-slate-500 dark:text-slate-400 mb-6 text-sm">請輸入由老師提供的 6 位數班級代碼</p>
                         <form onSubmit={handleJoin}>
-                            <input type="text" maxLength={6} className={`w-full px-4 py-4 rounded-2xl border ${floatingError ? 'border-red-400 bg-red-50 dark:bg-red-900/10 focus:ring-red-400' : `border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:${t.ring}`} dark:text-white text-center font-mono font-bold text-2xl tracking-[0.5em] outline-none mb-4 uppercase placeholder:tracking-normal placeholder:text-base placeholder:font-sans transition-colors`} placeholder="輸入代碼" value={code} onChange={e => {setCode(e.target.value); setFloatingError('');}} autoFocus required />
+                            <input type="text" maxLength={6} className={`w-full px-4 py-4 rounded-lg border ${floatingError ? 'border-red-400 bg-red-50 dark:bg-red-900/10 focus:ring-red-400' : `border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:${t.ring}`} dark:text-white text-center font-mono font-bold text-2xl tracking-[0.5em] outline-none mb-4 uppercase placeholder:tracking-normal placeholder:text-base placeholder:font-sans transition-colors`} placeholder="輸入代碼" value={code} onChange={e => {setCode(e.target.value); setFloatingError('');}} autoFocus required />
                             <button type="submit" disabled={loading || code.length !== 6} className={`w-full py-3 rounded-xl text-white font-bold transition-all shadow-lg active:scale-95 disabled:opacity-50 ${t.bg}`}>{loading ? '處理中...' : '確認加入'}</button>
                         </form>
                     </div>
@@ -695,10 +695,10 @@
             return ( 
                 <div className="fixed inset-0 z-[200] flex items-center justify-center p-4"> 
                     <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={onClose}></div> 
-                    <div className="modal-animate bg-white/90 dark:bg-slate-800/90 backdrop-blur-2xl rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.3)] w-full max-w-md p-8 relative z-10 border border-white/50 dark:border-slate-700 overflow-hidden"> 
-                        <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"><Icon name="x" className="w-6 h-6" /></button> 
-                        <div className="absolute -top-10 -left-10 w-40 h-40 bg-purple-300 dark:bg-purple-900 rounded-full mix-blend-multiply filter blur-2xl opacity-50 animate-blob pointer-events-none"></div> 
-                        <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-blue-300 dark:bg-blue-900 rounded-full mix-blend-multiply filter blur-2xl opacity-50 animate-blob animation-delay-2000 pointer-events-none"></div> 
+                    <div className="modal-animate bg-white/90 dark:bg-slate-800/90 backdrop-blur-2xl rounded-xl shadow-[0_20px_60px_rgba(0,0,0,0.3)] w-full max-w-md p-8 relative z-10 border border-white/50 dark:border-slate-700 overflow-hidden"> 
+                        <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"><Icon name="x" className="w-6 h-6" /></button> 
+                        <div className="absolute -top-10 -left-10 w-40 h-40 bg-purple-300 dark:bg-purple-900 rounded-md mix-blend-multiply filter blur-2xl opacity-50 animate-blob pointer-events-none"></div> 
+                        <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-blue-300 dark:bg-blue-900 rounded-md mix-blend-multiply filter blur-2xl opacity-50 animate-blob animation-delay-2000 pointer-events-none"></div> 
                         <div className="text-center mb-8 relative"><h2 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">{isLogin ? '登入帳戶' : '立即註冊'}</h2><p className="text-slate-500 dark:text-slate-400 mt-1 text-sm">{isLogin ? '登入即可儲存及同步你的資料' : '只需幾秒，開始雲端記錄'} </p></div> 
                         <form onSubmit={handleEmailAuth} className="space-y-4 relative"> 
                             <div className="relative group"><div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors"><Icon name="mail" className="w-5 h-5" /></div><input type="email" className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium" placeholder="電子郵件" value={email} onChange={e => setEmail(e.target.value)} required /></div> 
@@ -721,10 +721,10 @@
             return ( 
                 <div className="fixed inset-0 z-[110] flex items-center justify-center p-4"> 
                     <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={onClose}></div> 
-                    <div className="modal-animate bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md p-6 relative z-10 overflow-hidden"> 
+                    <div className="modal-animate bg-white dark:bg-slate-800 rounded-lg shadow-2xl w-full max-w-md p-6 relative z-10 overflow-hidden"> 
                         <div className="flex justify-between items-center mb-4"> 
                             <h3 className="text-xl font-bold text-slate-800 dark:text-white">修改紀錄</h3> 
-                            <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"><Icon name="x" className="w-5 h-5 text-slate-500 dark:text-slate-400" /></button> 
+                            <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md transition-colors"><Icon name="x" className="w-5 h-5 text-slate-500 dark:text-slate-400" /></button> 
                         </div> 
                         <form onSubmit={handleSave} className="space-y-4"> 
                             <div> 
@@ -752,18 +752,18 @@
             return (
                 <div className="fixed inset-0 z-[160] flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
-                    <div className="modal-animate bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-2xl p-6 relative z-10 flex flex-col max-h-[80vh]">
+                    <div className="modal-animate bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-2xl p-6 relative z-10 flex flex-col max-h-[80vh]">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-2xl font-bold text-slate-800 dark:text-white">選擇科目</h3>
-                            <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"><Icon name="x" className="w-6 h-6 text-slate-500 dark:text-slate-400" /></button>
+                            <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md transition-colors"><Icon name="x" className="w-6 h-6 text-slate-500 dark:text-slate-400" /></button>
                         </div>
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 overflow-y-auto p-1">
-                            <button onClick={() => onSelect("")} className="p-4 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-600 text-slate-400 dark:text-slate-500 font-bold hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-400 transition-all flex flex-col items-center justify-center gap-2 min-h-[80px]">
+                            <button onClick={() => onSelect("")} className="p-4 rounded-lg border-2 border-dashed border-slate-300 dark:border-slate-600 text-slate-400 dark:text-slate-500 font-bold hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-400 transition-all flex flex-col items-center justify-center gap-2 min-h-[80px]">
                                 <Icon name="minus-circle" className="w-6 h-6" />
                                 空堂
                             </button>
                             {subjects.map(sub => (
-                                <button key={sub.name} onClick={() => onSelect(sub.name)} className={`p-4 rounded-2xl border-2 font-bold transition-all shadow-sm hover:shadow-md hover:scale-[1.02] flex flex-col items-center justify-center gap-2 min-h-[80px] ${sub.color}`}>
+                                <button key={sub.name} onClick={() => onSelect(sub.name)} className={`p-4 rounded-lg border-2 font-bold transition-all shadow-sm hover:shadow-md hover:scale-[1.02] flex flex-col items-center justify-center gap-2 min-h-[80px] ${sub.color}`}>
                                     <span className="text-lg">{sub.name}</span>
                                 </button>
                             ))}
@@ -820,10 +820,10 @@
             return (
                 <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
-                    <div className="modal-animate bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-xl p-6 relative z-10 flex flex-col max-h-[85vh]">
+                    <div className="modal-animate bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-xl p-6 relative z-10 flex flex-col max-h-[85vh]">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-xl font-bold text-slate-800 dark:text-white">科目設定</h3>
-                            <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"><Icon name="x" className="w-5 h-5 text-slate-500 dark:text-slate-400" /></button>
+                            <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md transition-colors"><Icon name="x" className="w-5 h-5 text-slate-500 dark:text-slate-400" /></button>
                         </div>
                         <div className="flex-1 overflow-y-auto pr-1">
                             <div className="flex justify-between items-center mb-3">
@@ -913,12 +913,12 @@
             const lessonSlots = timeSlots.map((s, i) => ({ ...s, originalIndex: i })).filter(s => s.type === 'lesson');
 
             return (
-                <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden flex flex-col h-[80vh] max-w-4xl mx-auto relative">
+                <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden flex flex-col h-[80vh] max-w-4xl mx-auto relative">
                     <div className="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/50">
                         <h2 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2"><Icon name="edit" className="w-5 h-5 text-indigo-500 dark:text-indigo-400"/> 編輯時間表</h2>
                         <div className="flex gap-2">
                             <button onClick={resetToDefault} className="px-3 py-1.5 text-xs font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors">重置預設</button>
-                            <button onClick={onCancel} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full text-slate-400"><Icon name="x" className="w-5 h-5"/></button>
+                            <button onClick={onCancel} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md text-slate-400"><Icon name="x" className="w-5 h-5"/></button>
                         </div>
                     </div>
 
@@ -955,9 +955,9 @@
                                         <button key={i} onClick={() => setEditDay(i + 1)} className={`px-4 py-2 rounded-lg font-bold text-sm whitespace-nowrap transition-all ${editDay === i + 1 ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 dark:shadow-none' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'}`}>星期{d}</button>
                                     ))}
                                 </div>
-                                <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-3">
+                                <div className="bg-white dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm space-y-3">
                                     <h3 className="font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
-                                        <span className="w-2 h-6 bg-indigo-500 rounded-full"></span>
+                                        <span className="w-2 h-6 bg-indigo-500 rounded-md"></span>
                                         星期{['日','一','二','三','四','五','六'][editDay]} 課程
                                     </h3>
                                     {lessonSlots.length === 0 ? <p className="text-slate-400 text-center py-4">請先在「時間設定」新增課堂類型的時間段</p> : 
@@ -1007,21 +1007,21 @@
             return ( 
                 <div className="space-y-4"> 
                     <div className="flex bg-white dark:bg-slate-800 rounded-xl p-1 shadow-sm overflow-x-auto">{[1, 2, 3, 4, 5].map(day => (<button key={day} onClick={() => onDayChange(day)} className={`flex-1 py-2 px-3 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${currentDay === day ? 'bg-indigo-600 text-white shadow' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'}`}>星期{weekDays[day]}</button>))}</div> 
-                    <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 p-4">
+                    <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-100 dark:border-slate-700 p-4">
                         {scheduleData.length > 0 ? scheduleData.map((slot, idx) => { 
                             const nowTime = now.getTime(); const startTime = slot.start.getTime(); const endTime = slot.end.getTime();
                             let status = 'future'; let diff = 0;
                             if (nowTime > endTime) { status = 'past'; } else if (nowTime >= startTime && nowTime <= endTime) { status = 'current'; diff = endTime - nowTime; }
                             return (
                                 <div key={idx} className={`relative pl-6 pb-6 last:pb-0 border-l-2 transition-colors duration-500 ${status === 'current' ? 'border-purple-500 dark:border-purple-400' : (status === 'past' ? 'border-slate-200 dark:border-slate-700' : 'border-green-300 dark:border-green-700')}`}>
-                                    <div className={`absolute -left-[9px] top-0 w-4 h-4 rounded-full border-2 transition-all duration-500 ${status === 'current' ? 'bg-purple-500 border-purple-100 animate-pulse scale-110' : (status === 'past' ? 'bg-slate-200 dark:bg-slate-700 border-slate-100 dark:border-slate-600' : 'bg-white dark:bg-slate-800 border-green-400 dark:border-green-500')}`}></div>
+                                    <div className={`absolute -left-[9px] top-0 w-4 h-4 rounded-md border-2 transition-all duration-500 ${status === 'current' ? 'bg-purple-500 border-purple-100 animate-pulse scale-110' : (status === 'past' ? 'bg-slate-200 dark:bg-slate-700 border-slate-100 dark:border-slate-600' : 'bg-white dark:bg-slate-800 border-green-400 dark:border-green-500')}`}></div>
                                     <div className={`rounded-xl p-3 transition-all duration-500 ${status === 'current' ? 'bg-purple-50 dark:bg-purple-900/30 shadow-md border border-purple-100 dark:border-purple-800 transform scale-[1.02]' : (status === 'past' ? 'opacity-60 grayscale' : 'bg-green-50/50 dark:bg-green-900/20 border border-green-100 dark:border-green-800')}`}>
                                         <div className="flex justify-between items-start">
                                             <div>
                                                 <div className={`text-xs font-mono mb-0.5 ${status === 'current' ? 'text-purple-600 dark:text-purple-400 font-bold' : 'text-slate-400 dark:text-slate-500'}`}>{formatTimeStr(slot.start)} - {formatTimeStr(slot.end)}</div>
                                                 <div className={`text-base font-bold ${slot.type === 'lesson' ? 'text-slate-800 dark:text-slate-200' : 'text-slate-500 dark:text-slate-400 italic'} ${status === 'current' ? 'text-purple-900 dark:text-purple-300' : ''}`}>{slot.subjectName}</div>
                                             </div>
-                                            {status === 'current' && (<div className="text-right"><span className="inline-block text-[10px] bg-purple-600 text-white px-2 py-0.5 rounded-full font-bold mb-1 animate-pulse">進行中</span><div className="text-xs font-mono font-bold text-purple-600 dark:text-purple-400">剩 {formatCountdown(diff)}</div></div>)}
+                                            {status === 'current' && (<div className="text-right"><span className="inline-block text-[10px] bg-purple-600 text-white px-2 py-0.5 rounded-md font-bold mb-1 animate-pulse">進行中</span><div className="text-xs font-mono font-bold text-purple-600 dark:text-purple-400">剩 {formatCountdown(diff)}</div></div>)}
                                             {status === 'past' && <Icon name="check" className="w-4 h-4 text-slate-300 dark:text-slate-600" />}
                                         </div>
                                     </div>
@@ -1251,10 +1251,10 @@
             const filteredUsers = users.filter(u => (u.displayName || '').toLowerCase().includes(searchQuery.toLowerCase()) || (u.email || '').toLowerCase().includes(searchQuery.toLowerCase()));
 
             return (
-                <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col md:flex-row min-h-[700px] relative z-20">
+                <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col md:flex-row min-h-[700px] relative z-20">
                     <div className="w-full md:w-64 bg-slate-900 dark:bg-slate-950 text-slate-300 p-6 flex flex-col gap-2 shrink-0 border-r border-slate-800">
                         <div className="flex items-center gap-3 mb-8 text-white px-2">
-                            <button onClick={onBack} className="p-2 -ml-2 hover:bg-slate-800 rounded-full transition-colors"><Icon name="arrow-left" className="w-5 h-5" /></button>
+                            <button onClick={onBack} className="p-2 -ml-2 hover:bg-slate-800 rounded-md transition-colors"><Icon name="arrow-left" className="w-5 h-5" /></button>
                             <h2 className="text-xl font-black tracking-wide">超級管理中心</h2>
                         </div>
                         <div className="flex flex-row md:flex-col gap-2 overflow-x-auto scrollbar-hide pb-2 md:pb-0">
@@ -1276,15 +1276,15 @@
                             <div className="space-y-6 animate-fadeIn">
                                 <h3 className="text-2xl font-bold dark:text-white mb-6">系統概覽</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-6 text-white shadow-lg shadow-blue-500/20 relative overflow-hidden group">
+                                    <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg p-6 text-white shadow-lg shadow-blue-500/20 relative overflow-hidden group">
                                         <div className="text-blue-100 text-sm font-bold mb-1 flex items-center gap-2"><Icon name="users" className="w-4 h-4"/> 總註冊用戶</div>
                                         <div className="text-4xl font-black">{users.length}</div>
                                     </div>
-                                    <div className="bg-gradient-to-br from-emerald-400 to-teal-500 rounded-2xl p-6 text-white shadow-lg shadow-teal-500/20 relative overflow-hidden group">
+                                    <div className="bg-gradient-to-br from-emerald-400 to-teal-500 rounded-lg p-6 text-white shadow-lg shadow-teal-500/20 relative overflow-hidden group">
                                         <div className="text-emerald-100 text-sm font-bold mb-1 flex items-center gap-2"><Icon name="activity" className="w-4 h-4"/> 24小時內活躍</div>
                                         <div className="text-4xl font-black">{activeTodayCount}</div>
                                     </div>
-                                    <div className="bg-gradient-to-br from-orange-400 to-red-500 rounded-2xl p-6 text-white shadow-lg shadow-orange-500/20 relative overflow-hidden group">
+                                    <div className="bg-gradient-to-br from-orange-400 to-red-500 rounded-lg p-6 text-white shadow-lg shadow-orange-500/20 relative overflow-hidden group">
                                         <div className="text-orange-100 text-sm font-bold mb-1 flex items-center gap-2"><Icon name="radio" className="w-4 h-4"/> 廣播任務總數</div>
                                         <div className="text-4xl font-black">{publicTasks.length}</div>
                                         {isAdmin && <button onClick={handleGlobalCleanup} className="mt-4 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-xl text-xs font-bold transition-all">一鍵清理過期功課</button>}
@@ -1303,7 +1303,7 @@
                                     <button type="submit" className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-md active:scale-95 flex items-center gap-2 whitespace-nowrap"><Icon name="plus" className="w-4 h-4" /> 建立班級</button>
                                 </form>
 
-                                <div className="flex-1 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col mt-4">
+                                <div className="flex-1 bg-white dark:bg-slate-800 rounded-lg border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col mt-4">
                                     <div className="overflow-y-auto flex-1">
                                         <table className="w-full text-left text-sm whitespace-nowrap">
                                             <thead className="bg-slate-50/80 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 font-bold sticky top-0 backdrop-blur-md z-10 border-b border-slate-100 dark:border-slate-700">
@@ -1344,7 +1344,7 @@
                                 </div>
 
                                 {expiredReport && (
-                                    <div className="p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800/50 rounded-2xl animate-fadeIn shrink-0">
+                                    <div className="p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800/50 rounded-lg animate-fadeIn shrink-0">
                                         <div className="flex justify-between items-center mb-3">
                                             <h4 className="font-bold text-orange-800 dark:text-orange-300 flex items-center gap-2"><Icon name="alert-triangle" className="w-5 h-5"/> 未清理過期功課的學生名單 ({expiredReport.length} 人)</h4>
                                             <button onClick={() => setExpiredReport(null)} className="text-orange-500 hover:text-orange-700 dark:hover:text-orange-400"><Icon name="x" className="w-5 h-5"/></button>
@@ -1353,7 +1353,7 @@
                                             {expiredReport.map(r => (
                                                 <div key={r.user.uid} className="flex justify-between items-center bg-white dark:bg-slate-800 p-3 rounded-xl border border-orange-100 dark:border-orange-800/50 cursor-pointer hover:border-orange-300 dark:hover:border-orange-600 transition-colors shadow-sm" onClick={() => setSelectedUser(r.user)}>
                                                     <span className="font-bold text-sm dark:text-white flex items-center gap-2">
-                                                        <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs">{r.user.displayName?.[0]?.toUpperCase() || 'U'}</div>
+                                                        <div className="w-6 h-6 rounded-md bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs">{r.user.displayName?.[0]?.toUpperCase() || 'U'}</div>
                                                         {r.user.displayName} <span className="text-xs text-slate-400 font-normal hidden sm:inline-block ml-1">{r.user.email}</span>
                                                     </span>
                                                     <span className="bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 px-3 py-1 rounded-lg font-bold text-xs">{r.expiredCount} 項未清</span>
@@ -1363,7 +1363,7 @@
                                     </div>
                                 )}
 
-                                <div className="flex-1 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col">
+                                <div className="flex-1 bg-white dark:bg-slate-800 rounded-lg border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col">
                                     <div className="overflow-y-auto flex-1">
                                         <table className="w-full text-left text-sm whitespace-nowrap">
                                             <thead className="bg-slate-50/80 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 font-bold sticky top-0 backdrop-blur-md z-10 border-b border-slate-100 dark:border-slate-700">
@@ -1381,10 +1381,10 @@
                                                         <tr key={u.uid} className={`hover:bg-indigo-50/30 dark:hover:bg-slate-700/50 transition-colors group cursor-pointer ${isBlack ? 'opacity-60' : ''}`} onClick={() => setSelectedUser(u)}>
                                                             <td className="px-6 py-4">
                                                                 <div className="flex items-center gap-3">
-                                                                    <div className={`relative w-9 h-9 rounded-full flex items-center justify-center font-bold text-white shadow-sm shrink-0 ${isBlack ? 'bg-red-800' : isAdm ? 'bg-purple-500' : isWhite ? 'bg-emerald-500' : 'bg-slate-400 dark:bg-slate-600'}`}>
+                                                                    <div className={`relative w-9 h-9 rounded-md flex items-center justify-center font-bold text-white shadow-sm shrink-0 ${isBlack ? 'bg-red-800' : isAdm ? 'bg-purple-500' : isWhite ? 'bg-emerald-500' : 'bg-slate-400 dark:bg-slate-600'}`}>
                                                                         {u.displayName?.[0]?.toUpperCase() || 'U'}
-                                                                        {!isBlack && onlineStatus === 'online' && <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white dark:border-slate-800 rounded-full"></span>}
-                                                                        {!isBlack && onlineStatus === 'idle' && <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-yellow-400 border-2 border-white dark:border-slate-800 rounded-full"></span>}
+                                                                        {!isBlack && onlineStatus === 'online' && <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white dark:border-slate-800 rounded-md"></span>}
+                                                                        {!isBlack && onlineStatus === 'idle' && <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-yellow-400 border-2 border-white dark:border-slate-800 rounded-md"></span>}
                                                                     </div>
                                                                     <div>
                                                                         <div className="font-bold dark:text-white flex items-center gap-2">{u.displayName || '未命名'} {isBlack && <Icon name="shield-ban" className="w-3 h-3 text-red-500"/>}</div>
@@ -1394,10 +1394,10 @@
                                                                 </div>
                                                             </td>
                                                             <td className="px-6 py-4">
-                                                                {isBlack ? <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-[10px] font-bold">黑名單 (已封鎖)</span> :
-                                                                 isAdm ? <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 text-[10px] font-bold">管理員</span> :
-                                                                 isWhite ? <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold">白名單</span> :
-                                                                 <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-bold">普通用戶</span>}
+                                                                {isBlack ? <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-[10px] font-bold">黑名單 (已封鎖)</span> :
+                                                                 isAdm ? <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 text-[10px] font-bold">管理員</span> :
+                                                                 isWhite ? <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold">白名單</span> :
+                                                                 <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-bold">普通用戶</span>}
                                                             </td>
                                                             <td className="px-6 py-4 text-slate-500 dark:text-slate-400 text-xs font-mono">
                                                                 <span className="font-medium" title={u.lastSeen && typeof u.lastSeen.toDate === 'function' ? u.lastSeen.toDate().toLocaleString('zh-HK') : ''}>
@@ -1423,14 +1423,14 @@
                         {activeTab === 'users' && selectedUser && (
                             <div className="space-y-6 animate-fadeIn">
                                 <div className="flex items-center gap-3">
-                                    <button onClick={() => setSelectedUser(null)} className="p-2 hover:bg-white dark:hover:bg-slate-700 rounded-full transition-colors bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-600"><Icon name="arrow-left" className="w-5 h-5 text-slate-600 dark:text-slate-300" /></button>
+                                    <button onClick={() => setSelectedUser(null)} className="p-2 hover:bg-white dark:hover:bg-slate-700 rounded-md transition-colors bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-600"><Icon name="arrow-left" className="w-5 h-5 text-slate-600 dark:text-slate-300" /></button>
                                     <div>
                                         <h3 className="text-2xl font-bold dark:text-white flex items-center gap-2">{selectedUser.displayName} 的詳細紀錄 </h3>
                                         <p className="text-sm text-slate-500">{selectedUser.email}</p>
                                     </div>
                                 </div>
                                 
-                                <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col md:flex-row gap-6 items-center md:items-start">
+                                <div className="bg-white dark:bg-slate-800 p-5 rounded-lg border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col md:flex-row gap-6 items-center md:items-start">
                                      <div className="w-full md:w-auto flex-1 space-y-4">
                                          <h4 className="font-bold text-slate-700 dark:text-slate-200">用戶檔案編輯</h4>
                                          <div className="flex gap-2">
@@ -1457,7 +1457,7 @@
                                      </div>
                                 </div>
 
-                                <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 overflow-hidden p-2">
+                                <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-100 dark:border-slate-700 overflow-hidden p-2">
                                     <div className="max-h-[400px] overflow-y-auto space-y-2 pr-2">
                                                 {userHomeworks.map(h => (
                                                  <div key={h.id} className={`p-4 rounded-xl border text-sm flex justify-between items-start transition-all ${h.completed ? 'bg-slate-50 dark:bg-slate-900/50 border-slate-100 dark:border-slate-800 opacity-60' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-indigo-200'}`}>
@@ -1485,7 +1485,7 @@
                         {activeTab === 'tasks' && (
                             <div className="space-y-6 animate-fadeIn">
                                 <h3 className="text-2xl font-bold dark:text-white">廣播任務中心</h3>
-                                <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 overflow-hidden flex flex-col">
+                                <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-100 dark:border-slate-700 overflow-hidden flex flex-col">
                                     <div className="overflow-y-auto max-h-[500px]">
                                         <table className="w-full text-left text-sm whitespace-nowrap">
                                             <thead className="bg-slate-50/80 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 font-bold sticky top-0 backdrop-blur-md z-10 border-b border-slate-100 dark:border-slate-700">
@@ -1526,12 +1526,12 @@
                                 <div><h3 className="text-2xl font-bold dark:text-white mb-2">核心系統設定</h3></div>
 
                                 {/* 白名單系統設定 */}
-                                <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden p-1">
+                                <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden p-1">
                                     <div className="p-5 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 flex justify-between items-center">
                                             <h4 className="font-bold dark:text-white flex items-center gap-2"><Icon name="shield-check" className="w-5 h-5 text-emerald-500"/> 白名單系統</h4>
                                             <label className="relative inline-flex items-center cursor-pointer">
                                                 <input type="checkbox" className="sr-only peer" checked={systemConfig?.whitelistEnabled || false} onChange={(e) => updateConfig('whitelistEnabled', e.target.checked)} />
-                                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 dark:peer-focus:ring-emerald-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-emerald-600"></div>
+                                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 dark:peer-focus:ring-emerald-800 rounded-md peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-md after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-emerald-600"></div>
                                                 <span className="ml-3 text-sm font-medium text-slate-900 dark:text-slate-300">{systemConfig?.whitelistEnabled ? '已啟用' : '已停用'}</span>
                                             </label>
                                     </div>
@@ -1568,12 +1568,12 @@
                                 </div>
 
                                 {/* 黑名單系統設定 (NEW) */}
-                                <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden p-1">
+                                <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden p-1">
                                     <div className="p-5 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 flex justify-between items-center">
                                             <h4 className="font-bold dark:text-white flex items-center gap-2"><Icon name="shield-ban" className="w-5 h-5 text-red-500"/> 黑名單系統</h4>
                                             <label className="relative inline-flex items-center cursor-pointer">
                                                 <input type="checkbox" className="sr-only peer" checked={systemConfig?.blacklistEnabled || false} onChange={(e) => updateConfig('blacklistEnabled', e.target.checked)} />
-                                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-md peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-md after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
                                                 <span className="ml-3 text-sm font-medium text-slate-900 dark:text-slate-300">{systemConfig?.blacklistEnabled ? '已啟用' : '已停用'}</span>
                                             </label>
                                     </div>
@@ -1609,7 +1609,7 @@
                                     </div>
                                 </div>
 
-                                <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden p-1">
+                                <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden p-1">
                                     <div className="p-5 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50">
                                                 <h4 className="font-bold dark:text-white flex items-center gap-2"><Icon name="megaphone" className="w-5 h-5 text-amber-500"/> 系統跑馬燈公告</h4>
                                     </div>
@@ -1622,7 +1622,7 @@
                                     </div>
                                 </div>
 
-                                <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden p-1">
+                                <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden p-1">
                                     <div className="p-5 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50">
                                                 <h4 className="font-bold dark:text-white flex items-center gap-2"><Icon name="power" className="w-5 h-5 text-indigo-500"/> 系統維護模式</h4>
                                     </div>
@@ -1632,7 +1632,7 @@
                                                     <button key={mode.id} onClick={() => updateConfig('maintenanceMode', mode.id)} className={`relative flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all group ${systemConfig?.maintenanceMode === mode.id ? `${mode.colors.border} ${mode.colors.bg}` : 'border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800'}`}>
                                                         <Icon name={mode.icon} className={`w-8 h-8 mb-2 ${systemConfig?.maintenanceMode === mode.id ? mode.colors.text : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300'}`} />
                                                         <span className={`font-bold text-sm ${systemConfig?.maintenanceMode === mode.id ? mode.colors.textBold : 'text-slate-600 dark:text-slate-400'}`}>{mode.title}</span>
-                                                        {systemConfig?.maintenanceMode === mode.id && <div className={`absolute top-2 right-2 w-2 h-2 rounded-full ${mode.colors.dot} animate-pulse`}></div>}
+                                                        {systemConfig?.maintenanceMode === mode.id && <div className={`absolute top-2 right-2 w-2 h-2 rounded-md ${mode.colors.dot} animate-pulse`}></div>}
                                                     </button>
                                                 ))}
                                                 </div>
@@ -1720,11 +1720,11 @@
                 <div className="space-y-4">
                     <h3 className="text-lg font-bold dark:text-white">老師權限申請 ({requests.length})</h3>
                     {requests.length === 0 ? (
-                        <div className="p-8 text-center text-slate-400 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">目前沒有待處理的申請</div>
+                        <div className="p-8 text-center text-slate-400 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-dashed border-slate-200 dark:border-slate-700">目前沒有待處理的申請</div>
                     ) : (
                         <div className="grid gap-3">
                             {requests.map(req => (
-                                <div key={req.uid} className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 flex justify-between items-center">
+                                <div key={req.uid} className="bg-white dark:bg-slate-800 p-4 rounded-lg border border-slate-100 dark:border-slate-700 flex justify-between items-center">
                                     <div>
                                         <div className="font-bold dark:text-white">{req.displayName}</div>
                                         <div className="text-xs text-slate-500">{req.email}</div>
@@ -1795,6 +1795,13 @@
             const [nameSetupLoading, setNameSetupLoading] = useState(false);
 
             const [userProfile, setUserProfile] = useState(null);
+            window._userRole = userProfile?.role;
+            window._applyTeacher = async () => {
+                try {
+                    await updateDoc(doc(db, "users_public", user.uid), { role: "pending_teacher" });
+                    triggerAlert("申請已提交，請等待審核。");
+                } catch(e) { triggerAlert("提交失敗"); }
+            };
             const joinedClasses = userProfile?.joinedClasses || [];
             const joinedClassesStr = joinedClasses.join(',');
 
@@ -2269,8 +2276,8 @@
             return (
                 <div className={`min-h-screen transition-colors duration-500 bg-slate-50 dark:bg-slate-900 font-sans relative overflow-hidden p-4 sm:p-6 md:p-8 ${systemConfig?.announcementText ? 'pt-14 sm:pt-16 md:pt-20' : ''}`}>
                     <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-                        <div className={`absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full mix-blend-multiply filter blur-[100px] opacity-20 dark:opacity-10 animate-blob ${t.bg}`}></div>
-                        <div className={`absolute top-[20%] -right-[10%] w-[40%] h-[60%] rounded-full mix-blend-multiply filter blur-[100px] opacity-20 dark:opacity-10 animate-blob animation-delay-2000 bg-purple-500`}></div>
+                        <div className={`absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-md mix-blend-multiply filter blur-[100px] opacity-20 dark:opacity-10 animate-blob ${t.bg}`}></div>
+                        <div className={`absolute top-[20%] -right-[10%] w-[40%] h-[60%] rounded-md mix-blend-multiply filter blur-[100px] opacity-20 dark:opacity-10 animate-blob animation-delay-2000 bg-purple-500`}></div>
                     </div>
 
                     {systemConfig?.announcementText && (
@@ -2281,7 +2288,7 @@
                     )}
 
                     <div className={`max-w-[1200px] mx-auto relative z-10 transition-all duration-500 ${isGuest ? 'guest-blur' : ''}`}>
-                        <div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-4 max-w-3xl mx-auto bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl p-4 sm:p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700">
+                        <div className="flex items-center justify-between mb-6 gap-2 max-w-5xl mx-auto bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl p-3 sm:p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
                             <div className="w-full md:w-auto text-center md:text-left min-w-0">
                                 <h1 className={`text-xl sm:text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r ${t.gradient} flex items-center justify-center md:justify-start gap-2 truncate`}>
                                     {viewMode === 'current' ? (<><Icon name="graduation-cap" className={`w-6 h-6 sm:w-8 sm:h-8 ${t.text}`} />學生小幫手</>) : viewMode === 'admin' ? (<><Icon name="shield-alert" className={`w-6 h-6 sm:w-8 sm:h-8 text-blue-600`} />管理後台</>) : <><Icon name="history" className={`w-6 h-6 sm:w-8 sm:h-8 ${t.text}`} /> {viewMode === 'timetable' ? '上課時間表' : '完成紀錄'}</>}
@@ -2329,10 +2336,10 @@
                                                 await updateDoc(doc(db, "users_public", user.uid), { role: "pending_teacher" });
                                                 triggerAlert("申請已提交，請等待超級管理員審核。");
                                             } catch(e) { triggerAlert("提交失敗"); }
-                                        }} className="w-full mt-4 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 py-3 rounded-2xl font-bold text-sm">申請成為老師身份</button>
+                                        }} className="w-full mt-4 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 py-3 rounded-lg font-bold text-sm">申請成為老師身份</button>
                                     )}
                                     {userProfile?.role === 'pending_teacher' && (
-                                        <div className="w-full mt-4 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 py-3 rounded-2xl font-bold text-sm text-center">老師身份審核中...</div>
+                                        <div className="w-full mt-4 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 py-3 rounded-lg font-bold text-sm text-center">老師身份審核中...</div>
                                     )}
 
                                     <button onClick={handleLogout} className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 text-slate-500 hover:text-red-500 transition"><Icon name="log-out" className="w-4 h-4" /></button>
@@ -2348,7 +2355,7 @@
 
                             {/* --- 雙模式切換器 --- */}
                             {viewMode === 'current' && (
-                                <div className="flex bg-slate-200/50 dark:bg-slate-800/50 p-1.5 rounded-2xl w-full sm:w-fit mx-auto mb-6 shadow-inner border border-white/20 dark:border-slate-700">
+                                <div className="flex bg-slate-200/50 dark:bg-slate-800/50 p-1.5 rounded-lg w-full sm:w-fit mx-auto mb-6 shadow-inner border border-white/20 dark:border-slate-700">
                                     <button onClick={() => setAppMode('personal')} className={`flex-1 sm:flex-none px-8 py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${appMode === 'personal' ? `bg-white dark:bg-slate-700 shadow-sm ${t.text}` : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>
                                         <Icon name="user" className="w-4 h-4" /> 個人模式
                                     </button>
@@ -2361,25 +2368,25 @@
                             {/* v2.4 Feature Cards */}
                             {viewMode === 'current' && isVisible('cards') && (
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6 animate-fadeIn">
-                                    <button onClick={() => openQuickView('today')} className="relative overflow-hidden bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-4 rounded-2xl flex flex-col items-start justify-center gap-1 hover:shadow-md hover:-translate-y-1 transition-all group">
+                                    <button onClick={() => openQuickView('today')} className="relative overflow-hidden bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-4 rounded-lg flex flex-col items-start justify-center gap-1 hover:shadow-md hover:-translate-y-1 transition-all group">
                                         <div className="absolute -right-3 -top-3 text-red-50 dark:text-red-900/20 group-hover:scale-110 transition-transform"><Icon name="calendar-clock" className="w-20 h-20" /></div>
                                         <div className="text-red-500 font-black text-3xl z-10">{counts.today}</div>
-                                        <div className="text-slate-500 dark:text-slate-400 text-xs font-bold z-10 flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>今日到期</div>
+                                        <div className="text-slate-500 dark:text-slate-400 text-xs font-bold z-10 flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-md bg-red-500"></div>今日到期</div>
                                     </button>
-                                    <button onClick={() => openQuickView('tomorrow')} className="relative overflow-hidden bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-4 rounded-2xl flex flex-col items-start justify-center gap-1 hover:shadow-md hover:-translate-y-1 transition-all group">
+                                    <button onClick={() => openQuickView('tomorrow')} className="relative overflow-hidden bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-4 rounded-lg flex flex-col items-start justify-center gap-1 hover:shadow-md hover:-translate-y-1 transition-all group">
                                         <div className="absolute -right-3 -top-3 text-orange-50 dark:text-orange-900/20 group-hover:scale-110 transition-transform"><Icon name="sun" className="w-20 h-20" /></div>
                                         <div className="text-orange-500 font-black text-3xl z-10">{counts.tomorrow}</div>
-                                        <div className="text-slate-500 dark:text-slate-400 text-xs font-bold z-10 flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-orange-500"></div>明日到期</div>
+                                        <div className="text-slate-500 dark:text-slate-400 text-xs font-bold z-10 flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-md bg-orange-500"></div>明日到期</div>
                                     </button>
-                                    <button onClick={() => openQuickView('future')} className="relative overflow-hidden bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-4 rounded-2xl flex flex-col items-start justify-center gap-1 hover:shadow-md hover:-translate-y-1 transition-all group">
+                                    <button onClick={() => openQuickView('future')} className="relative overflow-hidden bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-4 rounded-lg flex flex-col items-start justify-center gap-1 hover:shadow-md hover:-translate-y-1 transition-all group">
                                         <div className="absolute -right-3 -top-3 text-emerald-50 dark:text-emerald-900/20 group-hover:scale-110 transition-transform"><Icon name="calendar-range" className="w-20 h-20" /></div>
                                         <div className="text-emerald-500 font-black text-3xl z-10">{counts.future}</div>
-                                        <div className="text-slate-500 dark:text-slate-400 text-xs font-bold z-10 flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>日後要交</div>
+                                        <div className="text-slate-500 dark:text-slate-400 text-xs font-bold z-10 flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-md bg-emerald-500"></div>日後要交</div>
                                     </button>
-                                    <button onClick={() => openQuickView('test')} className="relative overflow-hidden bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-4 rounded-2xl flex flex-col items-start justify-center gap-1 hover:shadow-md hover:-translate-y-1 transition-all group">
+                                    <button onClick={() => openQuickView('test')} className="relative overflow-hidden bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-4 rounded-lg flex flex-col items-start justify-center gap-1 hover:shadow-md hover:-translate-y-1 transition-all group">
                                         <div className="absolute -right-3 -top-3 text-violet-50 dark:text-violet-900/20 group-hover:scale-110 transition-transform"><Icon name="file-question" className="w-20 h-20" /></div>
                                         <div className="text-violet-500 font-black text-3xl z-10">{counts.test}</div>
-                                        <div className="text-slate-500 dark:text-slate-400 text-xs font-bold z-10 flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-violet-500"></div>默書測驗</div>
+                                        <div className="text-slate-500 dark:text-slate-400 text-xs font-bold z-10 flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-md bg-violet-500"></div>默書測驗</div>
                                     </button>
                                 </div>
                             )}
@@ -2390,7 +2397,7 @@
                             {(viewMode === 'current' || viewMode === 'history') && appMode === 'personal' && (
                                 <>
                                     {isVisible('input') && (
-                                        <div className={`relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl shadow-lg p-5 sm:p-8 mb-10 border border-slate-100 dark:border-slate-700 z-20`}>
+                                        <div className={`relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-xl shadow-lg p-5 sm:p-8 mb-10 border border-slate-100 dark:border-slate-700 z-20`}>
                                             <div className="flex bg-slate-100 dark:bg-slate-900/50 p-1.5 rounded-xl mb-6">
                                                 <button onClick={() => setInputType('homework')} className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-all ${inputType === 'homework' ? `bg-white dark:bg-slate-700 shadow-sm ${t.text}` : 'text-slate-500 dark:text-slate-400'}`}><Icon name="book-open" className="w-4 h-4" /> 新增功課</button>
                                                 <button onClick={() => setInputType('assessment')} className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-all ${inputType === 'assessment' ? `bg-white dark:bg-slate-700 shadow-sm text-purple-600 dark:text-purple-400` : 'text-slate-500 dark:text-slate-400'}`}><Icon name="file-question" className="w-4 h-4" /> 新增測驗</button>
@@ -2414,7 +2421,7 @@
                                                 </div>
                                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                                     <div className="md:col-span-2 space-y-3">
-                                                        <textarea placeholder={inputType === 'homework' ? "打返功課內容..." : "輸入範圍 (例如: 第3課 / P.20-25)"} value={description} onChange={(e) => setDescription(e.target.value)} rows="2" className={`w-full min-h-[100px] rounded-2xl border-2 border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 focus:bg-white dark:focus:bg-slate-800 focus:${t.border} focus:ring-4 focus:${t.ring} transition-all p-4 text-slate-700 dark:text-slate-100 placeholder-slate-400 outline-none resize-none text-base`} />
+                                                        <textarea placeholder={inputType === 'homework' ? "打返功課內容..." : "輸入範圍 (例如: 第3課 / P.20-25)"} value={description} onChange={(e) => setDescription(e.target.value)} rows="2" className={`w-full min-h-[100px] rounded-lg border-2 border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 focus:bg-white dark:focus:bg-slate-800 focus:${t.border} focus:ring-4 focus:${t.ring} transition-all p-4 text-slate-700 dark:text-slate-100 placeholder-slate-400 outline-none resize-none text-base`} />
                                                     </div>
                                                     <div className="flex flex-col gap-3 md:col-span-1">
                                                         <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className={`w-full h-12 rounded-xl border-2 border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 focus:bg-white dark:focus:bg-slate-800 focus:${t.border} focus:ring-4 focus:${t.ring} transition-all px-4 text-slate-700 dark:text-slate-100 font-medium outline-none`} required />
@@ -2425,7 +2432,7 @@
                                                     <div className="mt-2 pt-4 border-t border-slate-100 dark:border-slate-700">
                                                         <label className="flex items-center cursor-pointer mb-2">
                                                             <input type="checkbox" className="sr-only peer" checked={isBroadcast} onChange={e => setIsBroadcast(e.target.checked)} />
-                                                            <div className={`w-11 h-6 bg-slate-200 dark:bg-slate-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${t.bg} peer-checked:bg-orange-500 relative`}></div>
+                                                            <div className={`w-11 h-6 bg-slate-200 dark:bg-slate-700 rounded-md peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-md after:h-5 after:w-5 after:transition-all ${t.bg} peer-checked:bg-orange-500 relative`}></div>
                                                             <span className="ml-3 text-sm font-bold text-slate-600 dark:text-slate-300">📢 作為管理員廣播發放</span>
                                                         </label>
                                                         {isBroadcast && (
@@ -2477,12 +2484,12 @@
                                             <div className={`space-y-4 pb-20 transition-opacity duration-300 ${!isListVisible ? 'opacity-0' : 'opacity-100'}`}>
                                                 {displayedItems.length === 0 ? (
                                                     <div className="text-center py-20">
-                                                        <div className={`inline-flex p-6 rounded-full ${t.lightBg} mb-4`}><Icon name="sparkles" className={`w-12 h-12 ${t.text}`} /></div>
+                                                        <div className={`inline-flex p-6 rounded-md ${t.lightBg} mb-4`}><Icon name="sparkles" className={`w-12 h-12 ${t.text}`} /></div>
                                                         <h3 className="text-xl font-bold text-slate-700 dark:text-slate-300">{viewMode === 'history' ? '沒有已完成的紀錄' : '太好了！任務清單空空如也'}</h3>
                                                     </div>
                                                 ) : viewLayout === 'table' ? (
-                                                    <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] border border-white/50 dark:border-slate-700/50 overflow-hidden animate-fadeIn p-2 sm:p-4">
-                                                        <div className="overflow-x-auto rounded-2xl border border-slate-100 dark:border-slate-700/50 bg-white dark:bg-slate-900/50">
+                                                    <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] border border-white/50 dark:border-slate-700/50 overflow-hidden animate-fadeIn p-2 sm:p-4">
+                                                        <div className="overflow-x-auto rounded-lg border border-slate-100 dark:border-slate-700/50 bg-white dark:bg-slate-900/50">
                                                             <table className="w-full text-left text-sm border-collapse">
                                                                 <thead className="bg-slate-50/80 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 font-bold text-[11px] uppercase tracking-widest border-b border-slate-100 dark:border-slate-700/80">
                                                                     <tr>
@@ -2512,7 +2519,7 @@
                                                                             <tr key={item.id} style={{ animationDelay: `${index * 0.05}s` }} className={`animate-item hover:bg-slate-50/80 dark:hover:bg-slate-700/40 transition-all duration-300 group ${isCompleted ? 'opacity-50 grayscale hover:grayscale-0' : ''} ${isExiting ? 'scale-y-0 opacity-0 translate-x-4' : ''}`}>
                                                                                 <td className="px-5 py-4 whitespace-nowrap">
                                                                                     <div className="flex items-center gap-3">
-                                                                                        <div className={`w-2.5 h-2.5 rounded-full transition-transform duration-300 group-hover:scale-125 ${statusDot}`}></div>
+                                                                                        <div className={`w-2.5 h-2.5 rounded-md transition-transform duration-300 group-hover:scale-125 ${statusDot}`}></div>
                                                                                         <span className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border shadow-sm ${subjectStyle}`}>{item.subject || '其他'}</span>
                                                                                     </div>
                                                                                     <div className={`text-[11px] font-bold mt-2 ml-5 flex items-center gap-1.5 ${statusColor}`}>
@@ -2535,7 +2542,7 @@
                                                                                 </td>
                                                                                 <td className="px-5 py-4 text-right whitespace-nowrap">
                                                                                     <div className="flex items-center justify-end gap-2 opacity-90 group-hover:opacity-100 transition-opacity">
-                                                                                        <button onClick={() => handleToggle(item.id, item.completed)} className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all hover:scale-110 active:scale-95 ${isCompleted ? 'bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-500/30' : 'border-slate-300 dark:border-slate-500 hover:border-emerald-400 dark:hover:border-emerald-500 bg-white/50 dark:bg-slate-800/50'}`}>
+                                                                                        <button onClick={() => handleToggle(item.id, item.completed)} className={`w-8 h-8 rounded-md border-2 flex items-center justify-center transition-all hover:scale-110 active:scale-95 ${isCompleted ? 'bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-500/30' : 'border-slate-300 dark:border-slate-500 hover:border-emerald-400 dark:hover:border-emerald-500 bg-white/50 dark:bg-slate-800/50'}`}>
                                                                                             <Icon name="check" className={`w-4 h-4 ${isCompleted ? 'opacity-100' : 'opacity-0 text-emerald-500 group-hover:opacity-40 transition-opacity'}`} />
                                                                                         </button>
                                                                                         {!item.forceExpired && <button onClick={() => setEditingItem(item)} className="p-2 text-slate-400 hover:text-blue-500 transition hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-xl hover:scale-105"><Icon name="pencil" className="w-4 h-4" /></button>}
@@ -2562,16 +2569,16 @@
                                                     const glowColorClasses = subjectStyle.split(' ').filter(c => c.startsWith('text-') || c.startsWith('dark:text-')).join(' ');
 
                                                     return (
-                                                        <div key={item.id} style={{ animationDelay: `${index * 0.05}s` }} className={`animate-item relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] border border-white/50 dark:border-slate-700/50 transition-all hover:-translate-y-1 hover:shadow-lg overflow-hidden group ${isExiting ? 'scale-95 opacity-0' : ''}`}>
+                                                        <div key={item.id} style={{ animationDelay: `${index * 0.05}s` }} className={`animate-item relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-lg p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] border border-white/50 dark:border-slate-700/50 transition-all hover:-translate-y-1 hover:shadow-lg overflow-hidden group ${isExiting ? 'scale-95 opacity-0' : ''}`}>
                                                             
                                                             {/* 背景模糊光暈 */}
                                                             <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.12] dark:opacity-[0.25] transition-opacity group-hover:opacity-[0.2] dark:group-hover:opacity-[0.35]">
-                                                                 <div className={`absolute -right-8 -top-8 w-40 h-40 rounded-full blur-3xl ${glowColorClasses}`} style={{ backgroundColor: 'currentColor' }}></div>
-                                                                 <div className={`absolute -left-8 -bottom-8 w-32 h-32 rounded-full blur-2xl ${glowColorClasses}`} style={{ backgroundColor: 'currentColor' }}></div>
+                                                                 <div className={`absolute -right-8 -top-8 w-40 h-40 rounded-md blur-3xl ${glowColorClasses}`} style={{ backgroundColor: 'currentColor' }}></div>
+                                                                 <div className={`absolute -left-8 -bottom-8 w-32 h-32 rounded-md blur-2xl ${glowColorClasses}`} style={{ backgroundColor: 'currentColor' }}></div>
                                                             </div>
 
                                                             <div className="relative z-10 flex items-start gap-4">
-                                                                <button onClick={() => handleToggle(item.id, item.completed)} className={`mt-1 w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 transition-all shadow-sm ${isCompleted ? 'bg-emerald-500 border-emerald-500 text-white scale-110 shadow-emerald-500/30' : 'border-slate-300 dark:border-slate-500 bg-white/50 dark:bg-slate-800/50 hover:border-emerald-400 dark:hover:border-emerald-500'}`}>
+                                                                <button onClick={() => handleToggle(item.id, item.completed)} className={`mt-1 w-7 h-7 rounded-md border-2 flex items-center justify-center shrink-0 transition-all shadow-sm ${isCompleted ? 'bg-emerald-500 border-emerald-500 text-white scale-110 shadow-emerald-500/30' : 'border-slate-300 dark:border-slate-500 bg-white/50 dark:bg-slate-800/50 hover:border-emerald-400 dark:hover:border-emerald-500'}`}>
                                                                     <Icon name="check" className={`w-4 h-4 ${isCompleted ? 'opacity-100' : 'opacity-0'}`} />
                                                                 </button>
                                                                 <div className="flex-1 min-w-0">
@@ -2612,7 +2619,7 @@
 
                             {viewMode === 'current' && appMode === 'class' && (
                                 <div className="space-y-6 animate-fadeIn pb-20">
-                                    <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 flex justify-between items-center">
+                                    <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 flex justify-between items-center">
                                         <div>
                                             <h3 className="text-xl font-bold dark:text-white flex items-center gap-2"><Icon name="school" className={t.text} /> 我的班級</h3>
                                             <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">查看專屬的廣播任務</p>
@@ -2623,7 +2630,7 @@
                                     </div>
 
                                     {joinedClasses.length === 0 ? (
-                                        <div className="text-center py-20 bg-white dark:bg-slate-800 rounded-3xl border border-dashed border-slate-200 dark:border-slate-700">
+                                        <div className="text-center py-20 bg-white dark:bg-slate-800 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
                                             <Icon name="school" className="w-16 h-16 mx-auto text-slate-300 dark:text-slate-600 mb-4" />
                                             <h4 className="text-lg font-bold text-slate-600 dark:text-slate-300 mb-2">尚未加入任何班級</h4>
                                             <p className="text-sm text-slate-400 mb-6">請向老師索取 6 位數班級代碼</p>
@@ -2653,12 +2660,12 @@
                                                     const glowColorClasses = subjectStyle.split(' ').filter(c => c.startsWith('text-') || c.startsWith('dark:text-')).join(' ');
                                                     
                                                     return (
-                                                    <div key={task.id} style={{ animationDelay: `${idx * 0.05}s` }} className="animate-item bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl p-5 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] border border-white/50 dark:border-slate-700/50 relative overflow-hidden transition-all hover:-translate-y-1 hover:shadow-lg group">
+                                                    <div key={task.id} style={{ animationDelay: `${idx * 0.05}s` }} className="animate-item bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl p-5 rounded-lg shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] border border-white/50 dark:border-slate-700/50 relative overflow-hidden transition-all hover:-translate-y-1 hover:shadow-lg group">
                                                         
                                                         {/* 背景模糊光暈 */}
                                                         <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.12] dark:opacity-[0.25] transition-opacity group-hover:opacity-[0.2] dark:group-hover:opacity-[0.35]">
-                                                             <div className={`absolute -right-8 -top-8 w-40 h-40 rounded-full blur-3xl ${glowColorClasses}`} style={{ backgroundColor: 'currentColor' }}></div>
-                                                             <div className={`absolute -left-8 -bottom-8 w-32 h-32 rounded-full blur-2xl ${glowColorClasses}`} style={{ backgroundColor: 'currentColor' }}></div>
+                                                             <div className={`absolute -right-8 -top-8 w-40 h-40 rounded-md blur-3xl ${glowColorClasses}`} style={{ backgroundColor: 'currentColor' }}></div>
+                                                             <div className={`absolute -left-8 -bottom-8 w-32 h-32 rounded-md blur-2xl ${glowColorClasses}`} style={{ backgroundColor: 'currentColor' }}></div>
                                                         </div>
 
                                                         {task.forceExpired && <div className="absolute inset-0 bg-white/50 dark:bg-slate-800/50 backdrop-blur-[1px] z-20 flex items-center justify-center pointer-events-none"><span className="bg-red-500 text-white font-bold px-4 py-2 rounded-xl shadow-lg rotate-[-10deg]">已強制過期</span></div>}
@@ -2691,7 +2698,7 @@
 
                     {isGuest && (
                         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/20 backdrop-blur-sm">
-                            <button onClick={() => setIsAuthModalOpen(true)} className={`btn-glow px-8 py-4 ${t.bg} text-white rounded-full font-bold text-xl shadow-2xl hover:scale-105 transition-transform flex items-center gap-3`}>
+                            <button onClick={() => setIsAuthModalOpen(true)} className={`btn-glow px-8 py-4 ${t.bg} text-white rounded-md font-bold text-xl shadow-2xl hover:scale-105 transition-transform flex items-center gap-3`}>
                                 <Icon name="log-in" className="w-6 h-6" /> 登入系統
                             </button>
                         </div>
@@ -2700,8 +2707,8 @@
                     {notification.isOpen && (
                         <div className="fixed inset-0 z-[200] flex items-center justify-center px-4">
                             <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" onClick={closeNotification}></div>
-                            <div className="dialog-animate relative bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-sm p-6 text-center border border-slate-100 dark:border-slate-700">
-                                <div className={`mx-auto w-14 h-14 rounded-full flex items-center justify-center mb-4 ${notification.type === 'confirm' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400' : 'bg-slate-50 dark:bg-slate-700 text-slate-500 dark:text-slate-300'}`}>
+                            <div className="dialog-animate relative bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-sm p-6 text-center border border-slate-100 dark:border-slate-700">
+                                <div className={`mx-auto w-14 h-14 rounded-md flex items-center justify-center mb-4 ${notification.type === 'confirm' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400' : 'bg-slate-50 dark:bg-slate-700 text-slate-500 dark:text-slate-300'}`}>
                                     {notification.type === 'confirm' ? <Icon name="help-circle" className="w-8 h-8" /> : <Icon name="info" className="w-8 h-8" />}
                                 </div>
                                 <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2">{notification.type === 'confirm' ? '確認操作' : '提示'}</h3>
@@ -2752,7 +2759,7 @@
                     
                     {/* Footer Watermark */}
                     <div className="mt-12 mb-6 text-center">
-                        <div className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-slate-100/50 dark:bg-slate-800/50 backdrop-blur-sm border border-white/20">
+                        <div className="inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded-md bg-slate-100/50 dark:bg-slate-800/50 backdrop-blur-sm border border-white/20">
                             <Icon name="code-2" className="w-3 h-3 text-slate-400" />
                             <span className="text-[10px] font-mono font-bold text-slate-400 tracking-widest uppercase">
                                 Made by @colasonyt112 2026
