@@ -6,9 +6,12 @@
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
+
       gtag('config', 'G-8VCPLTE2QT');
     </script>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4156749891284054" crossorigin="anonymous"></script>
+
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4156749891284054"
+     crossorigin="anonymous"></script>
     
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -20,16 +23,32 @@
     
     <title>電子手冊</title>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js" crossorigin onerror="this.onerror=null; this.src='https://unpkg.com/react@18/umd/react.production.min.js'"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js" crossorigin onerror="this.onerror=null; this.src='https://unpkg.com/react-dom@18/umd/react-dom.production.min.js'"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js" onerror="this.onerror=null; this.src='https://unpkg.com/@babel/standalone/babel.min.js'"></script>
+    <script 
+        src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js" 
+        crossorigin 
+        onerror="this.onerror=null; this.src='https://unpkg.com/react@18/umd/react.production.min.js'">
+    </script>
+
+    <script 
+        src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js" 
+        crossorigin 
+        onerror="this.onerror=null; this.src='https://unpkg.com/react-dom@18/umd/react-dom.production.min.js'">
+    </script>
+
+    <script 
+        src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"
+        onerror="this.onerror=null; this.src='https://unpkg.com/@babel/standalone/babel.min.js'">
+    </script>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
-                    colors: { slate: { 850: '#151e2e' } },
+                    colors: {
+                        slate: { 850: '#151e2e' }
+                    },
                     animation: {
                         'pop-in': 'popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
                         'gradient-x': 'gradient-x 5s ease infinite',
@@ -49,15 +68,24 @@
             }
         }
     </script>
-    <script src="https://unpkg.com/lucide@latest" onerror="this.onerror=null; this.src='https://cdn.jsdelivr.net/npm/lucide@latest'"></script>
+
+    <script 
+        src="https://unpkg.com/lucide@latest"
+        onerror="this.onerror=null; this.src='https://cdn.jsdelivr.net/npm/lucide@latest'">
+    </script>
 
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; transition: background-color 0.3s ease, color 0.3s ease; }
         input[type="file"]::file-selector-button { display: none; }
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         .modal-animate { animation: fadeIn 0.2s ease-out forwards; }
-        @keyframes popIn { 0% { opacity: 0; transform: scale(0.9) translateY(10px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
+        
+        @keyframes popIn { 
+            0% { opacity: 0; transform: scale(0.9) translateY(10px); } 
+            100% { opacity: 1; transform: scale(1) translateY(0); } 
+        }
         .dialog-animate { animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
         @keyframes blob { 0% { transform: translate(0px, 0px) scale(1); } 33% { transform: translate(30px, -50px) scale(1.1); } 66% { transform: translate(-20px, 20px) scale(0.9); } 100% { transform: translate(0px, 0px) scale(1); } }
         .animate-blob { animation: blob 7s infinite; }
         .animation-delay-2000 { animation-delay: 2s; }
@@ -65,23 +93,48 @@
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         @keyframes slideUpFade { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .animate-item { animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+
         .guest-blur { filter: blur(6px) grayscale(100%); opacity: 0.8; pointer-events: none; user-select: none; transition: all 0.8s ease; }
+
         @keyframes glowing { 0% { box-shadow: 0 0 5px currentColor; } 50% { box-shadow: 0 0 20px currentColor; } 100% { box-shadow: 0 0 5px currentColor; } }
         .btn-glow { animation: glowing 2s infinite; }
+
         @keyframes marquee { 0% { transform: translateX(100vw); } 100% { transform: translateX(-100%); } }
         .animate-marquee { display: inline-block; white-space: nowrap; animation: marquee 20s linear infinite; will-change: transform; }
         .animate-marquee:hover { animation-play-state: paused; }
+
+        /* Custom Calendar Grid */
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-        @keyframes popInError { 0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; } 50% { transform: translate(-50%, -50%) scale(1.05); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; } }
+
+        /* 浮空錯誤動畫 */
+        @keyframes popInError {
+            0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+            50% { transform: translate(-50%, -50%) scale(1.05); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
         .pop-in-error { animation: popInError 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-        #loading-screen { position: fixed; inset: 0; z-index: 9999; background-color: #f8fafc; color: #475569; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: sans-serif; transition: opacity 0.5s ease; }
+
+        /* Loading Screen Styles */
+        #loading-screen {
+            position: fixed; inset: 0; z-index: 9999;
+            background-color: #f8fafc; color: #475569;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            font-family: sans-serif; transition: opacity 0.5s ease;
+        }
         .dark #loading-screen { background-color: #0f172a; color: #cbd5e1; }
         .spinner { width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top: 4px solid #4f46e5; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .hidden-loader { opacity: 0; pointer-events: none; }
+    
+        .safe-area-bottom { padding-bottom: env(safe-area-inset-bottom); }
+        .drag-over { border: 2px dashed #4f46e5 !important; background-color: rgba(79, 70, 229, 0.1) !important; }
+        @media (min-width: 1024px) {
+            .ipad-layout { display: grid; grid-template-columns: 1fr 350px; gap: 2rem; }
+        }
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100">
+    
     <div id="loading-screen">
         <div class="spinner"></div>
         <h2 style="font-size: 1.2rem; font-weight: bold; margin-bottom: 0.5rem;">正在啟動電子手冊...</h2>
@@ -91,7 +144,7 @@
         </p>
     </div>
 
-    <div id="root"></div>
+    <div id="root" class="pb-20 md:pb-0"></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -152,6 +205,7 @@
 
         const ADMIN_EMAIL = 'chimhinhin@gmail.com'; 
 
+        // --- Configuration Constants ---
         const DEFAULT_SUBJECTS = [
             { name: '中文', color: 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800' },
             { name: '英文', color: 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800' },
@@ -179,6 +233,7 @@
             { label: '石板', value: 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700' },
         ];
 
+        // --- Theme Configuration ---
         const THEME_CONFIG = {
             indigo: { name: '靛藍', text: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-600 hover:bg-indigo-700', ring: 'ring-indigo-100 dark:ring-indigo-900', gradient: 'from-indigo-600 to-blue-600', lightBg: 'bg-indigo-50 dark:bg-indigo-900/20', border: 'border-indigo-200 dark:border-indigo-800', shadow: 'shadow-indigo-200/50 dark:shadow-indigo-900/20' },
             rose: { name: '櫻粉', text: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-600 hover:bg-rose-700', ring: 'ring-rose-100 dark:ring-rose-900', gradient: 'from-rose-600 to-pink-600', lightBg: 'bg-rose-50 dark:bg-rose-900/20', border: 'border-rose-200 dark:border-rose-800', shadow: 'shadow-rose-200/50 dark:shadow-rose-900/20' },
@@ -277,6 +332,7 @@
 
         const formatDueDate = (dateStr) => {
             if (!dateStr) return '';
+            // 防呆機制：如果 dateStr 是物件 (例如 Firebase Timestamp)，強制轉換以防 React 白畫面崩潰
             if (typeof dateStr !== 'string') {
                 if (dateStr.toDate && typeof dateStr.toDate === 'function') {
                     const d = dateStr.toDate();
@@ -288,7 +344,7 @@
             }
             try {
                 const d = new Date(dateStr);
-                if (isNaN(d.getTime())) return String(dateStr);
+                if (isNaN(d.getTime())) return String(dateStr); // 如果日期無效，安全返回字串
                 const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
                 return `${dateStr} (星期${weekDays[d.getDay()]})`;
             } catch (e) {
@@ -319,6 +375,7 @@
             });
         };
 
+        // --- View Components ---
         function CurrentLessonWidget({ config, t, onClick, globalNow }) {
             const now = globalNow || new Date();
             const day = now.getDay();
@@ -571,6 +628,7 @@
                 </div>
             );
         }
+
         function JoinClassModal({ isOpen, onClose, systemClasses, joinedClasses, onJoin, t }) {
             const [code, setCode] = useState('');
             const [loading, setLoading] = useState(false);
@@ -775,7 +833,7 @@
                                 </button>
                             </div>
 
-                            <form onSubmit={handleAdd} className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-100 dark:border-slate-700 mb-4">
+                            <form onSubmit={handleAdd} className="bg-slate-5 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-100 dark:border-slate-700 mb-4">
                                 <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">新增科目</label>
                                 <div className="flex gap-2 mb-2">
                                     <input type="text" value={newSubjectName} onChange={e => setNewSubjectName(e.target.value)} className="flex-1 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white text-sm outline-none focus:ring-2 focus:ring-indigo-500" placeholder="科目名稱 (例如: 數學)" required />
@@ -934,6 +992,7 @@
             );
         }
 
+        // --- Timetable Component ---
         function Timetable({ currentDay, config, onDayChange, subjects, globalNow }) { 
             const weekDays = ['日', '一', '二', '三', '四', '五', '六']; 
             const now = globalNow || new Date();
@@ -974,7 +1033,8 @@
             ); 
         }
 
-        function AdminConsole({ db, systemConfig, systemClasses, onBack, subjects, triggerAlert, triggerConfirm }) {
+        // --- 全新超級管理控制台 AdminConsole ---
+        function AdminConsole({ db, systemConfig, systemClasses, onBack, subjects, triggerAlert, triggerConfirm, handleGlobalCleanup, isAdmin }) {
             const [activeTab, setActiveTab] = useState('overview');
             const [users, setUsers] = useState([]);
             const [publicTasks, setPublicTasks] = useState([]);
@@ -982,13 +1042,18 @@
             const [selectedUser, setSelectedUser] = useState(null);
             const [userHomeworks, setUserHomeworks] = useState([]);
             
+            // Whitelist states
             const [newEmail, setNewEmail] = useState('');
+            // Blacklist states
             const [newBlacklistEmail, setNewBlacklistEmail] = useState('');
+            
             const [newClassName, setNewClassName] = useState('');
             const [isSubmitting, setIsSubmitting] = useState(false);
             const [newName, setNewName] = useState('');
+            
             const [editingAdminItem, setEditingAdminItem] = useState(null);
 
+            // Scanner states
             const [isScanning, setIsScanning] = useState(false);
             const [expiredReport, setExpiredReport] = useState(null);
 
@@ -998,6 +1063,7 @@
 
             useEffect(() => {
                 if (!db || !collection) return;
+                // 添加 limit(300) 防止人數過多時拖垮系統及用盡讀取配額
                 const q = query(collection(db, "users_public"), orderBy("lastSeen", "desc"), limit(300));
                 const unsubscribe = onSnapshot(q, (snapshot) => setUsers(snapshot.docs.map(d => ({ uid: d.id, ...d.data() }))), (err) => console.warn("Admin users err:", err));
                 return () => unsubscribe();
@@ -1020,11 +1086,14 @@
 
             const updateConfig = async (key, value) => { try { await setDoc(doc(db, "system_settings", "config"), { [key]: value }, { merge: true }); triggerAlert("設定已更新"); } catch (e) { triggerAlert("設定更新失敗"); } };
             
+            // Whitelist Handlers
             const handleAddWhitelist = async (e) => { e.preventDefault(); if (!newEmail.trim()) return; setIsSubmitting(true); try { await updateDoc(doc(db, "system_settings", "config"), { allowedEmails: arrayUnion(newEmail.trim()) }); setNewEmail(''); triggerAlert("已新增至白名單"); } catch (e) { triggerAlert("新增失敗"); } setIsSubmitting(false); };
             const handleRemoveWhitelist = async (email) => { triggerConfirm(`確定要移除白名單 ${email} 嗎？`, async () => { try { await updateDoc(doc(db, "system_settings", "config"), { allowedEmails: arrayRemove(email) }); triggerAlert("已移除"); } catch (e) { } }); };
 
+            // Blacklist Handlers
             const handleAddBlacklist = async (e) => { e.preventDefault(); if (!newBlacklistEmail.trim()) return; setIsSubmitting(true); try { await updateDoc(doc(db, "system_settings", "config"), { blacklistedEmails: arrayUnion(newBlacklistEmail.trim()) }); setNewBlacklistEmail(''); triggerAlert("已新增至黑名單"); } catch (e) { triggerAlert("新增失敗"); } setIsSubmitting(false); };
             const handleRemoveBlacklist = async (email) => { triggerConfirm(`確定要解除封鎖 ${email} 嗎？`, async () => { try { await updateDoc(doc(db, "system_settings", "config"), { blacklistedEmails: arrayRemove(email) }); triggerAlert("已解除封鎖"); } catch (e) { } }); };
+
 
             const handleCreateClass = async (e) => {
                 e.preventDefault(); const name = newClassName.trim(); if (!name) return;
@@ -1119,9 +1188,11 @@
             const handleDeletePublicTask = (taskId) => {
                 triggerConfirm("確定要撤回這份廣播功課嗎？這會同時從所有同學的清單中移除。", async () => {
                     try { 
+                        // 改用 batch 處理大量刪除以確保完整性
                         const batch = writeBatch(db);
                         batch.delete(doc(db, "public_assignments", taskId));
                         
+                        // 注意：如果用戶數量超過 500 人，batch 寫入需要分段。此處先以 500 內為預設情境
                         for (const u of users) {
                             const dupQ = query(collection(db, "users", u.uid, "items"), where("publicRefId", "==", taskId));
                             const snap = await getDocs(dupQ);
@@ -1143,16 +1214,17 @@
                 
                 const report = [];
                 try {
+                    // 掃描所有學生的私有資料庫
                     for (const u of users) {
                         const q = query(collection(db, "users", u.uid, "items"));
                         const snap = await getDocs(q);
                         const userItems = snap.docs.map(d => d.data());
                         
                         const expired = userItems.filter(item => {
-                            if (item.completed) return false; 
+                            if (item.completed) return false; // 排除已完成的
                             const due = new Date(item.dueDate);
                             due.setHours(0,0,0,0);
-                            return due < today; 
+                            return due < today; // 揪出過期的
                         });
 
                         if (expired.length > 0) {
@@ -1170,8 +1242,8 @@
             const getUserStatus = (lastSeen) => {
                 if (!lastSeen || typeof lastSeen.toDate !== 'function') return 'offline';
                 const diff = new Date() - lastSeen.toDate();
-                if (diff < 2 * 60 * 1000) return 'online'; 
-                if (diff < 10 * 60 * 1000) return 'idle'; 
+                if (diff < 2 * 60 * 1000) return 'online'; // 2 mins
+                if (diff < 10 * 60 * 1000) return 'idle'; // 10 mins
                 return 'offline';
             };
 
@@ -1186,7 +1258,7 @@
                             <h2 className="text-xl font-black tracking-wide">超級管理中心</h2>
                         </div>
                         <div className="flex flex-row md:flex-col gap-2 overflow-x-auto scrollbar-hide pb-2 md:pb-0">
-                            {[ { id: 'overview', icon: 'pie-chart', label: '系統概覽' }, { id: 'users', icon: 'users', label: '用戶數據管理' }, { id: 'classes', icon: 'school', label: '班級代碼管理' }, { id: 'tasks', icon: 'radio', label: '廣播任務中心' }, { id: 'settings', icon: 'settings-2', label: '核心系統設定' } ].map(tab => (
+                            {[ { id: 'overview', icon: 'pie-chart', label: '系統概覽' }, { id: 'users', icon: 'users', label: '用戶數據管理' }, { id: 'classes', icon: 'school', label: '班級代碼管理' }, { id: 'tasks', icon: 'radio', label: '廣播任務中心' }, { id: 'settings', icon: 'settings-2', label: '核心系統設定' }, { id: 'approvals', icon: 'user-check', label: '老師審核' } ].map(tab => (
                                 <button key={tab.id} onClick={() => { setActiveTab(tab.id); setSelectedUser(null); }} className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all whitespace-nowrap md:whitespace-normal ${activeTab === tab.id ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/50' : 'hover:bg-slate-800 hover:text-white'}`}>
                                     <Icon name={tab.icon} className={`w-5 h-5 ${activeTab === tab.id ? 'text-indigo-200' : 'text-slate-500'}`} /> {tab.label}
                                 </button>
@@ -1199,6 +1271,7 @@
                             <EditModal item={editingAdminItem} onClose={() => setEditingAdminItem(null)} onSave={handleAdminUpdateItem} triggerAlert={triggerAlert} subjects={subjects} />
                         )}
 
+                        {activeTab === 'approvals' && <TeacherApproval db={db} triggerAlert={triggerAlert} triggerConfirm={triggerConfirm} />}
                         {activeTab === 'overview' && (
                             <div className="space-y-6 animate-fadeIn">
                                 <h3 className="text-2xl font-bold dark:text-white mb-6">系統概覽</h3>
@@ -1214,6 +1287,7 @@
                                     <div className="bg-gradient-to-br from-orange-400 to-red-500 rounded-2xl p-6 text-white shadow-lg shadow-orange-500/20 relative overflow-hidden group">
                                         <div className="text-orange-100 text-sm font-bold mb-1 flex items-center gap-2"><Icon name="radio" className="w-4 h-4"/> 廣播任務總數</div>
                                         <div className="text-4xl font-black">{publicTasks.length}</div>
+                                        {isAdmin && <button onClick={handleGlobalCleanup} className="mt-4 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-xl text-xs font-bold transition-all">一鍵清理過期功課</button>}
                                     </div>
                                 </div>
                             </div>
@@ -1235,9 +1309,9 @@
                                             <thead className="bg-slate-50/80 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 font-bold sticky top-0 backdrop-blur-md z-10 border-b border-slate-100 dark:border-slate-700">
                                                 <tr><th className="px-6 py-4">班級名稱</th><th className="px-6 py-4">加入代碼 (6碼)</th><th className="px-6 py-4 text-right">操作</th></tr>
                                             </thead>
-                                            <tbody className="divide-y divide-slate-50 dark:divide-slate-700">
+                                            <tbody className="divide-y divide-slate-5 dark:divide-slate-700">
                                                 {systemClasses.map(c => (
-                                                    <tr key={c.code} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                                                    <tr key={c.code} className="hover:bg-slate-5 dark:hover:bg-slate-700/50 transition-colors">
                                                         <td className="px-6 py-4 font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2"><Icon name="school" className="w-4 h-4 text-indigo-500"/> {c.name}</td>
                                                         <td className="px-6 py-4"><span className="px-3 py-1 bg-slate-100 dark:bg-slate-900 rounded-lg font-mono font-bold text-indigo-600 dark:text-indigo-400 tracking-widest">{c.code}</span></td>
                                                         <td className="px-6 py-4 text-right">
@@ -1295,7 +1369,7 @@
                                             <thead className="bg-slate-50/80 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 font-bold sticky top-0 backdrop-blur-md z-10 border-b border-slate-100 dark:border-slate-700">
                                                 <tr><th className="px-6 py-4">用戶資訊</th><th className="px-6 py-4">身分權限</th><th className="px-6 py-4">最後上線</th><th className="px-6 py-4 text-right">操作</th></tr>
                                             </thead>
-                                            <tbody className="divide-y divide-slate-50 dark:divide-slate-700">
+                                            <tbody className="divide-y divide-slate-5 dark:divide-slate-700">
                                                 {filteredUsers.map(u => {
                                                     const isAdm = u.email === ADMIN_EMAIL;
                                                     const isWhite = allowedEmails.includes(u.email);
@@ -1417,12 +1491,12 @@
                                             <thead className="bg-slate-50/80 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 font-bold sticky top-0 backdrop-blur-md z-10 border-b border-slate-100 dark:border-slate-700">
                                                 <tr><th className="px-6 py-4">任務內容</th><th className="px-6 py-4">科目/目標班級</th><th className="px-6 py-4 text-right">操作</th></tr>
                                             </thead>
-                                            <tbody className="divide-y divide-slate-50 dark:divide-slate-700">
+                                            <tbody className="divide-y divide-slate-5 dark:divide-slate-700">
                                                 {publicTasks.map(task => {
                                                     const cls = systemClasses.find(c => c.code === task.targetClass);
                                                     const targetName = cls ? cls.name : (task.targetClass || '全校');
                                                     return (
-                                                        <tr key={task.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                                                        <tr key={task.id} className="hover:bg-slate-5 dark:hover:bg-slate-700/50">
                                                             <td className="px-6 py-4">
                                                                 <div className="font-bold max-w-[200px] truncate dark:text-white" title={task.description}>{task.description}</div>
                                                                 <div className="text-[10px] text-slate-400 mt-1">Due: {formatDueDate(task.dueDate)} {task.forceExpired && <span className="text-red-500 font-bold ml-2">(強制過期)</span>}</div>
@@ -1451,6 +1525,7 @@
                             <div className="space-y-8 animate-fadeIn max-w-2xl">
                                 <div><h3 className="text-2xl font-bold dark:text-white mb-2">核心系統設定</h3></div>
 
+                                {/* 白名單系統設定 */}
                                 <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden p-1">
                                     <div className="p-5 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 flex justify-between items-center">
                                             <h4 className="font-bold dark:text-white flex items-center gap-2"><Icon name="shield-check" className="w-5 h-5 text-emerald-500"/> 白名單系統</h4>
@@ -1492,6 +1567,7 @@
                                     </div>
                                 </div>
 
+                                {/* 黑名單系統設定 (NEW) */}
                                 <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden p-1">
                                     <div className="p-5 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 flex justify-between items-center">
                                             <h4 className="font-bold dark:text-white flex items-center gap-2"><Icon name="shield-ban" className="w-5 h-5 text-red-500"/> 黑名單系統</h4>
@@ -1593,6 +1669,79 @@
                 </div>
             );
         }
+
+        
+        // --- 新增：底部導航欄 (Bottom Navigation) ---
+        function BottomNav({ activeTab, setActiveTab, isAdmin, isTeacher }) {
+            const tabs = [
+                { id: 'home', icon: 'home', label: '首頁' },
+                { id: 'timetable', icon: 'calendar', label: '課表' },
+                { id: 'class', icon: 'users', label: '班級' },
+                { id: 'settings', icon: 'settings', label: '設定' }
+            ];
+            if (isAdmin || isTeacher) {
+                tabs.splice(3, 0, { id: 'admin', icon: 'shield-check', label: '管理' });
+            }
+
+            return (
+                <div className="md:hidden fixed bottom-0 left-0 w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-t border-slate-200 dark:border-slate-800 z-50 px-6 py-3 flex justify-between items-center safe-area-bottom">
+                    {tabs.map(tab => (
+                        <button 
+                            key={tab.id} 
+                            onClick={() => setActiveTab(tab.id)}
+                            className={`flex flex-col items-center gap-1 transition-all ${activeTab === tab.id ? 'text-indigo-600 dark:text-indigo-400 scale-110' : 'text-slate-400'}`}
+                        >
+                            <Icon name={tab.icon} className="w-6 h-6" />
+                            <span className="text-[10px] font-bold">{tab.label}</span>
+                        </button>
+                    ))}
+                </div>
+            );
+        }
+
+        // --- 新增：老師申請審核組件 ---
+        function TeacherApproval({ db, triggerAlert, triggerConfirm }) {
+            const [requests, setRequests] = useState([]);
+            const { collection, query, where, onSnapshot, doc, updateDoc, getDocs } = window.firebaseServices;
+
+            useEffect(() => {
+                const q = query(collection(db, "users_public"), where("role", "==", "pending_teacher"));
+                return onSnapshot(q, (snap) => setRequests(snap.docs.map(d => ({ uid: d.id, ...d.data() }))));
+            }, [db]);
+
+            const handleApprove = async (uid) => {
+                try {
+                    await updateDoc(doc(db, "users_public", uid), { role: "teacher" });
+                    triggerAlert("已批准老師權限");
+                } catch (e) { triggerAlert("操作失敗"); }
+            };
+
+            return (
+                <div className="space-y-4">
+                    <h3 className="text-lg font-bold dark:text-white">老師權限申請 ({requests.length})</h3>
+                    {requests.length === 0 ? (
+                        <div className="p-8 text-center text-slate-400 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">目前沒有待處理的申請</div>
+                    ) : (
+                        <div className="grid gap-3">
+                            {requests.map(req => (
+                                <div key={req.uid} className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 flex justify-between items-center">
+                                    <div>
+                                        <div className="font-bold dark:text-white">{req.displayName}</div>
+                                        <div className="text-xs text-slate-500">{req.email}</div>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button onClick={() => handleApprove(req.uid)} className="bg-green-500 text-white px-4 py-2 rounded-xl text-xs font-bold">批准</button>
+                                        <button onClick={() => updateDoc(doc(db, "users_public", req.uid), { role: "student" })} className="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-4 py-2 rounded-xl text-xs font-bold">拒絕</button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // --- App Component ---
         function App() {
             const [user, setUser] = useState(null);
             const [authLoading, setAuthLoading] = useState(true);
@@ -1638,6 +1787,8 @@
             const [isListVisible, setIsListVisible] = useState(true);
             const [editingItem, setEditingItem] = useState(null);
             const [isAdmin, setIsAdmin] = useState(false);
+            const [isTeacher, setIsTeacher] = useState(false);
+            const [activeTab, setActiveTab] = useState("home");
             const [notification, setNotification] = useState({ isOpen: false, type: 'alert', message: '', onConfirm: null });
 
             const [showNameSetup, setShowNameSetup] = useState(false);
@@ -1712,6 +1863,7 @@
                             const d = new Date(); d.setDate(d.getDate() + (d.getDay()===5?3:d.getDay()===6?2:1));
                             setDueDate(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`); 
                             setIsAuthModalOpen(false); setIsAdmin(currentUser.email === ADMIN_EMAIL);
+                            setIsTeacher(docSnap.data()?.role === "teacher");
 
                             const unsubProfile = onSnapshot(doc(db, "users_public", currentUser.uid), async (docSnap) => {
                                 try {
@@ -1853,13 +2005,10 @@
 
             const handleJoinClassSubmit = async (code, name) => {
                 try {
-                    await setDoc(doc(db, "users_public", user.uid), { joinedClasses: arrayUnion(code) }, { merge: true });
+                    await updateDoc(doc(db, "users_public", user.uid), { joinedClasses: arrayUnion(code) });
                     triggerAlert(`成功加入班級：${name}`);
                     setIsJoinClassOpen(false);
-                } catch(e) { 
-                    triggerAlert("加入失敗，請重試"); 
-                    console.error("Join class error", e);
-                }
+                } catch(e) { triggerAlert("加入失敗，請重試"); }
             };
 
             const handleSubmit = async (e) => { 
@@ -1950,6 +2099,44 @@
             };
 
             const saveTimetableConfig = async (newConfig) => { if (!user) return; try { await setDoc(doc(db, 'users', user.uid, 'settings', 'timetable'), JSON.parse(JSON.stringify(newConfig))); triggerAlert("時間表已儲存"); setViewMode('timetable'); } catch (e) { triggerAlert("儲存失敗"); } };
+            
+            const handleGlobalCleanup = async () => {
+                if (!isAdmin) return;
+                triggerConfirm("⚠️ 確定要一鍵清理所有同學過期 1 天的功課嗎？此操作將會通知所有受影響的同學。", async () => {
+                    try {
+                        const yesterday = new Date();
+                        yesterday.setDate(yesterday.getDate() - 1);
+                        yesterday.setHours(0,0,0,0);
+                        const yesterdayStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+
+                        const userDocs = await getDocs(collection(db, "users_public"));
+                        let totalDeleted = 0;
+                        const batch = writeBatch(db);
+
+                        for (const uDoc of userDocs.docs) {
+                            const uid = uDoc.id;
+                            const q = query(collection(db, "users", uid, "items"), where("dueDate", "<", yesterdayStr), where("completed", "==", false));
+                            const snap = await getDocs(q);
+                            snap.forEach(d => {
+                                batch.delete(d.ref);
+                                totalDeleted++;
+                            });
+                        }
+
+                        if (totalDeleted > 0) {
+                            await batch.commit();
+                            // 發佈系統公告
+                            await setDoc(doc(db, "system_settings", "config"), { 
+                                announcementText: `📢 系統已自動清理過期 1 天以上的歷史紀錄，共清理 ${totalDeleted} 條。` 
+                            }, { merge: true });
+                            triggerAlert(`清理完成！共刪除 ${totalDeleted} 條過期紀錄。`);
+                        } else {
+                            triggerAlert("沒有發現需要清理的過期紀錄。");
+                        }
+                    } catch (e) { triggerAlert("清理失敗: " + e.message); }
+                });
+            };
+
             const saveSubjects = async (newSubjects) => { if (!user) return; try { await setDoc(doc(db, 'users', user.uid, 'settings', 'subjects'), { list: JSON.parse(JSON.stringify(newSubjects)) }); triggerAlert("科目已更新"); } catch (e) { triggerAlert("儲存失敗"); } };
 
             const handleLogout = () => { triggerConfirm("確定要登出系統嗎？", () => window.firebaseServices.signOut(auth)); };
@@ -2135,7 +2322,20 @@
                                             <div className="w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
                                             <button onClick={() => setIsSubjectManagerOpen(true)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 transition"><Icon name="settings" className="w-4 h-4" /></button>
                                             <div className="w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
-                                            <button onClick={handleLogout} className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 text-slate-500 hover:text-red-500 transition"><Icon name="log-out" className="w-4 h-4" /></button>
+                                            
+                                    {userProfile?.role !== 'teacher' && userProfile?.role !== 'pending_teacher' && (
+                                        <button onClick={async () => {
+                                            try {
+                                                await updateDoc(doc(db, "users_public", user.uid), { role: "pending_teacher" });
+                                                triggerAlert("申請已提交，請等待超級管理員審核。");
+                                            } catch(e) { triggerAlert("提交失敗"); }
+                                        }} className="w-full mt-4 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 py-3 rounded-2xl font-bold text-sm">申請成為老師身份</button>
+                                    )}
+                                    {userProfile?.role === 'pending_teacher' && (
+                                        <div className="w-full mt-4 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 py-3 rounded-2xl font-bold text-sm text-center">老師身份審核中...</div>
+                                    )}
+
+                                    <button onClick={handleLogout} className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 text-slate-500 hover:text-red-500 transition"><Icon name="log-out" className="w-4 h-4" /></button>
                                     </div>
                                 )}
                             </div>
@@ -2573,3 +2773,4 @@
     </script>
 </body>
 </html>
+
