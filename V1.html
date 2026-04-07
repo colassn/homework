@@ -1186,12 +1186,14 @@
                         const batch = writeBatch(db);
                         batch.delete(doc(db, "public_assignments", taskId));
                         
-                        // 注意：如果用戶數量超過 500 人，batch 寫入需要分段。此處先以 500 內為預設情境
-                        for (const u of users) {
-                            const dupQ = query(collection(db, "users", u.uid, "items"), where("publicRefId", "==", taskId));
-                            const snap = await getDocs(dupQ);
-                            snap.forEach(d => batch.delete(d.ref));
-                        }
+	                        // 注意：如果用戶數量超過 500 人，batch 寫入需要分段。此處先以 500 內為預設情境
+	                        const userDocs = await getDocs(collection(db, "users_public"));
+	                        for (const uDoc of userDocs.docs) {
+	                            const uid = uDoc.id;
+	                            const dupQ = query(collection(db, "users", uid, "items"), where("publicRefId", "==", taskId));
+	                            const snap = await getDocs(dupQ);
+	                            snap.forEach(d => batch.delete(d.ref));
+	                        }
                         
                         await batch.commit();
                         triggerAlert("廣播功課已撤回並同步清理所有學生紀錄"); 
@@ -1864,9 +1866,10 @@
                         setPublicTasks(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
                         const currentClasses = joinedClassesStr ? joinedClassesStr.split(',') : [];
 
-                        // 取得當前使用者既有的功課列表中所有的 publicRefId
-                        const existingItems = itemsRef.current;
-                        const existingPublicIds = new Set(existingItems.map(i => i.publicRefId).filter(Boolean));
+	                        // 取得當前使用者既有的功課列表中所有的 publicRefId
+	                        const existingItems = itemsRef.current;
+	                        const existingPublicIds = new Set(existingItems.map(i => i.publicRefId).filter(Boolean));
+	                        window._existingPublicIds = existingPublicIds; // 確保在循環中可訪問
 
                         const addPromises = [];
                         const batch = writeBatch(db);
@@ -1878,11 +1881,11 @@
                                 const target = publicData.targetClass || '全校';
                                 const isForMe = isAdmin || target === '全校' || currentClasses.includes(target); 
 
-                                if (change.type === "added" && isForMe) { 
-                                    // 只有當本機的現有項目中「沒有」這個廣播 ID 時，才觸發寫入，省去大量 getDocs 消耗
-                                    if (!existingPublicIds.has(publicId)) { 
-                                        addPromises.push(addDoc(collection(db, "users", user.uid, "items"), { ...publicData, publicRefId: publicId, completed: false, forceExpired: publicData.forceExpired || false })); 
-                                        const createdTime = publicData.createdAt ? new Date(publicData.createdAt).getTime() : 0;
+	                                if (change.type === "added" && isForMe) { 
+	                                    // 只有當本機的現有項目中「沒有」這個廣播 ID 時，才觸發寫入，省去大量 getDocs 消耗
+	                                    if (!window._existingPublicIds.has(publicId)) { 
+	                                        addPromises.push(addDoc(collection(db, "users", user.uid, "items"), { ...publicData, publicRefId: publicId, completed: false, forceExpired: publicData.forceExpired || false })); 
+	                                        const createdTime = publicData.createdAt ? new Date(publicData.createdAt).getTime() : 0;
                                         if (createdTime > pageLoadTime && "Notification" in window && Notification.permission === "granted") new Notification(`📢 新廣播任務 (${target})`, { body: `[${publicData.subject}] ${publicData.description}` });
                                         else if (createdTime > pageLoadTime) triggerAlert(`收到新功課：[${publicData.subject || '其他'}] ${publicData.description}`); 
                                     } 
@@ -2640,3 +2643,4 @@
     </script>
 </body>
 </html>
+
