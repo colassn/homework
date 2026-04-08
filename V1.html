@@ -2626,23 +2626,9 @@
 }
 
         
-        const initApp = () => {
-            // 安全機制：即使 React 啟動失敗，5 秒後也強制移除加載畫面
-            setTimeout(() => {
-                const loader = document.getElementById('loading-screen');
-                if (loader) {
-                    loader.style.opacity = '0';
-                    setTimeout(() => loader.remove(), 500);
-                    console.warn("Safety timeout: Forced loading screen removal.");
-                }
-            }, 5000);
-
-            if (window.firebaseServices && window.firebaseServices.auth) {
-                const root = ReactDOM.createRoot(document.getElementById('root'));
-                root.render(<App />);
-            } else setTimeout(initApp, 50);
-        };
-
+        const initApp = () => { console.log("Initializing App v6.2..."); setTimeout(() => { const loader = document.getElementById("loading-screen"); if (loader) { loader.style.opacity = "0"; setTimeout(() => loader.remove(), 500); console.warn("Safety timeout: Forced loading screen removal."); } }, 5000); const checkReady = () => { if (window.firebaseServices && window.firebaseServices.auth && window.ReactDOM) { try { const root = ReactDOM.createRoot(document.getElementById("root")); root.render(React.createElement(App)); console.log("React Render triggered."); } catch (e) { console.error("React Render Error:", e); const log = document.getElementById("error-log"); if (log) { document.getElementById("error-reporter").style.display = "block"; log.textContent += "React 渲染錯誤: " + e.message + "
+" + e.stack + "
+"; } } } else { setTimeout(checkReady, 100); } }; checkReady(); };
         initApp();
     </script>
 </body>
