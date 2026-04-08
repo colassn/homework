@@ -1668,6 +1668,7 @@
             const [authLoading, setAuthLoading] = useState(true);
             const [configLoading, setConfigLoading] = useState(true); 
             const [items, setItems] = useState([]);
+            const [itemsLoaded, setItemsLoaded] = useState(false);
             const [timetableConfig, setTimetableConfig] = useState({ timeSlots: DEFAULT_TIME_SLOTS, schedule: DEFAULT_SCHEDULE });
             const [subjects, setSubjects] = useState(DEFAULT_SUBJECTS);
 
@@ -1790,7 +1791,7 @@
                                         if (!currentUser.displayName) setShowNameSetup(true);
                                     } else {
                                         if (!currentUser.displayName) setShowNameSetup(true);
-                                        else await setDoc(doc(db, "users_public", currentUser.uid), { email: currentUser.email, displayName: currentUser.displayName, joinedClasses: [], lastSeen: serverTimestamp() }, { merge: true });
+                                        else await setDoc(doc(db, "users_public", currentUser.uid), { email: currentUser.email, displayName: currentUser.displayName, joinedClasses: [], dismissedTasks: [], lastSeen: serverTimestamp() }, { merge: true });
                                     }
                                 } catch (e) { console.warn("Profile inner err:", e); }
                             }, (err) => console.warn("Profile err:", err));
@@ -1810,6 +1811,7 @@
                     const loadedItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     setItems(loadedItems);
                     itemsRef.current = loadedItems; // 同步儲存至 Ref 以供其他 Effect 讀取
+                    setItemsLoaded(true);
                 }, (err) => console.warn("Items err:", err));
                 const unsubTimetable = onSnapshot(doc(db, 'users', user.uid, 'settings', 'timetable'), (docSnap) => setTimetableConfig(docSnap.exists() && docSnap.data().timeSlots ? docSnap.data() : { timeSlots: DEFAULT_TIME_SLOTS, schedule: DEFAULT_SCHEDULE }), (err) => console.warn("Timetable err:", err));
                 const unsubSubjects = onSnapshot(doc(db, 'users', user.uid, 'settings', 'subjects'), (docSnap) => setSubjects(docSnap.exists() && docSnap.data().list ? docSnap.data().list : DEFAULT_SUBJECTS), (err) => console.warn("Subjects err:", err));
@@ -1836,9 +1838,14 @@
                 if (toDelete.length > 0) {
                     autoDeleteRan.current = true;
                     const batch = writeBatch(db);
+                    const dismissed = [];
                     toDelete.forEach(item => {
                         batch.delete(doc(db, "users", user.uid, "items", item.id));
+                        if (item.publicRefId) dismissed.push(item.publicRefId);
                     });
+                    if (dismissed.length > 0) {
+                        batch.update(doc(db, "users_public", user.uid), { dismissedTasks: arrayUnion(...dismissed) });
+                    }
                     // 默默在背景刪除，不再彈出 triggerAlert 煩人視窗
                     batch.commit().catch(e => console.warn("Auto delete failed", e));
                 } else {
@@ -1855,22 +1862,35 @@
                 }
             }, [joinedClassesStr, selectedClassBoard]);
 
-            // [架構修復] 處理廣播任務同步機制，移除依賴 items，改用 itemsRef 解決 Read Storm 效能問題
+                        // [架構修復] 處理廣播任務同步機制，解決 Read Storm 及離線刪除不同步問題
             useEffect(() => {
-                if (!user || !db) return;
+                if (!user || !db || !itemsLoaded) return;
+                let isFirstLoad = true;
                 const q = query(collection(db, "public_assignments"), orderBy("createdAt", "desc"));
                 const unsubscribe = onSnapshot(q, async (snapshot) => { 
                     try {
                         setPublicTasks(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
                         const currentClasses = joinedClassesStr ? joinedClassesStr.split(',') : [];
 
-                        // 取得當前使用者既有的功課列表中所有的 publicRefId
                         const existingItems = itemsRef.current;
                         const existingPublicIds = new Set(existingItems.map(i => i.publicRefId).filter(Boolean));
+                        const activePublicIds = new Set(snapshot.docs.map(d => d.id));
+                        const dismissedTasks = userProfile?.dismissedTasks || [];
 
                         const addPromises = [];
                         const batch = writeBatch(db);
                         let hasBatchOp = false;
+
+                        // 清理離線時被全域刪除的廣播任務
+                        if (isFirstLoad) {
+                            existingItems.forEach(item => {
+                                if (item.publicRefId && !activePublicIds.has(item.publicRefId)) {
+                                    batch.delete(doc(db, "users", user.uid, "items", item.id));
+                                    hasBatchOp = true;
+                                }
+                            });
+                            isFirstLoad = false;
+                        }
 
                         for (const change of snapshot.docChanges()) { 
                             try {
@@ -1879,8 +1899,16 @@
                                 const isForMe = isAdmin || target === '全校' || currentClasses.includes(target); 
 
                                 if (change.type === "added" && isForMe) { 
-                                    // 只有當本機的現有項目中「沒有」這個廣播 ID 時，才觸發寫入，省去大量 getDocs 消耗
-                                    if (!existingPublicIds.has(publicId)) { 
+                                    const due = new Date(publicData.dueDate);
+                                    due.setHours(0,0,0,0);
+                                    const today = new Date();
+                                    today.setHours(0,0,0,0);
+                                    const diffDays = Math.floor((today - due) / 86400000);
+                                    
+                                    // 關鍵修復：檢查是否已被用戶手動刪除或清理
+                                    const isDismissed = dismissedTasks.includes(publicId);
+
+                                    if (!existingPublicIds.has(publicId) && diffDays < 2 && !isDismissed) { 
                                         addPromises.push(addDoc(collection(db, "users", user.uid, "items"), { ...publicData, publicRefId: publicId, completed: false, forceExpired: publicData.forceExpired || false })); 
                                         const createdTime = publicData.createdAt ? new Date(publicData.createdAt).getTime() : 0;
                                         if (createdTime > pageLoadTime && "Notification" in window && Notification.permission === "granted") new Notification(`📢 新廣播任務 (${target})`, { body: `[${publicData.subject}] ${publicData.description}` });
@@ -1893,19 +1921,17 @@
                                 } 
                                 if (change.type === "modified") { 
                                     const toUpdate = existingItems.filter(i => i.publicRefId === publicId);
-                                    toUpdate.forEach(item => { batch.update(doc(db, "users", user.uid, "items", item.id), { forceExpired: publicData.forceExpired === true }); hasBatchOp = true; });
+                                    toUpdate.forEach(item => { batch.update(doc(db, "users", user.uid, "items", item.id), { forceExpired: publicData.forceExpired === true, description: publicData.description, dueDate: publicData.dueDate, subject: publicData.subject }); hasBatchOp = true; });
                                 } 
                             } catch (e) { console.warn("Task process err:", e); }
                         }
-                        
-                        // 統一執行
                         if (addPromises.length > 0) await Promise.all(addPromises);
                         if (hasBatchOp) await batch.commit();
 
                     } catch (e) { console.warn("Public tasks wrapper err:", e); }
                 }, (err) => console.warn("Public tasks err:", err)); 
                 return () => unsubscribe(); 
-            }, [user, db, joinedClassesStr, pageLoadTime, isAdmin]);
+            }, [user, db, joinedClassesStr, pageLoadTime, isAdmin, itemsLoaded, userProfile]);
 
             const triggerAlert = (message) => setNotification({ isOpen: true, type: 'alert', message, onConfirm: null });
             const triggerConfirm = (message, onConfirmAction) => setNotification({ isOpen: true, type: 'confirm', message, onConfirm: onConfirmAction });
@@ -1962,7 +1988,7 @@
             };
 
             const handleUpdateItem = async (id, updatedData) => { if (isGuest) return; try { await updateDoc(doc(db, "users", user.uid, "items", id), updatedData); triggerAlert("更新成功！"); } catch (e) { triggerAlert("更新失敗"); throw e; } };
-            const deleteItem = (id) => { if (isGuest) return; triggerConfirm('確定要刪除這項紀錄？', async () => { try { await deleteDoc(doc(db, "users", user.uid, "items", id)); } catch (e) { triggerAlert("刪除失敗"); } }); };
+            const deleteItem = (id) => { if (isGuest) return; triggerConfirm('確定要刪除這項紀錄？', async () => { try { const itemToDelete = items.find(i => i.id === id); if (itemToDelete && itemToDelete.publicRefId) { await updateDoc(doc(db, "users_public", user.uid), { dismissedTasks: arrayUnion(itemToDelete.publicRefId) }); } await deleteDoc(doc(db, "users", user.uid, "items", id)); } catch (e) { triggerAlert("刪除失敗"); } }); };
             const deletePublicItem = (publicId, privateId) => { if (isGuest) return; triggerConfirm('⚠️ 確定要刪除全班的這份功課？', async () => { try { await deleteDoc(doc(db, "public_assignments", publicId)); if (privateId) await deleteDoc(doc(db, "users", user.uid, "items", privateId)); triggerAlert("已刪除"); } catch (e) { triggerAlert("刪除失敗"); } }); };
             
             const handleClearExpired = () => {
@@ -1985,7 +2011,14 @@
                 triggerConfirm(`確定要一鍵清理 ${expiredItems.length} 個過期項目嗎？`, async () => {
                     try {
                         const batch = writeBatch(db);
-                        expiredItems.forEach(item => batch.delete(doc(db, "users", user.uid, "items", item.id)));
+                        const dismissed = [];
+                        expiredItems.forEach(item => {
+                            batch.delete(doc(db, "users", user.uid, "items", item.id));
+                            if (item.publicRefId) dismissed.push(item.publicRefId);
+                        });
+                        if (dismissed.length > 0) {
+                            batch.update(doc(db, "users_public", user.uid), { dismissedTasks: arrayUnion(...dismissed) });
+                        }
                         await batch.commit();
                         triggerAlert(`成功刪除了 ${expiredItems.length} 個過期項目！`);
                     } catch(e) {
@@ -2007,7 +2040,14 @@
                 triggerConfirm(`確定要一鍵清理全部 ${completedItems.length} 個歷史紀錄嗎？（此操作無法復原）`, async () => {
                     try {
                         const batch = writeBatch(db);
-                        completedItems.forEach(item => batch.delete(doc(db, "users", user.uid, "items", item.id)));
+                        const dismissed = [];
+                        completedItems.forEach(item => {
+                            batch.delete(doc(db, "users", user.uid, "items", item.id));
+                            if (item.publicRefId) dismissed.push(item.publicRefId);
+                        });
+                        if (dismissed.length > 0) {
+                            batch.update(doc(db, "users_public", user.uid), { dismissedTasks: arrayUnion(...dismissed) });
+                        }
                         await batch.commit();
                         triggerAlert(`成功刪除了 ${completedItems.length} 個歷史紀錄！`);
                     } catch(e) {
