@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-HK">
 <head>
@@ -1051,7 +1052,7 @@
             const [isScanning, setIsScanning] = useState(false);
             const [expiredReport, setExpiredReport] = useState(null);
 
-            const { collection, getDocs, query, orderBy, onSnapshot, doc, updateDoc, arrayUnion, arrayRemove, deleteDoc, setDoc, getDoc, writeBatch, limit } = window.firebaseServices || {};
+            const { collection, getDocs, query, where, orderBy, onSnapshot, doc, updateDoc, arrayUnion, arrayRemove, deleteDoc, setDoc, getDoc, writeBatch, limit } = window.firebaseServices || {};
             const allowedEmails = systemConfig?.allowedEmails || [];
             const blacklistedEmails = systemConfig?.blacklistedEmails || [];
 
@@ -2388,7 +2389,7 @@
                                     <Icon name="book-open" className="w-6 h-6" />
                                 </div>
                                 <div className="hidden sm:block">
-                                    <h1 className="text-lg font-black tracking-tight dark:text-white">電子手冊 <span className="text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded ml-1 text-slate-500">v5.1 PRO</span></h1>
+                                    <h1 className="text-lg font-black tracking-tight dark:text-white">電子手冊 <span className="text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded ml-1 text-slate-500">v5.2 PRO</span></h1>
                                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Digital Handbook</p>
                                 </div>
                             </div>
@@ -2441,47 +2442,50 @@
 
                     {/* 佈局切換功能列 */}
                     <div className="flex gap-2 flex-wrap justify-center md:justify-end shrink-0 w-full mb-6">
+                        {viewMode === 'current' && appMode === 'personal' && (
+                            <CustomDropdown 
+                                value={viewLayout} 
+                                onChange={setViewLayout} 
+                                options={[
+                                    { value: 'list', label: '列表模式', icon: 'layout-list' },
+                                    { value: 'table', label: '表格模式', icon: 'table' }
+                                ]} 
+                                customClasses={`px-3 py-2 rounded-xl font-bold text-xs transition flex items-center gap-2 ${viewLayout === 'table' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 shadow-sm' : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-sm'} focus:outline-none focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900 active:scale-95`}
+                            />
+                        )}
 
-                                {viewMode === 'current' && appMode === 'personal' && (
-                                    <CustomDropdown 
-                                        value={viewLayout} 
-                                        onChange={setViewLayout} 
-                                        options={[
-                                            { value: 'list', label: '列表模式', icon: 'layout-list' },
-                                            { value: 'table', label: '表格模式', icon: 'table' }
-                                        ]} 
-                                        customClasses={`px-3 py-2 rounded-xl font-bold text-xs transition flex items-center gap-2 ${viewLayout === 'table' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 shadow-sm' : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-sm'} focus:outline-none focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900 active:scale-95`}
-                                    />
-                                )}
+                        {viewMode === 'timetable' && (
+                            <button onClick={() => setViewMode('timetable_edit')} className={`px-3 py-2 rounded-xl font-bold text-xs bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 shadow-sm transition-all flex items-center gap-2`}><Icon name="edit" className="w-4 h-4" /><span className="hidden sm:inline">編輯</span></button>
+                        )}
 
-                                {viewMode === 'timetable' && (
-                                    <button onClick={() => setViewMode('timetable_edit')} className={`px-3 py-2 rounded-xl font-bold text-xs bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 shadow-sm transition-all flex items-center gap-2`}><Icon name="edit" className="w-4 h-4" /><span className="hidden sm:inline">編輯</span></button>
-                                )}
-
-                                
-
-                                
-
-                                
-
-                                {user && (
-                                    <div className="flex bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-1">
-                                            <button onClick={() => setIsPreferencesOpen(true)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 transition"><Icon name="palette" className="w-4 h-4" /></button>
-                                            <div className="w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
-                                            <button onClick={() => setIsSubjectManagerOpen(true)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 transition"><Icon name="settings" className="w-4 h-4" /></button>
-                                            <div className="w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
-                                            <button onClick={handleLogout} className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 text-slate-500 hover:text-red-500 transition"><Icon name="log-out" className="w-4 h-4" /></button>
-                                    </div>
-                                )}
+                        {user && (
+                            <div className="flex bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-1">
+                                    <button onClick={() => setIsPreferencesOpen(true)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 transition"><Icon name="palette" className="w-4 h-4" /></button>
+                                    <div className="w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
+                                    <button onClick={() => setIsSubjectManagerOpen(true)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 transition"><Icon name="settings" className="w-4 h-4" /></button>
+                                    <div className="w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
+                                    <button onClick={handleLogout} className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 text-slate-500 hover:text-red-500 transition"><Icon name="log-out" className="w-4 h-4" /></button>
                             </div>
-                        </div>
+                        )}
+                    </div>
+
 
                         {viewMode === 'admin' ? ( <AdminConsole db={db} systemConfig={systemConfig} systemClasses={systemClasses} onBack={() => setViewMode('current')} subjects={subjects} triggerAlert={triggerAlert} triggerConfirm={triggerConfirm} /> ) : 
                          viewMode === 'timetable' ? ( <div className="max-w-3xl mx-auto"><Timetable currentDay={currentTimetableDay} config={timetableConfig} onDayChange={setCurrentTimetableDay} subjects={subjects} globalNow={globalNow} /></div> ) : 
                          viewMode === 'timetable_edit' ? ( <TimetableEditor initialConfig={timetableConfig} onSave={saveTimetableConfig} onCancel={() => setViewMode('timetable')} subjects={subjects} triggerConfirm={triggerConfirm} /> ) : (
                         <div className="max-w-3xl mx-auto">
 
-                            
+                            {/* --- 雙模式切換器 --- */}
+                            {viewMode === 'current' && (
+                                <div className="flex bg-slate-200/50 dark:bg-slate-800/50 p-1.5 rounded-2xl w-full sm:w-fit mx-auto mb-6 shadow-inner border border-white/20 dark:border-slate-700">
+                                    <button onClick={() => setAppMode('personal')} className={`flex-1 sm:flex-none px-8 py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${appMode === 'personal' ? `bg-white dark:bg-slate-700 shadow-sm ${t.text}` : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>
+                                        <Icon name="user" className="w-4 h-4" /> 個人模式
+                                    </button>
+                                    <button onClick={() => setAppMode('class')} className={`flex-1 sm:flex-none px-8 py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${appMode === 'class' ? `bg-white dark:bg-slate-700 shadow-sm ${t.text}` : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>
+                                        <Icon name="school" className="w-4 h-4" /> 班級模式
+                                    </button>
+                                </div>
+                            )}
 
                             {/* v2.4 Feature Cards */}
                             {viewMode === 'current' && isVisible('cards') && (
@@ -2888,12 +2892,24 @@
             );
         }
 
+        
         const initApp = () => {
+            // 安全機制：即使 React 啟動失敗，5 秒後也強制移除加載畫面
+            setTimeout(() => {
+                const loader = document.getElementById('loading-screen');
+                if (loader) {
+                    loader.style.opacity = '0';
+                    setTimeout(() => loader.remove(), 500);
+                    console.warn("Safety timeout: Forced loading screen removal.");
+                }
+            }, 5000);
+
             if (window.firebaseServices && window.firebaseServices.auth) {
                 const root = ReactDOM.createRoot(document.getElementById('root'));
                 root.render(<App />);
             } else setTimeout(initApp, 50);
         };
+
         initApp();
     </script>
 </body>
