@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-HK">
 <head>
@@ -1232,7 +1233,97 @@
                 }
                 setIsScanning(false);
             };
-            
+
+            // 清除單個學生的所有過期未完成記錄
+            const handleClearExpiredForUser = (targetUser) => {
+                triggerConfirm(`確定要清除 ${targetUser.displayName} 的所有過期未完成記錄嗎？此操作無法復原！`, async () => {
+                    const today = new Date();
+                    today.setHours(0,0,0,0);
+                    try {
+                        const q = query(collection(db, 'users', targetUser.uid, 'items'));
+                        const snap = await getDocs(q);
+                        const batch = writeBatch(db);
+                        const dismissed = [];
+                        let count = 0;
+                        snap.docs.forEach(d => {
+                            const item = d.data();
+                            if (!item.completed) {
+                                const due = new Date(item.dueDate);
+                                due.setHours(0,0,0,0);
+                                if (due < today) {
+                                    batch.delete(d.ref);
+                                    if (item.publicRefId) dismissed.push(item.publicRefId);
+                                    count++;
+                                }
+                            }
+                        });
+                        if (dismissed.length > 0) {
+                            batch.update(doc(db, 'users_public', targetUser.uid), { dismissedTasks: arrayUnion(...dismissed) });
+                        }
+                        await batch.commit();
+                        setExpiredReport(prev => prev ? prev.filter(r => r.user.uid !== targetUser.uid) : prev);
+                        triggerAlert(`已成功清除 ${targetUser.displayName} 的 ${count} 項過期記錄`);
+                    } catch(e) {
+                        triggerAlert('清除失敗: ' + e.message);
+                    }
+                });
+            };
+
+            // 清除所有學生的過期未完成記錄
+            const handleClearExpiredForAll = () => {
+                if (!expiredReport || expiredReport.length === 0) {
+                    triggerAlert('請先點擊「掃描未清過期」按鈕，取得過期名單後再執行清除。');
+                    return;
+                }
+                const totalCount = expiredReport.reduce((sum, r) => sum + r.expiredCount, 0);
+                triggerConfirm(`⚠️ 危險操作！確定要清除全部 ${expiredReport.length} 位學生共 ${totalCount} 項過期未完成記錄嗎？此操作無法復原！`, async () => {
+                    const today = new Date();
+                    today.setHours(0,0,0,0);
+                    let totalCleared = 0;
+                    let errorCount = 0;
+                    const reportSnapshot = [...expiredReport];
+                    try {
+                        for (const r of reportSnapshot) {
+                            try {
+                                const q = query(collection(db, 'users', r.user.uid, 'items'));
+                                const snap = await getDocs(q);
+                                const batch = writeBatch(db);
+                                const dismissed = [];
+                                let count = 0;
+                                snap.docs.forEach(d => {
+                                    const item = d.data();
+                                    if (!item.completed) {
+                                        const due = new Date(item.dueDate);
+                                        due.setHours(0,0,0,0);
+                                        if (due < today) {
+                                            batch.delete(d.ref);
+                                            if (item.publicRefId) dismissed.push(item.publicRefId);
+                                            count++;
+                                        }
+                                    }
+                                });
+                                if (dismissed.length > 0) {
+                                    batch.update(doc(db, 'users_public', r.user.uid), { dismissedTasks: arrayUnion(...dismissed) });
+                                }
+                                await batch.commit();
+                                totalCleared += count;
+                            } catch(e) {
+                                errorCount++;
+                                console.warn('清除失敗 ' + r.user.displayName, e);
+                            }
+                        }
+                        setExpiredReport(null);
+                        if (errorCount === 0) {
+                            triggerAlert(`✅ 已成功清除全部 ${reportSnapshot.length} 位學生，共 ${totalCleared} 項過期記錄！`);
+                        } else {
+                            triggerAlert(`清除完成，但有 ${errorCount} 位學生清除時發生錯誤。成功清除 ${totalCleared} 項。`);
+                        }
+                    } catch(e) {
+                        triggerAlert('全部清除失敗: ' + e.message);
+                    }
+                });
+            };
+
             const getUserStatus = (lastSeen) => {
                 if (!lastSeen || typeof lastSeen.toDate !== 'function') return 'offline';
                 const diff = new Date() - lastSeen.toDate();
@@ -1328,6 +1419,10 @@
                                             {isScanning ? <Icon name="loader" className="w-4 h-4 animate-spin" /> : <Icon name="search" className="w-4 h-4" />}
                                             掃描未清過期
                                         </button>
+                                        <button onClick={handleClearExpiredForAll} disabled={!expiredReport || expiredReport.length === 0} className="bg-red-600 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-sm hover:bg-red-700 transition flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed">
+                                            <Icon name="trash-2" className="w-4 h-4" />
+                                            一鍵清除全部
+                                        </button>
                                         <div className="relative w-full sm:w-auto flex-1">
                                             <Icon name="search" className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                                             <input type="text" placeholder="搜尋用戶名字或 Email..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full pl-9 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-sm" />
@@ -1341,14 +1436,21 @@
                                             <h4 className="font-bold text-orange-800 dark:text-orange-300 flex items-center gap-2"><Icon name="alert-triangle" className="w-5 h-5"/> 未清理過期功課的學生名單 ({expiredReport.length} 人)</h4>
                                             <button onClick={() => setExpiredReport(null)} className="text-orange-500 hover:text-orange-700 dark:hover:text-orange-400"><Icon name="x" className="w-5 h-5"/></button>
                                         </div>
-                                        <div className="max-h-40 overflow-y-auto space-y-2 pr-2 scrollbar-hide">
+                                        <div className="max-h-52 overflow-y-auto space-y-2 pr-2 scrollbar-hide">
                                             {expiredReport.map(r => (
-                                                <div key={r.user.uid} className="flex justify-between items-center bg-white dark:bg-slate-800 p-3 rounded-xl border border-orange-100 dark:border-orange-800/50 cursor-pointer hover:border-orange-300 dark:hover:border-orange-600 transition-colors shadow-sm" onClick={() => setSelectedUser(r.user)}>
-                                                    <span className="font-bold text-sm dark:text-white flex items-center gap-2">
-                                                        <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs">{r.user.displayName?.[0]?.toUpperCase() || 'U'}</div>
-                                                        {r.user.displayName} <span className="text-xs text-slate-400 font-normal hidden sm:inline-block ml-1">{r.user.email}</span>
+                                                <div key={r.user.uid} className="flex justify-between items-center bg-white dark:bg-slate-800 p-3 rounded-xl border border-orange-100 dark:border-orange-800/50 hover:border-orange-300 dark:hover:border-orange-600 transition-colors shadow-sm">
+                                                    <span className="font-bold text-sm dark:text-white flex items-center gap-2 cursor-pointer flex-1 min-w-0" onClick={() => setSelectedUser(r.user)}>
+                                                        <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs shrink-0">{r.user.displayName?.[0]?.toUpperCase() || 'U'}</div>
+                                                        <span className="truncate">{r.user.displayName}</span>
+                                                        <span className="text-xs text-slate-400 font-normal hidden sm:inline-block ml-1 shrink-0">{r.user.email}</span>
                                                     </span>
-                                                    <span className="bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 px-3 py-1 rounded-lg font-bold text-xs">{r.expiredCount} 項未清</span>
+                                                    <div className="flex items-center gap-2 shrink-0 ml-2">
+                                                        <span className="bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 px-3 py-1 rounded-lg font-bold text-xs">{r.expiredCount} 項未清</span>
+                                                        <button onClick={(e) => { e.stopPropagation(); handleClearExpiredForUser(r.user); }} className="flex items-center gap-1 px-2.5 py-1 bg-red-500 hover:bg-red-600 text-white rounded-lg font-bold text-xs transition-colors whitespace-nowrap" title="清除此學生的過期記錄">
+                                                            <Icon name="trash-2" className="w-3 h-3" />
+                                                            清除
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             ))}
                                         </div>
@@ -1443,9 +1545,16 @@
                                              <button onClick={() => handleDeleteUser(selectedUser)} className="text-xs font-bold text-slate-500 bg-slate-200 dark:bg-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-300 transition-colors flex items-center gap-1 ml-auto"><Icon name="trash-2" className="w-3 h-3" /> 徹底刪除帳號</button>
                                          </div>
                                      </div>
-                                     <div className="flex gap-4">
-                                         <div className="text-center p-2"><div className="text-2xl font-black">{userHomeworks.length}</div><div className="text-xs font-bold text-slate-400 mt-1">總項目</div></div>
-                                         <div className="text-center p-2"><div className="text-2xl font-black text-emerald-500">{userHomeworks.filter(h=>h.completed).length}</div><div className="text-xs font-bold text-slate-400 mt-1">已完成</div></div>
+                                     <div className="flex flex-col items-end gap-3">
+                                         <div className="flex gap-4">
+                                             <div className="text-center p-2"><div className="text-2xl font-black">{userHomeworks.length}</div><div className="text-xs font-bold text-slate-400 mt-1">總項目</div></div>
+                                             <div className="text-center p-2"><div className="text-2xl font-black text-emerald-500">{userHomeworks.filter(h=>h.completed).length}</div><div className="text-xs font-bold text-slate-400 mt-1">已完成</div></div>
+                                             <div className="text-center p-2"><div className="text-2xl font-black text-red-500">{userHomeworks.filter(h=>{ const due = new Date(h.dueDate); due.setHours(0,0,0,0); const today = new Date(); today.setHours(0,0,0,0); return !h.completed && due < today; }).length}</div><div className="text-xs font-bold text-slate-400 mt-1">過期未清</div></div>
+                                         </div>
+                                         <button onClick={() => handleClearExpiredForUser(selectedUser)} className="flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold text-sm transition-colors shadow-sm">
+                                             <Icon name="trash-2" className="w-4 h-4" />
+                                             清除此學生過期記錄
+                                         </button>
                                      </div>
                                 </div>
 
