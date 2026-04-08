@@ -665,11 +665,26 @@
             const handleGoogleLogin = async () => { try { setLoading(true); await signInWithPopup(auth, googleProvider); onClose(); } catch (error) { console.error(error); triggerAlert("Google 登入失敗: " + error.message); setLoading(false); } };
             const handleEmailAuth = async (e) => { 
                 e.preventDefault(); if(!email || !password) return;
+                if (!isLogin && password.length < 6) { triggerAlert("密碼長度至少需要 6 位字元"); return; }
                 try { 
                     setLoading(true); 
-                    if (isLogin) { await signInWithEmailAndPassword(auth, email, password); } else { await createUserWithEmailAndPassword(auth, email, password); } 
+                    if (isLogin) { 
+                        await signInWithEmailAndPassword(auth, email, password); 
+                    } else { 
+                        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                        // 註冊成功後，Firebase 會自動登入，onAuthStateChanged 會處理後續的 NameSetupModal 彈出
+                    } 
                     onClose(); 
-                } catch (error) { console.error(error); triggerAlert(isLogin ? "登入失敗: " + error.message : "註冊失敗: " + error.message); setLoading(false); } 
+                } catch (error) { 
+                    console.error(error); 
+                    let errorMsg = error.message;
+                    if (error.code === 'auth/email-already-in-use') errorMsg = "此電郵已被註冊，請直接登入";
+                    if (error.code === 'auth/invalid-email') errorMsg = "電郵格式不正確";
+                    if (error.code === 'auth/weak-password') errorMsg = "密碼強度不足";
+                    if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') errorMsg = "電郵或密碼錯誤";
+                    triggerAlert(isLogin ? "登入失敗: " + errorMsg : "註冊失敗: " + errorMsg); 
+                    setLoading(false); 
+                } 
             };
 
             return ( 
@@ -2462,6 +2477,19 @@
                                     ))}
                                 </div>
                             )}
+                        </div>
+                    );
+                }
+                if (isGuest) {
+                    return (
+                        <div className="max-w-3xl mx-auto py-12">
+                            <BlockScreen 
+                                type="guest" 
+                                customTitle="歡迎使用電子手冊"
+                                customMessage="切換至個人模式即可建立專屬你的功課清單與課表。\n登入後資料將自動同步至雲端。"
+                                onLogin={() => setIsAuthModalOpen(true)} 
+                                user={null} 
+                            />
                         </div>
                     );
                 }
