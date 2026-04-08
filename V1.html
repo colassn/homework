@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-HK">
 <head>
@@ -530,11 +529,77 @@
             );
         }
 
-        function AppearanceModal({ isOpen, onClose, t, themeColor, setThemeColor, isDarkMode, setIsDarkMode, layoutMode, setLayoutMode, customLayout, setCustomLayout }) {
+        
+        function SettingsCenter({ isOpen, onClose, user, userProfile, isAdmin, t, themeColor, setThemeColor, isDarkMode, setIsDarkMode, layoutMode, setLayoutMode, customLayout, setCustomLayout, onLogout }) {
             if (!isOpen) return null;
-            
-            const handleCustomToggle = (key) => {
-                setCustomLayout({ ...customLayout, [key]: !customLayout[key] });
+            return (
+                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md transition-opacity" onClick={onClose}></div>
+                    <div className="modal-animate bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl w-full max-w-md overflow-hidden relative z-10 border border-white/20 dark:border-slate-800">
+                        <div className={`p-8 ${t.bg} text-white relative`}>
+                            <button onClick={onClose} className="absolute top-6 right-6 p-2 bg-white/20 hover:bg-white/30 rounded-full transition-colors"><Icon name="x" className="w-5 h-5" /></button>
+                            <div className="flex items-center gap-4">
+                                <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-3xl font-black">
+                                    {user?.displayName?.charAt(0) || user?.email?.charAt(0).toUpperCase()}
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-black">{user?.displayName || '用戶'}</h3>
+                                    <p className="text-xs font-bold opacity-70 uppercase tracking-widest">{user?.email}</p>
+                                    {isAdmin && <span className="mt-1 inline-block bg-white/20 px-2 py-0.5 rounded text-[10px] font-black uppercase">Super Admin</span>}
+                                </div>
+                            </div>
+                        </div>
+                        <div className="p-6 space-y-8 max-h-[60vh] overflow-y-auto scrollbar-hide">
+                            <div className="space-y-3">
+                                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">帳戶資訊</h4>
+                                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-3xl p-4 space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3"><Icon name="users" className="w-4 h-4 text-slate-400" /><span className="text-sm font-bold dark:text-slate-300">所屬班級</span></div>
+                                        <span className="text-sm font-black text-indigo-500">{(userProfile?.joinedClasses || []).join(', ') || '未加入'}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3"><Icon name="shield" className="w-4 h-4 text-slate-400" /><span className="text-sm font-bold dark:text-slate-300">權限等級</span></div>
+                                        <span className="text-sm font-black text-slate-500">{isAdmin ? '超級管理員' : '普通學生'}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="space-y-3">
+                                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">外觀與佈局</h4>
+                                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-3xl p-4 space-y-6">
+                                    <div>
+                                        <div className="flex bg-slate-200/50 dark:bg-slate-900/50 p-1 rounded-xl mb-4">
+                                            <button onClick={() => setIsDarkMode(false)} className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-all ${!isDarkMode ? 'bg-white dark:bg-slate-700 shadow-sm dark:text-white' : 'text-slate-500'}`}><Icon name="sun" className="w-3 h-3" /> 淺色</button>
+                                            <button onClick={() => setIsDarkMode(true)} className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-all ${isDarkMode ? 'bg-white dark:bg-slate-700 shadow-sm dark:text-white' : 'text-slate-500'}`}><Icon name="moon" className="w-3 h-3" /> 深色</button>
+                                        </div>
+                                        <div className="grid grid-cols-4 gap-2">
+                                            {Object.entries(THEME_CONFIG).map(([key, config]) => (
+                                                <button key={key} onClick={() => setThemeColor(key)} className={`h-10 rounded-xl border-2 transition-all flex items-center justify-center ${themeColor === key ? `${config.border} ${config.lightBg}` : 'border-transparent bg-slate-200/30 dark:bg-slate-900/30'}`}>
+                                                    <div className={`w-5 h-5 rounded-full bg-gradient-to-br ${config.gradient}`}></div>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
+                                        <div className="flex items-center justify-between mb-3">
+                                            <span className="text-sm font-bold dark:text-slate-300">版面模式</span>
+                                            <select value={layoutMode} onChange={(e) => setLayoutMode(e.target.value)} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold px-2 py-1 outline-none dark:text-white">
+                                                <option value="normal">正常佈局</option>
+                                                <option value="minimal">極簡模式</option>
+                                                <option value="custom">自定義</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="pt-4">
+                                <button onClick={onLogout} className="w-full py-4 rounded-2xl bg-red-50 dark:bg-red-900/20 text-red-500 font-black text-sm flex items-center justify-center gap-2 hover:bg-red-100 transition-all active:scale-95"><Icon name="log-out" className="w-5 h-5" /> 登出帳戶</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+);
             };
 
             return (
@@ -1052,7 +1117,7 @@
             const [isScanning, setIsScanning] = useState(false);
             const [expiredReport, setExpiredReport] = useState(null);
 
-            const { collection, getDocs, query, orderBy, onSnapshot, doc, updateDoc, arrayUnion, arrayRemove, deleteDoc, setDoc, getDoc, writeBatch, limit } = window.firebaseServices || {};
+            const { collection, getDocs, query, where, orderBy, onSnapshot, doc, updateDoc, arrayUnion, arrayRemove, deleteDoc, setDoc, getDoc, writeBatch, limit } = window.firebaseServices || {};
             const allowedEmails = systemConfig?.allowedEmails || [];
             const blacklistedEmails = systemConfig?.blacklistedEmails || [];
 
@@ -1233,6 +1298,114 @@
                 }
                 setIsScanning(false);
             };
+
+            // 強制將學生設為某個班別
+            const handleForceClass = async (targetUser, classCode, action = 'add') => {
+                try {
+                    const userRef = doc(db, "users_public", targetUser.uid);
+                    if (action === 'add') {
+                        await updateDoc(userRef, { joinedClasses: arrayUnion(classCode) });
+                        triggerAlert(`已強制將 ${targetUser.displayName} 加入班級`);
+                    } else {
+                        await updateDoc(userRef, { joinedClasses: arrayRemove(classCode) });
+                        triggerAlert(`已將 ${targetUser.displayName} 移出班級`);
+                    }
+                } catch (e) { triggerAlert("操作失敗: " + e.message); }
+            };
+
+            // 推送時間表到指定班級的所有學生
+            const handlePushTimetable = async (classCode) => {
+                const className = systemClasses.find(c => c.code === classCode)?.name || classCode;
+                triggerConfirm(`確定要將目前的預設時間表推送到「${className}」的所有學生嗎？
+這將會覆蓋他們現有的時間表設定！`, async () => {
+                    try {
+                        setIsSubmitting(true);
+                        const q = query(collection(db, "users_public"), where("joinedClasses", "array-contains", classCode));
+                        const snap = await getDocs(q);
+                        
+                        if (snap.empty) {
+                            triggerAlert("該班級目前沒有學生");
+                            setIsSubmitting(false);
+                            return;
+                        }
+
+                        const batch = writeBatch(db);
+                        const newTimetable = { 
+                            timeSlots: DEFAULT_TIME_SLOTS, 
+                            schedule: DEFAULT_SCHEDULE,
+                            updatedAt: new Date().toISOString(),
+                            pushedBy: 'admin'
+                        };
+
+            // 批量將選擇的學生加入班級
+            const [selectedUserIds, setSelectedUserIds] = useState([]);
+            const toggleUserSelection = (uid) => {
+                setSelectedUserIds(prev => prev.includes(uid) ? prev.filter(id => id !== uid) : [...prev, uid]);
+            };
+            const handleBatchAddClass = async (classCode) => {
+                if (selectedUserIds.length === 0) { triggerAlert("請先選擇學生"); return; }
+                const className = systemClasses.find(c => c.code === classCode)?.name || classCode;
+                triggerConfirm(`確定要將這 ${selectedUserIds.length} 位學生加入「${className}」嗎？`, async () => {
+                    try {
+                        setIsSubmitting(true);
+                        const batch = writeBatch(db);
+                        selectedUserIds.forEach(uid => {
+                            batch.update(doc(db, "users_public", uid), { joinedClasses: arrayUnion(classCode) });
+                        });
+                        await batch.commit();
+                        triggerAlert(`成功將 ${selectedUserIds.length} 位學生加入 ${className}`);
+                        setSelectedUserIds([]);
+                    } catch (e) { triggerAlert("批量加入失敗: " + e.message); } finally { setIsSubmitting(false); }
+                });
+            };
+
+            // 全校推送時間表
+            const handlePushTimetableToAll = async () => {
+                triggerConfirm(`⚠️ 警告：確定要將目前的預設時間表推送到「全校所有學生」嗎？
+這將會覆蓋所有人的現有時間表設定！`, async () => {
+                    try {
+                        setIsSubmitting(true);
+                        const snap = await getDocs(collection(db, "users_public"));
+                        if (snap.empty) { triggerAlert("系統中沒有用戶"); setIsSubmitting(false); return; }
+                        
+                        const newTimetable = { 
+                            timeSlots: DEFAULT_TIME_SLOTS, 
+                            schedule: DEFAULT_SCHEDULE,
+                            updatedAt: new Date().toISOString(),
+                            pushedBy: 'admin_global'
+                        };
+
+                        const chunks = [];
+                        for (let i = 0; i < snap.docs.length; i += 400) chunks.push(snap.docs.slice(i, i + 400));
+                        
+                        for (const chunk of chunks) {
+                            const batch = writeBatch(db);
+                            chunk.forEach(d => {
+                                batch.set(doc(db, "users", d.id, "settings", "timetable"), newTimetable, { merge: true });
+                            });
+                            await batch.commit();
+                        }
+                        triggerAlert(`已成功推送時間表給全校 ${snap.size} 位學生`);
+                    } catch (e) { triggerAlert("全校推送失敗: " + e.message); } finally { setIsSubmitting(false); }
+                });
+            };
+
+
+                        snap.docs.forEach(d => {
+                            const userTimetableRef = doc(db, "users", d.id, "settings", "timetable");
+                            batch.set(userTimetableRef, newTimetable, { merge: true });
+                        });
+
+                        await batch.commit();
+                        triggerAlert(`已成功推送時間表給 ${snap.size} 位學生`);
+                    } catch (e) { 
+                        triggerAlert("推送失敗: " + e.message); 
+                    } finally {
+                        setIsSubmitting(false);
+                    }
+                });
+            };
+
 
             // 清除單個學生的所有過期未完成記錄
             const handleClearExpiredForUser = (targetUser) => {
@@ -1415,7 +1588,8 @@
                                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                                     <h3 className="text-2xl font-bold dark:text-white">用戶數據管理</h3>
                                     <div className="flex gap-2 w-full sm:w-auto flex-col sm:flex-row">
-                                        <button onClick={handleScanExpired} disabled={isScanning} className="bg-orange-500 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-sm hover:bg-orange-600 transition flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-50">
+                                        <button onClick={handlePushTimetableToAll} className="flex-1 bg-amber-500 text-white py-4 rounded-2xl font-black text-sm shadow-lg shadow-amber-500/20 hover:scale-105 transition-all flex items-center justify-center gap-2"><Icon name="globe" className="w-5 h-5" /> 全校推送時間表</button>
+<button onClick={handleScanExpired} disabled={isScanning} className="bg-orange-500 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-sm hover:bg-orange-600 transition flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-50">
                                             {isScanning ? <Icon name="loader" className="w-4 h-4 animate-spin" /> : <Icon name="search" className="w-4 h-4" />}
                                             掃描未清過期
                                         </button>
@@ -1558,7 +1732,23 @@
                                      </div>
                                 </div>
 
-                                <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 overflow-hidden p-2">
+                                
+                                         <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-100 dark:border-slate-700 w-full">
+                                             <h4 className="text-xs font-bold text-slate-500 mb-3 uppercase tracking-wider">班級管理 (強制)</h4>
+                                             <div className="flex flex-wrap gap-2">
+                                                 {systemClasses.map(cls => {
+                                                     const isJoined = (selectedUser.joinedClasses || []).includes(cls.code);
+                                                     return (
+                                                         <button key={cls.code} onClick={() => handleForceClass(selectedUser, cls.code, isJoined ? 'remove' : 'add')} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${isJoined ? 'bg-indigo-600 text-white shadow-sm' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:border-indigo-300'}`}>
+                                                             {isJoined ? <Icon name="check" className="w-3 h-3 inline mr-1"/> : <Icon name="plus" className="w-3 h-3 inline mr-1"/>}
+                                                             {cls.name}
+                                                         </button>
+                                                     );
+                                                 })}
+                                             </div>
+                                         </div>
+
+<div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 overflow-hidden p-2">
                                     <div className="max-h-[400px] overflow-y-auto space-y-2 pr-2">
                                                 {userHomeworks.map(h => (
                                                  <div key={h.id} className={`p-4 rounded-xl border text-sm flex justify-between items-start transition-all ${h.completed ? 'bg-slate-50 dark:bg-slate-900/50 border-slate-100 dark:border-slate-800 opacity-60' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-indigo-200'}`}>
@@ -1794,7 +1984,7 @@
             const [targetClassInput, setTargetClassInput] = useState('全校');
 
             const [viewMode, setViewMode] = useState('current'); 
-            const [appMode, setAppMode] = useState('personal'); // 'personal' | 'class'
+            const [appMode, setAppMode] = useState('class'); // 'personal' | 'class'
             const [viewLayout, setViewLayout] = useState('list'); 
 
             const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('isDarkMode') === 'true');
@@ -2309,55 +2499,77 @@
                         </div>
                     )}
 
-                    <div className={`max-w-[1200px] mx-auto relative z-10 transition-all duration-500 ${isGuest ? 'guest-blur' : ''}`}>
-                        <div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-4 max-w-3xl mx-auto bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl p-4 sm:p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700">
-                            <div className="w-full md:w-auto text-center md:text-left min-w-0">
-                                <h1 className={`text-xl sm:text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r ${t.gradient} flex items-center justify-center md:justify-start gap-2 truncate`}>
-                                    {viewMode === 'current' ? (<><Icon name="graduation-cap" className={`w-6 h-6 sm:w-8 sm:h-8 ${t.text}`} />學生小幫手</>) : viewMode === 'admin' ? (<><Icon name="shield-alert" className={`w-6 h-6 sm:w-8 sm:h-8 text-blue-600`} />管理後台</>) : <><Icon name="history" className={`w-6 h-6 sm:w-8 sm:h-8 ${t.text}`} /> {viewMode === 'timetable' ? '上課時間表' : '完成紀錄'}</>}
-                                </h1>
-                                <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm font-medium mt-1">{globalNow.toLocaleDateString('zh-HK', { year: 'numeric', month: 'numeric', day: 'numeric', weekday: 'short' })}</p>
+                    
+                
+                <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 opacity-40">
+                    <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-400/20 blur-[120px] rounded-full animate-blob"></div>
+                    <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-400/20 blur-[120px] rounded-full animate-blob animation-delay-2000"></div>
+                </div>
+                <div className={`max-w-[1200px] mx-auto relative z-10 transition-all duration-500 ${isGuest ? 'guest-blur' : ''}`}>
+                    {/* 頂部高級導航欄 */}
+                    <nav className="sticky top-0 z-[100] bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl border-b border-slate-200/50 dark:border-slate-800/50 px-4 py-3 sm:px-6 mb-6 rounded-b-3xl shadow-sm">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3 cursor-pointer group" onClick={() => { setViewMode('current'); setAppMode('class'); }}>
+                                <div className={`w-10 h-10 rounded-2xl ${t.bg} flex items-center justify-center text-white shadow-lg shadow-indigo-500/20 group-hover:scale-110 transition-transform duration-300`}>
+                                    <Icon name="book-open" className="w-6 h-6" />
+                                </div>
+                                <div className="hidden sm:block">
+                                    <h1 className="text-lg font-black tracking-tight dark:text-white">電子手冊 <span className="text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded ml-1 text-slate-500">v6.0 PRO</span></h1>
+                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Digital Handbook</p>
+                                </div>
                             </div>
-                            <div className="flex gap-2 flex-wrap justify-center md:justify-end shrink-0 w-full md:w-auto">
-                                {viewMode === 'current' && appMode === 'personal' && (
-                                    <CustomDropdown 
-                                        value={viewLayout} 
-                                        onChange={setViewLayout} 
-                                        options={[
-                                            { value: 'list', label: '列表模式', icon: 'layout-list' },
-                                            { value: 'table', label: '表格模式', icon: 'table' }
-                                        ]} 
-                                        customClasses={`px-3 py-2 rounded-xl font-bold text-xs transition flex items-center gap-2 ${viewLayout === 'table' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 shadow-sm' : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-sm'} focus:outline-none focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900 active:scale-95`}
-                                    />
-                                )}
 
-                                {viewMode === 'timetable' && (
-                                    <button onClick={() => setViewMode('timetable_edit')} className={`px-3 py-2 rounded-xl font-bold text-xs bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 shadow-sm transition-all flex items-center gap-2`}><Icon name="edit" className="w-4 h-4" /><span className="hidden sm:inline">編輯</span></button>
-                                )}
+                            {/* 桌面端模式切換 */}
+                            <div className="hidden md:flex items-center bg-slate-100/50 dark:bg-slate-800/50 p-1 rounded-2xl border border-slate-200/30 dark:border-slate-700/30">
+                                {[
+                                    { id: 'class', label: '班級模式', icon: 'users' },
+                                    { id: 'personal', label: '個人模式', icon: 'user' }
+                                ].map(mode => (
+                                    <button key={mode.id} onClick={() => { setAppMode(mode.id); setViewMode('current'); }} className={`flex items-center gap-2 px-6 py-2 rounded-xl text-sm font-bold transition-all duration-300 ${appMode === mode.id ? `bg-white dark:bg-slate-700 shadow-md ${t.text}` : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>
+                                        <Icon name={mode.icon} className="w-4 h-4" />
+                                        {mode.label}
+                                    </button>
+                                ))}
+                            </div>
 
-                                <button onClick={() => !user ? setIsAuthModalOpen(true) : setViewMode('timetable')} className={`px-3 py-2 rounded-xl font-bold text-xs transition flex items-center gap-2 ${viewMode === 'timetable' || viewMode === 'timetable_edit' ? 'bg-orange-500 text-white' : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50'}`}><Icon name="calendar-days" className="w-4 h-4" /><span className="hidden sm:inline">時間表</span></button>
-
+                            <div className="flex items-center gap-2">
                                 {isAdmin && (
-                                    <button onClick={() => setViewMode('admin')} className={`px-3 py-2 rounded-xl font-bold text-xs transition flex items-center gap-2 ${viewMode === 'admin' ? 'bg-slate-800 text-white' : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'}`}><Icon name="shield-alert" className="w-4 h-4" /><span className="hidden sm:inline">後台</span></button>
+                                    <button onClick={() => setViewMode('admin')} className={`p-2.5 rounded-xl transition-all ${viewMode === 'admin' ? `${t.lightBg} ${t.text}` : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500'}`} title="管理中心">
+                                        <Icon name="shield-check" className="w-5 h-5" />
+                                    </button>
                                 )}
-
-                                <button onClick={() => !user ? setIsAuthModalOpen(true) : setViewMode(viewMode === 'current' ? 'history' : 'current')} className={`px-3 py-2 rounded-xl font-bold text-xs transition flex items-center gap-2 ${viewMode === 'history' ? 'bg-indigo-600 text-white shadow-md' : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50'}`}>
-                                    <Icon name={viewMode === 'current' ? "history" : "arrow-left"} className="w-4 h-4" />
-                                    <span>{viewMode === 'current' ? '歷史紀錄' : '返回列表'}</span>
+                                <button onClick={() => setViewMode(viewMode === 'history' ? 'current' : 'history')} className={`p-2.5 rounded-xl transition-all ${viewMode === 'history' ? `${t.lightBg} ${t.text}` : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500'}`} title="歷史記錄">
+                                    <Icon name="archive" className="w-5 h-5" />
                                 </button>
-
-                                {user && (
-                                    <div className="flex bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-1">
-                                            <button onClick={() => setIsPreferencesOpen(true)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 transition"><Icon name="palette" className="w-4 h-4" /></button>
-                                            <div className="w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
-                                            <button onClick={() => setIsSubjectManagerOpen(true)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 transition"><Icon name="settings" className="w-4 h-4" /></button>
-                                            <div className="w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
-                                            <button onClick={handleLogout} className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 text-slate-500 hover:text-red-500 transition"><Icon name="log-out" className="w-4 h-4" /></button>
-                                    </div>
-                                )}
+                                <button onClick={() => setViewMode(viewMode === 'timetable' ? 'current' : 'timetable')} className={`p-2.5 rounded-xl transition-all ${viewMode === 'timetable' ? `${t.lightBg} ${t.text}` : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500'}`} title="時間表">
+                                    <Icon name="calendar" className="w-5 h-5" />
+                                </button>
+                                <div className="w-px h-6 bg-slate-200 dark:bg-slate-800 mx-1"></div>
+                                <button onClick={() => setIsPreferencesOpen(true)} className="p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition-all">
+                                    <Icon name="settings" className="w-5 h-5" />
+                                </button>
                             </div>
                         </div>
+                    </nav>
 
-                        {viewMode === 'admin' ? ( <AdminConsole db={db} systemConfig={systemConfig} systemClasses={systemClasses} onBack={() => setViewMode('current')} subjects={subjects} triggerAlert={triggerAlert} triggerConfirm={triggerConfirm} /> ) : 
+                    {/* 行動端模式切換 (只在行動端顯示) */}
+                    <div className="md:hidden flex items-center bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl p-1.5 rounded-2xl border border-slate-100 dark:border-slate-700 mb-6 shadow-sm">
+                        {[
+                            { id: 'class', label: '班級模式', icon: 'users' },
+                            { id: 'personal', label: '個人模式', icon: 'user' }
+                        ].map(mode => (
+                            <button key={mode.id} onClick={() => { setAppMode(mode.id); setViewMode('current'); }} className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all ${appMode === mode.id ? `${t.bg} text-white shadow-lg` : 'text-slate-500 dark:text-slate-400'}`}>
+                                <Icon name={mode.icon} className="w-4 h-4" />
+                                {mode.label}
+                            </button>
+                        ))}
+                    </div>
+
+                    {viewMode === 'admin' ? ( <AdminConsole db={db} systemConfig={systemConfig} systemClasses={systemClasses} onBack={() => setViewMode('current')} subjects={subjects} triggerAlert={triggerAlert} triggerConfirm={triggerConfirm} /> ) : 
+                     viewMode === 'timetable' ? ( <div className="max-w-3xl mx-auto"><Timetable currentDay={currentTimetableDay} config={timetableConfig} onDayChange={setCurrentTimetableDay} subjects={subjects} globalNow={globalNow} /></div> ) : 
+                     viewMode === 'timetable_edit' ? ( <TimetableEditor initialConfig={timetableConfig} onSave={saveTimetableConfig} onCancel={() => setViewMode('timetable')} subjects={subjects} triggerConfirm={triggerConfirm} /> ) : (
+                    <div className="max-w-3xl mx-auto">
+ db={db} systemConfig={systemConfig} systemClasses={systemClasses} onBack={() => setViewMode('current')} subjects={subjects} triggerAlert={triggerAlert} triggerConfirm={triggerConfirm} /> ) : 
                          viewMode === 'timetable' ? ( <div className="max-w-3xl mx-auto"><Timetable currentDay={currentTimetableDay} config={timetableConfig} onDayChange={setCurrentTimetableDay} subjects={subjects} globalNow={globalNow} /></div> ) : 
                          viewMode === 'timetable_edit' ? ( <TimetableEditor initialConfig={timetableConfig} onSave={saveTimetableConfig} onCancel={() => setViewMode('timetable')} subjects={subjects} triggerConfirm={triggerConfirm} /> ) : (
                         <div className="max-w-3xl mx-auto">
@@ -2747,7 +2959,7 @@
                         isAdmin={isAdmin}
                         userUid={user?.uid}
                     />
-                    <AppearanceModal 
+                    <SettingsCenter 
                         isOpen={isPreferencesOpen} 
                         onClose={() => setIsPreferencesOpen(false)} 
                         t={t} 
@@ -2779,12 +2991,24 @@
             );
         }
 
+        
         const initApp = () => {
+            // 安全機制：即使 React 啟動失敗，5 秒後也強制移除加載畫面
+            setTimeout(() => {
+                const loader = document.getElementById('loading-screen');
+                if (loader) {
+                    loader.style.opacity = '0';
+                    setTimeout(() => loader.remove(), 500);
+                    console.warn("Safety timeout: Forced loading screen removal.");
+                }
+            }, 5000);
+
             if (window.firebaseServices && window.firebaseServices.auth) {
                 const root = ReactDOM.createRoot(document.getElementById('root'));
                 root.render(<App />);
             } else setTimeout(initApp, 50);
         };
+
         initApp();
     </script>
 </body>
