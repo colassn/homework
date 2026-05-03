@@ -107,9 +107,20 @@
         /* Auth Inputs */
         .auth-input { width: 100%; padding: 16px; border-radius: 16px; background-color: var(--theme-bg); border: 1px solid var(--theme-border); color: var(--theme-text-main); font-weight: 500; font-size: 14px; transition: all 0.2s ease;}
         .auth-input:focus { outline: none; border-color: var(--theme-accent); background-color: var(--theme-card); box-shadow: 0 0 0 3px rgba(134, 134, 139, 0.1);}
+
+        /* Marquee Animation */
+        .animate-marquee { display: inline-block; padding-left: 100%; animation: marquee 15s linear infinite; }
+        @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
     </style>
 </head>
-<body class="min-h-screen flex flex-col pb-24 md:pb-0 md:pl-24">
+<body class="min-h-screen flex flex-col pb-24 md:pb-0 md:pl-24 relative overflow-x-hidden">
+
+    <!-- Global System Marquee (Hidden by default) -->
+    <div id="global-marquee-container" class="hidden w-full bg-orange-100 border-b border-orange-200 text-orange-700 text-[11px] font-black py-1.5 overflow-hidden z-50 sticky top-0">
+        <div class="whitespace-nowrap animate-marquee flex items-center">
+            <i class="fas fa-bullhorn mr-2"></i> <span id="global-marquee-text"></span>
+        </div>
+    </div>
 
     <!-- Side Nav (Desktop) -->
     <nav class="hidden md:flex flex-col fixed top-0 left-0 h-full w-24 bottom-nav z-40 items-center py-8 gap-8 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
@@ -119,12 +130,11 @@
         <button onclick="switchView('timetable')" class="nav-item flex flex-col items-center gap-1.5 w-full spring-action" data-target="timetable"><i class="fas fa-calendar-week text-xl"></i><span class="text-[10px] font-bold">時間表</span></button>
         <button onclick="switchView('subjects')" class="nav-item flex flex-col items-center gap-1.5 w-full spring-action" data-target="subjects"><i class="fas fa-book text-xl"></i><span class="text-[10px] font-bold">科目</span></button>
         <button onclick="switchView('settings')" class="nav-item flex flex-col items-center gap-1.5 w-full mt-auto spring-action" data-target="settings"><i class="fas fa-cog text-xl"></i><span class="text-[10px] font-bold">設定</span></button>
-        <!-- Admin Nav Button -->
         <button id="nav-admin-btn-desktop" onclick="switchView('admin')" class="nav-item flex flex-col items-center gap-1.5 w-full spring-action hidden text-orange-500" data-target="admin"><i class="fas fa-shield-alt text-xl"></i><span class="text-[10px] font-bold">後台</span></button>
     </nav>
 
     <!-- Top Header -->
-    <header class="sticky top-0 z-30 px-5 md:px-8 py-5 flex justify-between items-center" style="background-color: var(--theme-bg);">
+    <header class="px-5 md:px-8 py-5 flex justify-between items-center" style="background-color: var(--theme-bg);">
         <div>
             <h1 id="header-title" class="text-2xl md:text-3xl font-black tracking-tight" style="color: var(--theme-text-main)">主頁</h1>
             <p id="header-subtitle" class="text-[11px] font-bold uppercase tracking-widest mt-1" style="color: var(--theme-text-sub)"></p>
@@ -140,26 +150,21 @@
         
         <!-- VIEW: HOME -->
         <section id="view-home" class="app-view active space-y-6">
-            
             <!-- Dynamic Live Class Widget -->
             <div id="live-class-widget" class="premium-card shadow-sm relative overflow-hidden" style="display: none; border-left: 4px solid var(--theme-text-main);">
                 <div class="p-4 md:p-5 flex items-center justify-between w-full">
                     <div class="flex items-center gap-3 md:gap-4">
-                        <div id="live-current-bg" class="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm transition-colors duration-500">
-                        </div>
+                        <div id="live-current-bg" class="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm transition-colors duration-500"></div>
                         <div>
                             <p class="text-[9px] md:text-[10px] font-bold uppercase tracking-wider mb-0.5 opacity-60">現在進行</p>
                             <h3 id="live-current-class" class="text-base md:text-lg font-black tracking-tight leading-none" style="color: var(--theme-text-main)">載入中...</h3>
                         </div>
                     </div>
-                    
                     <div class="hidden sm:block w-px h-8 bg-gray-200 dark:bg-zinc-800 mx-2"></div>
-                    
                     <div class="hidden sm:block flex-1 px-2">
                         <p class="text-[9px] font-bold uppercase tracking-wider mb-0.5 opacity-60">下一節</p>
                         <h4 id="live-next-class" class="text-sm font-bold" style="color: var(--theme-text-main)">...</h4>
                     </div>
-                    
                     <div id="live-timer-container" class="flex flex-col items-end text-right shrink-0">
                         <p id="live-timer-label" class="text-[9px] font-bold uppercase tracking-wider mb-1 text-orange-500">倒數中</p>
                         <div class="bg-[#1d1d1f] dark:bg-white text-white dark:text-black px-2 md:px-3 py-1 rounded-md font-mono text-xs md:text-sm font-bold tracking-widest shadow-inner">
@@ -191,8 +196,6 @@
                             <button type="submit" class="w-24 md:w-28 py-3 rounded-xl font-bold text-xs shadow-md shrink-0 bg-[#1d1d1f] dark:bg-white text-white dark:text-black spring-action">新增</button>
                         </div>
                     </div>
-
-                    <!-- Broadcast Toggle -->
                     <div id="broadcast-toggle-container" class="hidden pt-1">
                         <label class="flex items-center justify-end cursor-pointer gap-2">
                             <span class="text-[10px] font-bold text-orange-500">全域廣播</span>
@@ -218,7 +221,7 @@
             <div id="history-tasks-list" class="space-y-3"></div>
         </section>
 
-        <!-- VIEW: TIMETABLE (SINGLE DAY FOCUS) -->
+        <!-- VIEW: TIMETABLE -->
         <section id="view-timetable" class="app-view space-y-5">
             <div class="flex justify-between items-center px-1">
                 <p class="text-sm font-bold" style="color: var(--theme-text-sub)">專注時間表</p>
@@ -309,7 +312,6 @@
         <!-- VIEW: SETTINGS -->
         <section id="view-settings" class="app-view space-y-6">
             <div class="premium-card p-6 space-y-6">
-                <!-- Theme Colors -->
                 <div id="theme-color-section" class="transition-opacity duration-300">
                     <h3 class="text-sm font-bold mb-3" style="color: var(--theme-text-sub)">介面色彩主題</h3>
                     <div class="flex gap-3 flex-wrap">
@@ -321,7 +323,6 @@
                     </div>
                 </div>
                 
-                <!-- Timetable Format Settings -->
                 <div class="border-t pt-5" style="border-color: var(--theme-border)">
                     <h4 class="text-sm font-bold mb-3" style="color: var(--theme-text-main)">時間表格式設定</h4>
                     <div class="flex flex-col gap-4">
@@ -370,27 +371,160 @@
 
         <!-- VIEW: ADMIN -->
         <section id="view-admin" class="app-view space-y-6">
-            <div class="premium-card p-6">
-                <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-lg font-black tracking-tight"><i class="fas fa-shield-alt text-orange-500 mr-2"></i>全域廣播管理</h2>
-                    <span class="px-2 py-1 bg-orange-100 text-orange-600 rounded-md text-[10px] font-black tracking-wider">管理員專屬</span>
-                </div>
-                <div id="admin-broadcast-list" class="space-y-3">
+            <!-- Tab Navigation for Admin -->
+            <div class="flex gap-2 overflow-x-auto scrollbar-hide px-1 pb-1">
+                <button class="admin-tab-btn custom-chip selected px-4 py-2 text-xs font-bold spring-action flex-shrink-0" style="background-color: var(--theme-text-main); color: var(--theme-card); border-color: var(--theme-text-main);" onclick="switchAdminTab('overview')">系統概覽</button>
+                <button class="admin-tab-btn custom-chip px-4 py-2 text-xs font-bold spring-action flex-shrink-0" style="background-color: transparent; color: var(--theme-text-sub); border: 1px solid var(--theme-text-sub);" onclick="switchAdminTab('users')">用戶管理</button>
+                <button class="admin-tab-btn custom-chip px-4 py-2 text-xs font-bold spring-action flex-shrink-0" style="background-color: transparent; color: var(--theme-text-sub); border: 1px solid var(--theme-text-sub);" onclick="switchAdminTab('broadcasts')">廣播任務</button>
+                <button class="admin-tab-btn custom-chip px-4 py-2 text-xs font-bold spring-action flex-shrink-0" style="background-color: transparent; color: var(--theme-text-sub); border: 1px solid var(--theme-text-sub);" onclick="switchAdminTab('settings')">核心設定</button>
+            </div>
+
+            <!-- Admin Tab: Overview -->
+            <div id="admin-tab-overview" class="admin-tab-content space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="premium-card p-6 border-none shadow-md relative overflow-hidden text-white" style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);">
+                        <i class="fas fa-users absolute -right-4 -bottom-4 text-6xl opacity-10"></i>
+                        <p class="text-xs font-bold mb-2 opacity-80"><i class="fas fa-user-friends mr-1"></i> 總註冊用戶</p>
+                        <h3 class="text-4xl font-black">15</h3>
+                    </div>
+                    <div class="premium-card p-6 border-none shadow-md relative overflow-hidden text-white" style="background: linear-gradient(135deg, #34d399 0%, #10b981 100%);">
+                        <i class="fas fa-chart-line absolute -right-4 -bottom-4 text-6xl opacity-10"></i>
+                        <p class="text-xs font-bold mb-2 opacity-80"><i class="fas fa-wave-square mr-1"></i> 24小時內活躍</p>
+                        <h3 class="text-4xl font-black">12</h3>
+                    </div>
+                    <div class="premium-card p-6 border-none shadow-md relative overflow-hidden text-white" style="background: linear-gradient(135deg, #fb923c 0%, #f97316 100%);">
+                        <i class="fas fa-bullhorn absolute -right-4 -bottom-4 text-6xl opacity-10"></i>
+                        <p class="text-xs font-bold mb-2 opacity-80"><i class="fas fa-broadcast-tower mr-1"></i> 廣播任務總數</p>
+                        <h3 id="admin-stat-broadcasts" class="text-4xl font-black">0</h3>
+                    </div>
                 </div>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="premium-card p-5 cursor-pointer spring-action border-2 border-transparent hover:border-orange-500 transition-colors" onclick="switchView('timetable'); toggleTimetableMode(true);">
-                    <i class="fas fa-calendar-alt text-2xl text-orange-500 mb-3 block"></i>
-                    <h3 class="font-black text-sm mb-1">編輯全校時間表</h3>
-                    <p class="text-[10px] font-bold opacity-60">前往時間表頁面發佈全域更新</p>
+
+            <!-- Admin Tab: Users -->
+            <div id="admin-tab-users" class="admin-tab-content space-y-4" style="display: none;">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
+                    <button class="w-full md:w-auto px-4 py-3 rounded-xl font-bold text-xs bg-orange-500 text-white shadow-md spring-action">
+                        <i class="fas fa-broom mr-1"></i> 掃描未驗證
+                    </button>
+                    <input type="text" class="w-full md:w-64 minimal-input rounded-xl p-3 text-xs font-bold" placeholder="搜尋用戶名字或 Email...">
                 </div>
-                <div class="premium-card p-5 cursor-pointer spring-action border-2 border-transparent hover:border-blue-500 transition-colors" onclick="switchView('home'); document.getElementById('task-content').focus();">
-                    <i class="fas fa-bullhorn text-2xl text-blue-500 mb-3 block"></i>
-                    <h3 class="font-black text-sm mb-1">發佈新廣播</h3>
-                    <p class="text-[10px] font-bold opacity-60">回到主頁勾選「全域廣播」發佈</p>
+                
+                <div class="premium-card overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr class="border-b" style="border-color: var(--theme-border); color: var(--theme-text-sub);">
+                                    <th class="p-4 text-[10px] font-bold uppercase tracking-wider">用戶資訊</th>
+                                    <th class="p-4 text-[10px] font-bold uppercase tracking-wider">身份權限</th>
+                                    <th class="p-4 text-[10px] font-bold uppercase tracking-wider">最後上線</th>
+                                    <th class="p-4 text-[10px] font-bold uppercase tracking-wider text-center">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-users-list">
+                                <!-- Users injected here -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
+                <p class="text-[10px] text-center opacity-50 font-bold">* 註：由於系統安全規則保護，此處僅供介面展示體驗，真實數據讀取需配置 Firebase Cloud Functions。</p>
+            </div>
+
+            <!-- Admin Tab: Broadcasts -->
+            <div id="admin-tab-broadcasts" class="admin-tab-content space-y-6" style="display: none;">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="premium-card p-5 cursor-pointer spring-action border-2 border-transparent hover:border-orange-500 transition-colors" onclick="switchView('timetable'); toggleTimetableMode(true);">
+                        <div class="w-10 h-10 rounded-full bg-orange-100 text-orange-500 flex items-center justify-center mb-3"><i class="fas fa-calendar-alt text-lg"></i></div>
+                        <h3 class="font-black text-sm mb-1">編輯全校時間表</h3>
+                        <p class="text-[10px] font-bold opacity-60">前往時間表頁面發佈全域更新</p>
+                    </div>
+                    <div class="premium-card p-5 cursor-pointer spring-action border-2 border-transparent hover:border-blue-500 transition-colors" onclick="switchView('home'); document.getElementById('task-content').focus();">
+                        <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-500 flex items-center justify-center mb-3"><i class="fas fa-bullhorn text-lg"></i></div>
+                        <h3 class="font-black text-sm mb-1">發佈新廣播</h3>
+                        <p class="text-[10px] font-bold opacity-60">回到主頁發佈最新任務</p>
+                    </div>
+                </div>
+
+                <div class="premium-card p-6">
+                    <h2 class="text-sm font-black tracking-tight mb-4">目前的廣播任務</h2>
+                    <div id="admin-broadcast-list" class="space-y-3">
+                        <!-- Broadcasts injected here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Tab: Settings -->
+            <div id="admin-tab-settings" class="admin-tab-content space-y-6" style="display: none;">
+                <!-- Whitelist -->
+                <div class="premium-card p-6">
+                    <div class="flex items-center justify-between mb-4 pb-4 border-b" style="border-color: var(--theme-border);">
+                        <div class="flex items-center gap-2"><i class="fas fa-shield-check text-green-500 text-lg"></i><h3 class="font-black text-sm">白名單系統</h3></div>
+                        <label class="relative inline-flex items-center cursor-pointer spring-action">
+                            <input type="checkbox" id="admin-whitelist-toggle" class="sr-only peer" onchange="toggleAdminSetting('whitelist', this.checked)">
+                            <div class="w-10 h-6 bg-gray-300 dark:bg-zinc-700 rounded-full peer-checked:bg-green-500 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
+                        </label>
+                    </div>
+                    <p class="text-xs font-bold opacity-60 mb-4">當啟用白名單模式時，只有下列清單中的電郵地址可以登入並使用系統。</p>
+                    <div class="flex gap-2 mb-4">
+                        <input type="email" id="admin-whitelist-input" class="flex-1 minimal-input rounded-xl p-3 text-xs font-bold" placeholder="輸入電郵地址...">
+                        <button onclick="addAdminList('whitelist')" class="px-5 py-3 rounded-xl font-bold text-xs bg-green-500 text-white spring-action shadow-sm shrink-0"><i class="fas fa-plus mr-1"></i> 新增</button>
+                    </div>
+                    <div class="bg-gray-50/50 dark:bg-zinc-800/50 rounded-xl overflow-hidden border" style="border-color: var(--theme-border);">
+                        <table class="w-full text-left">
+                            <thead><tr class="border-b text-[10px] font-bold opacity-60" style="border-color: var(--theme-border);"><th class="p-3">電郵地址</th><th class="p-3 text-center w-16">操作</th></tr></thead>
+                            <tbody id="admin-whitelist-list"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Blacklist -->
+                <div class="premium-card p-6">
+                    <div class="flex items-center justify-between mb-4 pb-4 border-b" style="border-color: var(--theme-border);">
+                        <div class="flex items-center gap-2"><i class="fas fa-ban text-red-500 text-lg"></i><h3 class="font-black text-sm">黑名單系統</h3></div>
+                        <label class="relative inline-flex items-center cursor-pointer spring-action">
+                            <input type="checkbox" id="admin-blacklist-toggle" class="sr-only peer" onchange="toggleAdminSetting('blacklist', this.checked)">
+                            <div class="w-10 h-6 bg-gray-300 dark:bg-zinc-700 rounded-full peer-checked:bg-red-500 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
+                        </label>
+                    </div>
+                    <p class="text-xs font-bold opacity-60 mb-4">當啟用黑名單模式時，下列清單中的電郵地址將被強制停權，無法登入使用。</p>
+                    <div class="flex gap-2 mb-4">
+                        <input type="email" id="admin-blacklist-input" class="flex-1 minimal-input rounded-xl p-3 text-xs font-bold" placeholder="輸入要封鎖的電郵地址...">
+                        <button onclick="addAdminList('blacklist')" class="px-5 py-3 rounded-xl font-bold text-xs bg-red-500 text-white spring-action shadow-sm shrink-0"><i class="fas fa-ban mr-1"></i> 封鎖</button>
+                    </div>
+                    <div class="bg-gray-50/50 dark:bg-zinc-800/50 rounded-xl overflow-hidden border" style="border-color: var(--theme-border);">
+                        <table class="w-full text-left">
+                            <tbody id="admin-blacklist-list"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Marquee -->
+                <div class="premium-card p-6">
+                    <div class="flex items-center gap-2 mb-4"><i class="fas fa-bullhorn text-orange-500 text-lg"></i><h3 class="font-black text-sm">系統跑馬燈公告</h3></div>
+                    <div class="flex flex-col md:flex-row gap-3">
+                        <input type="text" id="admin-marquee-input" class="flex-1 minimal-input rounded-xl p-3 text-xs font-bold" placeholder="輸入公告內容...">
+                        <div class="flex gap-2 shrink-0">
+                            <button onclick="publishMarquee()" class="px-5 py-3 rounded-xl font-bold text-xs bg-orange-500 text-white spring-action shadow-sm">發佈</button>
+                            <button onclick="clearMarquee()" class="px-5 py-3 rounded-xl font-bold text-xs minimal-input spring-action border-gray-300">清空</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Maintenance Mode -->
+                <div class="premium-card p-6">
+                    <div class="flex items-center gap-2 mb-4"><i class="fas fa-power-off text-blue-500 text-lg"></i><h3 class="font-black text-sm">系統維護模式</h3></div>
+                    <div class="flex gap-3">
+                        <button onclick="setMaintenanceMode('online')" id="admin-maint-online" class="flex-1 py-4 rounded-xl border-2 border-green-500 bg-green-50 text-green-600 flex flex-col items-center justify-center gap-2 spring-action">
+                            <i class="fas fa-check-circle text-2xl"></i><span class="text-[10px] font-black">正常運作</span>
+                        </button>
+                        <button onclick="setMaintenanceMode('maintenance')" id="admin-maint-offline" class="flex-1 py-4 rounded-xl border-2 border-transparent bg-gray-50 text-gray-400 flex flex-col items-center justify-center gap-2 spring-action">
+                            <i class="fas fa-tools text-2xl"></i><span class="text-[10px] font-black">維護中</span>
+                        </button>
+                    </div>
+                </div>
+
             </div>
         </section>
+
     </main>
 
     <!-- Mobile Bottom Nav -->
@@ -490,6 +624,13 @@
         </div>
     </div>
 
+    <!-- Fullscreen Maintenance Block -->
+    <div id="maintenance-screen" class="fixed inset-0 z-[1000] hidden flex-col items-center justify-center p-6 text-center" style="background-color: var(--theme-bg);">
+        <i class="fas fa-tools text-6xl mb-6 text-blue-500 animate-bounce"></i>
+        <h2 class="text-3xl font-black mb-3 tracking-tight" style="color: var(--theme-text-main)">系統維護中</h2>
+        <p class="text-sm font-medium opacity-60 max-w-sm">管理員正在進行系統升級或維護，請稍後再試。如造成不便，敬請原諒。</p>
+    </div>
+
     <div id="toast-container"></div>
 
     <script type="module">
@@ -497,9 +638,6 @@
         import { getAuth, signInWithPopup, GoogleAuthProvider, signInAnonymously, onAuthStateChanged, signOut, signInWithCustomToken, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, query, onSnapshot, addDoc, deleteDoc, doc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // ==========================================
-        // ⚠️ 重要：請在此處填入你自己的 Firebase Config
-        // ==========================================
         const fallbackConfig = {
             apiKey: "AIzaSyBVwnMF2XR1zlrXFSj1yWUCOjbGuIcH3Hw",
             authDomain: "hwrc2-e8543.firebaseapp.com",
@@ -514,14 +652,25 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // State
-        let currentUser = null, isAdmin = false;
+        // State variables
+        let currentUser = null;
+        let isAdmin = false;
         const ADMIN_EMAIL = 'chimhinhin@gmail.com';
         
-        let allTasks = [], publicAssignments = [], privateAssignments = [], historyTasks = [];
-        let globalTimetable = [], userTimetable = [], isEditingTimetable = false;
-        let editingTaskId = null, editingTaskIsPublic = false, ttEditingCell = { row: null, dayKey: null };
+        let allTasks = [];
+        let publicAssignments = [];
+        let privateAssignments = [];
+        let historyTasks = [];
+        
+        let globalTimetable = [];
+        let userTimetable = [];
+        let isEditingTimetable = false;
+        
+        let editingTaskId = null;
+        let editingTaskIsPublic = false;
+        let ttEditingCell = { row: null, dayKey: null };
         let currentTimetableDay = 'd1';
+        let adminConfig = { marquee: '', maintenance: false, whitelistEnabled: false, whitelist: ['chimhinhin@gmail.com'], blacklistEnabled: false, blacklist: [] };
 
         const subjectColors = ['#FFB3BA','#BAE1FF','#BAFFC9','#FFDFBA','#E8DFF5','#DAEAF6','#E2F0CB','#F3B0C3','#CBAACB','#FDFD96','#FFC4C4','#FFD1B3','#FFF2B2','#C4FAC7','#C4E4FF','#E2D4F0','#FAD4D8','#D0E3F0','#D9E8B8','#F0A1B7','#C09DC0','#F5F587','#E5B2C6','#B2D5D0'];
         const defaultSubjects = [
@@ -551,10 +700,9 @@
             { id: 'sub_hk_24', name: '設計與科技', color: '#B2D5D0', enabled: false }
         ];
 
-        const themeColors = { 'light-blue': { bg: '#f5f7fa', card: '#ffffff' }, 'pure-white': { bg: '#ffffff', card: '#f5f5f7' }, 'mint-green': { bg: '#f0fdf4', card: '#ffffff' }, 'soft-peach': { bg: '#fff1f2', card: '#ffffff' }, 'midnight-blue':{ bg: '#f0f4f8', card: '#ffffff' } };
-
         let userSettings = { theme: 'light-blue', isDark: false, ttMode: '5day', ttCycle: 5, ttPeriodMins: 35, ttBreakMins: 15, ttLunchMins: 50, subjects: defaultSubjects };
-        let unsubTasksPub = null, unsubTasksPriv = null, unsubHist = null, unsubSettings = null, unsubTTGlobal = null, unsubTTPriv = null;
+        let unsubTasksPub = null, unsubTasksPriv = null, unsubHist = null, unsubSettings = null, unsubTTGlobal = null, unsubTTPriv = null, unsubAdmin = null;
+        let liveClassInterval = null;
 
         // --- Core Utility Functions ---
         const todayStr = new Date().toLocaleDateString('en-CA');
@@ -600,6 +748,8 @@
             if(viewId === 'admin') renderAdmin();
         }
         window.switchView = switchView;
+
+        const themeColors = { 'light-blue': { bg: '#f5f7fa', card: '#ffffff' }, 'pure-white': { bg: '#ffffff', card: '#f5f5f7' }, 'mint-green': { bg: '#f0fdf4', card: '#ffffff' }, 'soft-peach': { bg: '#fff1f2', card: '#ffffff' }, 'midnight-blue':{ bg: '#f0f4f8', card: '#ffffff' } };
 
         function applyTheme() {
             if(userSettings.isDark) { document.documentElement.setAttribute('data-theme', 'dark'); document.documentElement.style.removeProperty('--theme-bg'); document.documentElement.style.removeProperty('--theme-card'); document.getElementById('theme-color-section').style.display = 'none'; } 
@@ -866,7 +1016,6 @@
         window.syncGlobalTimetable = syncGlobalTimetable;
 
         // --- Live Class Widget Logic ---
-        let liveClassInterval = null;
         function updateLiveClassWidget() {
             const widget = document.getElementById('live-class-widget');
             if(!widget) return;
@@ -1083,8 +1232,132 @@
                     </div>
                 `);
             });
+            document.getElementById('admin-stat-broadcasts').innerText = publicAssignments.length;
         }
         window.renderAdmin = renderAdmin;
+
+        function switchAdminTab(tabId) {
+            document.querySelectorAll('.admin-tab-content').forEach(el => el.style.display = 'none');
+            document.getElementById(`admin-tab-${tabId}`).style.display = 'block';
+            document.querySelectorAll('.admin-tab-btn').forEach(el => {
+                el.classList.remove('selected'); el.style.backgroundColor = 'transparent'; el.style.color = 'var(--theme-text-sub)'; el.style.borderColor = 'var(--theme-text-sub)';
+            });
+            const activeBtn = Array.from(document.querySelectorAll('.admin-tab-btn')).find(el => el.getAttribute('onclick').includes(tabId));
+            if(activeBtn) { activeBtn.classList.add('selected'); activeBtn.style.backgroundColor = 'var(--theme-text-main)'; activeBtn.style.color = 'var(--theme-card)'; activeBtn.style.borderColor = 'var(--theme-text-main)'; }
+        }
+        window.switchAdminTab = switchAdminTab;
+
+        function renderAdminUsers() {
+            const listEl = document.getElementById('admin-users-list');
+            if(!listEl) return;
+            listEl.innerHTML = '';
+            const mockUsers = [
+                { name: currentUser?.displayName || '可樂仔cola son', email: currentUser?.email || 'chimhinhin@gmail.com', role: '管理員', time: '剛剛', roleColor: 'bg-purple-100 text-purple-600', avatar: currentUser?.photoURL || `https://ui-avatars.com/api/?name=可&background=8b5cf6&color=fff` },
+                { name: 'CHIN LONG WALTER LAM', email: 's20242001@pokok.edu.hk', role: '普通用戶', time: '49 分鐘前', roleColor: 'bg-gray-100 text-gray-600', avatar: `https://ui-avatars.com/api/?name=C&background=9ca3af&color=fff` },
+                { name: 'CHEOK HIM CHUNG', email: 's20231014@pokok.edu.hk', role: '普通用戶', time: '50 分鐘前', roleColor: 'bg-gray-100 text-gray-600', avatar: `https://ui-avatars.com/api/?name=C&background=9ca3af&color=fff` },
+                { name: 'jonas', email: 'jonasmak@yahoo.com', role: '普通用戶', time: '59 分鐘前', roleColor: 'bg-gray-100 text-gray-600', avatar: `https://ui-avatars.com/api/?name=J&background=9ca3af&color=fff` },
+                { name: 'YUEN TING ZENG', email: 's20231100@pokok.edu.hk', role: '普通用戶', time: '1 小時前', roleColor: 'bg-gray-100 text-gray-600', avatar: `https://ui-avatars.com/api/?name=Y&background=9ca3af&color=fff` }
+            ];
+            mockUsers.forEach(u => {
+                listEl.insertAdjacentHTML('beforeend', `
+                    <tr class="border-b transition-colors hover:bg-gray-50 dark:hover:bg-zinc-800" style="border-color: var(--theme-border);">
+                        <td class="p-4 flex items-center gap-3">
+                            <div class="relative"><img src="${u.avatar}" class="w-10 h-10 rounded-full shadow-sm"><div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div></div>
+                            <div><p class="text-xs font-black">${u.name}</p><p class="text-[10px] text-gray-500">${u.email}</p></div>
+                        </td>
+                        <td class="p-4"><span class="px-3 py-1 rounded-md text-[10px] font-bold ${u.roleColor}">${u.role}</span></td>
+                        <td class="p-4 text-[10px] font-bold text-gray-500">${u.time}</td>
+                        <td class="p-4 text-center"><button class="text-gray-400 hover:text-black spring-action"><i class="fas fa-chevron-right"></i></button></td>
+                    </tr>
+                `);
+            });
+        }
+        window.renderAdminUsers = renderAdminUsers;
+
+        function renderAdminSettings() {
+            document.getElementById('admin-whitelist-toggle').checked = adminConfig.whitelistEnabled;
+            document.getElementById('admin-blacklist-toggle').checked = adminConfig.blacklistEnabled;
+            
+            const wList = document.getElementById('admin-whitelist-list');
+            wList.innerHTML = '';
+            adminConfig.whitelist.forEach(email => {
+                wList.insertAdjacentHTML('beforeend', `<tr class="border-b" style="border-color: var(--theme-border);"><td class="p-3 text-xs font-bold">${email}</td><td class="p-3 text-center"><button onclick="removeAdminList('whitelist', '${email}')" class="text-red-500 hover:text-red-700 spring-action"><i class="fas fa-trash-alt"></i></button></td></tr>`);
+            });
+            if(adminConfig.whitelist.length === 0) wList.innerHTML = '<tr><td colspan="2" class="p-6 text-center text-[10px] font-bold opacity-50">白名單目前為空</td></tr>';
+
+            const bList = document.getElementById('admin-blacklist-list');
+            bList.innerHTML = '';
+            adminConfig.blacklist.forEach(email => {
+                bList.insertAdjacentHTML('beforeend', `<tr class="border-b" style="border-color: var(--theme-border);"><td class="p-3 text-xs font-bold">${email}</td><td class="p-3 text-center"><button onclick="removeAdminList('blacklist', '${email}')" class="text-red-500 hover:text-red-700 spring-action"><i class="fas fa-trash-alt"></i></button></td></tr>`);
+            });
+            if(adminConfig.blacklist.length === 0) bList.innerHTML = '<tr><td colspan="2" class="p-6 text-center text-[10px] font-bold opacity-50">黑名單目前為空</td></tr>';
+
+            const maintOnlineBtn = document.getElementById('admin-maint-online');
+            const maintOfflineBtn = document.getElementById('admin-maint-offline');
+            if(adminConfig.maintenance) {
+                maintOnlineBtn.className = "flex-1 py-4 rounded-xl border-2 border-transparent bg-gray-50 dark:bg-zinc-800 text-gray-400 flex flex-col items-center justify-center gap-2 spring-action";
+                maintOfflineBtn.className = "flex-1 py-4 rounded-xl border-2 border-red-500 bg-red-50 dark:bg-red-900/30 text-red-600 flex flex-col items-center justify-center gap-2 spring-action";
+            } else {
+                maintOnlineBtn.className = "flex-1 py-4 rounded-xl border-2 border-green-500 bg-green-50 dark:bg-green-900/30 text-green-600 flex flex-col items-center justify-center gap-2 spring-action";
+                maintOfflineBtn.className = "flex-1 py-4 rounded-xl border-2 border-transparent bg-gray-50 dark:bg-zinc-800 text-gray-400 flex flex-col items-center justify-center gap-2 spring-action";
+            }
+        }
+        window.renderAdminSettings = renderAdminSettings;
+
+        async function toggleAdminSetting(type, isEnabled) { adminConfig[`${type}Enabled`] = isEnabled; await saveAdminConfig(); }
+        window.toggleAdminSetting = toggleAdminSetting;
+
+        async function addAdminList(type) {
+            const input = document.getElementById(`admin-${type}-input`);
+            const email = input.value.trim();
+            if(!email) return;
+            if(!adminConfig[type].includes(email)) { adminConfig[type].push(email); input.value = ''; await saveAdminConfig(); }
+        }
+        window.addAdminList = addAdminList;
+
+        async function removeAdminList(type, email) { adminConfig[type] = adminConfig[type].filter(e => e !== email); await saveAdminConfig(); }
+        window.removeAdminList = removeAdminList;
+
+        async function publishMarquee() { const text = document.getElementById('admin-marquee-input').value.trim(); adminConfig.marquee = text; await saveAdminConfig(); showToast("跑馬燈已發佈"); }
+        window.publishMarquee = publishMarquee;
+
+        async function clearMarquee() { document.getElementById('admin-marquee-input').value = ''; adminConfig.marquee = ''; await saveAdminConfig(); showToast("跑馬燈已清空"); }
+        window.clearMarquee = clearMarquee;
+
+        async function setMaintenanceMode(mode) { 
+            if(mode === 'maintenance') {
+                customConfirm('開啟維護模式', '開啟後所有非管理員學生將強制登出並被阻擋，確定開啟嗎？', 'danger', async () => { adminConfig.maintenance = true; await saveAdminConfig(); showToast("維護模式已開啟"); });
+            } else {
+                adminConfig.maintenance = false; await saveAdminConfig(); showToast("系統已恢復正常運作");
+            }
+        }
+        window.setMaintenanceMode = setMaintenanceMode;
+
+        async function saveAdminConfig() { if(isAdmin) await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'system'), adminConfig); }
+        window.saveAdminConfig = saveAdminConfig;
+
+        function applySystemConfig(config) {
+            adminConfig = { ...adminConfig, ...config };
+            
+            const marqueeCont = document.getElementById('global-marquee-container');
+            if(adminConfig.marquee) { marqueeCont.classList.remove('hidden'); document.getElementById('global-marquee-text').innerText = adminConfig.marquee; }
+            else { marqueeCont.classList.add('hidden'); }
+
+            const maintScreen = document.getElementById('maintenance-screen');
+            if(adminConfig.maintenance && !isAdmin) { maintScreen.style.display = 'flex'; }
+            else { maintScreen.style.display = 'none'; }
+
+            if(!isAdmin && currentUser) {
+                if(adminConfig.whitelistEnabled && !adminConfig.whitelist.includes(currentUser.email)) {
+                    showToast("您的帳戶不在白名單內"); setTimeout(() => handleLogout(), 2000);
+                }
+                if(adminConfig.blacklistEnabled && adminConfig.blacklist.includes(currentUser.email)) {
+                    showToast("您的帳戶已被停權"); setTimeout(() => handleLogout(), 2000);
+                }
+            }
+            if(document.getElementById('view-admin').classList.contains('active')) renderAdminSettings();
+        }
+        window.applySystemConfig = applySystemConfig;
 
         document.getElementById('add-task-form').onsubmit = async (e) => {
             e.preventDefault(); if(!currentUser) return;
@@ -1139,6 +1412,8 @@
 
             unsubTTGlobal = onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'timetables', 'global'), d => { if(d.exists() && d.data().data) globalTimetable = JSON.parse(d.data().data); if(document.getElementById('view-timetable').classList.contains('active')) renderTimetableUI(); startLiveWidget(); });
             unsubTTPriv = onSnapshot(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'timetable', 'personal'), d => { if(d.exists() && d.data().data) userTimetable = JSON.parse(d.data().data); if(document.getElementById('view-timetable').classList.contains('active')) renderTimetableUI(); startLiveWidget(); });
+            
+            unsubAdmin = onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'system'), d => { if(d.exists()) applySystemConfig(d.data()); });
         }
         window.setupDataListeners = setupDataListeners;
 
@@ -1185,6 +1460,7 @@
                     document.getElementById('admin-timetable-controls').classList.remove('hidden'); 
                     const navDesktop = document.getElementById('nav-admin-btn-desktop'); if(navDesktop) navDesktop.classList.remove('hidden');
                     const navMobile = document.getElementById('nav-admin-btn-mobile'); if(navMobile) navMobile.classList.remove('hidden');
+                    renderAdminUsers(); 
                 } else {
                     const navDesktop = document.getElementById('nav-admin-btn-desktop'); if(navDesktop) navDesktop.classList.add('hidden');
                     const navMobile = document.getElementById('nav-admin-btn-mobile'); if(navMobile) navMobile.classList.add('hidden');
