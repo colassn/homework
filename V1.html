@@ -68,7 +68,6 @@
             box-shadow: 0 0 0 3px rgba(134, 134, 139, 0.1);
         }
         
-        /* Time Input adjustments */
         input[type="time"] { appearance: none; -webkit-appearance: none; }
         input[type="time"]::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.6; }
         [data-theme="dark"] input[type="time"]::-webkit-calendar-picker-indicator { filter: invert(1); }
@@ -93,7 +92,7 @@
         .spring-action { transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important; will-change: transform; }
         .spring-action:active { transform: scale(0.9) !important; }
 
-        /* Custom Chips with Fixed Border CSS */
+        /* Custom Chips */
         .custom-chip { 
             cursor: pointer; user-select: none; border-radius: 12px; position: relative; 
             border: 1.5px solid transparent; font-weight: 600;
@@ -105,9 +104,12 @@
         ::-webkit-scrollbar { display: none; }
         * { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* Table styling */
-        th, td { min-width: 55px; }
-        .sticky-col { position: sticky; left: 0; z-index: 20; background-color: var(--theme-card); }
+        /* Auth Inputs */
+        .auth-input { width: 100%; padding: 16px; border-radius: 16px; background-color: var(--theme-bg); border: 1px solid var(--theme-border); color: var(--theme-text-main); font-weight: 500; font-size: 14px; transition: all 0.2s ease;}
+        .auth-input:focus { outline: none; border-color: var(--theme-accent); background-color: var(--theme-card); box-shadow: 0 0 0 3px rgba(134, 134, 139, 0.1);}
+
+        /* Timeline View Overrides */
+        .timeline-line { transition: background-color 0.3s ease; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col pb-24 md:pb-0 md:pl-24">
@@ -129,8 +131,8 @@
             <p id="header-subtitle" class="text-[11px] font-bold uppercase tracking-widest mt-1" style="color: var(--theme-text-sub)"></p>
         </div>
         <div id="user-profile" class="hidden items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity spring-action" onclick="openModal('profile-modal')">
-            <span id="admin-badge" class="hidden bg-orange-100 text-orange-600 px-2 py-1 rounded-md text-[10px] font-black tracking-wider">ADMIN</span>
-            <img id="user-avatar" src="" class="w-11 h-11 rounded-full border-2" style="border-color: var(--theme-border)">
+            <span id="admin-badge" class="hidden bg-orange-100 text-orange-600 px-2 py-1 rounded-md text-[10px] font-black tracking-wider shadow-sm">ADMIN</span>
+            <img id="user-avatar" src="" class="w-10 h-10 rounded-full border-2" style="border-color: var(--theme-border)">
         </div>
     </header>
 
@@ -139,6 +141,39 @@
         
         <!-- VIEW: HOME -->
         <section id="view-home" class="app-view active space-y-6">
+            
+            <!-- Dynamic Live Class Widget -->
+            <div id="live-class-widget" class="premium-card shadow-sm relative overflow-hidden" style="display: none; border-left: 4px solid var(--theme-text-main);">
+                <div class="p-4 md:p-5 flex items-center justify-between w-full">
+                    <div class="flex items-center gap-3 md:gap-4">
+                        <div id="live-current-bg" class="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm transition-colors duration-500">
+                        </div>
+                        <div>
+                            <p class="text-[9px] md:text-[10px] font-bold uppercase tracking-wider mb-0.5 opacity-60">現在進行</p>
+                            <h3 id="live-current-class" class="text-base md:text-lg font-black tracking-tight leading-none" style="color: var(--theme-text-main)">載入中...</h3>
+                        </div>
+                    </div>
+                    
+                    <div class="hidden sm:block w-px h-8 bg-gray-200 dark:bg-zinc-800 mx-2"></div>
+                    
+                    <div class="hidden sm:block flex-1 px-2">
+                        <p class="text-[9px] font-bold uppercase tracking-wider mb-0.5 opacity-60">下一節</p>
+                        <h4 id="live-next-class" class="text-sm font-bold" style="color: var(--theme-text-main)">...</h4>
+                    </div>
+                    
+                    <div id="live-timer-container" class="flex flex-col items-end text-right shrink-0">
+                        <p id="live-timer-label" class="text-[9px] font-bold uppercase tracking-wider mb-1 text-orange-500">倒數中</p>
+                        <div class="bg-[#1d1d1f] dark:bg-white text-white dark:text-black px-2 md:px-3 py-1 rounded-md font-mono text-xs md:text-sm font-bold tracking-widest shadow-inner">
+                            <span id="live-timer-value">00:00</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- 課堂進度條 -->
+                <div class="absolute bottom-0 left-0 w-full h-[6px] bg-black/5 dark:bg-white/10">
+                    <div id="live-progress-bar" class="h-full bg-green-500 transition-all duration-1000 ease-linear rounded-r-full" style="width: 0%;"></div>
+                </div>
+            </div>
+
             <div class="premium-card p-5 md:p-6">
                 <form id="add-task-form" class="space-y-4">
                     <div class="flex flex-col md:flex-row md:items-center gap-3">
@@ -156,6 +191,13 @@
                             <input type="date" id="task-date" class="w-full md:w-36 minimal-input rounded-xl p-3 text-xs font-bold cursor-pointer" required>
                             <button type="submit" class="w-24 md:w-28 py-3 rounded-xl font-bold text-xs shadow-md shrink-0 bg-[#1d1d1f] text-white spring-action">新增</button>
                         </div>
+                    </div>
+
+                    <div id="broadcast-toggle-container" class="hidden pt-1">
+                        <label class="flex items-center justify-end cursor-pointer gap-2">
+                            <span class="text-[10px] font-bold text-orange-500">全域廣播</span>
+                            <input type="checkbox" id="task-broadcast" class="w-4 h-4 accent-orange-500 rounded">
+                        </label>
                     </div>
                 </form>
             </div>
@@ -179,28 +221,56 @@
         <!-- VIEW: TIMETABLE -->
         <section id="view-timetable" class="app-view space-y-5">
             <div class="flex justify-between items-center px-1">
-                <p class="text-sm font-bold" style="color: var(--theme-text-sub)">時間表</p>
+                <p class="text-sm font-bold" style="color: var(--theme-text-sub)">專注時間表</p>
                 <div id="tt-view-actions" class="flex gap-2">
                     <button onclick="syncGlobalTimetable()" class="bg-blue-500 text-white px-3 py-1.5 rounded-lg text-[11px] font-bold spring-action hidden" id="btn-sync-timetable">同步學校</button>
                     <button onclick="toggleTimetableMode(true)" class="px-4 py-2 rounded-xl text-[11px] font-bold shadow-md bg-[#1d1d1f] text-white spring-action"><i class="fas fa-edit mr-1"></i> 修改</button>
                 </div>
                 <div id="tt-edit-actions" class="flex items-center gap-2 hidden">
-                    <div class="flex items-center gap-1 bg-gray-100 dark:bg-zinc-800 p-1 rounded-xl mr-2">
-                        <button onclick="adjustDays(-1)" class="w-8 h-8 rounded-lg bg-white dark:bg-zinc-700 flex items-center justify-center text-xs spring-action shadow-sm"><i class="fas fa-minus"></i></button>
-                        <span id="tt-day-count-display" class="px-3 text-xs font-black">5 Days</span>
-                        <button onclick="adjustDays(1)" class="w-8 h-8 rounded-lg bg-white dark:bg-zinc-700 flex items-center justify-center text-xs spring-action shadow-sm"><i class="fas fa-plus"></i></button>
-                    </div>
                     <button onclick="toggleTimetableMode(false)" class="minimal-input px-3 py-2 rounded-lg text-[11px] font-bold spring-action">取消</button>
                     <button onclick="saveTimetable()" class="px-4 py-2 rounded-lg text-[11px] font-bold shadow-md bg-green-500 text-white spring-action"><i class="fas fa-save"></i> 儲存</button>
                 </div>
             </div>
 
-            <div class="premium-card overflow-x-auto p-3 scrollbar-hide">
-                <table class="w-full text-center" id="timetable-table">
-                    <thead><tr id="timetable-header" class="border-b" style="border-color: var(--theme-border)"></tr></thead>
-                    <tbody id="timetable-body"></tbody>
-                </table>
-                <button id="add-tt-row-btn" onclick="addTimetableRow()" class="hidden w-full mt-3 py-3 rounded-xl text-[11px] font-bold minimal-input border border-dashed spring-action"><i class="fas fa-plus mr-1"></i> 新增時段</button>
+            <!-- Day Selector -->
+            <div id="timetable-day-selector" class="flex gap-2 overflow-x-auto scrollbar-hide pb-2 px-1"></div>
+
+            <div id="admin-timetable-controls" class="hidden premium-card p-3 border border-orange-200 bg-orange-50/50">
+                <div class="flex justify-between items-center">
+                    <span class="text-[11px] font-bold text-orange-600"><i class="fas fa-user-shield mr-1"></i> 管理員</span>
+                    <button onclick="saveGlobalTimetable()" class="bg-orange-500 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold shadow-sm">發佈至全校</button>
+                </div>
+            </div>
+
+            <div class="premium-card p-4 md:p-6 overflow-hidden">
+                <!-- VIEW MODE -->
+                <div id="timetable-timeline-container" class="flex flex-col">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 id="tt-single-day-header" class="text-xl font-black tracking-tight"></h2>
+                    </div>
+                    <div id="timetable-timeline" class="flex flex-col gap-1 pb-2"></div>
+                </div>
+
+                <!-- EDIT MODE -->
+                <div id="timetable-edit-container" class="hidden">
+                    <div class="overflow-x-auto scrollbar-hide pb-4">
+                        <table class="w-full text-center" id="timetable-table">
+                            <thead>
+                                <tr id="tt-edit-header-row" class="border-b" style="border-color: var(--theme-border)"></tr>
+                            </thead>
+                            <tbody id="timetable-body"></tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="mt-2 border-t pt-4" style="border-color: var(--theme-border)">
+                        <p class="text-[10px] font-bold uppercase tracking-wider mb-2" style="color: var(--theme-text-sub)">智能連續新增</p>
+                        <div class="flex flex-wrap gap-2">
+                            <button onclick="addSmartRow('class')" class="flex-1 py-3 rounded-xl text-[11px] font-bold shadow-md spring-action" style="background-color: var(--theme-accent); color: var(--theme-accent-text);"><i class="fas fa-plus mr-1"></i> 課堂</button>
+                            <button onclick="addSmartRow('break')" class="flex-1 py-3 rounded-xl text-[11px] font-bold shadow-sm minimal-input spring-action"><i class="fas fa-mug-hot mr-1"></i> 小息</button>
+                            <button onclick="addSmartRow('lunch')" class="flex-1 py-3 rounded-xl text-[11px] font-bold shadow-sm minimal-input spring-action"><i class="fas fa-utensils mr-1"></i> 午膳</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -208,11 +278,19 @@
         <section id="view-subjects" class="app-view space-y-6">
             <div class="premium-card p-6">
                 <h3 class="text-sm font-bold uppercase tracking-widest mb-4" style="color: var(--theme-text-sub)">新增科目</h3>
-                <div class="flex flex-col md:flex-row gap-4">
-                    <input type="text" id="new-subject-name" class="flex-1 minimal-input rounded-xl p-3 text-sm font-bold" placeholder="輸入新科目名稱...">
-                    <div class="flex flex-wrap gap-2 py-1 items-center" id="subject-color-picker"></div>
-                    <input type="hidden" id="new-subject-color" value="#FFB3BA">
-                    <button onclick="addSubject()" class="w-full md:w-auto px-8 py-3 rounded-xl font-bold text-xs bg-[#1d1d1f] text-white spring-action">新增科目</button>
+                <div class="flex flex-col gap-5">
+                    <div>
+                        <p class="text-[10px] font-bold uppercase tracking-wider mb-2 opacity-60">科目名稱</p>
+                        <div class="flex flex-col md:flex-row gap-3">
+                            <input type="text" id="new-subject-name" class="flex-1 minimal-input rounded-xl p-3.5 text-sm font-bold" placeholder="輸入新科目名稱 (例如: 電腦)">
+                            <button onclick="addSubject()" class="w-full md:w-32 px-6 py-3.5 rounded-xl font-bold text-xs shadow-md shrink-0 spring-action" style="background-color: var(--theme-accent); color: var(--theme-accent-text);">新增科目</button>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-bold uppercase tracking-wider mb-2 opacity-60">專屬顏色</p>
+                        <div class="flex flex-wrap gap-2.5 py-1" id="subject-color-picker"></div>
+                        <input type="hidden" id="new-subject-color" value="#FFB3BA">
+                    </div>
                 </div>
             </div>
 
@@ -232,8 +310,8 @@
         <section id="view-settings" class="app-view space-y-6">
             <div class="premium-card p-6 space-y-6">
                 <div id="theme-color-section">
-                    <h3 class="text-sm font-bold mb-4" style="color: var(--theme-text-sub)">介面色彩主題</h3>
-                    <div class="flex gap-4 flex-wrap">
+                    <h3 class="text-sm font-bold mb-3" style="color: var(--theme-text-sub)">介面色彩主題</h3>
+                    <div class="flex gap-3 flex-wrap">
                         <button onclick="setThemeColor('light-blue')" class="w-10 h-10 rounded-full shadow-md border-4 theme-btn spring-action" data-color="light-blue" style="background-color: #f5f7fa; border-color: #1d1d1f"></button>
                         <button onclick="setThemeColor('pure-white')" class="w-10 h-10 rounded-full shadow-md border-4 theme-btn spring-action" data-color="pure-white" style="background-color: #ffffff;"></button>
                         <button onclick="setThemeColor('mint-green')" class="w-10 h-10 rounded-full shadow-md border-4 theme-btn spring-action" data-color="mint-green" style="background-color: #f0fdf4;"></button>
@@ -241,6 +319,43 @@
                         <button onclick="setThemeColor('midnight-blue')" class="w-10 h-10 rounded-full shadow-md border-4 theme-btn spring-action" data-color="midnight-blue" style="background-color: #f0f4f8;"></button>
                     </div>
                 </div>
+                
+                <div class="border-t pt-5" style="border-color: var(--theme-border)">
+                    <h4 class="text-sm font-bold mb-3" style="color: var(--theme-text-main)">時間表格式設定</h4>
+                    <div class="flex flex-col gap-4">
+                        <div class="flex flex-wrap gap-2">
+                            <button type="button" class="tt-mode-btn custom-chip px-3 py-1.5 text-[11px] flex-shrink-0 spring-action" data-val="5day" onclick="setTTMode('5day')">星期一至五</button>
+                            <button type="button" class="tt-mode-btn custom-chip px-3 py-1.5 text-[11px] flex-shrink-0 spring-action" data-val="6day" onclick="setTTMode('6day')">星期一至六</button>
+                            <button type="button" class="tt-mode-btn custom-chip px-3 py-1.5 text-[11px] flex-shrink-0 spring-action" data-val="7day" onclick="setTTMode('7day')">星期一至日</button>
+                            <button type="button" class="tt-mode-btn custom-chip px-3 py-1.5 text-[11px] flex-shrink-0 spring-action" data-val="cycle" onclick="setTTMode('cycle')">循環日 (Day X)</button>
+                        </div>
+                        <input type="hidden" id="setting-tt-mode" value="5day">
+                        
+                        <div id="setting-tt-cycle-container" class="hidden flex items-center justify-between bg-gray-50/50 dark:bg-zinc-800 p-3 rounded-xl border border-gray-100 dark:border-zinc-700" style="border-color: var(--theme-border);">
+                            <span class="text-xs font-bold" style="color: var(--theme-text-sub)">設定總日數 (X)</span>
+                            <input type="number" id="setting-tt-cycle" min="1" max="14" class="w-16 minimal-input rounded-lg p-2 text-center text-xs font-bold" onchange="updateTTCycle()">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border-t pt-5" style="border-color: var(--theme-border)">
+                    <h4 class="text-sm font-bold mb-3" style="color: var(--theme-text-main)">智能新增時間預設</h4>
+                    <div class="grid grid-cols-3 gap-3">
+                        <div>
+                            <label class="text-[10px] font-bold opacity-60 block mb-1">課堂 (分鐘)</label>
+                            <input type="number" id="setting-tt-period" class="w-full minimal-input rounded-xl p-2.5 text-center text-xs font-bold" value="35" onchange="updateTTSmart()">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold opacity-60 block mb-1">小息 (分鐘)</label>
+                            <input type="number" id="setting-tt-break" class="w-full minimal-input rounded-xl p-2.5 text-center text-xs font-bold" value="15" onchange="updateTTSmart()">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold opacity-60 block mb-1">午膳 (分鐘)</label>
+                            <input type="number" id="setting-tt-lunch" class="w-full minimal-input rounded-xl p-2.5 text-center text-xs font-bold" value="50" onchange="updateTTSmart()">
+                        </div>
+                    </div>
+                </div>
+
                 <div class="flex items-center justify-between border-t pt-6" style="border-color: var(--theme-border)">
                     <div><h4 class="text-sm font-bold">深色模式</h4><p class="text-[10px] opacity-60">完全沉浸式深黑體驗</p></div>
                     <label class="relative inline-flex items-center cursor-pointer">
@@ -261,17 +376,32 @@
         <button onclick="switchView('settings')" class="nav-item flex flex-col items-center gap-1 spring-action" data-target="settings"><i class="fas fa-cog text-xl"></i><span class="text-[9px] font-bold">設定</span></button>
     </nav>
 
-    <!-- Login Screen -->
+    <!-- Login/Register Screen -->
     <div id="login-screen" class="fixed inset-0 z-[200] flex flex-col items-center justify-center p-6" style="background-color: var(--theme-bg);">
         <i class="fas fa-layer-group text-5xl mb-6" style="color: var(--theme-text-main)"></i>
         <h2 class="text-2xl font-black mb-2 tracking-tight" style="color: var(--theme-text-main)">電子手冊系統</h2>
-        <p class="text-xs mb-10 font-medium" style="color: var(--theme-text-sub)">極簡・智能・高效管理</p>
+        <p class="text-xs mb-8 font-medium" style="color: var(--theme-text-sub)">極簡・智能・高效管理</p>
         
-        <div class="w-full max-w-xs space-y-4">
+        <div class="w-full max-w-xs bg-white dark:bg-[#1c1c1e] p-6 rounded-[24px] shadow-xl border border-gray-100 dark:border-gray-800 mb-6">
+            <h3 class="text-sm font-bold mb-4 text-center">電郵登入 / 註冊</h3>
+            <div class="space-y-3 mb-5">
+                <input type="email" id="auth-email" class="auth-input" placeholder="電郵地址 (Email)">
+                <input type="password" id="auth-pwd" class="auth-input" placeholder="密碼 (最少 6 位)">
+            </div>
+            <div class="flex gap-2">
+                <button onclick="loginEmail()" class="flex-1 py-3.5 rounded-xl font-bold text-xs bg-[#1d1d1f] dark:bg-white text-white dark:text-black spring-action shadow-md">登入</button>
+                <button onclick="registerEmail()" class="flex-1 py-3.5 rounded-xl font-bold text-xs minimal-input spring-action border border-gray-200">註冊新帳號</button>
+            </div>
+        </div>
+
+        <div class="w-full max-w-xs space-y-3">
+            <div class="flex items-center gap-3 mb-4 opacity-50">
+                <div class="flex-1 h-px bg-gray-400"></div><span class="text-[10px] font-bold uppercase">或使用其他方式</span><div class="flex-1 h-px bg-gray-400"></div>
+            </div>
             <button onclick="loginGoogle()" class="w-full flex items-center justify-center gap-2 bg-white text-black font-bold py-3.5 rounded-xl shadow-md border border-gray-100 text-sm spring-action">
-                <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-4 h-4"> 授權登入
+                <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-4 h-4"> Google 快速登入
             </button>
-            <button onclick="loginAnon()" class="w-full flex items-center justify-center gap-2 bg-[#1d1d1f] text-white font-bold py-3.5 rounded-xl shadow-md text-sm spring-action">
+            <button onclick="loginAnon()" class="w-full flex items-center justify-center gap-2 minimal-input font-bold py-3.5 rounded-xl text-sm spring-action">
                 以訪客身份預覽
             </button>
         </div>
@@ -314,7 +444,7 @@
     </div>
 
     <div id="edit-modal" class="custom-modal-overlay fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/40">
-        <div class="custom-modal-content w-full max-w-sm rounded-[24px] p-6 shadow-2xl text-left">
+        <div class="custom-modal-content w-full max-w-sm rounded-[24px] p-6 shadow-2xl text-left border border-gray-200">
             <h3 class="text-lg font-bold mb-5">修改功課紀錄</h3>
             <div class="space-y-5">
                 <div>
@@ -336,10 +466,21 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, signInAnonymously, onAuthStateChanged, signOut, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signInAnonymously, onAuthStateChanged, signOut, signInWithCustomToken, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, query, onSnapshot, addDoc, deleteDoc, doc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const firebaseConfig = JSON.parse(__firebase_config);
+        // ==========================================
+        // ⚠️ 重要：請在此處填入你自己的 Firebase Config
+        // ==========================================
+        const fallbackConfig = {
+            apiKey: "AIzaSyBVwnMF2XR1zlrXFSj1yWUCOjbGuIcH3Hw",
+            authDomain: "hwrc2-e8543.firebaseapp.com",
+            projectId: "hwrc2-e8543",
+            storageBucket: "hwrc2-e8543.firebasestorage.app",
+            messagingSenderId: "652104124735",
+            appId: "1:652104124735:web:aeaa80ef2f4e2c4acc2b8a"
+        };
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : fallbackConfig;
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-handbook';
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
@@ -351,9 +492,9 @@
         let allTasks = [], publicAssignments = [], privateAssignments = [], historyTasks = [];
         let globalTimetable = [], userTimetable = [], isEditingTimetable = false;
         let editingTaskId = null, editingTaskIsPublic = false, ttEditingCell = { row: null, dayKey: null };
+        let currentTimetableDay = 'd1';
 
         const subjectColors = ['#FFB3BA','#BAE1FF','#BAFFC9','#FFDFBA','#E8DFF5','#DAEAF6','#E2F0CB','#F3B0C3','#CBAACB','#FDFD96','#FFC4C4','#FFD1B3','#FFF2B2','#C4FAC7','#C4E4FF','#E2D4F0','#FAD4D8','#D0E3F0','#D9E8B8','#F0A1B7','#C09DC0','#F5F587','#E5B2C6','#B2D5D0'];
-
         const defaultSubjects = [
             { id: 'sub_hk_1', name: '中國語文', color: '#FFB3BA', enabled: true },
             { id: 'sub_hk_2', name: '英國語文', color: '#BAE1FF', enabled: true },
@@ -381,34 +522,38 @@
             { id: 'sub_hk_24', name: '設計與科技', color: '#B2D5D0', enabled: false }
         ];
 
-        let userSettings = { theme: 'light-blue', isDark: false, ttMode: '5day', ttCycle: 5, subjects: defaultSubjects };
+        let userSettings = { theme: 'light-blue', isDark: false, ttMode: '5day', ttCycle: 5, ttPeriodMins: 35, ttBreakMins: 15, ttLunchMins: 50, subjects: defaultSubjects };
+        let unsubTasksPub = null, unsubTasksPriv = null, unsubHist = null, unsubSettings = null, unsubTTGlobal = null, unsubTTPriv = null;
 
+        // --- Core Utility Functions (Hoisted) ---
         const todayStr = new Date().toLocaleDateString('en-CA');
-        const getNextWeekdayStr = () => { let d = new Date(); let day = d.getDay(); d.setDate(d.getDate() + (day === 5 ? 3 : day === 6 ? 2 : 1)); return d.toLocaleDateString('en-CA'); };
-        const getDaysDiffStr = (dateStr) => { const due = new Date(dateStr); const today = new Date(todayStr); const diffDays = Math.ceil((due - today) / (1000 * 60 * 60 * 24)); if(diffDays === 0) return '今天要交'; if(diffDays === 1) return '明天要交'; if(diffDays < 0) return `已過期 ${Math.abs(diffDays)} 天`; return `${diffDays} 天後交`; };
-        const getDayOfWeek = (dateStr) => { return ['日', '一', '二', '三', '四', '五', '六'][new Date(dateStr).getDay()]; };
-        const hexToRgba = (hex, alpha) => { if(!hex || hex.length < 7) return `rgba(200,200,200,${alpha})`; let r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16); return `rgba(${r}, ${g}, ${b}, ${alpha})`; };
+        function getNextWeekdayStr() { let d = new Date(); let day = d.getDay(); d.setDate(d.getDate() + (day === 5 ? 3 : day === 6 ? 2 : 1)); return d.toLocaleDateString('en-CA'); }
+        function getDaysDiffStr(dateStr) { const due = new Date(dateStr); const today = new Date(todayStr); const diffDays = Math.ceil((due - today) / (1000 * 60 * 60 * 24)); if(diffDays === 0) return '今天要交'; if(diffDays === 1) return '明天要交'; if(diffDays < 0) return `已過期 ${Math.abs(diffDays)} 天`; return `${diffDays} 天後交`; }
+        function getDayOfWeek(dateStr) { return ['日', '一', '二', '三', '四', '五', '六'][new Date(dateStr).getDay()]; }
+        function hexToRgba(hex, alpha) { if(!hex || hex.length < 7) return `rgba(200,200,200,${alpha})`; let r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16); return `rgba(${r}, ${g}, ${b}, ${alpha})`; }
 
-        window.showToast = (msg) => { const container = document.getElementById('toast-container'); const toast = document.createElement('div'); toast.className = `toast show`; toast.innerText = msg; container.appendChild(toast); setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 400); }, 3000); };
-        window.openModal = (id) => document.getElementById(id).classList.add('active');
-        window.closeModal = (id) => document.getElementById(id).classList.remove('active');
+        document.getElementById('task-date').value = getNextWeekdayStr();
 
-        window.customConfirm = (title, message, type, onConfirm) => {
-            const overlay = document.getElementById('custom-dialog');
-            document.getElementById('dialog-title').innerText = title;
-            document.getElementById('dialog-message').innerText = message;
-            const iconEl = document.getElementById('dialog-icon');
-            const confirmBtn = document.getElementById('dialog-confirm');
-            const cancelBtn = document.getElementById('dialog-cancel');
+        function showToast(msg) { const container = document.getElementById('toast-container'); const toast = document.createElement('div'); toast.className = `toast show`; toast.innerText = msg; container.appendChild(toast); setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 400); }, 3000); }
+        window.showToast = showToast;
+
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        window.openModal = openModal;
+
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+        window.closeModal = closeModal;
+
+        function customConfirm(title, message, type, onConfirm) {
+            const overlay = document.getElementById('custom-dialog'); document.getElementById('dialog-title').innerText = title; document.getElementById('dialog-message').innerText = message;
+            const iconEl = document.getElementById('dialog-icon'); const confirmBtn = document.getElementById('dialog-confirm'); const cancelBtn = document.getElementById('dialog-cancel');
             cancelBtn.classList.remove('hidden');
-            if(type === 'danger') { iconEl.className = 'w-10 h-10 rounded-full mx-auto flex items-center justify-center text-lg mb-3 bg-red-100 text-red-600'; iconEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i>'; confirmBtn.style.backgroundColor = '#ef4444'; confirmBtn.style.color = '#fff'; }
-            else { iconEl.className = 'w-10 h-10 rounded-full mx-auto flex items-center justify-center text-lg mb-3 bg-blue-100 text-blue-600'; iconEl.innerHTML = '<i class="fas fa-question-circle"></i>'; confirmBtn.style.backgroundColor = 'var(--theme-accent)'; confirmBtn.style.color = 'var(--theme-accent-text)'; }
-            confirmBtn.onclick = () => { overlay.classList.remove('active'); onConfirm(); };
-            cancelBtn.onclick = () => { overlay.classList.remove('active'); };
-            overlay.classList.add('active');
-        };
+            if(type === 'danger') { iconEl.className = 'w-12 h-12 rounded-full mx-auto flex items-center justify-center text-xl mb-4 bg-red-100 text-red-600'; iconEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i>'; confirmBtn.style.backgroundColor = '#ef4444'; confirmBtn.style.color = '#fff'; }
+            else { iconEl.className = 'w-12 h-12 rounded-full mx-auto flex items-center justify-center text-xl mb-4 bg-blue-100 text-blue-600'; iconEl.innerHTML = '<i class="fas fa-question-circle"></i>'; confirmBtn.style.backgroundColor = 'var(--theme-accent)'; confirmBtn.style.color = 'var(--theme-accent-text)'; }
+            confirmBtn.onclick = () => { overlay.classList.remove('active'); onConfirm(); }; cancelBtn.onclick = () => { overlay.classList.remove('active'); }; overlay.classList.add('active');
+        }
+        window.customConfirm = customConfirm;
 
-        window.switchView = (viewId) => {
+        function switchView(viewId) {
             document.querySelectorAll('.app-view').forEach(el => el.classList.remove('active'));
             document.getElementById(`view-${viewId}`).classList.add('active');
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
@@ -420,44 +565,77 @@
             if(viewId === 'history') renderHistory();
             if(viewId === 'timetable') renderTimetableUI();
             if(viewId === 'subjects') renderSubjectsPage();
-        };
+            if(viewId === 'settings') updateTTModeChips();
+        }
+        window.switchView = switchView;
 
-        const applyTheme = () => {
+        const themeColors = { 'light-blue': { bg: '#f5f7fa', card: '#ffffff' }, 'pure-white': { bg: '#ffffff', card: '#f5f5f7' }, 'mint-green': { bg: '#f0fdf4', card: '#ffffff' }, 'soft-peach': { bg: '#fff1f2', card: '#ffffff' }, 'midnight-blue':{ bg: '#f0f4f8', card: '#ffffff' } };
+
+        function applyTheme() {
             if(userSettings.isDark) { document.documentElement.setAttribute('data-theme', 'dark'); document.documentElement.style.removeProperty('--theme-bg'); document.documentElement.style.removeProperty('--theme-card'); document.getElementById('theme-color-section').style.display = 'none'; } 
             else { document.documentElement.removeAttribute('data-theme'); const tc = themeColors[userSettings.theme] || themeColors['light-blue']; document.documentElement.style.setProperty('--theme-bg', tc.bg); document.documentElement.style.setProperty('--theme-card', tc.card); document.getElementById('theme-color-section').style.display = 'block'; }
             document.getElementById('dark-mode-toggle').checked = userSettings.isDark;
+            document.getElementById('setting-tt-cycle').value = userSettings.ttCycle || 5;
+            document.getElementById('setting-tt-period').value = userSettings.ttPeriodMins || 35;
+            document.getElementById('setting-tt-break').value = userSettings.ttBreakMins || 15;
+            document.getElementById('setting-tt-lunch').value = userSettings.ttLunchMins || 50;
             document.querySelectorAll('.theme-btn').forEach(btn => btn.style.borderColor = (btn.dataset.color === userSettings.theme) ? 'var(--theme-text-main)' : 'transparent');
             buildCustomChips(); 
-        };
+            updateTTModeChips();
+        }
+        window.applyTheme = applyTheme;
 
-        const themeColors = { 'light-blue': { bg: '#f5f7fa', card: '#ffffff' }, 'pure-white': { bg: '#ffffff', card: '#f5f5f7' }, 'mint-green': { bg: '#f0fdf4', card: '#ffffff' }, 'soft-peach': { bg: '#fff1f2', card: '#ffffff' }, 'midnight-blue':{ bg: '#f0f4f8', card: '#ffffff' } };
-        window.setThemeColor = (colorId) => { userSettings.theme = colorId; userSettings.isDark = false; applyTheme(); saveSettings(); };
-        window.toggleDarkMode = (isDark) => { userSettings.isDark = isDark; applyTheme(); saveSettings(); };
-        window.updateTTModeUI = () => { userSettings.ttMode = document.getElementById('setting-tt-mode').value; document.getElementById('setting-tt-cycle-container').style.display = (userSettings.ttMode === 'cycle') ? 'flex' : 'none'; saveSettings(); renderTimetableUI(); };
-        window.updateTTCycle = () => { userSettings.ttCycle = parseInt(document.getElementById('setting-tt-cycle').value) || 5; saveSettings(); renderTimetableUI(); };
-        const saveSettings = async () => { if(currentUser) await setDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'settings', 'profile'), userSettings); };
-        window.setTaskType = (type, btnEl) => { document.querySelectorAll('.type-toggle-btn').forEach(btn => { btn.classList.remove('active'); btn.classList.add('text-[var(--theme-text-sub)]'); }); btnEl.classList.add('active'); btnEl.classList.remove('text-[var(--theme-text-sub)]'); document.getElementById('task-type').value = type; };
+        function setThemeColor(colorId) { userSettings.theme = colorId; userSettings.isDark = false; applyTheme(); saveSettings(); }
+        window.setThemeColor = setThemeColor;
 
-        const buildCustomChips = () => {
+        function toggleDarkMode(isDark) { userSettings.isDark = isDark; applyTheme(); saveSettings(); }
+        window.toggleDarkMode = toggleDarkMode;
+
+        function updateTTModeChips() {
+            const currentMode = userSettings.ttMode || '5day';
+            document.getElementById('setting-tt-mode').value = currentMode;
+            document.querySelectorAll('.tt-mode-btn').forEach(btn => {
+                if(btn.dataset.val === currentMode) { btn.classList.add('selected'); btn.style.backgroundColor = 'var(--theme-text-main)'; btn.style.color = 'var(--theme-card)'; btn.style.borderColor = 'var(--theme-text-main)'; } 
+                else { btn.classList.remove('selected'); btn.style.backgroundColor = 'transparent'; btn.style.color = 'var(--theme-text-sub)'; btn.style.borderColor = 'var(--theme-text-sub)'; }
+            });
+            document.getElementById('setting-tt-cycle-container').style.display = (currentMode === 'cycle') ? 'flex' : 'none';
+        }
+        window.updateTTModeChips = updateTTModeChips;
+
+        function setTTMode(mode) { userSettings.ttMode = mode; updateTTModeChips(); saveSettings(); renderTimetableUI(); }
+        window.setTTMode = setTTMode;
+
+        function updateTTCycle() { userSettings.ttCycle = parseInt(document.getElementById('setting-tt-cycle').value) || 5; saveSettings(); renderTimetableUI(); }
+        window.updateTTCycle = updateTTCycle;
+
+        function updateTTSmart() { userSettings.ttPeriodMins = parseInt(document.getElementById('setting-tt-period').value) || 35; userSettings.ttBreakMins = parseInt(document.getElementById('setting-tt-break').value) || 15; userSettings.ttLunchMins = parseInt(document.getElementById('setting-tt-lunch').value) || 50; saveSettings(); }
+        window.updateTTSmart = updateTTSmart;
+
+        async function saveSettings() { if(currentUser) await setDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'settings', 'profile'), userSettings); }
+        window.saveSettings = saveSettings;
+
+        function setTaskType(type, btnEl) { document.querySelectorAll('.type-toggle-btn').forEach(btn => { btn.classList.remove('active'); btn.classList.add('text-[var(--theme-text-sub)]'); }); btnEl.classList.add('active'); btnEl.classList.remove('text-[var(--theme-text-sub)]'); document.getElementById('task-type').value = type; }
+        window.setTaskType = setTaskType;
+
+        function buildCustomChips() {
             const addCont = document.getElementById('subject-chips-add'); const filterCont = document.getElementById('subject-chips-filter'); const editCont = document.getElementById('subject-chips-edit'); const ttCont = document.getElementById('tt-cell-chips');
             if(!addCont || !filterCont || !editCont || !ttCont) return;
             addCont.innerHTML = ''; filterCont.innerHTML = ''; editCont.innerHTML = ''; ttCont.innerHTML = '';
-            filterCont.insertAdjacentHTML('beforeend', `<button type="button" class="custom-chip px-3 py-1.5 text-[11px] flex-shrink-0" data-subject="all" onclick="setSubjectFilter('all')">所有科目</button>`);
+            filterCont.insertAdjacentHTML('beforeend', `<button type="button" class="custom-chip px-3 py-1.5 text-[11px] flex-shrink-0 spring-action" data-subject="all" onclick="setSubjectFilter('all')">所有科目</button>`);
             const enabledSubjects = userSettings.subjects.filter(s => s.enabled !== false);
             enabledSubjects.forEach(sub => {
-                addCont.insertAdjacentHTML('beforeend', `<button type="button" class="custom-chip px-3 py-1.5 text-[11px] flex-shrink-0" data-subject="${sub.name}" onclick="setSubjectAdd('${sub.name}')">${sub.name}</button>`);
-                filterCont.insertAdjacentHTML('beforeend', `<button type="button" class="custom-chip px-3 py-1.5 text-[11px] flex-shrink-0" data-subject="${sub.name}" onclick="setSubjectFilter('${sub.name}')">${sub.name}</button>`);
-                editCont.insertAdjacentHTML('beforeend', `<button type="button" class="custom-chip px-3 py-1.5 text-[11px] flex-shrink-0" data-subject="${sub.name}" onclick="setSubjectEdit('${sub.name}')">${sub.name}</button>`);
+                addCont.insertAdjacentHTML('beforeend', `<button type="button" class="custom-chip px-3 py-1.5 text-[11px] flex-shrink-0 spring-action" data-subject="${sub.name}" onclick="setSubjectAdd('${sub.name}')">${sub.name}</button>`);
+                filterCont.insertAdjacentHTML('beforeend', `<button type="button" class="custom-chip px-3 py-1.5 text-[11px] flex-shrink-0 spring-action" data-subject="${sub.name}" onclick="setSubjectFilter('${sub.name}')">${sub.name}</button>`);
+                editCont.insertAdjacentHTML('beforeend', `<button type="button" class="custom-chip px-3 py-1.5 text-[11px] flex-shrink-0 spring-action" data-subject="${sub.name}" onclick="setSubjectEdit('${sub.name}')">${sub.name}</button>`);
                 ttCont.insertAdjacentHTML('beforeend', `<button type="button" class="custom-chip px-4 py-2 text-xs shadow-sm" style="background-color: ${sub.color}; border: 1.5px solid ${sub.color}; color: #1d1d1f;" onclick="saveTTCellDirect('${sub.name}')">${sub.name}</button>`);
             });
             ttCont.insertAdjacentHTML('beforeend', `<button type="button" class="custom-chip px-4 py-2 text-xs border border-gray-300 spring-action" onclick="saveTTCellDirect('')">清除</button>`);
             updateChipStyles();
-        };
+        }
+        window.buildCustomChips = buildCustomChips;
 
-        window.updateChipStyles = () => {
-            const currentAdd = document.getElementById('task-subject').value;
-            const currentFilter = document.getElementById('filter-subject').value;
-            const currentEdit = document.getElementById('edit-subject').value;
+        function updateChipStyles() {
+            const currentAdd = document.getElementById('task-subject').value; const currentFilter = document.getElementById('filter-subject').value; const currentEdit = document.getElementById('edit-subject').value;
             const applyStyle = (chip, isSelected, sub) => {
                 if (sub === 'all') { chip.style.backgroundColor = isSelected ? 'var(--theme-text-main)' : 'transparent'; chip.style.color = isSelected ? 'var(--theme-card)' : 'var(--theme-text-main)'; chip.style.borderColor = 'var(--theme-text-main)'; } 
                 else { chip.style.backgroundColor = isSelected ? hexToRgba(sub.color, 0.4) : 'transparent'; chip.style.color = 'var(--theme-text-main)'; chip.style.borderColor = sub.color; }
@@ -466,74 +644,291 @@
             document.querySelectorAll('#subject-chips-filter .custom-chip').forEach(chip => { const subName = chip.dataset.subject; if(subName === 'all') applyStyle(chip, currentFilter === 'all', 'all'); else { const sub = userSettings.subjects.find(s => s.name === subName); if(sub) applyStyle(chip, currentFilter === subName, sub); } });
             document.querySelectorAll('#subject-chips-add .custom-chip').forEach(chip => { const subName = chip.dataset.subject; const sub = userSettings.subjects.find(s => s.name === subName); if(sub) applyStyle(chip, currentAdd === subName, sub); });
             document.querySelectorAll('#subject-chips-edit .custom-chip').forEach(chip => { const subName = chip.dataset.subject; const sub = userSettings.subjects.find(s => s.name === subName); if(sub) applyStyle(chip, currentEdit === subName, sub); });
-        };
+        }
+        window.updateChipStyles = updateChipStyles;
 
-        window.setSubjectAdd = (val) => { document.getElementById('task-subject').value = val; updateChipStyles(); };
-        window.setSubjectFilter = (val) => { document.getElementById('filter-subject').value = val; updateChipStyles(); renderHome(); };
-        window.setSubjectEdit = (val) => { document.getElementById('edit-subject').value = val; updateChipStyles(); };
+        function setSubjectAdd(val) { document.getElementById('task-subject').value = val; updateChipStyles(); }
+        window.setSubjectAdd = setSubjectAdd;
 
-        window.adjustDays = (delta) => {
-            userSettings.ttMode = 'cycle';
-            userSettings.ttCycle = Math.max(1, Math.min(14, userSettings.ttCycle + delta));
-            saveSettings(); renderTimetableUI();
-        };
+        function setSubjectFilter(val) { document.getElementById('filter-subject').value = val; updateChipStyles(); renderHome(); }
+        window.setSubjectFilter = setSubjectFilter;
 
-        const getTimetableDaysConfig = () => {
-            const mode = userSettings.ttMode; const cycle = userSettings.ttCycle; let days = []; const weekLabels = ['一', '二', '三', '四', '五', '六', '日'];
+        function setSubjectEdit(val) { document.getElementById('edit-subject').value = val; updateChipStyles(); }
+        window.setSubjectEdit = setSubjectEdit;
+
+        function getTimetableDaysConfig() {
+            const mode = userSettings.ttMode || '5day'; const cycle = userSettings.ttCycle || 5; let days = []; const weekLabels = ['一', '二', '三', '四', '五', '六', '日'];
             const count = (mode === '5day') ? 5 : (mode === '6day') ? 6 : (mode === '7day') ? 7 : cycle;
-            for(let i=0; i<count; i++) days.push({ key: `d${i+1}`, label: (mode === 'cycle') ? `D${i+1}` : weekLabels[i] });
+            for(let i=0; i<count; i++) days.push({ key: `d${i+1}`, label: (mode === 'cycle') ? `Day ${i+1}` : `星期${weekLabels[i]}` });
             return days;
-        };
+        }
+        window.getTimetableDaysConfig = getTimetableDaysConfig;
 
-        window.renderTimetableUI = () => {
-            const thead = document.getElementById('timetable-header'); const tbody = document.getElementById('timetable-body');
+        function initDefaultTimetableDay() {
             const daysConfig = getTimetableDaysConfig();
-            document.getElementById('tt-day-count-display').innerText = `${daysConfig.length} Days`;
-            let thHtml = `<th class="py-2 px-1 text-[11px] font-bold opacity-60 sticky-col">時間</th>`;
-            daysConfig.forEach(d => { thHtml += `<th class="py-2 px-2 text-[11px] font-bold min-w-[50px] whitespace-nowrap">${d.label}</th>`; });
-            if(isEditingTimetable) thHtml += `<th class="py-2 px-1 text-[10px] font-bold opacity-60">操作</th>`;
-            thead.innerHTML = thHtml;
-            tbody.innerHTML = '';
+            const todayIndex = new Date().getDay(); 
+            const mapDayToKey = { 1: 'd1', 2: 'd2', 3: 'd3', 4: 'd4', 5: 'd5', 6: 'd6', 0: 'd7' };
+            let targetKey = mapDayToKey[todayIndex];
+            if(!daysConfig.find(d => d.key === targetKey)) targetKey = 'd1';
+            currentTimetableDay = targetKey;
+        }
+
+        function setTimetableDay(dayKey) { currentTimetableDay = dayKey; renderTimetableUI(); }
+        window.setTimetableDay = setTimetableDay;
+
+        function toggleTimetableMode(edit) { 
+            isEditingTimetable = edit; 
+            document.getElementById('tt-view-actions').classList.toggle('hidden', edit); 
+            document.getElementById('tt-edit-actions').classList.toggle('hidden', !edit); 
+            document.getElementById('timetable-timeline-container').classList.toggle('hidden', edit);
+            document.getElementById('timetable-edit-container').classList.toggle('hidden', !edit);
+            renderTimetableUI(); 
+        }
+        window.toggleTimetableMode = toggleTimetableMode;
+
+        function addSmartRow(type) {
+            let lastRow = userTimetable.length > 0 ? userTimetable[userTimetable.length - 1] : null;
+            let startStr = lastRow && lastRow.endTime ? lastRow.endTime : '08:00';
+            let duration = 35; let fillText = '';
+            if(type === 'class') duration = parseInt(userSettings.ttPeriodMins) || 35;
+            else if(type === 'break') { duration = parseInt(userSettings.ttBreakMins) || 15; fillText = '小息'; }
+            else if(type === 'lunch') { duration = parseInt(userSettings.ttLunchMins) || 50; fillText = '午膳'; }
+            
+            let [h, m] = startStr.split(':').map(Number);
+            let date = new Date(); date.setHours(h, m, 0, 0);
+            date.setMinutes(date.getMinutes() + duration);
+            let endStr = `${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+            let newRow = { startTime: startStr, endTime: endStr };
+            if(fillText) { const daysConfig = getTimetableDaysConfig(); daysConfig.forEach(d => { newRow[d.key] = fillText; }); }
+            userTimetable.push(newRow);
+            renderTimetableUI();
+        }
+        window.addSmartRow = addSmartRow;
+
+        function renderTimetableUI() {
+            const daysConfig = getTimetableDaysConfig();
             const dataToRender = userTimetable.length > 0 ? userTimetable : globalTimetable;
-            if(dataToRender.length === 0 && isEditingTimetable) { userTimetable = [{startTime: '08:00', endTime: '08:35'}]; renderTimetableUI(); return; } 
-            else if (dataToRender.length === 0 && !isEditingTimetable) { tbody.innerHTML = `<tr><td colspan="${daysConfig.length + 1}" class="py-10 text-[11px] font-bold opacity-50">尚未設定時間表</td></tr>`; return; }
-            document.getElementById('add-tt-row-btn').classList.toggle('hidden', !isEditingTimetable);
-            dataToRender.forEach((row, rIdx) => {
-                let tr = document.createElement('tr'); tr.className = "border-b border-dashed"; tr.style.borderColor = "var(--theme-border)";
-                if (isEditingTimetable) {
-                    let html = `<td class="p-1 sticky-col"><div class="flex flex-col gap-1 items-center">
+
+            dataToRender.forEach(r => {
+                if(r.time && !r.startTime) { let parts = r.time.split('-'); r.startTime = parts[0]?.trim() || ''; r.endTime = parts[1]?.trim() || ''; }
+                const oldKeys = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+                oldKeys.forEach((k, idx) => { if (r[k] !== undefined) { r[`d${idx+1}`] = r[k]; delete r[k]; } });
+            });
+
+            if(!isEditingTimetable) {
+                const selectorCont = document.getElementById('timetable-day-selector');
+                selectorCont.innerHTML = '';
+                daysConfig.forEach(d => {
+                    const isSelected = d.key === currentTimetableDay;
+                    const style = isSelected ? `background-color: var(--theme-text-main); color: var(--theme-card);` : `border: 1px solid var(--theme-text-sub); color: var(--theme-text-sub);`;
+                    selectorCont.insertAdjacentHTML('beforeend', `<button onclick="setTimetableDay('${d.key}')" class="custom-chip px-4 py-2 text-xs font-bold spring-action flex-shrink-0 ${isSelected?'selected':''}" style="${style}">${d.label}</button>`);
+                });
+
+                document.getElementById('tt-single-day-header').innerText = daysConfig.find(d => d.key === currentTimetableDay)?.label || '';
+                const timelineCont = document.getElementById('timetable-timeline');
+                timelineCont.innerHTML = '';
+
+                if(dataToRender.length === 0) {
+                    timelineCont.innerHTML = `<div class="py-10 text-[11px] font-bold opacity-50 text-center">尚未設定時間表</div>`;
+                } else {
+                    dataToRender.forEach((row, i) => {
+                        let cellVal = row[currentTimetableDay] || '';
+                        let sub = userSettings.subjects.find(s => s.name === cellVal);
+                        let subColor = sub ? sub.color : 'var(--theme-text-sub)';
+                        let isBreak = cellVal.includes('小息');
+                        let isLunch = cellVal.includes('午膳');
+                        if (isBreak) subColor = '#AAB7B8';
+                        if (isLunch) subColor = '#FFB3BA';
+                        if (!cellVal) subColor = 'transparent';
+
+                        let bgStyle = cellVal ? `background-color: ${hexToRgba(subColor, 0.15)}; border-color: ${subColor}` : `background-color: transparent; border-color: var(--theme-border)`;
+                        let textStyle = cellVal ? `color: var(--theme-text-main)` : `color: var(--theme-text-sub)`;
+                        let lineHtml = (i < dataToRender.length - 1) ? `<div class="w-[2px] h-full absolute top-3" style="background-color: var(--theme-border)"></div>` : '';
+
+                        timelineCont.insertAdjacentHTML('beforeend', `
+                            <div class="flex gap-3 min-h-[60px]">
+                                <div class="flex flex-col items-end w-10 shrink-0 pt-2">
+                                    <span class="text-[11px] font-black" style="color: var(--theme-text-main)">${row.startTime||'--'}</span>
+                                    <span class="text-[9px] font-bold opacity-50">${row.endTime||'--'}</span>
+                                </div>
+                                <div class="relative flex flex-col items-center pt-3">
+                                    <div class="w-2.5 h-2.5 rounded-full z-10" style="background-color: ${cellVal ? subColor : 'var(--theme-border)'};"></div>
+                                    ${lineHtml}
+                                </div>
+                                <div class="flex-1 pb-4">
+                                    <div class="rounded-xl p-3 shadow-sm border-l-4 flex items-center gap-2" style="${bgStyle}">
+                                        ${isBreak ? '<i class="fas fa-mug-hot text-xs opacity-60"></i>' : ''}
+                                        ${isLunch ? '<i class="fas fa-utensils text-xs opacity-60"></i>' : ''}
+                                        <span class="font-black text-xs" style="${textStyle}">${cellVal || '空堂'}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `);
+                    });
+                }
+            }
+
+            if(isEditingTimetable) {
+                const thead = document.getElementById('tt-edit-header-row');
+                const tbody = document.getElementById('timetable-body');
+
+                let thHtml = `<th class="py-2 px-1 text-[11px] font-bold opacity-60 sticky left-0 z-10" style="background-color: var(--theme-card);">時間</th>`;
+                daysConfig.forEach(d => { thHtml += `<th class="py-2 px-2 text-[11px] font-bold min-w-[50px] whitespace-nowrap">${d.label}</th>`; });
+                thHtml += `<th class="py-2 px-1 text-[10px] font-bold opacity-60">刪除</th>`;
+                thead.innerHTML = thHtml;
+                tbody.innerHTML = '';
+
+                if(dataToRender.length === 0) userTimetable = [{startTime: '08:00', endTime: '08:35'}];
+
+                dataToRender.forEach((row, rIdx) => {
+                    let tr = document.createElement('tr'); tr.className = "border-b border-dashed"; tr.style.borderColor = "var(--theme-border)";
+                    let html = `<td class="p-1 sticky left-0 z-10 w-[70px] min-w-[70px]" style="background-color: var(--theme-card);">
+                        <div class="flex flex-col gap-1 items-center">
                             <input type="time" class="w-full text-center text-[10px] font-bold minimal-input rounded p-1" value="${row.startTime||''}" onchange="updateTT(${rIdx}, 'startTime', this.value)">
                             <input type="time" class="w-full text-center text-[10px] font-bold minimal-input rounded p-1" value="${row.endTime||''}" onchange="updateTT(${rIdx}, 'endTime', this.value)">
-                        </div></td>`;
+                        </div>
+                    </td>`;
+                    
                     daysConfig.forEach(d => {
-                        const cellVal = row[d.key] || ''; const cellColor = (userSettings.subjects.find(s => s.name === cellVal) || {}).color || 'var(--theme-border)';
-                        html += `<td class="p-1 min-w-[55px]"><button onclick="openTTCellModal(${rIdx}, '${d.key}')" class="w-full h-11 minimal-input rounded-lg text-[10px] font-bold flex items-center justify-center px-1 spring-action" style="border: 1.5px solid ${cellVal ? cellColor : 'var(--theme-border)'}; background-color: ${cellVal ? hexToRgba(cellColor, 0.4) : 'var(--theme-bg)'}">${cellVal || '<i class="fas fa-plus opacity-20"></i>'}</button></td>`;
+                        const cellVal = row[d.key] || '';
+                        let cellColor = (userSettings.subjects.find(s => s.name === cellVal) || {}).color || 'var(--theme-border)';
+                        if(cellVal.includes('小息')) cellColor = '#AAB7B8';
+                        if(cellVal.includes('午膳')) cellColor = '#FFB3BA';
+
+                        html += `<td class="p-1 min-w-[55px]">
+                            <button onclick="openTTCellModal(${rIdx}, '${d.key}')" class="w-full h-11 minimal-input rounded-lg text-[10px] font-bold flex items-center justify-center px-1" style="color: var(--theme-text-main); border: 1.5px solid ${cellVal ? cellColor : 'var(--theme-border)'}; background-color: ${cellVal ? hexToRgba(cellColor, 0.4) : 'var(--theme-bg)'}">
+                                ${cellVal || '<i class="fas fa-plus opacity-20"></i>'}
+                            </button>
+                        </td>`;
                     });
-                    html += `<td class="p-1 w-[40px] text-center"><button onclick="removeTTRow(${rIdx})" class="text-red-400 hover:text-red-600 w-7 h-7 spring-action"><i class="fas fa-trash-alt text-[10px]"></i></button></td>`;
+
+                    html += `<td class="p-1 w-[40px] text-center"><button onclick="removeTTRow(${rIdx})" class="text-red-400 hover:text-red-600 w-7 h-7 rounded-full hover:bg-red-50 spring-action"><i class="fas fa-trash-alt text-[10px]"></i></button></td>`;
                     tr.innerHTML = html;
-                } else {
-                    let html = `<td class="p-2 md:p-3 text-[9px] md:text-[11px] font-bold whitespace-nowrap opacity-60 sticky-col"><div>${row.startTime||''}</div><div>${row.endTime||''}</div></td>`;
-                    daysConfig.forEach(d => {
-                        const cellVal = row[d.key] || ''; const cellColor = (userSettings.subjects.find(s => s.name === cellVal) || {}).color || 'var(--theme-text-main)';
-                        const styleStr = cellVal ? `background-color: ${cellColor}; color: #1d1d1f; border-radius: 6px; padding: 3px 0;` : '';
-                        html += `<td class="p-1 text-[10px] md:text-[11px] font-bold min-w-[50px]"><div style="${styleStr}">${cellVal}</div></td>`;
-                    });
-                    tr.innerHTML = html;
+                    tbody.appendChild(tr);
+                });
+            }
+            document.getElementById('btn-sync-timetable').classList.toggle('hidden', globalTimetable.length === 0 || isEditingTimetable);
+        }
+        window.renderTimetableUI = renderTimetableUI;
+
+        function updateTT(idx, field, val) { userTimetable[idx][field] = val; }
+        window.updateTT = updateTT;
+
+        function removeTTRow(idx) { userTimetable.splice(idx, 1); renderTimetableUI(); }
+        window.removeTTRow = removeTTRow;
+
+        function openTTCellModal(rIdx, dayKey) { ttEditingCell = { row: rIdx, dayKey: dayKey }; document.getElementById('tt-cell-custom').value = ''; openModal('tt-cell-modal'); }
+        window.openTTCellModal = openTTCellModal;
+
+        function saveTTCellDirect(val) { userTimetable[ttEditingCell.row][ttEditingCell.dayKey] = val; closeModal('tt-cell-modal'); renderTimetableUI(); }
+        window.saveTTCellDirect = saveTTCellDirect;
+
+        function saveTTCellCustom() { const val = document.getElementById('tt-cell-custom').value.trim(); saveTTCellDirect(val); }
+        window.saveTTCellCustom = saveTTCellCustom;
+
+        async function saveTimetable() { if(!currentUser) return; await setDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'timetable', 'personal'), { data: JSON.stringify(userTimetable) }); showToast("時間表已儲存"); toggleTimetableMode(false); }
+        window.saveTimetable = saveTimetable;
+
+        async function saveGlobalTimetable() { if(!isAdmin) return; customConfirm('全校時間表', '確定要將目前畫面上的時間表發佈給全校嗎？', 'normal', async () => { await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'timetables', 'global'), { data: JSON.stringify(userTimetable) }); showToast("全校時間表已發佈"); }); }
+        window.saveGlobalTimetable = saveGlobalTimetable;
+
+        function syncGlobalTimetable() { if(globalTimetable.length === 0) return; customConfirm('同步時間表', '這將覆蓋你的個人修改，確定同步嗎？', 'danger', () => { userTimetable = JSON.parse(JSON.stringify(globalTimetable)); renderTimetableUI(); saveTimetable(); }); }
+        window.syncGlobalTimetable = syncGlobalTimetable;
+
+        // --- Live Class Widget Logic ---
+        let liveClassInterval = null;
+        function updateLiveClassWidget() {
+            const widget = document.getElementById('live-class-widget');
+            if(!widget) return;
+            
+            const tt = userTimetable.length > 0 ? userTimetable : globalTimetable;
+            if(tt.length === 0) { widget.style.display = 'none'; return; }
+            
+            const now = new Date(); let dayNum = now.getDay(); let dayKey = dayNum === 0 ? 'd7' : 'd' + dayNum;
+            const daysConfig = getTimetableDaysConfig();
+            
+            if(!daysConfig.find(d => d.key === dayKey)) {
+                widget.style.display = 'block';
+                document.getElementById('live-current-class').innerText = "放假中"; document.getElementById('live-next-class').innerText = "好好休息";
+                document.getElementById('live-timer-container').style.display = 'none'; document.getElementById('live-current-bg').style.backgroundColor = "var(--theme-bg)";
+                document.getElementById('live-current-bg').innerHTML = `<i class="fas fa-bed text-xl opacity-50" style="color: var(--theme-text-main)"></i>`;
+                document.getElementById('live-progress-bar').style.width = '0%';
+                return;
+            }
+            
+            let classesToday = tt.map(row => {
+                const sParts = (row.startTime||"00:00").split(':'); const eParts = (row.endTime||"00:00").split(':');
+                let start = new Date(now); start.setHours(parseInt(sParts[0]||0), parseInt(sParts[1]||0), 0, 0);
+                let end = new Date(now); end.setHours(parseInt(eParts[0]||0), parseInt(eParts[1]||0), 0, 0);
+                return { name: row[dayKey] || '空堂', start, end };
+            }).sort((a,b) => a.start - b.start);
+            
+            let currentState = "課堂已結束"; let nextState = "明日請早"; let countdownTarget = null;
+            let timerLabel = ""; let currentBgColor = "var(--theme-bg)";
+            let iconHtml = `<i class="fas fa-check-circle text-xl opacity-50" style="color: var(--theme-text-main)"></i>`;
+            let periodStart = null; let periodEnd = null; let isBreak = false;
+            
+            if(now < classesToday[0].start) {
+                currentState = "即將上課"; nextState = classesToday[0].name; countdownTarget = classesToday[0].start;
+                timerLabel = "距離上課"; iconHtml = `<i class="fas fa-clock text-xl opacity-50" style="color: var(--theme-text-main)"></i>`;
+            } else if (now > classesToday[classesToday.length-1].end) {
+                currentState = "今日課堂結束"; nextState = "明日請早";
+                document.getElementById('live-progress-bar').style.width = '100%';
+            } else {
+                for(let i=0; i<classesToday.length; i++) {
+                    let c = classesToday[i];
+                    if(now >= c.start && now < c.end) {
+                        currentState = c.name; nextState = (i+1 < classesToday.length) ? classesToday[i+1].name : "放學";
+                        countdownTarget = c.end; timerLabel = "距離下課"; periodStart = c.start; periodEnd = c.end;
+                        const sub = userSettings.subjects.find(s => s.name === currentState);
+                        if(currentState.includes('小息')) { currentBgColor = '#AAB7B8'; iconHtml = `<i class="fas fa-mug-hot text-lg" style="color: #1d1d1f"></i>`; isBreak = true; } 
+                        else if(currentState.includes('午膳')) { currentBgColor = '#FFB3BA'; iconHtml = `<i class="fas fa-utensils text-lg" style="color: #1d1d1f"></i>`; isBreak = true; } 
+                        else if(sub) { currentBgColor = sub.color; iconHtml = `<span class="text-lg font-black" style="color: #1d1d1f">${currentState.charAt(0)}</span>`; } 
+                        else { iconHtml = `<i class="fas fa-book-open text-xl opacity-50" style="color: var(--theme-text-main)"></i>`; }
+                        break;
+                    }
+                    if(i+1 < classesToday.length && now >= c.end && now < classesToday[i+1].start) {
+                        currentState = "小息 / 空堂"; nextState = classesToday[i+1].name;
+                        countdownTarget = classesToday[i+1].start; timerLabel = "距離上課";
+                        periodStart = c.end; periodEnd = classesToday[i+1].start; isBreak = true;
+                        iconHtml = `<i class="fas fa-mug-hot text-xl opacity-50" style="color: var(--theme-text-main)"></i>`;
+                        break;
+                    }
                 }
-                tbody.appendChild(tr);
-            });
-        };
+            }
+            
+            widget.style.display = 'block';
+            document.getElementById('live-current-class').innerText = currentState; document.getElementById('live-next-class').innerText = nextState;
+            document.getElementById('live-current-bg').style.backgroundColor = currentBgColor; document.getElementById('live-current-bg').innerHTML = iconHtml;
+            
+            const timerEl = document.getElementById('live-timer-container');
+            const progressEl = document.getElementById('live-progress-bar');
+            
+            if(countdownTarget) {
+                timerEl.style.display = 'flex';
+                let diff = Math.floor((countdownTarget - now) / 1000);
+                let h = Math.floor(diff / 3600); let m = Math.floor((diff % 3600) / 60); let s = diff % 60;
+                let timeStr = h > 0 ? `${h}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}` : `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+                document.getElementById('live-timer-label').innerText = timerLabel; document.getElementById('live-timer-value').innerText = timeStr;
+                
+                if (periodStart && periodEnd) {
+                    let total = periodEnd - periodStart;
+                    let current = now - periodStart;
+                    let pct = Math.max(0, Math.min(100, (current / total) * 100));
+                    progressEl.style.width = `${pct}%`;
+                    progressEl.style.backgroundColor = isBreak ? '#AAB7B8' : '#34c759'; // 若為小息則變換進度條顏色
+                } else {
+                    progressEl.style.width = '0%';
+                }
+            } else { 
+                timerEl.style.display = 'none'; 
+                if(!periodStart) progressEl.style.width = '0%';
+            }
+        }
 
-        window.toggleTimetableMode = (edit) => { isEditingTimetable = edit; document.getElementById('tt-view-actions').classList.toggle('hidden', edit); document.getElementById('tt-edit-actions').classList.toggle('hidden', !edit); renderTimetableUI(); };
-        window.updateTT = (idx, field, val) => { userTimetable[idx][field] = val; };
-        window.addTimetableRow = () => { userTimetable.push({startTime: '09:00', endTime: '09:35'}); renderTimetableUI(); };
-        window.removeTTRow = (idx) => { userTimetable.splice(idx, 1); renderTimetableUI(); };
-        window.openTTCellModal = (rIdx, dayKey) => { ttEditingCell = { row: rIdx, dayKey: dayKey }; document.getElementById('tt-cell-custom').value = ''; openModal('tt-cell-modal'); };
-        window.saveTTCellDirect = (val) => { userTimetable[ttEditingCell.row][ttEditingCell.dayKey] = val; closeModal('tt-cell-modal'); renderTimetableUI(); };
-        window.saveTTCellCustom = () => { const val = document.getElementById('tt-cell-custom').value.trim(); saveTTCellDirect(val); };
-        window.saveTimetable = async () => { if(currentUser) await setDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'timetable', 'personal'), { data: JSON.stringify(userTimetable) }); showToast("時間表已儲存"); toggleTimetableMode(false); };
+        function startLiveWidget() { if(liveClassInterval) clearInterval(liveClassInterval); updateLiveClassWidget(); liveClassInterval = setInterval(updateLiveClassWidget, 1000); }
 
-        window.renderSubjectsPage = () => {
+        function renderSubjectsPage() {
             const colorsContainer = document.getElementById('subject-color-picker'); colorsContainer.innerHTML = ''; const hiddenColor = document.getElementById('new-subject-color');
             subjectColors.forEach((hex, idx) => {
                 const btn = document.createElement('button'); btn.className = `w-7 h-7 rounded-full border-2 transition-transform spring-action ${idx===0 ? 'scale-110 shadow-md' : 'border-transparent'}`; btn.style.backgroundColor = hex;
@@ -560,13 +955,31 @@
                 if(isEnabled) listEnabled.insertAdjacentHTML('beforeend', html); else listDisabled.insertAdjacentHTML('beforeend', html);
             });
             buildCustomChips(); 
-        };
+        }
+        window.renderSubjectsPage = renderSubjectsPage;
 
-        window.toggleSubjectEnable = (id, isEnabled) => { const sub = userSettings.subjects.find(s => s.id === id); if(sub) { sub.enabled = isEnabled; saveSettings(); renderSubjectsPage(); } };
-        window.addSubject = () => { const name = document.getElementById('new-subject-name').value.trim(); if(!name) return; userSettings.subjects.push({ id: 'sub_' + Date.now(), name, color: document.getElementById('new-subject-color').value, enabled: true }); document.getElementById('new-subject-name').value = ''; saveSettings(); renderSubjectsPage(); showToast('已新增科目'); };
-        window.deleteSubject = (id) => { customConfirm('刪除科目', '確定要刪除此科目嗎？', 'danger', () => { userSettings.subjects = userSettings.subjects.filter(s => s.id !== id); saveSettings(); renderSubjectsPage(); }); };
+        function toggleSubjectEnable(id, isEnabled) { const sub = userSettings.subjects.find(s => s.id === id); if(sub) { sub.enabled = isEnabled; saveSettings(); renderSubjectsPage(); } }
+        window.toggleSubjectEnable = toggleSubjectEnable;
 
-        const renderHome = () => {
+        function addSubject() { const name = document.getElementById('new-subject-name').value.trim(); if(!name) return; userSettings.subjects.push({ id: 'sub_' + Date.now(), name, color: document.getElementById('new-subject-color').value, enabled: true }); document.getElementById('new-subject-name').value = ''; saveSettings(); renderSubjectsPage(); showToast('已新增科目'); }
+        window.addSubject = addSubject;
+
+        function deleteSubject(id) { customConfirm('刪除科目', '確定要刪除此科目嗎？', 'danger', () => { userSettings.subjects = userSettings.subjects.filter(s => s.id !== id); saveSettings(); renderSubjectsPage(); }); }
+        window.deleteSubject = deleteSubject;
+
+        function getCardBg(subName) {
+            const sub = userSettings.subjects.find(s => s.name === subName);
+            const color = sub ? sub.color : '#e5e5ea';
+            return userSettings.isDark ? hexToRgba(color, 0.15) : hexToRgba(color, 0.2);
+        }
+
+        function getSubjectHTML(subName) {
+            const sub = userSettings.subjects.find(s => s.name === subName);
+            const color = sub ? sub.color : '#e5e5ea';
+            return `<span class="px-2 py-0.5 rounded text-[9px] font-bold shadow-sm" style="background-color: ${color}; color: #1d1d1f;">${subName}</span>`;
+        }
+
+        function renderHome() {
             const listEl = document.getElementById('home-tasks-list'); const filterVal = document.getElementById('filter-subject').value;
             listEl.innerHTML = '';
             let filtered = allTasks.filter(t => filterVal === 'all' || t.subject === filterVal);
@@ -586,55 +999,97 @@
                         </div>
                     </div>`);
             });
-        };
+        }
+        window.renderHome = renderHome;
 
-        const renderHistory = () => {
+        function renderHistory() {
             const listEl = document.getElementById('history-tasks-list'); listEl.innerHTML = '';
             if(historyTasks.length === 0) { listEl.innerHTML = `<div class="text-center py-16 text-sm font-bold opacity-30">暫無歷史紀錄。</div>`; return; }
             historyTasks.forEach(task => { listEl.insertAdjacentHTML('beforeend', `<div class="premium-card p-4 opacity-50"><div class="flex justify-between items-start mb-2">${getSubjectHTML(task.subject)}<button onclick="deleteHistoryTask('${task.id}')" class="text-red-500 spring-action"><i class="fas fa-times"></i></button></div><p class="text-xs font-bold line-through">${task.content}</p><p class="text-[9px] mt-2 font-bold opacity-50">完成於: ${new Date(task.completedAt).toLocaleString()}</p></div>`); });
+        }
+        window.renderHistory = renderHistory;
+
+        document.getElementById('add-task-form').onsubmit = async (e) => {
+            e.preventDefault(); if(!currentUser) return;
+            const btn = e.target.querySelector('button[type="submit"]'); btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            const isPub = document.getElementById('task-broadcast').checked && isAdmin;
+            const task = { content: document.getElementById('task-content').value, subject: document.getElementById('task-subject').value, type: document.getElementById('task-type').value, dueDate: document.getElementById('task-date').value, createdAt: new Date().toISOString(), createdBy: currentUser.uid };
+            try { await addDoc(collection(db, 'artifacts', appId, isPub ? 'public/data/assignments' : `users/${currentUser.uid}/assignments`), task); document.getElementById('task-content').value = ''; document.getElementById('task-date').value = getNextWeekdayStr(); showToast("新增成功"); } catch(e) { showToast("新增失敗"); } finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-plus mr-1"></i> 新增'; }
         };
 
-        window.completeTask = async (id, isPub) => { const task = allTasks.find(t => t.id === id); if(!task) return; try { await addDoc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'history'), { ...task, completedAt: new Date().toISOString() }); await deleteDoc(doc(db, 'artifacts', appId, isPub ? 'public/data/assignments' : `users/${currentUser.uid}/assignments`, id)); showToast("任務已完成"); switchView('history'); } catch(e) { showToast("操作失敗"); } };
-        window.deleteTask = (id, isPub) => { customConfirm('刪除任務', '確定要徹底刪除此紀錄嗎？', 'danger', async () => { try { await deleteDoc(doc(db, 'artifacts', appId, isPub ? 'public/data/assignments' : `users/${currentUser.uid}/assignments`, id)); showToast("已刪除"); } catch(e) {} }); };
-        window.deleteHistoryTask = (id) => { customConfirm('清除紀錄', '徹底刪除此歷史紀錄？', 'danger', async () => { await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'history', id)); showToast("紀錄已刪除"); }); };
-        window.confirmClearHistory = () => { if(historyTasks.length === 0) return; customConfirm('徹底清空', '確定要清空所有紀錄嗎？', 'danger', () => { historyTasks.forEach(t => deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'history', t.id))); showToast("歷史紀錄已清空"); }); };
-        window.openEditModal = (id, isPub) => { const task = allTasks.find(t => t.id === id); if(!task) return; editingTaskId = id; editingTaskIsPublic = isPub; document.getElementById('edit-content').value = task.content; document.getElementById('edit-subject').value = task.subject; document.getElementById('edit-date').value = task.dueDate; updateChipStyles(); openModal('edit-modal'); };
-        window.saveEditTask = async () => { try { await updateDoc(doc(db, 'artifacts', appId, editingTaskIsPublic ? 'public/data/assignments' : `users/${currentUser.uid}/assignments`, editingTaskId), { content: document.getElementById('edit-content').value, subject: document.getElementById('edit-subject').value, dueDate: document.getElementById('edit-date').value }); showToast("修改成功"); closeModal('edit-modal'); } catch(e) { showToast("修改失敗"); } };
+        async function completeTask(id, isPub) { const task = allTasks.find(t => t.id === id); if(!task) return; try { await addDoc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'history'), { ...task, completedAt: new Date().toISOString() }); await deleteDoc(doc(db, 'artifacts', appId, isPub ? 'public/data/assignments' : `users/${currentUser.uid}/assignments`, id)); showToast("任務已完成"); switchView('history'); } catch(e) { showToast("操作失敗"); } }
+        window.completeTask = completeTask;
 
-        const setupDataListeners = () => {
+        function deleteTask(id, isPub) { customConfirm('刪除任務', '確定要徹底刪除此紀錄嗎？', 'danger', async () => { try { await deleteDoc(doc(db, 'artifacts', appId, isPub ? 'public/data/assignments' : `users/${currentUser.uid}/assignments`, id)); showToast("已刪除"); } catch(e) {} }); }
+        window.deleteTask = deleteTask;
+
+        function deleteHistoryTask(id) { customConfirm('清除紀錄', '徹底刪除此歷史紀錄？', 'danger', async () => { await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'history', id)); showToast("紀錄已刪除"); }); }
+        window.deleteHistoryTask = deleteHistoryTask;
+
+        function confirmClearHistory() { if(historyTasks.length === 0) return showToast("沒有紀錄可清除"); customConfirm('徹底清空', '確定要清空所有紀錄嗎？', 'danger', () => { historyTasks.forEach(t => deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'history', t.id))); showToast("歷史紀錄已清空"); }); }
+        window.confirmClearHistory = confirmClearHistory;
+
+        function openEditModal(id, isPub) { const task = allTasks.find(t => t.id === id); if(!task) return; editingTaskId = id; editingTaskIsPublic = isPub; document.getElementById('edit-content').value = task.content; document.getElementById('edit-subject').value = task.subject; document.getElementById('edit-date').value = task.dueDate; updateChipStyles(); openModal('edit-modal'); }
+        window.openEditModal = openEditModal;
+
+        async function saveEditTask() { try { await updateDoc(doc(db, 'artifacts', appId, editingTaskIsPublic ? 'public/data/assignments' : `users/${currentUser.uid}/assignments`, editingTaskId), { content: document.getElementById('edit-content').value, subject: document.getElementById('edit-subject').value, dueDate: document.getElementById('edit-date').value }); showToast("修改成功"); closeModal('edit-modal'); } catch(e) { showToast("修改失敗"); } }
+        window.saveEditTask = saveEditTask;
+
+        function setupDataListeners() {
             if(!currentUser) return;
-            onSnapshot(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'settings', 'profile'), docSnap => { if(docSnap.exists()) { const d = docSnap.data(); if(d.subjects) d.subjects = d.subjects.map(s => ({...s, enabled: s.enabled !== false})); userSettings = { ...userSettings, ...d }; } applyTheme(); renderSubjectsPage(); renderHome(); if(document.getElementById('view-timetable').classList.contains('active')) renderTimetableUI(); });
-            const processTasks = () => { allTasks = [...publicAssignments, ...privateAssignments].sort((a,b) => new Date(a.dueDate) - new Date(b.dueDate)); renderHome(); };
-            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'assignments'), s => { publicAssignments = []; s.forEach(d => publicAssignments.push({ id: d.id, ...d.data(), isPublic: true })); processTasks(); });
-            onSnapshot(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'assignments'), s => { privateAssignments = []; s.forEach(d => privateAssignments.push({ id: d.id, ...d.data(), isPublic: false })); processTasks(); });
-            onSnapshot(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'history'), s => { historyTasks = []; s.forEach(d => historyTasks.push({ id: d.id, ...d.data() })); historyTasks.sort((a,b) => new Date(b.completedAt) - new Date(a.completedAt)); renderHistory(); });
-            onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'timetables', 'global'), d => { if(d.exists() && d.data().data) globalTimetable = JSON.parse(d.data().data); renderTimetableUI(); });
-            onSnapshot(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'timetable', 'personal'), d => { if(d.exists() && d.data().data) userTimetable = JSON.parse(d.data().data); renderTimetableUI(); });
-        };
+            unsubSettings = onSnapshot(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'settings', 'profile'), docSnap => { if(docSnap.exists()) { const d = docSnap.data(); if(d.subjects) d.subjects = d.subjects.map(s => ({...s, enabled: s.enabled !== false})); userSettings = { ...userSettings, ...d }; } applyTheme(); renderSubjectsPage(); renderHome(); if(document.getElementById('view-timetable').classList.contains('active')) renderTimetableUI(); });
+            
+            function processTasks() { allTasks = [...publicAssignments, ...privateAssignments].sort((a,b) => new Date(a.dueDate) - new Date(b.dueDate)); renderHome(); }
 
-        window.loginGoogle = async () => { try { await signInWithPopup(auth, new GoogleAuthProvider()); } catch(e){ showToast("授權失敗"); } };
-        window.loginAnon = async () => { try { await signInAnonymously(auth); } catch(e){ showToast("進入失敗"); } };
-        window.handleLogout = () => signOut(auth);
-        const initAuth = async () => { if(typeof __initial_auth_token !== 'undefined' && __initial_auth_token) await signInWithCustomToken(auth, __initial_auth_token); };
+            unsubTasksPub = onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'assignments'), s => { publicAssignments = []; s.forEach(d => publicAssignments.push({ id: d.id, ...d.data(), isPublic: true })); processTasks(); });
+            unsubTasksPriv = onSnapshot(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'assignments'), s => { privateAssignments = []; s.forEach(d => privateAssignments.push({ id: d.id, ...d.data(), isPublic: false })); processTasks(); });
+
+            unsubHist = onSnapshot(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'history'), s => { historyTasks = []; s.forEach(d => historyTasks.push({ id: d.id, ...d.data() })); historyTasks.sort((a,b) => new Date(b.completedAt) - new Date(a.completedAt)); if(document.getElementById('view-history').classList.contains('active')) renderHistory(); });
+
+            unsubTTGlobal = onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'timetables', 'global'), d => { if(d.exists() && d.data().data) globalTimetable = JSON.parse(d.data().data); if(document.getElementById('view-timetable').classList.contains('active')) renderTimetableUI(); startLiveWidget(); });
+            unsubTTPriv = onSnapshot(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'timetable', 'personal'), d => { if(d.exists() && d.data().data) userTimetable = JSON.parse(d.data().data); if(document.getElementById('view-timetable').classList.contains('active')) renderTimetableUI(); startLiveWidget(); });
+        }
+
+        // --- Auth Email / Google ---
+        async function loginEmail() { const email = document.getElementById('auth-email').value.trim(); const pwd = document.getElementById('auth-pwd').value.trim(); if(!email || !pwd) return showToast('請填寫電郵與密碼'); try { await signInWithEmailAndPassword(auth, email, pwd); } catch(e) { showToast('登入失敗，請檢查帳號密碼'); } }
+        window.loginEmail = loginEmail;
+
+        async function registerEmail() { const email = document.getElementById('auth-email').value.trim(); const pwd = document.getElementById('auth-pwd').value.trim(); if(!email || !pwd) return showToast('請填寫電郵與密碼'); if(pwd.length < 6) return showToast('密碼最少需要 6 個字元'); try { await createUserWithEmailAndPassword(auth, email, pwd); showToast('註冊成功！'); } catch(e) { showToast('註冊失敗，電郵可能已被使用'); } }
+        window.registerEmail = registerEmail;
+
+        async function loginGoogle() { try { await signInWithPopup(auth, new GoogleAuthProvider()); } catch(e){ showToast("Google 登入失敗"); } }
+        window.loginGoogle = loginGoogle;
+
+        async function loginAnon() { try { await signInAnonymously(auth); } catch(e){ showToast("訪客登入失敗"); } }
+        window.loginAnon = loginAnon;
+
+        function handleLogout() { signOut(auth); }
+        window.handleLogout = handleLogout;
+
+        async function initAuth() { if(typeof __initial_auth_token !== 'undefined' && __initial_auth_token) await signInWithCustomToken(auth, __initial_auth_token); }
+
         onAuthStateChanged(auth, user => {
             currentUser = user;
+            const loginScreen = document.getElementById('login-screen');
             if (user) {
-                const loginScreen = document.getElementById('login-screen');
                 if (loginScreen) loginScreen.style.display = 'none';
                 document.getElementById('user-profile').classList.remove('hidden'); document.getElementById('user-profile').classList.add('flex');
-                const avatarUrl = user.photoURL || `https://ui-avatars.com/api/?name=${user.isAnonymous?'G':'U'}&background=1d1d1f&color=fff`;
+                const avatarUrl = user.photoURL || `https://ui-avatars.com/api/?name=${user.email ? user.email.charAt(0) : 'U'}&background=1d1d1f&color=fff`;
                 document.getElementById('user-avatar').src = avatarUrl; document.getElementById('profile-modal-avatar').src = avatarUrl;
-                document.getElementById('profile-modal-name').innerText = user.displayName || '學生帳戶'; document.getElementById('profile-modal-email').innerText = user.email || '未綁定電郵';
+                document.getElementById('profile-modal-name').innerText = user.displayName || '學生帳戶'; document.getElementById('profile-modal-email').innerText = user.email || '訪客預覽';
+
                 isAdmin = (user.email === ADMIN_EMAIL);
-                if(isAdmin) { document.getElementById('admin-badge').classList.remove('hidden'); }
+                if(isAdmin) { document.getElementById('admin-badge').classList.remove('hidden'); document.getElementById('broadcast-toggle-container').classList.remove('hidden'); document.getElementById('admin-timetable-controls').classList.remove('hidden'); }
                 const roleBadge = document.getElementById('profile-modal-role'); roleBadge.innerText = isAdmin ? '管理員 (Admin)' : '學生帳戶'; roleBadge.className = `mb-8 inline-block px-4 py-1.5 rounded-lg text-xs font-bold ${isAdmin ? 'bg-orange-100 text-orange-600' : 'bg-gray-100 text-gray-600'}`;
+                
+                initDefaultTimetableDay();
                 setupDataListeners(); switchView('home');
             } else {
-                const loginScreen = document.getElementById('login-screen');
-                if (loginScreen) loginScreen.style.display = 'flex';
+                if (loginScreen) loginScreen.style.display = 'flex'; closeModal('profile-modal');
                 isAdmin = false;
             }
         });
+
         initAuth();
     </script>
 </body>
