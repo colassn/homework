@@ -96,7 +96,7 @@
         .custom-chip { 
             cursor: pointer; user-select: none; border-radius: 12px; position: relative; 
             border: 1.5px solid transparent; font-weight: 600;
-            transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.3s ease;
         }
         .custom-chip.selected { font-weight: 800; transform: scale(1.04); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
 
@@ -107,14 +107,11 @@
         /* Auth Inputs */
         .auth-input { width: 100%; padding: 16px; border-radius: 16px; background-color: var(--theme-bg); border: 1px solid var(--theme-border); color: var(--theme-text-main); font-weight: 500; font-size: 14px; transition: all 0.2s ease;}
         .auth-input:focus { outline: none; border-color: var(--theme-accent); background-color: var(--theme-card); box-shadow: 0 0 0 3px rgba(134, 134, 139, 0.1);}
-
-        /* Timeline View Overrides */
-        .timeline-line { transition: background-color 0.3s ease; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col pb-24 md:pb-0 md:pl-24">
 
-    <!-- Side Nav -->
+    <!-- Side Nav (Desktop) -->
     <nav class="hidden md:flex flex-col fixed top-0 left-0 h-full w-24 bottom-nav z-40 items-center py-8 gap-8 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
         <div class="w-12 h-12 rounded-2xl bg-[#1d1d1f] text-white flex items-center justify-center text-xl mb-4 shadow-lg"><i class="fas fa-layer-group"></i></div>
         <button onclick="switchView('home')" class="nav-item active flex flex-col items-center gap-1.5 w-full spring-action" data-target="home"><i class="fas fa-home text-xl"></i><span class="text-[10px] font-bold">主頁</span></button>
@@ -122,6 +119,8 @@
         <button onclick="switchView('timetable')" class="nav-item flex flex-col items-center gap-1.5 w-full spring-action" data-target="timetable"><i class="fas fa-calendar-week text-xl"></i><span class="text-[10px] font-bold">時間表</span></button>
         <button onclick="switchView('subjects')" class="nav-item flex flex-col items-center gap-1.5 w-full spring-action" data-target="subjects"><i class="fas fa-book text-xl"></i><span class="text-[10px] font-bold">科目</span></button>
         <button onclick="switchView('settings')" class="nav-item flex flex-col items-center gap-1.5 w-full mt-auto spring-action" data-target="settings"><i class="fas fa-cog text-xl"></i><span class="text-[10px] font-bold">設定</span></button>
+        <!-- Admin Nav Button -->
+        <button id="nav-admin-btn-desktop" onclick="switchView('admin')" class="nav-item flex flex-col items-center gap-1.5 w-full spring-action hidden text-orange-500" data-target="admin"><i class="fas fa-shield-alt text-xl"></i><span class="text-[10px] font-bold">後台</span></button>
     </nav>
 
     <!-- Top Header -->
@@ -189,10 +188,11 @@
                         <input type="text" id="task-content" class="flex-1 minimal-input rounded-xl p-3.5 text-sm font-medium" placeholder="新增內容..." required>
                         <div class="flex gap-3">
                             <input type="date" id="task-date" class="w-full md:w-36 minimal-input rounded-xl p-3 text-xs font-bold cursor-pointer" required>
-                            <button type="submit" class="w-24 md:w-28 py-3 rounded-xl font-bold text-xs shadow-md shrink-0 bg-[#1d1d1f] text-white spring-action">新增</button>
+                            <button type="submit" class="w-24 md:w-28 py-3 rounded-xl font-bold text-xs shadow-md shrink-0 bg-[#1d1d1f] dark:bg-white text-white dark:text-black spring-action">新增</button>
                         </div>
                     </div>
 
+                    <!-- Broadcast Toggle -->
                     <div id="broadcast-toggle-container" class="hidden pt-1">
                         <label class="flex items-center justify-end cursor-pointer gap-2">
                             <span class="text-[10px] font-bold text-orange-500">全域廣播</span>
@@ -218,13 +218,13 @@
             <div id="history-tasks-list" class="space-y-3"></div>
         </section>
 
-        <!-- VIEW: TIMETABLE -->
+        <!-- VIEW: TIMETABLE (SINGLE DAY FOCUS) -->
         <section id="view-timetable" class="app-view space-y-5">
             <div class="flex justify-between items-center px-1">
                 <p class="text-sm font-bold" style="color: var(--theme-text-sub)">專注時間表</p>
                 <div id="tt-view-actions" class="flex gap-2">
                     <button onclick="syncGlobalTimetable()" class="bg-blue-500 text-white px-3 py-1.5 rounded-lg text-[11px] font-bold spring-action hidden" id="btn-sync-timetable">同步學校</button>
-                    <button onclick="toggleTimetableMode(true)" class="px-4 py-2 rounded-xl text-[11px] font-bold shadow-md bg-[#1d1d1f] text-white spring-action"><i class="fas fa-edit mr-1"></i> 修改</button>
+                    <button onclick="toggleTimetableMode(true)" class="px-4 py-2 rounded-xl text-[11px] font-bold shadow-md bg-[#1d1d1f] dark:bg-white text-white dark:text-black spring-action"><i class="fas fa-edit mr-1"></i> 修改</button>
                 </div>
                 <div id="tt-edit-actions" class="flex items-center gap-2 hidden">
                     <button onclick="toggleTimetableMode(false)" class="minimal-input px-3 py-2 rounded-lg text-[11px] font-bold spring-action">取消</button>
@@ -238,7 +238,7 @@
             <div id="admin-timetable-controls" class="hidden premium-card p-3 border border-orange-200 bg-orange-50/50">
                 <div class="flex justify-between items-center">
                     <span class="text-[11px] font-bold text-orange-600"><i class="fas fa-user-shield mr-1"></i> 管理員</span>
-                    <button onclick="saveGlobalTimetable()" class="bg-orange-500 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold shadow-sm">發佈至全校</button>
+                    <button onclick="saveGlobalTimetable()" class="bg-orange-500 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold shadow-sm spring-action">發佈至全校</button>
                 </div>
             </div>
 
@@ -309,7 +309,8 @@
         <!-- VIEW: SETTINGS -->
         <section id="view-settings" class="app-view space-y-6">
             <div class="premium-card p-6 space-y-6">
-                <div id="theme-color-section">
+                <!-- Theme Colors -->
+                <div id="theme-color-section" class="transition-opacity duration-300">
                     <h3 class="text-sm font-bold mb-3" style="color: var(--theme-text-sub)">介面色彩主題</h3>
                     <div class="flex gap-3 flex-wrap">
                         <button onclick="setThemeColor('light-blue')" class="w-10 h-10 rounded-full shadow-md border-4 theme-btn spring-action" data-color="light-blue" style="background-color: #f5f7fa; border-color: #1d1d1f"></button>
@@ -320,6 +321,7 @@
                     </div>
                 </div>
                 
+                <!-- Timetable Format Settings -->
                 <div class="border-t pt-5" style="border-color: var(--theme-border)">
                     <h4 class="text-sm font-bold mb-3" style="color: var(--theme-text-main)">時間表格式設定</h4>
                     <div class="flex flex-col gap-4">
@@ -365,6 +367,30 @@
                 </div>
             </div>
         </section>
+
+        <!-- VIEW: ADMIN -->
+        <section id="view-admin" class="app-view space-y-6">
+            <div class="premium-card p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-lg font-black tracking-tight"><i class="fas fa-shield-alt text-orange-500 mr-2"></i>全域廣播管理</h2>
+                    <span class="px-2 py-1 bg-orange-100 text-orange-600 rounded-md text-[10px] font-black tracking-wider">管理員專屬</span>
+                </div>
+                <div id="admin-broadcast-list" class="space-y-3">
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="premium-card p-5 cursor-pointer spring-action border-2 border-transparent hover:border-orange-500 transition-colors" onclick="switchView('timetable'); toggleTimetableMode(true);">
+                    <i class="fas fa-calendar-alt text-2xl text-orange-500 mb-3 block"></i>
+                    <h3 class="font-black text-sm mb-1">編輯全校時間表</h3>
+                    <p class="text-[10px] font-bold opacity-60">前往時間表頁面發佈全域更新</p>
+                </div>
+                <div class="premium-card p-5 cursor-pointer spring-action border-2 border-transparent hover:border-blue-500 transition-colors" onclick="switchView('home'); document.getElementById('task-content').focus();">
+                    <i class="fas fa-bullhorn text-2xl text-blue-500 mb-3 block"></i>
+                    <h3 class="font-black text-sm mb-1">發佈新廣播</h3>
+                    <p class="text-[10px] font-bold opacity-60">回到主頁勾選「全域廣播」發佈</p>
+                </div>
+            </div>
+        </section>
     </main>
 
     <!-- Mobile Bottom Nav -->
@@ -374,6 +400,7 @@
         <button onclick="switchView('timetable')" class="nav-item flex flex-col items-center gap-1 spring-action" data-target="timetable"><i class="fas fa-calendar-week text-xl"></i><span class="text-[9px] font-bold">時間表</span></button>
         <button onclick="switchView('subjects')" class="nav-item flex flex-col items-center gap-1 spring-action" data-target="subjects"><i class="fas fa-book text-xl"></i><span class="text-[9px] font-bold">科目</span></button>
         <button onclick="switchView('settings')" class="nav-item flex flex-col items-center gap-1 spring-action" data-target="settings"><i class="fas fa-cog text-xl"></i><span class="text-[9px] font-bold">設定</span></button>
+        <button id="nav-admin-btn-mobile" onclick="switchView('admin')" class="nav-item flex flex-col items-center gap-1 spring-action hidden text-orange-500" data-target="admin"><i class="fas fa-shield-alt text-xl"></i><span class="text-[9px] font-bold">後台</span></button>
     </nav>
 
     <!-- Login/Register Screen -->
@@ -443,17 +470,18 @@
         </div>
     </div>
 
+    <!-- Edit Task Modal -->
     <div id="edit-modal" class="custom-modal-overlay fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/40">
         <div class="custom-modal-content w-full max-w-sm rounded-[24px] p-6 shadow-2xl text-left border border-gray-200">
             <h3 class="text-lg font-bold mb-5">修改功課紀錄</h3>
-            <div class="space-y-5">
-                <div>
+            <div class="space-y-4">
+                <div class="w-full overflow-hidden">
                     <p class="text-[10px] font-bold uppercase tracking-wider mb-2 opacity-60">更改科目</p>
-                    <div id="subject-chips-edit" class="flex gap-2 overflow-x-auto pb-1 scrollbar-hide"></div>
+                    <div id="subject-chips-edit" class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide flex-nowrap w-full"></div>
                     <input type="hidden" id="edit-subject">
                 </div>
-                <input type="text" id="edit-content" class="w-full minimal-input rounded-xl p-3.5 text-sm font-medium">
-                <input type="date" id="edit-date" class="w-full minimal-input rounded-xl p-3.5 text-xs font-bold">
+                <input type="text" id="edit-content" class="w-full minimal-input rounded-xl p-3.5 text-sm font-medium box-border">
+                <input type="date" id="edit-date" class="w-full minimal-input rounded-xl p-3.5 text-xs font-bold box-border">
             </div>
             <div class="flex gap-3 mt-6">
                 <button onclick="closeModal('edit-modal')" class="flex-1 py-3.5 rounded-xl font-bold text-xs minimal-input spring-action">取消</button>
@@ -486,6 +514,7 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
+        // State
         let currentUser = null, isAdmin = false;
         const ADMIN_EMAIL = 'chimhinhin@gmail.com';
         
@@ -522,10 +551,12 @@
             { id: 'sub_hk_24', name: '設計與科技', color: '#B2D5D0', enabled: false }
         ];
 
+        const themeColors = { 'light-blue': { bg: '#f5f7fa', card: '#ffffff' }, 'pure-white': { bg: '#ffffff', card: '#f5f5f7' }, 'mint-green': { bg: '#f0fdf4', card: '#ffffff' }, 'soft-peach': { bg: '#fff1f2', card: '#ffffff' }, 'midnight-blue':{ bg: '#f0f4f8', card: '#ffffff' } };
+
         let userSettings = { theme: 'light-blue', isDark: false, ttMode: '5day', ttCycle: 5, ttPeriodMins: 35, ttBreakMins: 15, ttLunchMins: 50, subjects: defaultSubjects };
         let unsubTasksPub = null, unsubTasksPriv = null, unsubHist = null, unsubSettings = null, unsubTTGlobal = null, unsubTTPriv = null;
 
-        // --- Core Utility Functions (Hoisted) ---
+        // --- Core Utility Functions ---
         const todayStr = new Date().toLocaleDateString('en-CA');
         function getNextWeekdayStr() { let d = new Date(); let day = d.getDay(); d.setDate(d.getDate() + (day === 5 ? 3 : day === 6 ? 2 : 1)); return d.toLocaleDateString('en-CA'); }
         function getDaysDiffStr(dateStr) { const due = new Date(dateStr); const today = new Date(todayStr); const diffDays = Math.ceil((due - today) / (1000 * 60 * 60 * 24)); if(diffDays === 0) return '今天要交'; if(diffDays === 1) return '明天要交'; if(diffDays < 0) return `已過期 ${Math.abs(diffDays)} 天`; return `${diffDays} 天後交`; }
@@ -558,7 +589,7 @@
             document.getElementById(`view-${viewId}`).classList.add('active');
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             document.querySelectorAll(`.nav-item[data-target="${viewId}"]`).forEach(el => el.classList.add('active'));
-            const titles = { 'home':'主頁', 'history':'歷史紀錄', 'timetable':'時間表', 'subjects':'管理科目', 'settings':'系統設定' };
+            const titles = { 'home':'主頁', 'history':'歷史紀錄', 'timetable':'時間表', 'subjects':'管理科目', 'settings':'系統設定', 'admin':'後台管理' };
             document.getElementById('header-title').innerText = titles[viewId];
             document.getElementById('header-subtitle').innerText = new Date().toLocaleDateString('zh-HK', { month: 'short', day: 'numeric', weekday: 'short' });
             if(viewId === 'home') renderHome();
@@ -566,10 +597,9 @@
             if(viewId === 'timetable') renderTimetableUI();
             if(viewId === 'subjects') renderSubjectsPage();
             if(viewId === 'settings') updateTTModeChips();
+            if(viewId === 'admin') renderAdmin();
         }
         window.switchView = switchView;
-
-        const themeColors = { 'light-blue': { bg: '#f5f7fa', card: '#ffffff' }, 'pure-white': { bg: '#ffffff', card: '#f5f5f7' }, 'mint-green': { bg: '#f0fdf4', card: '#ffffff' }, 'soft-peach': { bg: '#fff1f2', card: '#ffffff' }, 'midnight-blue':{ bg: '#f0f4f8', card: '#ffffff' } };
 
         function applyTheme() {
             if(userSettings.isDark) { document.documentElement.setAttribute('data-theme', 'dark'); document.documentElement.style.removeProperty('--theme-bg'); document.documentElement.style.removeProperty('--theme-card'); document.getElementById('theme-color-section').style.display = 'none'; } 
@@ -916,7 +946,7 @@
                     let current = now - periodStart;
                     let pct = Math.max(0, Math.min(100, (current / total) * 100));
                     progressEl.style.width = `${pct}%`;
-                    progressEl.style.backgroundColor = isBreak ? '#AAB7B8' : '#34c759'; // 若為小息則變換進度條顏色
+                    progressEl.style.backgroundColor = isBreak ? '#AAB7B8' : '#34c759';
                 } else {
                     progressEl.style.width = '0%';
                 }
@@ -927,6 +957,7 @@
         }
 
         function startLiveWidget() { if(liveClassInterval) clearInterval(liveClassInterval); updateLiveClassWidget(); liveClassInterval = setInterval(updateLiveClassWidget, 1000); }
+        window.startLiveWidget = startLiveWidget;
 
         function renderSubjectsPage() {
             const colorsContainer = document.getElementById('subject-color-picker'); colorsContainer.innerHTML = ''; const hiddenColor = document.getElementById('new-subject-color');
@@ -987,14 +1018,31 @@
             filtered.forEach(task => {
                 const canEditDelete = task.createdBy === currentUser.uid || (task.isPublic && isAdmin);
                 const subColor = (userSettings.subjects.find(s=>s.name===task.subject)||{}).color||'#e5e5ea';
+                
+                const due = new Date(task.dueDate); due.setHours(0,0,0,0);
+                const todayDate = new Date(); todayDate.setHours(0,0,0,0);
+                const diffDays = Math.round((due - todayDate) / (1000 * 60 * 60 * 24));
+                let badgeHtml = '';
+                if (diffDays < 0) badgeHtml = `<span class="bg-red-100 text-red-600 px-2 py-1 rounded-md text-[10px] font-black tracking-widest shadow-sm border border-red-200">過期 ${Math.abs(diffDays)} 日</span>`;
+                else if (diffDays === 0) badgeHtml = `<span class="bg-red-500 text-white px-2 py-1 rounded-md text-[10px] font-black tracking-widest shadow-md animate-pulse">❗今天要交</span>`;
+                else if (diffDays === 1) badgeHtml = `<span class="bg-orange-100 text-orange-600 px-2 py-1 rounded-md text-[10px] font-black tracking-widest shadow-sm border border-orange-200">聽日要交</span>`;
+                else badgeHtml = `<span class="bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-gray-300 px-2 py-1 rounded-md text-[10px] font-black tracking-widest shadow-sm border border-gray-200 dark:border-zinc-700">餘 ${diffDays} 日</span>`;
+
                 listEl.insertAdjacentHTML('beforeend', `<div class="premium-card p-5 relative group" style="background-color: ${getCardBg(task.subject)}; border-left: 5px solid ${subColor};">
                         <div class="flex justify-between items-start mb-3">
-                            <div class="flex items-center gap-2">${getSubjectHTML(task.subject)}${task.type === 'test' ? `<span class="px-2 py-0.5 rounded text-[9px] font-bold bg-purple-100 text-purple-700">測驗</span>` : ''}</div>
+                            <div class="flex items-center gap-2">
+                                ${getSubjectHTML(task.subject)}
+                                ${task.type === 'test' ? `<span class="px-2 py-0.5 rounded text-[9px] font-bold bg-purple-100 text-purple-700">測驗</span>` : ''}
+                                ${badgeHtml}
+                            </div>
                             ${canEditDelete ? `<div class="flex gap-2"><button onclick="openEditModal('${task.id}', ${task.isPublic})" class="w-7 h-7 rounded-full bg-white/60 text-gray-600 flex items-center justify-center text-xs shadow-sm spring-action"><i class="fas fa-pen"></i></button><button onclick="deleteTask('${task.id}', ${task.isPublic})" class="w-7 h-7 rounded-full bg-white/60 text-red-500 flex items-center justify-center text-xs shadow-sm spring-action"><i class="fas fa-trash"></i></button></div>` : ''}
                         </div>
                         <p class="text-[15px] font-black leading-relaxed mb-4" style="color: var(--theme-text-main)">${task.content}</p>
                         <div class="flex justify-between items-end border-t pt-3 border-black/5">
-                            <div><p class="text-[10px] font-bold opacity-60"><i class="far fa-calendar mr-1"></i> ${task.dueDate} (${getDayOfWeek(task.dueDate)})</p><p class="text-[10px] font-black mt-1 ${task.dueDate < todayStr ? 'text-red-500' : 'text-gray-500'}">${getDaysDiffStr(task.dueDate)}</p></div>
+                            <div>
+                                <p class="text-[10px] font-bold opacity-60"><i class="far fa-calendar mr-1"></i> ${task.dueDate} (${getDayOfWeek(task.dueDate)})</p>
+                                ${task.isPublic ? `<p class="text-[10px] font-black mt-1 text-orange-500"><i class="fas fa-bullhorn"></i> 全域廣播</p>` : ''}
+                            </div>
                             <button onclick="completeTask('${task.id}', ${task.isPublic})" class="px-4 py-2 rounded-xl text-[11px] font-black shadow-md bg-black text-white spring-action"><i class="fas fa-check mr-1"></i> 完成</button>
                         </div>
                     </div>`);
@@ -1009,6 +1057,35 @@
         }
         window.renderHistory = renderHistory;
 
+        function renderAdmin() {
+            const listEl = document.getElementById('admin-broadcast-list');
+            if(!listEl) return;
+            listEl.innerHTML = '';
+            if (publicAssignments.length === 0) {
+                listEl.innerHTML = `<div class="text-center py-10 text-sm font-bold opacity-30">目前沒有活躍的全域廣播。</div>`;
+                return;
+            }
+            publicAssignments.forEach(task => {
+                const subColor = (userSettings.subjects.find(s=>s.name===task.subject)||{}).color||'#e5e5ea';
+                listEl.insertAdjacentHTML('beforeend', `
+                    <div class="flex items-center justify-between p-4 rounded-xl border border-gray-100 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-900/50 shadow-sm">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1.5">
+                                <span class="px-2 py-0.5 rounded text-[9px] font-bold" style="background-color: ${subColor}; color: #1d1d1f;">${task.subject}</span>
+                                <span class="text-[10px] font-bold text-gray-500">${task.dueDate} 到期</span>
+                            </div>
+                            <p class="text-sm font-black text-gray-800 dark:text-gray-200">${task.content}</p>
+                        </div>
+                        <div class="flex gap-2 shrink-0">
+                            <button onclick="openEditModal('${task.id}', true)" class="w-8 h-8 rounded-full bg-white dark:bg-zinc-700 text-gray-600 dark:text-gray-300 flex items-center justify-center spring-action shadow-sm"><i class="fas fa-pen text-xs"></i></button>
+                            <button onclick="deleteTask('${task.id}', true)" class="w-8 h-8 rounded-full bg-red-50 dark:bg-red-900/30 text-red-500 flex items-center justify-center spring-action shadow-sm"><i class="fas fa-trash text-xs"></i></button>
+                        </div>
+                    </div>
+                `);
+            });
+        }
+        window.renderAdmin = renderAdmin;
+
         document.getElementById('add-task-form').onsubmit = async (e) => {
             e.preventDefault(); if(!currentUser) return;
             const btn = e.target.querySelector('button[type="submit"]'); btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
@@ -1017,7 +1094,17 @@
             try { await addDoc(collection(db, 'artifacts', appId, isPub ? 'public/data/assignments' : `users/${currentUser.uid}/assignments`), task); document.getElementById('task-content').value = ''; document.getElementById('task-date').value = getNextWeekdayStr(); showToast("新增成功"); } catch(e) { showToast("新增失敗"); } finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-plus mr-1"></i> 新增'; }
         };
 
-        async function completeTask(id, isPub) { const task = allTasks.find(t => t.id === id); if(!task) return; try { await addDoc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'history'), { ...task, completedAt: new Date().toISOString() }); await deleteDoc(doc(db, 'artifacts', appId, isPub ? 'public/data/assignments' : `users/${currentUser.uid}/assignments`, id)); showToast("任務已完成"); switchView('history'); } catch(e) { showToast("操作失敗"); } }
+        async function completeTask(id, isPub) { 
+            const task = allTasks.find(t => t.id === id); 
+            if(!task) return; 
+            try { 
+                await addDoc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'history'), { ...task, completedAt: new Date().toISOString() }); 
+                await deleteDoc(doc(db, 'artifacts', appId, isPub ? 'public/data/assignments' : `users/${currentUser.uid}/assignments`, id)); 
+                showToast("任務已完成！紀錄已封存"); 
+            } catch(e) { 
+                showToast("操作失敗"); 
+            } 
+        }
         window.completeTask = completeTask;
 
         function deleteTask(id, isPub) { customConfirm('刪除任務', '確定要徹底刪除此紀錄嗎？', 'danger', async () => { try { await deleteDoc(doc(db, 'artifacts', appId, isPub ? 'public/data/assignments' : `users/${currentUser.uid}/assignments`, id)); showToast("已刪除"); } catch(e) {} }); }
@@ -1039,7 +1126,11 @@
             if(!currentUser) return;
             unsubSettings = onSnapshot(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'settings', 'profile'), docSnap => { if(docSnap.exists()) { const d = docSnap.data(); if(d.subjects) d.subjects = d.subjects.map(s => ({...s, enabled: s.enabled !== false})); userSettings = { ...userSettings, ...d }; } applyTheme(); renderSubjectsPage(); renderHome(); if(document.getElementById('view-timetable').classList.contains('active')) renderTimetableUI(); });
             
-            function processTasks() { allTasks = [...publicAssignments, ...privateAssignments].sort((a,b) => new Date(a.dueDate) - new Date(b.dueDate)); renderHome(); }
+            function processTasks() { 
+                allTasks = [...publicAssignments, ...privateAssignments].sort((a,b) => new Date(a.dueDate) - new Date(b.dueDate)); 
+                if(document.getElementById('view-home').classList.contains('active')) renderHome(); 
+                if(document.getElementById('view-admin') && document.getElementById('view-admin').classList.contains('active')) renderAdmin();
+            }
 
             unsubTasksPub = onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'assignments'), s => { publicAssignments = []; s.forEach(d => publicAssignments.push({ id: d.id, ...d.data(), isPublic: true })); processTasks(); });
             unsubTasksPriv = onSnapshot(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'assignments'), s => { privateAssignments = []; s.forEach(d => privateAssignments.push({ id: d.id, ...d.data(), isPublic: false })); processTasks(); });
@@ -1049,12 +1140,21 @@
             unsubTTGlobal = onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'timetables', 'global'), d => { if(d.exists() && d.data().data) globalTimetable = JSON.parse(d.data().data); if(document.getElementById('view-timetable').classList.contains('active')) renderTimetableUI(); startLiveWidget(); });
             unsubTTPriv = onSnapshot(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'timetable', 'personal'), d => { if(d.exists() && d.data().data) userTimetable = JSON.parse(d.data().data); if(document.getElementById('view-timetable').classList.contains('active')) renderTimetableUI(); startLiveWidget(); });
         }
+        window.setupDataListeners = setupDataListeners;
 
         // --- Auth Email / Google ---
-        async function loginEmail() { const email = document.getElementById('auth-email').value.trim(); const pwd = document.getElementById('auth-pwd').value.trim(); if(!email || !pwd) return showToast('請填寫電郵與密碼'); try { await signInWithEmailAndPassword(auth, email, pwd); } catch(e) { showToast('登入失敗，請檢查帳號密碼'); } }
+        async function loginEmail() {
+            const email = document.getElementById('auth-email').value.trim(); const pwd = document.getElementById('auth-pwd').value.trim();
+            if(!email || !pwd) return showToast('請填寫電郵與密碼');
+            try { await signInWithEmailAndPassword(auth, email, pwd); } catch(e) { showToast('登入失敗，請檢查帳號密碼'); }
+        }
         window.loginEmail = loginEmail;
 
-        async function registerEmail() { const email = document.getElementById('auth-email').value.trim(); const pwd = document.getElementById('auth-pwd').value.trim(); if(!email || !pwd) return showToast('請填寫電郵與密碼'); if(pwd.length < 6) return showToast('密碼最少需要 6 個字元'); try { await createUserWithEmailAndPassword(auth, email, pwd); showToast('註冊成功！'); } catch(e) { showToast('註冊失敗，電郵可能已被使用'); } }
+        async function registerEmail() {
+            const email = document.getElementById('auth-email').value.trim(); const pwd = document.getElementById('auth-pwd').value.trim();
+            if(!email || !pwd) return showToast('請填寫電郵與密碼'); if(pwd.length < 6) return showToast('密碼最少需要 6 個字元');
+            try { await createUserWithEmailAndPassword(auth, email, pwd); showToast('註冊成功！'); } catch(e) { showToast('註冊失敗，電郵可能已被使用'); }
+        }
         window.registerEmail = registerEmail;
 
         async function loginGoogle() { try { await signInWithPopup(auth, new GoogleAuthProvider()); } catch(e){ showToast("Google 登入失敗"); } }
@@ -1079,7 +1179,16 @@
                 document.getElementById('profile-modal-name').innerText = user.displayName || '學生帳戶'; document.getElementById('profile-modal-email').innerText = user.email || '訪客預覽';
 
                 isAdmin = (user.email === ADMIN_EMAIL);
-                if(isAdmin) { document.getElementById('admin-badge').classList.remove('hidden'); document.getElementById('broadcast-toggle-container').classList.remove('hidden'); document.getElementById('admin-timetable-controls').classList.remove('hidden'); }
+                if(isAdmin) { 
+                    document.getElementById('admin-badge').classList.remove('hidden'); 
+                    document.getElementById('broadcast-toggle-container').classList.remove('hidden'); 
+                    document.getElementById('admin-timetable-controls').classList.remove('hidden'); 
+                    const navDesktop = document.getElementById('nav-admin-btn-desktop'); if(navDesktop) navDesktop.classList.remove('hidden');
+                    const navMobile = document.getElementById('nav-admin-btn-mobile'); if(navMobile) navMobile.classList.remove('hidden');
+                } else {
+                    const navDesktop = document.getElementById('nav-admin-btn-desktop'); if(navDesktop) navDesktop.classList.add('hidden');
+                    const navMobile = document.getElementById('nav-admin-btn-mobile'); if(navMobile) navMobile.classList.add('hidden');
+                }
                 const roleBadge = document.getElementById('profile-modal-role'); roleBadge.innerText = isAdmin ? '管理員 (Admin)' : '學生帳戶'; roleBadge.className = `mb-8 inline-block px-4 py-1.5 rounded-lg text-xs font-bold ${isAdmin ? 'bg-orange-100 text-orange-600' : 'bg-gray-100 text-gray-600'}`;
                 
                 initDefaultTimetableDay();
