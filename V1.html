@@ -43,79 +43,157 @@
 
         /* 穩定順滑的頁面切換動畫 */
         .app-view { display: none; }
-        .app-view.active { display: block; animation: viewFadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .app-view.active { display: block; animation: viewFadeInUp 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
         @keyframes viewFadeInUp { 
-            from { opacity: 0; transform: translateY(12px); } 
-            to { opacity: 1; transform: translateY(0); } 
+            from { opacity: 0; transform: translateY(24px) scale(0.98); filter: blur(4px); } 
+            to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); } 
         }
 
         /* 列表階梯載入動畫 */
-        .stagger-item { opacity: 0; animation: viewFadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .stagger-item { opacity: 0; animation: viewFadeInUp 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
 
         /* Premium Cards */
         .premium-card {
             background-color: var(--theme-card);
-            border-radius: 24px;
-            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+            border-radius: 28px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04);
             border: 1px solid var(--theme-border);
-            transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
+        .premium-card:hover { box-shadow: 0 12px 48px rgba(0, 0, 0, 0.08); transform: translateY(-2px); }
 
         /* Inputs */
         .minimal-input {
             background-color: var(--theme-bg);
             color: var(--theme-text-main);
             border: 1px solid var(--theme-border); 
-            transition: all 0.2s ease;
+            transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
         .minimal-input:focus {
             background-color: var(--theme-card);
             border-color: var(--theme-accent);
             outline: none;
-            box-shadow: 0 0 0 3px rgba(134, 134, 139, 0.1);
+            box-shadow: 0 0 0 4px rgba(134, 134, 139, 0.15);
+            transform: translateY(-1px);
         }
         
         input[type="time"] { appearance: none; -webkit-appearance: none; }
-        input[type="time"]::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.6; }
+        input[type="time"]::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.6; transition: opacity 0.3s; }
+        input[type="time"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
         [data-theme="dark"] input[type="time"]::-webkit-calendar-picker-indicator { filter: invert(1); }
 
         /* Nav Active State */
-        .nav-item { color: var(--theme-text-sub); transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
-        .nav-item.active { color: var(--theme-accent); transform: scale(1.15); }
+        .nav-item { color: var(--theme-text-sub); transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .nav-item.active { color: var(--theme-accent); transform: scale(1.15) translateY(-3px); filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1)); }
 
-        /* Custom Modals 開關動畫 */
-        .custom-modal-overlay { opacity: 0; visibility: hidden; transition: all 0.3s ease; backdrop-filter: blur(8px); }
+        /* Custom Modals 開關動畫 (人體工學底部抽屜設計) */
+        .custom-modal-overlay { opacity: 0; visibility: hidden; transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); display: flex; align-items: center; justify-content: center; }
         .custom-modal-overlay.active { opacity: 1; visibility: visible; }
-        .custom-modal-content { transform: scale(0.95) translateY(10px); opacity: 0; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); background-color: var(--theme-card); }
-        .custom-modal-overlay.active .custom-modal-content { transform: scale(1) translateY(0); opacity: 1; }
+        .custom-modal-content { background-color: var(--theme-card); transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); box-shadow: 0 24px 64px rgba(0,0,0,0.2); }
+        
+        @media (max-width: 768px) {
+            .custom-modal-overlay { align-items: flex-end; padding: 0; }
+            .custom-modal-content { transform: translateY(100%); border-radius: 36px 36px 0 0; width: 100% !important; max-width: 100% !important; margin: 0; padding-top: 36px; padding-bottom: calc(env(safe-area-inset-bottom) + 24px); position: relative; }
+            .custom-modal-content::before { content: ''; position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: 48px; height: 6px; border-radius: 100px; background-color: var(--theme-border); }
+            .custom-modal-overlay.active .custom-modal-content { transform: translateY(0); }
+        }
+        @media (min-width: 769px) {
+            .custom-modal-content { transform: scale(0.9) translateY(20px); opacity: 0; border-radius: 32px; }
+            .custom-modal-overlay.active .custom-modal-content { transform: scale(1) translateY(0); opacity: 1; }
+        }
 
         /* Toast */
-        #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; align-items: center; gap: 8px;}
-        .toast { background-color: var(--theme-accent); color: var(--theme-accent-text); transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); transform: translateY(-20px) scale(0.9); opacity: 0; border-radius: 100px; padding: 12px 24px; font-weight: 600; font-size: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);}
+        #toast-container { position: fixed; top: env(safe-area-inset-top, 20px); left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none;}
+        .toast { background-color: var(--theme-accent); color: var(--theme-accent-text); transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); transform: translateY(-30px) scale(0.8); opacity: 0; border-radius: 100px; padding: 14px 28px; font-weight: 700; font-size: 14px; box-shadow: 0 12px 40px rgba(0,0,0,0.2); backdrop-filter: blur(12px); }
         .toast.show { transform: translateY(0) scale(1); opacity: 1; }
 
-        /* Global Spring Animation */
-        .spring-action { transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important; will-change: transform; }
-        .spring-action:active { transform: scale(0.92) !important; }
+        /* Global Spring Animation (極速觸控優化) */
+        .spring-action { 
+            transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease !important; 
+            will-change: transform; 
+            cursor: pointer; 
+            touch-action: manipulation; /* 禁用雙擊縮放延遲 */
+            -webkit-tap-highlight-color: transparent;
+        }
+        /* 按下瞬間極速壓縮 (0.01s 零延遲) */
+        .spring-action:active { 
+            transform: scale(0.92) !important; 
+            filter: brightness(0.9); 
+            opacity: 0.9;
+            transition: all 0.01s ease !important; /* 瞬間觸發 */
+        }
+        .spring-action:hover { filter: brightness(1.05); }
 
         /* Custom Chips */
         .custom-chip { 
-            cursor: pointer; user-select: none; border-radius: 12px; position: relative; 
-            border: 1.5px solid transparent; font-weight: 600;
-            transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.3s ease;
+            cursor: pointer; user-select: none; border-radius: 16px; position: relative; 
+            border: 1.5px solid transparent; font-weight: 700;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            touch-action: manipulation;
         }
-        .custom-chip.selected { font-weight: 800; transform: scale(1.04); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+        .custom-chip.selected { transform: scale(1.05); box-shadow: 0 6px 16px rgba(0,0,0,0.08); }
+        .custom-chip:hover:not(.selected) { background-color: var(--theme-border) !important; transform: translateY(-1px); }
+        .custom-chip:active { transform: scale(0.9) !important; transition: all 0.01s ease !important; filter: brightness(0.9); }
+
+        /* iOS Toggle Switch - 極速物理形變動畫 */
+        .ios-toggle { position: relative; display: inline-flex; align-items: center; cursor: pointer; flex-shrink: 0; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+        .ios-toggle input { display: none; }
+        .ios-toggle .toggle-track { width: 52px; height: 30px; background-color: var(--theme-border); border-radius: 999px; transition: background-color 0.2s ease; position: relative; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); will-change: background-color; }
+        .ios-toggle .toggle-thumb { position: absolute; top: 2px; left: 2px; width: 26px; height: 26px; background-color: #ffffff; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.15), 0 1px 2px rgba(0,0,0,0.1); transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1); will-change: transform, width; }
+        .ios-toggle input:checked + .toggle-track { background-color: #34c759; }
+        .ios-toggle input:checked + .toggle-track .toggle-thumb { transform: translateX(22px); }
+        
+        /* 核心細節：按壓時 Toggle 圓球會被拉長，還原真實橡膠手感 */
+        .ios-toggle:active .toggle-thumb { width: 34px; transition: all 0.1s ease; }
+        .ios-toggle input:checked:active + .toggle-track .toggle-thumb { transform: translateX(14px); }
+
+        [data-theme="dark"] .ios-toggle .toggle-track { background-color: rgba(255,255,255,0.15); }
+        [data-theme="dark"] .ios-toggle input:checked + .toggle-track { background-color: #30d158; }
+
+        /* 硬體加速水波紋特效 */
+        .tap-splash {
+            position: fixed;
+            width: 40px;
+            height: 40px;
+            margin-top: -20px;
+            margin-left: -20px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 999999;
+            animation: splash-anim 0.4s cubic-bezier(0.1, 0.8, 0.2, 1) forwards;
+            will-change: transform, opacity;
+        }
+        @keyframes splash-anim {
+            0% { transform: scale(0.3); opacity: 0.8; }
+            100% { transform: scale(4); opacity: 0; }
+        }
 
         ::-webkit-scrollbar { display: none; }
         * { -ms-overflow-style: none; scrollbar-width: none; }
 
-        .auth-input { width: 100%; padding: 16px; border-radius: 16px; background-color: var(--theme-bg); border: 1px solid var(--theme-border); color: var(--theme-text-main); font-weight: 500; font-size: 14px; transition: all 0.2s ease;}
-        .auth-input:focus { outline: none; border-color: var(--theme-accent); background-color: var(--theme-card); box-shadow: 0 0 0 3px rgba(134, 134, 139, 0.1);}
+        /* Smooth Horizontal Scrolling */
+        .scroll-smooth-x { overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scroll-behavior: smooth; }
+        .scroll-smooth-x::-webkit-scrollbar { display: none; }
+        .scroll-smooth-x > * { scroll-snap-align: center; }
+
+        .auth-input { width: 100%; padding: 18px; border-radius: 20px; background-color: var(--theme-bg); border: 1px solid var(--theme-border); color: var(--theme-text-main); font-weight: 600; font-size: 15px; transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);}
+        .auth-input:focus { outline: none; border-color: var(--theme-accent); background-color: var(--theme-card); box-shadow: 0 0 0 4px rgba(134, 134, 139, 0.15); transform: translateY(-2px);}
 
         .animate-marquee { display: inline-block; padding-left: 100%; animation: marquee 15s linear infinite; }
         @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
         .glow-effect { animation: glow 2s ease-in-out infinite alternate; }
-        @keyframes glow { from { box-shadow: 0 0 5px rgba(251, 191, 36, 0.2); } to { box-shadow: 0 0 20px rgba(251, 191, 36, 0.6); } }
+        @keyframes glow { from { box-shadow: 0 0 5px rgba(251, 191, 36, 0.2); } to { box-shadow: 0 0 24px rgba(251, 191, 36, 0.5); } }
+
+        /* View Transitions 平滑跨區塊飛行參數 */
+        ::view-transition-group(*) {
+            animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+            animation-duration: 0.4s;
+        }
+        ::view-transition-old(*),
+        ::view-transition-new(*) {
+            animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+            animation-duration: 0.4s;
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col pb-[100px] md:pb-[120px] relative overflow-x-hidden">
@@ -128,7 +206,7 @@
     </div>
 
     <!-- Floating Dock Nav (Desktop) -->
-    <nav class="hidden md:flex flex-row fixed bottom-8 left-1/2 -translate-x-1/2 h-[auto] py-3 px-4 rounded-[32px] bg-white/80 dark:bg-[#1c1c1e]/80 backdrop-blur-3xl border border-gray-200/50 dark:border-zinc-700/50 shadow-2xl z-40 items-center gap-2">
+    <nav class="hidden md:flex flex-row fixed bottom-8 left-1/2 -translate-x-1/2 h-[auto] py-4 px-6 rounded-[36px] bg-white/80 dark:bg-[#1c1c1e]/80 backdrop-blur-3xl border border-gray-200/50 dark:border-zinc-700/50 shadow-[0_12px_40px_rgba(0,0,0,0.12)] z-40 items-center gap-3">
         <button onclick="switchView('home')" class="nav-item active group relative w-12 h-12 flex items-center justify-center rounded-2xl hover:bg-black/5 dark:hover:bg-white/10 spring-action" data-target="home">
             <i class="fas fa-home text-[22px]"></i>
             <span class="absolute -top-12 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-black/90 dark:bg-white/90 text-white dark:text-black text-xs font-bold rounded-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md">主頁</span>
@@ -159,7 +237,7 @@
     </nav>
 
     <!-- Floating Dock Nav (Mobile) -->
-    <nav class="md:hidden fixed bottom-6 left-6 right-6 rounded-[28px] bg-white/85 dark:bg-[#1c1c1e]/85 backdrop-blur-3xl border border-gray-200/50 dark:border-zinc-700/50 z-40 px-6 flex justify-between items-center h-[72px] shadow-[0_10px_40px_rgba(0,0,0,0.08)]">
+    <nav class="md:hidden fixed bottom-6 left-4 right-4 rounded-[36px] bg-white/85 dark:bg-[#1c1c1e]/85 backdrop-blur-3xl border border-gray-200/50 dark:border-zinc-700/50 z-40 px-6 flex justify-between items-center h-[76px] shadow-[0_16px_48px_rgba(0,0,0,0.15)]">
         <button onclick="switchView('home')" class="nav-item active flex items-center justify-center w-12 h-12 spring-action" data-target="home"><i class="fas fa-home text-[22px]"></i></button>
         <button onclick="switchView('history')" class="nav-item flex items-center justify-center w-12 h-12 spring-action" data-target="history"><i class="fas fa-history text-[22px]"></i></button>
         <button onclick="switchView('timetable')" class="nav-item flex items-center justify-center w-12 h-12 spring-action" data-target="timetable"><i class="fas fa-calendar-week text-[22px]"></i></button>
@@ -222,30 +300,33 @@
                             <button type="button" class="type-toggle-btn text-[var(--theme-text-sub)] flex-1 py-1.5 rounded-lg text-[11px] font-bold spring-action" data-val="test" onclick="setTaskType('test', this)">測驗</button>
                             <input type="hidden" id="task-type" value="homework">
                         </div>
-                        <div id="subject-chips-add" class="flex gap-2 overflow-x-auto scrollbar-hide pb-1 flex-1 items-center"></div>
+                        <div id="subject-chips-add" class="flex gap-2 scroll-smooth-x pb-1 flex-1 items-center"></div>
                         <input type="hidden" id="task-subject" required>
                     </div>
                     
                     <div class="flex flex-col gap-3">
-                        <textarea id="task-content" rows="2" class="w-full minimal-input rounded-xl p-3.5 text-sm font-medium resize-none" placeholder="新增內容... (支援多行排版)" required></textarea>
+                        <textarea id="task-content" rows="3" class="w-full minimal-input rounded-2xl p-4 text-[15px] font-medium resize-none shadow-sm" placeholder="新增內容... (支援多行排版)" required></textarea>
                         
                         <div class="flex flex-col md:flex-row gap-3">
-                            <input type="url" id="task-url" class="flex-1 minimal-input rounded-xl p-3 text-xs font-medium" placeholder="附加連結 (選填，例如 Google Form 連結)">
+                            <input type="url" id="task-url" class="flex-1 minimal-input rounded-xl p-3.5 text-xs font-medium" placeholder="附加連結 (選填，例如 Google Form 連結)">
                             <div class="flex gap-3">
-                                <label class="flex items-center justify-center gap-1.5 px-3 minimal-input rounded-xl cursor-pointer spring-action shrink-0">
-                                    <input type="checkbox" id="task-important" class="w-3.5 h-3.5 accent-yellow-500 rounded">
-                                    <span class="text-xs font-bold text-yellow-600 dark:text-yellow-500">標記重要</span>
+                                <label class="flex items-center justify-center gap-2 px-4 minimal-input rounded-xl cursor-pointer spring-action shrink-0 shadow-sm">
+                                    <input type="checkbox" id="task-important" class="w-4 h-4 accent-yellow-500 rounded">
+                                    <span class="text-[13px] font-black text-yellow-600 dark:text-yellow-500">標記重要</span>
                                 </label>
-                                <input type="date" id="task-date" class="w-full md:w-36 minimal-input rounded-xl p-3 text-xs font-bold cursor-pointer" required>
-                                <button type="submit" class="w-24 md:w-28 py-3 rounded-xl font-bold text-xs shadow-md shrink-0 bg-[#1d1d1f] dark:bg-white text-white dark:text-black spring-action">新增</button>
+                                <input type="date" id="task-date" class="w-full md:w-40 minimal-input rounded-xl p-3.5 text-[13px] font-bold cursor-pointer" required>
+                                <button type="submit" class="w-28 md:w-32 py-3.5 rounded-xl font-black text-[13px] shadow-md shrink-0 bg-[#1d1d1f] dark:bg-white text-white dark:text-black spring-action">新增任務</button>
                             </div>
                         </div>
                     </div>
 
                     <div id="broadcast-toggle-container" class="hidden pt-1 border-t border-dashed mt-2" style="border-color: var(--theme-border);">
-                        <label class="flex items-center justify-end cursor-pointer gap-2 pt-2">
-                            <span class="text-[10px] font-bold text-orange-500">發佈為全域廣播 (全校可見)</span>
-                            <input type="checkbox" id="task-broadcast" class="w-4 h-4 accent-orange-500 rounded">
+                        <label class="flex items-center justify-end cursor-pointer gap-3 pt-3 pb-1">
+                            <span class="text-[11px] font-black text-orange-500">發佈為全域廣播 (全校可見)</span>
+                            <div class="ios-toggle spring-action scale-90 origin-right">
+                                <input type="checkbox" id="task-broadcast">
+                                <div class="toggle-track"><div class="toggle-thumb"></div></div>
+                            </div>
                         </label>
                     </div>
                 </form>
@@ -253,7 +334,7 @@
             
             <div>
                 <h2 class="text-lg font-bold tracking-tight mb-3 px-1">未來任務</h2>
-                <div id="subject-chips-filter" class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide px-1"></div>
+                <div id="subject-chips-filter" class="flex gap-2 scroll-smooth-x pb-2 px-1"></div>
                 <input type="hidden" id="filter-subject" value="all">
                 <div id="home-tasks-list" class="space-y-3 mt-2"></div>
             </div>
@@ -281,7 +362,7 @@
                     <button onclick="saveTimetable()" class="px-4 py-2 rounded-lg text-[11px] font-bold shadow-md bg-green-500 text-white spring-action"><i class="fas fa-save"></i> 儲存</button>
                 </div>
             </div>
-            <div id="timetable-day-selector" class="flex gap-2 overflow-x-auto scrollbar-hide pb-2 px-1"></div>
+            <div id="timetable-day-selector" class="flex gap-2 scroll-smooth-x pb-2 px-1"></div>
             
             <div id="admin-timetable-controls" class="hidden premium-card p-3 border border-orange-200 bg-orange-50/50">
                 <div class="flex justify-between items-center">
@@ -400,10 +481,9 @@
                 
                 <div class="flex items-center justify-between border-t pt-6" style="border-color: var(--theme-border)">
                     <div><h4 class="text-sm font-bold">深色模式</h4><p class="text-[10px] opacity-60">完全沉浸式深黑體驗</p></div>
-                    <!-- Tailwind Native Toggle for Dark Mode -->
-                    <label class="relative inline-flex items-center cursor-pointer shrink-0">
-                        <input type="checkbox" id="dark-mode-toggle" class="sr-only peer" onchange="toggleDarkMode(this.checked)">
-                        <div class="w-11 h-6 bg-gray-300 dark:bg-zinc-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                    <label class="ios-toggle spring-action">
+                        <input type="checkbox" id="dark-mode-toggle" onchange="toggleDarkMode(this.checked)">
+                        <div class="toggle-track"><div class="toggle-thumb"></div></div>
                     </label>
                 </div>
             </div>
@@ -411,7 +491,7 @@
 
         <!-- VIEW: ADMIN -->
         <section id="view-admin" class="app-view space-y-6">
-            <div class="flex gap-2 overflow-x-auto scrollbar-hide px-1 pb-1">
+            <div class="flex gap-2 scroll-smooth-x px-1 pb-1">
                 <button class="admin-tab-btn custom-chip selected px-4 py-2 text-xs font-bold spring-action flex-shrink-0" style="background-color: var(--theme-text-main); color: var(--theme-card); border-color: var(--theme-text-main);" onclick="switchAdminTab('overview')">系統概覽</button>
                 <button class="admin-tab-btn custom-chip px-4 py-2 text-xs font-bold spring-action flex-shrink-0" style="background-color: transparent; color: var(--theme-text-sub); border: 1px solid var(--theme-text-sub);" onclick="switchAdminTab('users')">用戶管理</button>
                 <button class="admin-tab-btn custom-chip px-4 py-2 text-xs font-bold spring-action flex-shrink-0" style="background-color: transparent; color: var(--theme-text-sub); border: 1px solid var(--theme-text-sub);" onclick="switchAdminTab('broadcasts')">廣播任務</button>
@@ -499,10 +579,9 @@
                 <div class="premium-card p-6">
                     <div class="flex items-center justify-between mb-2">
                         <div class="flex items-center gap-2"><i class="fas fa-broom text-blue-500 text-lg"></i><h3 class="font-black text-sm">自動清理歷史紀錄</h3></div>
-                        <!-- Tailwind Native Toggle -->
-                        <label class="relative inline-flex items-center cursor-pointer shrink-0">
-                            <input type="checkbox" id="admin-autoclean-toggle" class="sr-only peer" onchange="toggleAdminSetting('autoClean', this.checked)">
-                            <div class="w-11 h-6 bg-gray-300 dark:bg-zinc-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                        <label class="ios-toggle spring-action">
+                            <input type="checkbox" id="admin-autoclean-toggle" onchange="toggleAdminSetting('autoClean', this.checked)">
+                            <div class="toggle-track"><div class="toggle-thumb"></div></div>
                         </label>
                     </div>
                     <p class="text-xs font-bold opacity-60">開啟後，系統會自動在背景刪除學生端完成時間超過 3 天的紀錄，大幅節省資料庫空間與成本。</p>
@@ -511,10 +590,9 @@
                 <div class="premium-card p-6">
                     <div class="flex items-center justify-between mb-4 pb-4 border-b" style="border-color: var(--theme-border);">
                         <div class="flex items-center gap-2"><i class="fas fa-shield-check text-green-500 text-lg"></i><h3 class="font-black text-sm">白名單系統</h3></div>
-                        <!-- Tailwind Native Toggle -->
-                        <label class="relative inline-flex items-center cursor-pointer shrink-0">
-                            <input type="checkbox" id="admin-whitelist-toggle" class="sr-only peer" onchange="toggleAdminSetting('whitelist', this.checked)">
-                            <div class="w-11 h-6 bg-gray-300 dark:bg-zinc-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                        <label class="ios-toggle spring-action">
+                            <input type="checkbox" id="admin-whitelist-toggle" onchange="toggleAdminSetting('whitelist', this.checked)">
+                            <div class="toggle-track"><div class="toggle-thumb"></div></div>
                         </label>
                     </div>
                     <div class="flex gap-2 mb-4">
@@ -531,10 +609,9 @@
                 <div class="premium-card p-6">
                     <div class="flex items-center justify-between mb-4 pb-4 border-b" style="border-color: var(--theme-border);">
                         <div class="flex items-center gap-2"><i class="fas fa-ban text-red-500 text-lg"></i><h3 class="font-black text-sm">黑名單系統</h3></div>
-                        <!-- Tailwind Native Toggle -->
-                        <label class="relative inline-flex items-center cursor-pointer shrink-0">
-                            <input type="checkbox" id="admin-blacklist-toggle" class="sr-only peer" onchange="toggleAdminSetting('blacklist', this.checked)">
-                            <div class="w-11 h-6 bg-gray-300 dark:bg-zinc-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500"></div>
+                        <label class="ios-toggle spring-action">
+                            <input type="checkbox" id="admin-blacklist-toggle" onchange="toggleAdminSetting('blacklist', this.checked)">
+                            <div class="toggle-track"><div class="toggle-thumb"></div></div>
                         </label>
                     </div>
                     <div class="flex gap-2 mb-4">
@@ -681,12 +758,12 @@
             <div class="space-y-4">
                 <div class="w-full overflow-hidden">
                     <p class="text-[10px] font-bold uppercase tracking-wider mb-2 opacity-60">更改科目</p>
-                    <div id="subject-chips-edit" class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide flex-nowrap w-full"></div>
+                    <div id="subject-chips-edit" class="flex gap-2 scroll-smooth-x pb-2 flex-nowrap w-full"></div>
                     <input type="hidden" id="edit-subject">
                 </div>
-                <textarea id="edit-content" rows="2" class="w-full minimal-input rounded-xl p-3.5 text-sm font-medium resize-none box-border"></textarea>
-                <input type="url" id="edit-url" class="w-full minimal-input rounded-xl p-3.5 text-xs font-medium box-border" placeholder="附加連結 (可選)">
-                <input type="date" id="edit-date" class="w-full minimal-input rounded-xl p-3.5 text-xs font-bold box-border">
+                <textarea id="edit-content" rows="3" class="w-full minimal-input rounded-2xl p-4 text-[15px] font-medium resize-none box-border"></textarea>
+                <input type="url" id="edit-url" class="w-full minimal-input rounded-xl p-4 text-xs font-medium box-border" placeholder="附加連結 (可選)">
+                <input type="date" id="edit-date" class="w-full minimal-input rounded-xl p-4 text-[13px] font-bold box-border">
             </div>
             <div class="flex gap-3 mt-6">
                 <button onclick="closeModal('edit-modal')" class="flex-1 py-3.5 rounded-xl font-bold text-xs minimal-input spring-action">取消</button>
@@ -707,13 +784,40 @@
 
     <div id="toast-container"></div>
 
+    <!-- 全局觸控/點擊回饋系統 (Haptic & Visual Splash GPU 加速版) -->
+    <script>
+        document.addEventListener('pointerdown', function(e) {
+            const target = e.target.closest('.spring-action, button, .custom-chip, .ios-toggle, a');
+            if(!target) return;
+            
+            // 1. 手機硬體震動回饋 (Haptic Engine)
+            if (navigator.vibrate) {
+                // 使用更短的 10ms 震動，營造更清脆的「噠」聲手感
+                navigator.vibrate(10);
+            }
+
+            // 2. 視覺水波紋 (純 CSS GPU 加速)
+            const splash = document.createElement('div');
+            splash.className = 'tap-splash';
+            splash.style.left = `${e.clientX}px`;
+            splash.style.top = `${e.clientY}px`;
+            splash.style.backgroundColor = document.documentElement.getAttribute('data-theme') === 'dark' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)';
+            
+            // 直接插入 DOM，交給 CSS @keyframes 處理，不阻塞 JS 主線程
+            document.body.appendChild(splash);
+            
+            // 動畫結束後移除 DOM
+            setTimeout(() => splash.remove(), 400);
+        }, { passive: true }); // 使用 passive 提升滑動與點擊的偵測效能
+    </script>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, signInAnonymously, onAuthStateChanged, signOut, signInWithCustomToken, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, query, onSnapshot, addDoc, deleteDoc, doc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // ==========================================
-        // ⚠️ 重要：請在此處填入你自己的 Firebase Config
+        // Firebase Config 初始化
         // ==========================================
         const fallbackConfig = {
             apiKey: "AIzaSyBVwnMF2XR1zlrXFSj1yWUCOjbGuIcH3Hw",
@@ -774,6 +878,14 @@
         let userSettings = { theme: 'light-blue', isDark: false, ttMode: '5day', ttCycle: 5, ttPeriodMins: 35, ttBreakMins: 15, ttLunchMins: 50, subjects: defaultSubjects };
         let unsubTasksPub = null, unsubTasksPriv = null, unsubHist = null, unsubSettings = null, unsubTTGlobal = null, unsubTTPriv = null, unsubAdmin = null, unsubAdminUsers = null, unsubLogs = null;
         let liveClassInterval = null;
+
+        // --- 🚀 效能極致化：防抖、快取與「渲染懸停 (Render Suspension)」變數 ---
+        let renderTasksTimeout = null;
+        let cachedScheduleSignature = '';
+        let cachedSchedule = [];
+        let lastSettingsSaveTime = 0;       // 防止 Firebase 回傳干擾設定畫面
+        let suspendRenderUntil = 0;         // 點擊完成/刪除時，暫時鎖死畫面重繪
+        let subjectToggleTimeout = null;    // 科目切換重繪延遲
 
         // --- Core Utility Functions ---
         const todayStr = new Date().toLocaleDateString('en-CA');
@@ -933,6 +1045,10 @@
             const input = document.getElementById(`admin-${listName}-input`);
             const email = input.value.trim();
             if(!email) return;
+            
+            // 安全檢查：若 Firebase 中還沒有該陣列屬性，則初始化之
+            if (!adminConfig[listName]) adminConfig[listName] = [];
+
             if(!adminConfig[listName].includes(email)) {
                 adminConfig[listName].push(email);
                 saveAdminConfig();
@@ -945,6 +1061,7 @@
         window.addAdminList = addAdminList;
 
         function removeAdminList(listName, email) {
+            if (!adminConfig[listName]) return;
             adminConfig[listName] = adminConfig[listName].filter(e => e !== email);
             saveAdminConfig();
             logAdminAction(`更新${listName}`, `移除電郵: ${email}`);
@@ -957,14 +1074,14 @@
             const wl = document.getElementById('admin-whitelist-list');
             if(wl) {
                 wl.innerHTML = '';
-                adminConfig.whitelist.forEach(email => {
+                (adminConfig.whitelist || []).forEach(email => {
                     wl.insertAdjacentHTML('beforeend', `<tr class="border-b dark:border-zinc-700"><td class="p-3 text-xs">${email}</td><td class="p-3 text-right"><button onclick="removeAdminList('whitelist', '${email}')" class="text-red-500"><i class="fas fa-times"></i></button></td></tr>`);
                 });
             }
             const bl = document.getElementById('admin-blacklist-list');
             if(bl) {
                 bl.innerHTML = '';
-                adminConfig.blacklist.forEach(email => {
+                (adminConfig.blacklist || []).forEach(email => {
                     bl.insertAdjacentHTML('beforeend', `<tr class="border-b dark:border-zinc-700"><td class="p-3 text-xs">${email}</td><td class="p-3 text-right"><button onclick="removeAdminList('blacklist', '${email}')" class="text-red-500"><i class="fas fa-times"></i></button></td></tr>`);
                 });
             }
@@ -1042,11 +1159,11 @@
 
             // Whitelist/Blacklist Check for non-admins
             if (currentUser && !isAdmin) {
-                if (adminConfig.blacklistEnabled && adminConfig.blacklist.includes(currentUser.email)) {
+                if (adminConfig.blacklistEnabled && adminConfig.blacklist && adminConfig.blacklist.includes(currentUser.email)) {
                     handleLogout();
                     alert("你的帳戶已被管理員封鎖。");
                 }
-                if (adminConfig.whitelistEnabled && !adminConfig.whitelist.includes(currentUser.email)) {
+                if (adminConfig.whitelistEnabled && adminConfig.whitelist && !adminConfig.whitelist.includes(currentUser.email)) {
                     handleLogout();
                     alert("系統目前僅開放白名單用戶登入。");
                 }
@@ -1217,7 +1334,7 @@
         function syncGlobalTimetable() { if(globalTimetable.length === 0) return; customConfirm('同步時間表', '這將覆蓋你的個人修改，確定同步嗎？', 'danger', () => { userTimetable = JSON.parse(JSON.stringify(globalTimetable)); renderTimetableUI(); saveTimetable(); }); }
         window.syncGlobalTimetable = syncGlobalTimetable;
 
-        // --- Live Class Widget Logic ---
+        // --- Live Class Widget Logic (🚀 極致降維優化版) ---
         function updateLiveClassWidget() {
             const widget = document.getElementById('live-class-widget');
             if(!widget) return;
@@ -1225,10 +1342,28 @@
             const tt = userTimetable.length > 0 ? userTimetable : globalTimetable;
             if(tt.length === 0) { widget.style.display = 'none'; return; }
             
-            const now = new Date(); let dayNum = now.getDay(); let dayKey = dayNum === 0 ? 'd7' : 'd' + dayNum;
-            const daysConfig = getTimetableDaysConfig();
+            const now = new Date();
+            const currentSignature = now.toDateString() + '_' + tt.length;
             
-            if(!daysConfig.find(d => d.key === dayKey)) {
+            // 🚀 效能極致化：只有日期變更或時間表長度變更時，才重新解析日期與建立陣列 (避免每秒瘋狂產垃圾卡死手機)
+            if (cachedScheduleSignature !== currentSignature) {
+                let dayNum = now.getDay(); let dayKey = dayNum === 0 ? 'd7' : 'd' + dayNum;
+                const daysConfig = getTimetableDaysConfig();
+                
+                if(!daysConfig.find(d => d.key === dayKey)) {
+                    cachedSchedule = null; // 放假
+                } else {
+                    cachedSchedule = tt.map(row => {
+                        const sParts = (row.startTime||"00:00").split(':'); const eParts = (row.endTime||"00:00").split(':');
+                        let start = new Date(now); start.setHours(parseInt(sParts[0]||0), parseInt(sParts[1]||0), 0, 0);
+                        let end = new Date(now); end.setHours(parseInt(eParts[0]||0), parseInt(eParts[1]||0), 0, 0);
+                        return { name: row[dayKey] || '空堂', startMs: start.getTime(), endMs: end.getTime() };
+                    }).sort((a,b) => a.startMs - b.startMs);
+                }
+                cachedScheduleSignature = currentSignature;
+            }
+            
+            if(!cachedSchedule) {
                 widget.style.display = 'block';
                 document.getElementById('live-current-class').innerText = "放假中"; document.getElementById('live-next-class').innerText = "好好休息";
                 document.getElementById('live-timer-container').style.display = 'none'; document.getElementById('live-current-bg').style.backgroundColor = "var(--theme-bg)";
@@ -1237,29 +1372,23 @@
                 return;
             }
             
-            let classesToday = tt.map(row => {
-                const sParts = (row.startTime||"00:00").split(':'); const eParts = (row.endTime||"00:00").split(':');
-                let start = new Date(now); start.setHours(parseInt(sParts[0]||0), parseInt(sParts[1]||0), 0, 0);
-                let end = new Date(now); end.setHours(parseInt(eParts[0]||0), parseInt(eParts[1]||0), 0, 0);
-                return { name: row[dayKey] || '空堂', start, end };
-            }).sort((a,b) => a.start - b.start);
-            
-            let currentState = "課堂已結束"; let nextState = "明日請早"; let countdownTarget = null;
+            const nowMs = now.getTime();
+            let currentState = "課堂已結束"; let nextState = "明日請早"; let countdownTargetMs = null;
             let timerLabel = ""; let currentBgColor = "var(--theme-bg)"; let iconHtml = `<i class="fas fa-check-circle text-xl opacity-50" style="color: var(--theme-text-main)"></i>`;
-            let periodStart = null; let periodEnd = null; let isBreak = false;
+            let periodStartMs = null; let periodEndMs = null; let isBreak = false;
             
-            if(now < classesToday[0].start) {
-                currentState = "即將上課"; nextState = classesToday[0].name; countdownTarget = classesToday[0].start;
+            if(nowMs < cachedSchedule[0].startMs) {
+                currentState = "即將上課"; nextState = cachedSchedule[0].name; countdownTargetMs = cachedSchedule[0].startMs;
                 timerLabel = "距離上課"; iconHtml = `<i class="fas fa-clock text-xl opacity-50" style="color: var(--theme-text-main)"></i>`;
-            } else if (now > classesToday[classesToday.length-1].end) {
+            } else if (nowMs >= cachedSchedule[cachedSchedule.length-1].endMs) {
                 currentState = "今日課堂結束"; nextState = "明日請早";
                 document.getElementById('live-progress-bar').style.width = '100%';
             } else {
-                for(let i=0; i<classesToday.length; i++) {
-                    let c = classesToday[i];
-                    if(now >= c.start && now < c.end) {
-                        currentState = c.name; nextState = (i+1 < classesToday.length) ? classesToday[i+1].name : "放學";
-                        countdownTarget = c.end; timerLabel = "距離下課"; periodStart = c.start; periodEnd = c.end;
+                for(let i=0; i<cachedSchedule.length; i++) {
+                    let c = cachedSchedule[i];
+                    if(nowMs >= c.startMs && nowMs < c.endMs) {
+                        currentState = c.name; nextState = (i+1 < cachedSchedule.length) ? cachedSchedule[i+1].name : "放學";
+                        countdownTargetMs = c.endMs; timerLabel = "距離下課"; periodStartMs = c.startMs; periodEndMs = c.endMs;
                         const sub = userSettings.subjects.find(s => s.name === currentState);
                         if(currentState.includes('小息')) { currentBgColor = '#AAB7B8'; iconHtml = `<i class="fas fa-mug-hot text-lg" style="color: #1d1d1f"></i>`; isBreak = true; } 
                         else if(currentState.includes('午膳')) { currentBgColor = '#FFB3BA'; iconHtml = `<i class="fas fa-utensils text-lg" style="color: #1d1d1f"></i>`; isBreak = true; } 
@@ -1267,10 +1396,10 @@
                         else { iconHtml = `<i class="fas fa-book-open text-xl opacity-50" style="color: var(--theme-text-main)"></i>`; }
                         break;
                     }
-                    if(i+1 < classesToday.length && now >= c.end && now < classesToday[i+1].start) {
-                        currentState = "小息 / 空堂"; nextState = classesToday[i+1].name;
-                        countdownTarget = classesToday[i+1].start; timerLabel = "距離上課";
-                        periodStart = c.end; periodEnd = classesToday[i+1].start; isBreak = true;
+                    if(i+1 < cachedSchedule.length && nowMs >= c.endMs && nowMs < cachedSchedule[i+1].startMs) {
+                        currentState = "小息 / 空堂"; nextState = cachedSchedule[i+1].name;
+                        countdownTargetMs = cachedSchedule[i+1].startMs; timerLabel = "距離上課";
+                        periodStartMs = c.endMs; periodEndMs = cachedSchedule[i+1].startMs; isBreak = true;
                         iconHtml = `<i class="fas fa-mug-hot text-xl opacity-50" style="color: var(--theme-text-main)"></i>`;
                         break;
                     }
@@ -1278,22 +1407,35 @@
             }
             
             widget.style.display = 'block';
-            document.getElementById('live-current-class').innerText = currentState; document.getElementById('live-next-class').innerText = nextState;
-            document.getElementById('live-current-bg').style.backgroundColor = currentBgColor; document.getElementById('live-current-bg').innerHTML = iconHtml;
+            
+            // 🚀 效能極致化：Virtual DOM 概念，只在資料有變化時才修改 DOM，避免瀏覽器 Layout Thrashing
+            const elCurrentClass = document.getElementById('live-current-class');
+            if(elCurrentClass.innerText !== currentState) elCurrentClass.innerText = currentState;
+            
+            const elNextClass = document.getElementById('live-next-class');
+            if(elNextClass.innerText !== nextState) elNextClass.innerText = nextState;
+            
+            const elCurrentBg = document.getElementById('live-current-bg');
+            if(elCurrentBg.style.backgroundColor !== currentBgColor) {
+                elCurrentBg.style.backgroundColor = currentBgColor;
+                elCurrentBg.innerHTML = iconHtml;
+            }
             
             const timerEl = document.getElementById('live-timer-container');
             const progressEl = document.getElementById('live-progress-bar');
             
-            if(countdownTarget) {
+            if(countdownTargetMs) {
                 timerEl.style.display = 'flex';
-                let diff = Math.floor((countdownTarget - now) / 1000);
+                let diff = Math.floor((countdownTargetMs - nowMs) / 1000);
                 let h = Math.floor(diff / 3600); let m = Math.floor((diff % 3600) / 60); let s = diff % 60;
                 let timeStr = h > 0 ? `${h}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}` : `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
-                document.getElementById('live-timer-label').innerText = timerLabel; document.getElementById('live-timer-value').innerText = timeStr;
                 
-                if (periodStart && periodEnd) {
-                    let total = periodEnd - periodStart;
-                    let current = now - periodStart;
+                document.getElementById('live-timer-label').innerText = timerLabel; 
+                document.getElementById('live-timer-value').innerText = timeStr;
+                
+                if (periodStartMs && periodEndMs) {
+                    let total = periodEndMs - periodStartMs;
+                    let current = nowMs - periodStartMs;
                     let pct = Math.max(0, Math.min(100, (current / total) * 100));
                     progressEl.style.width = `${pct}%`;
                     progressEl.style.backgroundColor = isBreak ? '#AAB7B8' : '#34c759';
@@ -1302,7 +1444,7 @@
                 }
             } else { 
                 timerEl.style.display = 'none'; 
-                if(!periodStart) progressEl.style.width = '0%';
+                if(!periodStartMs) progressEl.style.width = '0%';
             }
         }
 
@@ -1320,16 +1462,17 @@
             listEnabled.innerHTML = ''; listDisabled.innerHTML = '';
             userSettings.subjects.forEach(sub => {
                 const isEnabled = sub.enabled !== false;
-                const html = `<div class="premium-card p-3 md:p-4 flex justify-between items-center shadow-sm transition-all duration-300" style="background-color: ${hexToRgba(sub.color, isEnabled ? 0.3 : 0.1)};">
+                // 加入安全的 view-transition-name 讓瀏覽器追蹤元素軌跡
+                const safeId = sub.id.replace(/[^a-zA-Z0-9_]/g, '_');
+                const html = `<div class="premium-card p-4 md:p-5 flex justify-between items-center shadow-sm transition-all duration-300" style="background-color: ${hexToRgba(sub.color, isEnabled ? 0.3 : 0.1)}; view-transition-name: subject_card_${safeId};">
                         <div class="flex items-center gap-3 overflow-hidden">
-                            <div class="w-4 h-4 rounded-full shadow-sm shrink-0" style="background-color: ${sub.color}"></div>
-                            <span class="font-black text-[13px] md:text-sm truncate" style="color: var(--theme-text-main)">${sub.name}</span>
+                            <div class="w-5 h-5 rounded-full shadow-sm shrink-0" style="background-color: ${sub.color}"></div>
+                            <span class="font-black text-[14px] md:text-[15px] truncate" style="color: var(--theme-text-main)">${sub.name}</span>
                         </div>
-                        <div class="flex items-center gap-3 shrink-0">
-                            <!-- 純 Tailwind iOS 風格開關 -->
-                            <label class="relative inline-flex items-center cursor-pointer shrink-0">
-                                <input type="checkbox" class="sr-only peer" ${isEnabled ? 'checked' : ''} onchange="toggleSubjectEnable('${sub.id}', this.checked, this)">
-                                <div class="w-11 h-6 bg-gray-300 dark:bg-zinc-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                        <div class="flex items-center gap-4 shrink-0">
+                            <label class="ios-toggle spring-action scale-90 origin-right">
+                                <input type="checkbox" ${isEnabled ? 'checked' : ''} onchange="toggleSubjectEnable('${sub.id}', this.checked, this)">
+                                <div class="toggle-track"><div class="toggle-thumb"></div></div>
                             </label>
                             <button onclick="deleteSubject('${sub.id}')" class="text-red-500/50 hover:text-red-500 w-8 h-8 flex items-center justify-center rounded-full hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors spring-action shrink-0"><i class="fas fa-trash"></i></button>
                         </div>
@@ -1340,26 +1483,66 @@
         }
         window.renderSubjectsPage = renderSubjectsPage;
 
+        // 🌟 終極 0 延遲：移除所有「縮放與位移」動畫，解決「收埋再開返」的閃縮錯覺
         function toggleSubjectEnable(id, isEnabled, el) { 
             const sub = userSettings.subjects.find(s => s.id === id); 
-            if(sub) { 
-                sub.enabled = isEnabled; 
-                const card = el ? el.closest('.premium-card') : null;
-                if(card) {
-                    card.style.backgroundColor = hexToRgba(sub.color, isEnabled ? 0.3 : 0.1);
-                    card.style.transform = 'scale(0.95)';
-                    card.style.opacity = '0.5';
+            if(!sub || sub.enabled === isEnabled) return; 
+            
+            sub.enabled = isEnabled; 
+            lastSettingsSaveTime = Date.now();
+            
+            // 將存檔工作推遲 50ms，讓出主線程，確保點擊瞬間零卡頓
+            setTimeout(() => saveSettings(), 50); 
+            
+            const card = el ? el.closest('.premium-card') : null;
+            const targetList = isEnabled ? document.getElementById('subjects-list-enabled') : document.getElementById('subjects-list-disabled');
+            
+            if(card && targetList) {
+                // 1. 關閉過渡動畫，準備瞬間搬移
+                card.style.transition = 'none';
+                
+                // 2. 0 毫秒瞬間搬移到另一個列表
+                if (isEnabled) {
+                    targetList.appendChild(card); 
+                } else {
+                    targetList.prepend(card);     
                 }
-                saveSettings(); 
-                setTimeout(() => { renderSubjectsPage(); }, 350); 
-            } 
+                
+                // 3. 瞬間改變背景顏色，不改變透明度與大小
+                card.style.backgroundColor = hexToRgba(sub.color, isEnabled ? 0.3 : 0.1);
+                
+                // 4. 強制瀏覽器重繪讓搬移立刻生效
+                void card.offsetWidth; 
+                
+                // 5. 恢復柔和的背景色漸變 (完全不加 transform，卡片就不會亂縮放了！)
+                card.style.transition = 'background-color 0.3s ease';
+                
+                // 同步更新 Chips 標籤
+                buildCustomChips();
+            } else {
+                renderSubjectsPage(); 
+            }
         }
         window.toggleSubjectEnable = toggleSubjectEnable;
 
-        function addSubject() { const name = document.getElementById('new-subject-name').value.trim(); if(!name) return; userSettings.subjects.push({ id: 'sub_' + Date.now(), name, color: document.getElementById('new-subject-color').value, enabled: true }); document.getElementById('new-subject-name').value = ''; saveSettings(); renderSubjectsPage(); showToast('已新增科目'); }
+        function addSubject() { 
+            const name = document.getElementById('new-subject-name').value.trim(); 
+            if(!name) return; 
+            userSettings.subjects.push({ id: 'sub_' + Date.now(), name, color: document.getElementById('new-subject-color').value, enabled: true }); 
+            document.getElementById('new-subject-name').value = ''; 
+            saveSettings(); 
+            renderSubjectsPage(); 
+            showToast('已新增科目'); 
+        }
         window.addSubject = addSubject;
 
-        function deleteSubject(id) { customConfirm('刪除科目', '確定要刪除此科目嗎？', 'danger', () => { userSettings.subjects = userSettings.subjects.filter(s => s.id !== id); saveSettings(); renderSubjectsPage(); }); }
+        function deleteSubject(id) { 
+            customConfirm('刪除科目', '確定要刪除此科目嗎？', 'danger', () => { 
+                userSettings.subjects = userSettings.subjects.filter(s => s.id !== id); 
+                saveSettings(); 
+                renderSubjectsPage(); 
+            }); 
+        }
         window.deleteSubject = deleteSubject;
 
         function resetDefaultSubjects() {
@@ -1372,7 +1555,11 @@
                         added = true;
                     }
                 });
-                if(added) { saveSettings(); renderSubjectsPage(); showToast('預設科目已成功還原'); }
+                if(added) { 
+                    saveSettings(); 
+                    renderSubjectsPage(); 
+                    showToast('預設科目已成功還原'); 
+                }
                 else { showToast('所有預設科目已存在'); }
             });
         }
@@ -1420,7 +1607,8 @@
                                 ${task.type === 'test' ? `<span class="px-2 py-0.5 rounded text-[9px] font-bold bg-purple-100 text-purple-700">測驗</span>` : ''}
                                 ${badgeHtml}
                             </div>
-                            ${canEditDelete ? `<div class="flex gap-2 shrink-0"><button onclick="openEditModal('${task.id}', ${task.isPublic})" class="w-7 h-7 rounded-full bg-white/60 text-gray-600 flex items-center justify-center text-xs shadow-sm spring-action"><i class="fas fa-pen"></i></button><button onclick="deleteTask('${task.id}', ${task.isPublic})" class="w-7 h-7 rounded-full bg-white/60 text-red-500 flex items-center justify-center text-xs shadow-sm spring-action"><i class="fas fa-trash"></i></button></div>` : ''}
+                            <!-- 🌟 傳入 this 實現點擊瞬間動畫 -->
+                            ${canEditDelete ? `<div class="flex gap-2 shrink-0"><button onclick="openEditModal('${task.id}', ${task.isPublic})" class="w-7 h-7 rounded-full bg-white/60 text-gray-600 flex items-center justify-center text-xs shadow-sm spring-action"><i class="fas fa-pen"></i></button><button onclick="deleteTask('${task.id}', ${task.isPublic}, this)" class="w-7 h-7 rounded-full bg-white/60 text-red-500 flex items-center justify-center text-xs shadow-sm spring-action"><i class="fas fa-trash"></i></button></div>` : ''}
                         </div>
                         <p class="text-[15px] font-black leading-relaxed mb-1" style="color: var(--theme-text-main)">${contentHtml}</p>
                         ${urlBtnHtml}
@@ -1429,7 +1617,8 @@
                                 <p class="text-[10px] font-bold opacity-60"><i class="far fa-calendar mr-1"></i> ${task.dueDate} (${getDayOfWeek(task.dueDate)})</p>
                                 ${task.isPublic ? `<p class="text-[10px] font-black mt-1 text-orange-500"><i class="fas fa-bullhorn"></i> 全域廣播</p>` : ''}
                             </div>
-                            <button onclick="completeTask('${task.id}', ${task.isPublic})" class="px-5 py-2.5 rounded-xl text-[11px] font-black shadow-md bg-black dark:bg-white text-white dark:text-black spring-action hover:scale-105 transition-transform"><i class="fas fa-check mr-1"></i> 完成</button>
+                            <!-- 🌟 傳入 this 實現點擊瞬間動畫 -->
+                            <button onclick="completeTask('${task.id}', ${task.isPublic}, this)" class="px-5 py-2.5 rounded-xl text-[11px] font-black shadow-md bg-black dark:bg-white text-white dark:text-black spring-action hover:scale-105 transition-transform"><i class="fas fa-check mr-1"></i> 完成</button>
                         </div>
                     </div>`);
             });
@@ -1440,7 +1629,8 @@
             const listEl = document.getElementById('history-tasks-list'); listEl.innerHTML = '';
             if(historyTasks.length === 0) { listEl.innerHTML = `<div class="text-center py-16 text-sm font-bold opacity-30">暫無歷史紀錄。</div>`; return; }
             historyTasks.forEach((task, index) => { 
-                listEl.insertAdjacentHTML('beforeend', `<div class="premium-card p-4 opacity-50 stagger-item" style="animation-delay: ${index * 0.05}s;"><div class="flex justify-between items-start mb-2">${getSubjectHTML(task.subject)}<button onclick="deleteHistoryTask('${task.id}')" class="text-red-500 spring-action hover:text-red-700 transition-colors"><i class="fas fa-times"></i></button></div><p class="text-xs font-bold line-through line-clamp-1">${task.content}</p><p class="text-[9px] mt-2 font-bold opacity-50">完成於: ${new Date(task.completedAt).toLocaleString()}</p></div>`); 
+                // 🌟 傳入 this 實現點擊瞬間動畫
+                listEl.insertAdjacentHTML('beforeend', `<div class="premium-card p-4 opacity-50 stagger-item" style="animation-delay: ${index * 0.05}s;"><div class="flex justify-between items-start mb-2">${getSubjectHTML(task.subject)}<button onclick="deleteHistoryTask('${task.id}', this)" class="text-red-500 spring-action hover:text-red-700 transition-colors"><i class="fas fa-times"></i></button></div><p class="text-xs font-bold line-through line-clamp-1">${task.content}</p><p class="text-[9px] mt-2 font-bold opacity-50">完成於: ${new Date(task.completedAt).toLocaleString()}</p></div>`); 
             });
         }
         window.renderHistory = renderHistory;
@@ -1519,7 +1709,7 @@
 
             filteredUsers.sort((a,b) => new Date(b.lastLogin || 0) - new Date(a.lastLogin || 0)).forEach((u, index) => {
                 const roleColor = u.role === '管理員' ? 'bg-purple-100 text-purple-600' : 'bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-gray-300';
-                const isBlocked = adminConfig.blacklist.includes(u.email);
+                const isBlocked = adminConfig.blacklist && adminConfig.blacklist.includes(u.email);
                 const statusBadge = isBlocked ? `<span class="bg-red-500 text-white px-2 py-0.5 rounded-md text-[9px] font-black mt-1 inline-block">已封鎖</span>` : '';
                 
                 listEl.insertAdjacentHTML('beforeend', `
@@ -1545,7 +1735,7 @@
             document.getElementById('modal-user-email').innerText = user.email; document.getElementById('modal-user-email-hidden').value = user.email;
             document.getElementById('modal-user-pending').innerText = user.pendingCount || 0; document.getElementById('modal-user-completed').innerText = user.completedCount || 0;
             
-            const isBlocked = adminConfig.blacklist.includes(user.email);
+            const isBlocked = adminConfig.blacklist && adminConfig.blacklist.includes(user.email);
             const statusEl = document.getElementById('modal-user-status');
             if (isBlocked) { statusEl.innerText = "已封鎖帳戶"; statusEl.className = "mt-2 inline-block px-2 py-0.5 rounded text-[9px] font-bold bg-red-100 text-red-600"; document.getElementById('modal-btn-block').classList.add('hidden'); document.getElementById('modal-btn-unblock').classList.remove('hidden'); } 
             else { statusEl.innerText = "正常活躍中"; statusEl.className = "mt-2 inline-block px-2 py-0.5 rounded text-[9px] font-bold bg-green-100 text-green-600"; document.getElementById('modal-btn-block').classList.remove('hidden'); document.getElementById('modal-btn-unblock').classList.add('hidden'); }
@@ -1553,8 +1743,8 @@
         }
         window.openUserModal = openUserModal;
 
-        document.getElementById('modal-btn-block').onclick = () => { const email = document.getElementById('modal-user-email-hidden').value; if(!adminConfig.blacklist.includes(email)) { adminConfig.blacklist.push(email); saveAdminConfig(); logAdminAction('封鎖用戶', `已封鎖帳戶: ${email}`); showToast('用戶已封鎖'); closeModal('user-details-modal'); } };
-        document.getElementById('modal-btn-unblock').onclick = () => { const email = document.getElementById('modal-user-email-hidden').value; adminConfig.blacklist = adminConfig.blacklist.filter(e => e !== email); saveAdminConfig(); logAdminAction('解除封鎖', `已解除封鎖帳戶: ${email}`); showToast('用戶已解封'); closeModal('user-details-modal'); };
+        document.getElementById('modal-btn-block').onclick = () => { const email = document.getElementById('modal-user-email-hidden').value; if(!adminConfig.blacklist) adminConfig.blacklist = []; if(!adminConfig.blacklist.includes(email)) { adminConfig.blacklist.push(email); saveAdminConfig(); logAdminAction('封鎖用戶', `已封鎖帳戶: ${email}`); showToast('用戶已封鎖'); closeModal('user-details-modal'); } };
+        document.getElementById('modal-btn-unblock').onclick = () => { const email = document.getElementById('modal-user-email-hidden').value; if(!adminConfig.blacklist) return; adminConfig.blacklist = adminConfig.blacklist.filter(e => e !== email); saveAdminConfig(); logAdminAction('解除封鎖', `已解除封鎖帳戶: ${email}`); showToast('用戶已解封'); closeModal('user-details-modal'); };
 
         // --- Data Submission ---
         document.getElementById('add-task-form').onsubmit = (e) => {
@@ -1571,18 +1761,32 @@
                 createdAt: new Date().toISOString(), createdBy: currentUser.uid 
             };
             
-            addDoc(collection(db, 'artifacts', appId, isPub ? 'public/data/assignments' : `users/${currentUser.uid}/assignments`), task).then(() => {
+            addDoc(collection(db, 'artifacts', appId, isPub ? 'public' : 'users', isPub ? 'data' : currentUser.uid, 'assignments'), task).then(() => {
                 if (isPub) logAdminAction('發佈廣播', `[${subject}] ${taskContent.substring(0,20)}...`);
                 document.getElementById('add-task-form').reset(); document.getElementById('task-date').value = getNextWeekdayStr(); 
                 document.getElementById('task-subject').value = subject; updateChipStyles();
                 showToast("新增成功"); 
-            }).catch(e => showToast("新增失敗")).finally(() => { btn.disabled = false; btn.innerHTML = '新增'; });
+            }).catch(e => showToast("新增失敗")).finally(() => { btn.disabled = false; btn.innerHTML = '新增任務'; });
         };
 
-        function completeTask(id, isPub) { 
+        // 🌟 樂觀 UI 升級：點擊完成，卡片極速縮小並在 150ms 內消失，手感零延遲
+        function completeTask(id, isPub, el) { 
             const task = allTasks.find(t => t.id === id); if(!task) return; 
+
+            suspendRenderUntil = Date.now() + 500; // 暫停全局畫面重繪 0.5 秒，保護動畫！
+
+            if(el) {
+                const card = el.closest('.premium-card');
+                if(card) {
+                    card.style.transition = 'all 0.15s cubic-bezier(0.2, 0.8, 0.2, 1)';
+                    card.style.transform = 'scale(0.85)';
+                    card.style.opacity = '0';
+                    setTimeout(() => { if(card.parentNode) card.remove(); }, 150); // 極速清空
+                }
+            }
+
             addDoc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'history'), { ...task, completedAt: new Date().toISOString() })
-            .then(() => deleteDoc(doc(db, 'artifacts', appId, isPub ? 'public/data/assignments' : `users/${currentUser.uid}/assignments`, id)))
+            .then(() => deleteDoc(doc(db, 'artifacts', appId, isPub ? 'public' : 'users', isPub ? 'data' : currentUser.uid, 'assignments', id)))
             .then(() => {
                 confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ['#FFB3BA', '#BAE1FF', '#BAFFC9', '#1d1d1f'] });
                 showToast("任務已完成！紀錄已封存"); 
@@ -1590,10 +1794,44 @@
         }
         window.completeTask = completeTask;
 
-        function deleteTask(id, isPub) { customConfirm('刪除任務', '確定要徹底刪除此紀錄嗎？', 'danger', () => { deleteDoc(doc(db, 'artifacts', appId, isPub ? 'public/data/assignments' : `users/${currentUser.uid}/assignments`, id)).then(() => { if(isPub) logAdminAction('刪除廣播', `撤回了廣播任務 ID: ${id}`); showToast("已刪除"); }).catch(e => {}); }); }
+        // 🌟 樂觀 UI 升級：點擊刪除，150ms 瞬間消失
+        function deleteTask(id, isPub, el) { 
+            customConfirm('刪除任務', '確定要徹底刪除此紀錄嗎？', 'danger', () => { 
+                suspendRenderUntil = Date.now() + 500; // 保護動畫
+
+                if(el) {
+                    const card = el.closest('.premium-card');
+                    if(card) {
+                        card.style.transition = 'all 0.15s ease';
+                        card.style.transform = 'scale(0.85)';
+                        card.style.opacity = '0';
+                        setTimeout(() => { if(card.parentNode) card.remove(); }, 150);
+                    }
+                }
+                deleteDoc(doc(db, 'artifacts', appId, isPub ? 'public' : 'users', isPub ? 'data' : currentUser.uid, 'assignments', id)).then(() => { 
+                    if(isPub) logAdminAction('刪除廣播', `撤回了廣播任務 ID: ${id}`); showToast("已刪除"); 
+                }).catch(e => {}); 
+            }); 
+        }
         window.deleteTask = deleteTask;
 
-        function deleteHistoryTask(id) { customConfirm('清除紀錄', '徹底刪除此歷史紀錄？', 'danger', () => { deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'history', id)).then(() => showToast("紀錄已刪除")); }); }
+        // 🌟 樂觀 UI 升級：點擊刪除歷史，150ms 瞬間消失
+        function deleteHistoryTask(id, el) { 
+            customConfirm('清除紀錄', '徹底刪除此歷史紀錄？', 'danger', () => { 
+                suspendRenderUntil = Date.now() + 500; // 保護動畫
+
+                if(el) {
+                    const card = el.closest('.premium-card');
+                    if(card) {
+                        card.style.transition = 'all 0.15s ease';
+                        card.style.transform = 'scale(0.85)';
+                        card.style.opacity = '0';
+                        setTimeout(() => { if(card.parentNode) card.remove(); }, 150);
+                    }
+                }
+                deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'history', id)).then(() => showToast("紀錄已刪除")); 
+            }); 
+        }
         window.deleteHistoryTask = deleteHistoryTask;
 
         function confirmClearHistory() { if(historyTasks.length === 0) return showToast("沒有紀錄可清除"); customConfirm('徹底清空', '確定要清空所有紀錄嗎？', 'danger', () => { historyTasks.forEach(t => deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'history', t.id))); showToast("歷史紀錄已清空"); }); }
@@ -1614,7 +1852,7 @@
         window.openEditModal = openEditModal;
 
         function saveEditTask() { 
-            updateDoc(doc(db, 'artifacts', appId, editingTaskIsPublic ? 'public/data/assignments' : `users/${currentUser.uid}/assignments`, editingTaskId), { 
+            updateDoc(doc(db, 'artifacts', appId, editingTaskIsPublic ? 'public' : 'users', editingTaskIsPublic ? 'data' : currentUser.uid, 'assignments', editingTaskId), { 
                 content: document.getElementById('edit-content').value, subject: document.getElementById('edit-subject').value, dueDate: document.getElementById('edit-date').value, url: document.getElementById('edit-url').value.trim()
             }).then(() => {
                 if (editingTaskIsPublic) logAdminAction('修改廣播', `更新了廣播任務 ID: ${editingTaskId}`);
@@ -1623,28 +1861,77 @@
         }
         window.saveEditTask = saveEditTask;
 
+        // --- Clean Listeners ---
+        function clearListeners() {
+            if(unsubTasksPub) { unsubTasksPub(); unsubTasksPub = null; }
+            if(unsubTasksPriv) { unsubTasksPriv(); unsubTasksPriv = null; }
+            if(unsubHist) { unsubHist(); unsubHist = null; }
+            if(unsubSettings) { unsubSettings(); unsubSettings = null; }
+            if(unsubTTGlobal) { unsubTTGlobal(); unsubTTGlobal = null; }
+            if(unsubTTPriv) { unsubTTPriv(); unsubTTPriv = null; }
+            if(unsubAdmin) { unsubAdmin(); unsubAdmin = null; }
+            if(unsubAdminUsers) { unsubAdminUsers(); unsubAdminUsers = null; }
+            if(unsubLogs) { unsubLogs(); unsubLogs = null; }
+        }
+
         // --- Core Listeners & Error Handlers ---
         function setupDataListeners() {
             if(!currentUser) return;
+            clearListeners();
             
             const handleSnapshotError = (err) => {
                 console.warn("Firestore 讀取被拒絕，請檢查資料庫規則設定:", err.message);
                 if (err.code === 'permission-denied' && !window.hasShownRuleWarning) {
-                    showToast("權限被拒絕，請管理員更新 Firebase 規則！");
+                    showToast("權限被拒絕，請確保路徑正確或管理員更新了規則！");
                     window.hasShownRuleWarning = true;
                 }
             };
             
+            let lastSettingsDataStr = "";
             unsubSettings = onSnapshot(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'settings', 'profile'), docSnap => { 
-                if(docSnap.exists()) { const d = docSnap.data(); if(d.subjects) d.subjects = d.subjects.map(s => ({...s, enabled: s.enabled !== false})); userSettings = { ...userSettings, ...d }; } 
-                applyTheme(); renderSubjectsPage(); renderHome(); if(document.getElementById('view-timetable').classList.contains('active')) renderTimetableUI(); 
+                if(docSnap.exists()) { 
+                    const d = docSnap.data(); 
+                    if(d.subjects) d.subjects = d.subjects.map(s => ({...s, enabled: s.enabled !== false})); 
+                    
+                    const newStr = JSON.stringify(d);
+                    if (lastSettingsDataStr === newStr) return; // 資料無變化，無視！
+                    lastSettingsDataStr = newStr;
+
+                    userSettings = { ...userSettings, ...d }; 
+                } 
+                
+                // 🌟 終極防護機制：如果是自己最近 1.5 秒內存檔的，一律無視伺服器回傳的強制重繪！
+                if (docSnap.metadata && docSnap.metadata.hasPendingWrites) return;
+                if (Date.now() - lastSettingsSaveTime < 1500) return; 
+
+                applyTheme(); 
+                if(document.getElementById('view-subjects').classList.contains('active')) renderSubjectsPage(); 
+                if(document.getElementById('view-home').classList.contains('active')) renderHome(); 
+                if(document.getElementById('view-timetable').classList.contains('active')) renderTimetableUI(); 
             }, handleSnapshotError);
             
             function processTasks() { 
-                allTasks = [...publicAssignments, ...privateAssignments].sort((a,b) => { if(a.isImportant && !b.isImportant) return -1; if(!a.isImportant && b.isImportant) return 1; return new Date(a.dueDate) - new Date(b.dueDate); }); 
-                if(document.getElementById('view-home').classList.contains('active')) renderHome(); 
-                if(document.getElementById('view-admin') && document.getElementById('view-admin').classList.contains('active')) renderAdmin();
-                setDoc(doc(db, 'artifacts', appId, 'directory', currentUser.uid), { pendingCount: privateAssignments.length, completedCount: historyTasks.length, lastLogin: new Date().toISOString() }, { merge: true }).catch(()=>{});
+                clearTimeout(renderTasksTimeout);
+                renderTasksTimeout = setTimeout(() => {
+                    allTasks = [...publicAssignments, ...privateAssignments].sort((a,b) => { 
+                        if(a.isImportant && !b.isImportant) return -1; 
+                        if(!a.isImportant && b.isImportant) return 1; 
+                        return new Date(a.dueDate) - new Date(b.dueDate); 
+                    }); 
+                    
+                    setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'directory', currentUser.uid), { pendingCount: privateAssignments.length, completedCount: historyTasks.length, lastLogin: new Date().toISOString() }, { merge: true }).catch(()=>{});
+
+                    // 🌟 如果目前有「正在刪除」的動畫，把重繪工作推遲 400ms，保證動畫不被卡死
+                    if (Date.now() < suspendRenderUntil) {
+                        setTimeout(processTasks, 400); 
+                        return;
+                    }
+
+                    requestAnimationFrame(() => {
+                        if(document.getElementById('view-home').classList.contains('active')) renderHome(); 
+                        if(document.getElementById('view-admin') && document.getElementById('view-admin').classList.contains('active')) renderAdmin();
+                    });
+                }, 80); 
             }
 
             unsubTasksPub = onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'assignments'), s => { publicAssignments = []; s.forEach(d => publicAssignments.push({ id: d.id, ...d.data(), isPublic: true })); processTasks(); }, handleSnapshotError);
@@ -1652,7 +1939,13 @@
 
             unsubHist = onSnapshot(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'history'), s => { 
                 historyTasks = []; s.forEach(d => historyTasks.push({ id: d.id, ...d.data() })); historyTasks.sort((a,b) => new Date(b.completedAt) - new Date(a.completedAt)); 
-                if(document.getElementById('view-history').classList.contains('active')) renderHistory(); 
+                
+                const doRender = () => {
+                    if(document.getElementById('view-history').classList.contains('active')) renderHistory(); 
+                };
+
+                // 保護刪除動畫
+                if (Date.now() < suspendRenderUntil) { setTimeout(doRender, 400); } else { doRender(); }
                 
                 if (adminConfig.autoCleanEnabled && historyTasks.length > 0) {
                     historyTasks.forEach(t => {
@@ -1665,10 +1958,18 @@
             unsubTTGlobal = onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'timetables', 'global'), d => { if(d.exists() && d.data().data) globalTimetable = JSON.parse(d.data().data); if(document.getElementById('view-timetable').classList.contains('active')) renderTimetableUI(); startLiveWidget(); }, handleSnapshotError);
             unsubTTPriv = onSnapshot(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'timetable', 'personal'), d => { if(d.exists() && d.data().data) userTimetable = JSON.parse(d.data().data); if(document.getElementById('view-timetable').classList.contains('active')) renderTimetableUI(); startLiveWidget(); }, handleSnapshotError);
             
-            unsubAdmin = onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'system'), d => { if(d.exists()) applySystemConfig(d.data()); }, handleSnapshotError);
+            unsubAdmin = onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'system'), d => { 
+                if(d.exists()) {
+                    if (d.metadata && d.metadata.hasPendingWrites) {
+                        adminConfig = { ...adminConfig, ...d.data() };
+                        return;
+                    }
+                    applySystemConfig(d.data()); 
+                }
+            }, handleSnapshotError);
 
             if(isAdmin) {
-                unsubAdminUsers = onSnapshot(collection(db, 'artifacts', appId, 'directory'), snap => { adminUsersList = []; snap.forEach(d => adminUsersList.push({uid: d.id, ...d.data()})); if(document.getElementById('view-admin').classList.contains('active')) renderAdminUsers(); }, handleSnapshotError);
+                unsubAdminUsers = onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'directory'), snap => { adminUsersList = []; snap.forEach(d => adminUsersList.push({uid: d.id, ...d.data()})); if(document.getElementById('view-admin').classList.contains('active')) renderAdminUsers(); }, handleSnapshotError);
                 const logsQuery = query(collection(db, 'artifacts', appId, 'public', 'data', 'auditLogs'));
                 unsubLogs = onSnapshot(logsQuery, snap => { systemAuditLogs = []; snap.forEach(d => systemAuditLogs.push(d.data())); systemAuditLogs.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp)); systemAuditLogs = systemAuditLogs.slice(0, 100); if(document.getElementById('view-admin').classList.contains('active')) renderAdminLogs(); }, handleSnapshotError);
             }
@@ -1696,10 +1997,18 @@
         async function loginAnon() { try { await signInAnonymously(auth); } catch(e){ showToast("訪客登入失敗"); } }
         window.loginAnon = loginAnon;
 
-        function handleLogout() { signOut(auth); }
+        function handleLogout() { 
+            clearListeners();
+            signOut(auth); 
+        }
         window.handleLogout = handleLogout;
 
-        async function initAuth() { if(typeof __initial_auth_token !== 'undefined' && __initial_auth_token) await signInWithCustomToken(auth, __initial_auth_token); }
+        const initAuth = async () => { 
+            if(typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                await signInWithCustomToken(auth, __initial_auth_token); 
+            }
+        };
+        initAuth();
 
         onAuthStateChanged(auth, user => {
             currentUser = user;
@@ -1714,7 +2023,7 @@
                 isAdmin = (user.email === ADMIN_EMAIL);
                 
                 const userProfileData = { uid: user.uid, name: user.displayName || '學生帳戶', email: user.email || '訪客', avatar: avatarUrl, role: isAdmin ? '管理員' : '普通用戶' };
-                setDoc(doc(db, 'artifacts', appId, 'directory', user.uid), userProfileData, { merge: true }).catch(e=>{});
+                setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'directory', user.uid), userProfileData, { merge: true }).catch(e=>{});
 
                 if(isAdmin) { 
                     document.getElementById('admin-badge').classList.remove('hidden'); document.getElementById('broadcast-toggle-container').classList.remove('hidden'); document.getElementById('admin-timetable-controls').classList.remove('hidden'); 
@@ -1731,12 +2040,12 @@
                 
                 initDefaultTimetableDay(); setupDataListeners(); switchView('home');
             } else {
-                if (loginScreen) loginScreen.style.display = 'flex'; closeModal('profile-modal');
+                clearListeners();
+                if (loginScreen) loginScreen.style.display = 'flex'; 
+                closeModal('profile-modal');
                 isAdmin = false;
             }
         });
-
-        initAuth();
     </script>
 </body>
 </html>
