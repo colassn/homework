@@ -49,9 +49,6 @@
             to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); } 
         }
 
-        /* 列表階梯載入動畫 */
-        .stagger-item { opacity: 0; animation: viewFadeInUp 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
-
         /* Premium Cards */
         .premium-card {
             background-color: var(--theme-card);
@@ -107,20 +104,19 @@
         .toast { background-color: var(--theme-accent); color: var(--theme-accent-text); transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); transform: translateY(-30px) scale(0.8); opacity: 0; border-radius: 100px; padding: 14px 28px; font-weight: 700; font-size: 14px; box-shadow: 0 12px 40px rgba(0,0,0,0.2); backdrop-filter: blur(12px); }
         .toast.show { transform: translateY(0) scale(1); opacity: 1; }
 
-        /* Global Spring Animation (極速觸控優化) */
+        /* Global Spring Animation (極簡優化版) */
         .spring-action { 
-            transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease !important; 
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.2s ease, opacity 0.2s ease !important; 
             will-change: transform; 
             cursor: pointer; 
-            touch-action: manipulation; /* 禁用雙擊縮放延遲 */
+            touch-action: manipulation; 
             -webkit-tap-highlight-color: transparent;
         }
-        /* 按下瞬間極速壓縮 (0.01s 零延遲) */
         .spring-action:active { 
             transform: scale(0.92) !important; 
             filter: brightness(0.9); 
             opacity: 0.9;
-            transition: all 0.01s ease !important; /* 瞬間觸發 */
+            transition: transform 0.05s ease, filter 0.05s ease, opacity 0.05s ease !important;
         }
         .spring-action:hover { filter: brightness(1.05); }
 
@@ -128,45 +124,25 @@
         .custom-chip { 
             cursor: pointer; user-select: none; border-radius: 16px; position: relative; 
             border: 1.5px solid transparent; font-weight: 700;
-            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             touch-action: manipulation;
         }
         .custom-chip.selected { transform: scale(1.05); box-shadow: 0 6px 16px rgba(0,0,0,0.08); }
         .custom-chip:hover:not(.selected) { background-color: var(--theme-border) !important; transform: translateY(-1px); }
-        .custom-chip:active { transform: scale(0.9) !important; transition: all 0.01s ease !important; filter: brightness(0.9); }
+        .custom-chip:active { transform: scale(0.9) !important; transition: transform 0.05s ease !important; filter: brightness(0.9); }
 
         /* iOS Toggle Switch - 極速物理形變動畫 */
         .ios-toggle { position: relative; display: inline-flex; align-items: center; cursor: pointer; flex-shrink: 0; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
         .ios-toggle input { display: none; }
-        .ios-toggle .toggle-track { width: 52px; height: 30px; background-color: var(--theme-border); border-radius: 999px; transition: background-color 0.2s ease; position: relative; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); will-change: background-color; }
-        .ios-toggle .toggle-thumb { position: absolute; top: 2px; left: 2px; width: 26px; height: 26px; background-color: #ffffff; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.15), 0 1px 2px rgba(0,0,0,0.1); transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1); will-change: transform, width; }
+        .ios-toggle .toggle-track { width: 52px; height: 30px; background-color: var(--theme-border); border-radius: 999px; transition: background-color 0.25s ease; position: relative; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); will-change: background-color; }
+        .ios-toggle .toggle-thumb { position: absolute; top: 2px; left: 2px; width: 26px; height: 26px; background-color: #ffffff; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.15), 0 1px 2px rgba(0,0,0,0.1); transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), width 0.15s ease; will-change: transform, width; }
         .ios-toggle input:checked + .toggle-track { background-color: #34c759; }
         .ios-toggle input:checked + .toggle-track .toggle-thumb { transform: translateX(22px); }
-        
-        /* 核心細節：按壓時 Toggle 圓球會被拉長，還原真實橡膠手感 */
         .ios-toggle:active .toggle-thumb { width: 34px; transition: all 0.1s ease; }
         .ios-toggle input:checked:active + .toggle-track .toggle-thumb { transform: translateX(14px); }
 
         [data-theme="dark"] .ios-toggle .toggle-track { background-color: rgba(255,255,255,0.15); }
         [data-theme="dark"] .ios-toggle input:checked + .toggle-track { background-color: #30d158; }
-
-        /* 硬體加速水波紋特效 */
-        .tap-splash {
-            position: fixed;
-            width: 40px;
-            height: 40px;
-            margin-top: -20px;
-            margin-left: -20px;
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 999999;
-            animation: splash-anim 0.4s cubic-bezier(0.1, 0.8, 0.2, 1) forwards;
-            will-change: transform, opacity;
-        }
-        @keyframes splash-anim {
-            0% { transform: scale(0.3); opacity: 0.8; }
-            100% { transform: scale(4); opacity: 0; }
-        }
 
         ::-webkit-scrollbar { display: none; }
         * { -ms-overflow-style: none; scrollbar-width: none; }
@@ -183,17 +159,6 @@
         @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
         .glow-effect { animation: glow 2s ease-in-out infinite alternate; }
         @keyframes glow { from { box-shadow: 0 0 5px rgba(251, 191, 36, 0.2); } to { box-shadow: 0 0 24px rgba(251, 191, 36, 0.5); } }
-
-        /* View Transitions 平滑跨區塊飛行參數 */
-        ::view-transition-group(*) {
-            animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
-            animation-duration: 0.4s;
-        }
-        ::view-transition-old(*),
-        ::view-transition-new(*) {
-            animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
-            animation-duration: 0.4s;
-        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col pb-[100px] md:pb-[120px] relative overflow-x-hidden">
@@ -301,7 +266,8 @@
                             <input type="hidden" id="task-type" value="homework">
                         </div>
                         <div id="subject-chips-add" class="flex gap-2 scroll-smooth-x pb-1 flex-1 items-center"></div>
-                        <input type="hidden" id="task-subject" required>
+                        <!-- ⚠️ 移除 required 屬性，防範瀏覽器無故阻擋表單送出 -->
+                        <input type="hidden" id="task-subject">
                     </div>
                     
                     <div class="flex flex-col gap-3">
@@ -323,7 +289,7 @@
                     <div id="broadcast-toggle-container" class="hidden pt-1 border-t border-dashed mt-2" style="border-color: var(--theme-border);">
                         <label class="flex items-center justify-end cursor-pointer gap-3 pt-3 pb-1">
                             <span class="text-[11px] font-black text-orange-500">發佈為全域廣播 (全校可見)</span>
-                            <div class="ios-toggle spring-action scale-90 origin-right">
+                            <div class="ios-toggle scale-90 origin-right">
                                 <input type="checkbox" id="task-broadcast">
                                 <div class="toggle-track"><div class="toggle-thumb"></div></div>
                             </div>
@@ -481,7 +447,7 @@
                 
                 <div class="flex items-center justify-between border-t pt-6" style="border-color: var(--theme-border)">
                     <div><h4 class="text-sm font-bold">深色模式</h4><p class="text-[10px] opacity-60">完全沉浸式深黑體驗</p></div>
-                    <label class="ios-toggle spring-action">
+                    <label class="ios-toggle">
                         <input type="checkbox" id="dark-mode-toggle" onchange="toggleDarkMode(this.checked)">
                         <div class="toggle-track"><div class="toggle-thumb"></div></div>
                     </label>
@@ -579,7 +545,7 @@
                 <div class="premium-card p-6">
                     <div class="flex items-center justify-between mb-2">
                         <div class="flex items-center gap-2"><i class="fas fa-broom text-blue-500 text-lg"></i><h3 class="font-black text-sm">自動清理歷史紀錄</h3></div>
-                        <label class="ios-toggle spring-action">
+                        <label class="ios-toggle">
                             <input type="checkbox" id="admin-autoclean-toggle" onchange="toggleAdminSetting('autoClean', this.checked)">
                             <div class="toggle-track"><div class="toggle-thumb"></div></div>
                         </label>
@@ -590,7 +556,7 @@
                 <div class="premium-card p-6">
                     <div class="flex items-center justify-between mb-4 pb-4 border-b" style="border-color: var(--theme-border);">
                         <div class="flex items-center gap-2"><i class="fas fa-shield-check text-green-500 text-lg"></i><h3 class="font-black text-sm">白名單系統</h3></div>
-                        <label class="ios-toggle spring-action">
+                        <label class="ios-toggle">
                             <input type="checkbox" id="admin-whitelist-toggle" onchange="toggleAdminSetting('whitelist', this.checked)">
                             <div class="toggle-track"><div class="toggle-thumb"></div></div>
                         </label>
@@ -609,7 +575,7 @@
                 <div class="premium-card p-6">
                     <div class="flex items-center justify-between mb-4 pb-4 border-b" style="border-color: var(--theme-border);">
                         <div class="flex items-center gap-2"><i class="fas fa-ban text-red-500 text-lg"></i><h3 class="font-black text-sm">黑名單系統</h3></div>
-                        <label class="ios-toggle spring-action">
+                        <label class="ios-toggle">
                             <input type="checkbox" id="admin-blacklist-toggle" onchange="toggleAdminSetting('blacklist', this.checked)">
                             <div class="toggle-track"><div class="toggle-thumb"></div></div>
                         </label>
@@ -784,41 +750,11 @@
 
     <div id="toast-container"></div>
 
-    <!-- 全局觸控/點擊回饋系統 (Haptic & Visual Splash GPU 加速版) -->
-    <script>
-        document.addEventListener('pointerdown', function(e) {
-            const target = e.target.closest('.spring-action, button, .custom-chip, .ios-toggle, a');
-            if(!target) return;
-            
-            // 1. 手機硬體震動回饋 (Haptic Engine)
-            if (navigator.vibrate) {
-                // 使用更短的 10ms 震動，營造更清脆的「噠」聲手感
-                navigator.vibrate(10);
-            }
-
-            // 2. 視覺水波紋 (純 CSS GPU 加速)
-            const splash = document.createElement('div');
-            splash.className = 'tap-splash';
-            splash.style.left = `${e.clientX}px`;
-            splash.style.top = `${e.clientY}px`;
-            splash.style.backgroundColor = document.documentElement.getAttribute('data-theme') === 'dark' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)';
-            
-            // 直接插入 DOM，交給 CSS @keyframes 處理，不阻塞 JS 主線程
-            document.body.appendChild(splash);
-            
-            // 動畫結束後移除 DOM
-            setTimeout(() => splash.remove(), 400);
-        }, { passive: true }); // 使用 passive 提升滑動與點擊的偵測效能
-    </script>
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, signInAnonymously, onAuthStateChanged, signOut, signInWithCustomToken, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, query, onSnapshot, addDoc, deleteDoc, doc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // ==========================================
-        // Firebase Config 初始化
-        // ==========================================
         const fallbackConfig = {
             apiKey: "AIzaSyBVwnMF2XR1zlrXFSj1yWUCOjbGuIcH3Hw",
             authDomain: "hwrc2-e8543.firebaseapp.com",
@@ -845,6 +781,7 @@
         let adminConfig = { marquee: '', maintenance: false, autoCleanEnabled: false, whitelistEnabled: false, whitelist: ['chimhinhin@gmail.com'], blacklistEnabled: false, blacklist: [] };
         let adminUsersList = []; let systemAuditLogs = [];
 
+        // 🌟 已完整補回所有香港學校 24 個科目，確保無論如何都有資料
         const subjectColors = ['#FFB3BA','#BAE1FF','#BAFFC9','#FFDFBA','#E8DFF5','#DAEAF6','#E2F0CB','#F3B0C3','#CBAACB','#FDFD96','#FFC4C4','#FFD1B3','#FFF2B2','#C4FAC7','#C4E4FF','#E2D4F0','#FAD4D8','#D0E3F0','#D9E8B8','#F0A1B7','#C09DC0','#F5F587','#E5B2C6','#B2D5D0'];
         const defaultSubjects = [
             { id: 'sub_hk_1', name: '中國語文', color: '#FFB3BA', enabled: true },
@@ -879,21 +816,18 @@
         let unsubTasksPub = null, unsubTasksPriv = null, unsubHist = null, unsubSettings = null, unsubTTGlobal = null, unsubTTPriv = null, unsubAdmin = null, unsubAdminUsers = null, unsubLogs = null;
         let liveClassInterval = null;
 
-        // --- 🚀 效能極致化：防抖、快取與「渲染懸停 (Render Suspension)」變數 ---
+        // 🚀 效能與防重繪變數
         let renderTasksTimeout = null;
         let cachedScheduleSignature = '';
         let cachedSchedule = [];
-        let lastSettingsSaveTime = 0;       // 防止 Firebase 回傳干擾設定畫面
-        let suspendRenderUntil = 0;         // 點擊完成/刪除時，暫時鎖死畫面重繪
-        let subjectToggleTimeout = null;    // 科目切換重繪延遲
+        let lastSettingsSaveTime = 0;       
+        let suspendRenderUntil = 0;         
+        let isFirstLoadSettings = true; // 🌟 確保首次載入 100% 渲染 UI
 
-        // --- Core Utility Functions ---
         const todayStr = new Date().toLocaleDateString('en-CA');
         function getNextWeekdayStr() { let d = new Date(); let day = d.getDay(); d.setDate(d.getDate() + (day === 5 ? 3 : day === 6 ? 2 : 1)); return d.toLocaleDateString('en-CA'); }
-        function getDaysDiffStr(dateStr) { const due = new Date(dateStr); const today = new Date(todayStr); const diffDays = Math.ceil((due - today) / (1000 * 60 * 60 * 24)); if(diffDays === 0) return '今天要交'; if(diffDays === 1) return '明天要交'; if(diffDays < 0) return `已過期 ${Math.abs(diffDays)} 天`; return `${diffDays} 天後交`; }
         function getDayOfWeek(dateStr) { return ['日', '一', '二', '三', '四', '五', '六'][new Date(dateStr).getDay()]; }
         function hexToRgba(hex, alpha) { if(!hex || hex.length < 7) return `rgba(200,200,200,${alpha})`; let r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16); return `rgba(${r}, ${g}, ${b}, ${alpha})`; }
-        function timeAgo(dateStr) { if(!dateStr) return '未知'; const diff = (new Date() - new Date(dateStr)) / 1000; if(diff < 60) return '剛剛'; if(diff < 3600) return Math.floor(diff/60) + ' 分鐘前'; if(diff < 86400) return Math.floor(diff/3600) + ' 小時前'; return Math.floor(diff/86400) + ' 天前'; }
 
         document.getElementById('task-date').value = getNextWeekdayStr();
 
@@ -943,6 +877,7 @@
             const ttBreakNode = document.getElementById('setting-tt-break'); if (ttBreakNode) ttBreakNode.value = userSettings.ttBreakMins || 15;
             const ttLunchNode = document.getElementById('setting-tt-lunch'); if (ttLunchNode) ttLunchNode.value = userSettings.ttLunchMins || 50;
             document.querySelectorAll('.theme-btn').forEach(btn => btn.style.borderColor = (btn.dataset.color === userSettings.theme) ? 'var(--theme-text-main)' : 'transparent');
+            
             buildCustomChips(); updateTTModeChips();
         }
         window.applyTheme = applyTheme;
@@ -971,8 +906,10 @@
         window.updateTTCycle = updateTTCycle;
         function updateTTSmart() { userSettings.ttPeriodMins = parseInt(document.getElementById('setting-tt-period').value) || 35; userSettings.ttBreakMins = parseInt(document.getElementById('setting-tt-break').value) || 15; userSettings.ttLunchMins = parseInt(document.getElementById('setting-tt-lunch').value) || 50; saveSettings(); }
         window.updateTTSmart = updateTTSmart;
+        
         function saveSettings() { 
             if(currentUser) {
+                lastSettingsSaveTime = Date.now(); 
                 setDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'settings', 'profile'), userSettings).catch(err => console.warn("設定儲存失敗", err));
             }
         }
@@ -986,6 +923,10 @@
             if(!addCont || !filterCont || !editCont) return;
             addCont.innerHTML = ''; filterCont.innerHTML = ''; editCont.innerHTML = ''; if(ttCont) ttCont.innerHTML = '';
             filterCont.insertAdjacentHTML('beforeend', `<button type="button" class="custom-chip px-3 py-1.5 text-[11px] flex-shrink-0 spring-action" data-subject="all" onclick="setSubjectFilter('all')">所有科目</button>`);
+            
+            // 防護機制，確保有預設資料
+            if (!userSettings.subjects || userSettings.subjects.length === 0) userSettings.subjects = defaultSubjects;
+
             const enabledSubjects = userSettings.subjects.filter(s => s.enabled !== false);
             enabledSubjects.forEach(sub => {
                 addCont.insertAdjacentHTML('beforeend', `<button type="button" class="custom-chip px-3 py-1.5 text-[11px] flex-shrink-0 spring-action" data-subject="${sub.name}" onclick="setSubjectAdd('${sub.name}')">${sub.name}</button>`);
@@ -1018,18 +959,15 @@
         function setSubjectEdit(val) { document.getElementById('edit-subject').value = val; updateChipStyles(); }
         window.setSubjectEdit = setSubjectEdit;
 
-        // --- Admin Functions ---
         async function saveAdminConfig() {
             if(!isAdmin) return;
-            try {
-                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'system'), adminConfig);
-            } catch(e) { console.warn("Admin config save failed", e); }
+            try { await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'system'), adminConfig); } catch(e) {}
         }
         window.saveAdminConfig = saveAdminConfig;
 
         function logAdminAction(action, details) {
             if (!isAdmin) return;
-            addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'auditLogs'), { action, details, admin: currentUser.email, timestamp: new Date().toISOString() }).catch(e => console.warn('日誌寫入失敗', e));
+            addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'auditLogs'), { action, details, admin: currentUser.email, timestamp: new Date().toISOString() }).catch(e => {});
         }
 
         function toggleAdminSetting(key, val) {
@@ -1046,9 +984,7 @@
             const email = input.value.trim();
             if(!email) return;
             
-            // 安全檢查：若 Firebase 中還沒有該陣列屬性，則初始化之
             if (!adminConfig[listName]) adminConfig[listName] = [];
-
             if(!adminConfig[listName].includes(email)) {
                 adminConfig[listName].push(email);
                 saveAdminConfig();
@@ -1074,16 +1010,12 @@
             const wl = document.getElementById('admin-whitelist-list');
             if(wl) {
                 wl.innerHTML = '';
-                (adminConfig.whitelist || []).forEach(email => {
-                    wl.insertAdjacentHTML('beforeend', `<tr class="border-b dark:border-zinc-700"><td class="p-3 text-xs">${email}</td><td class="p-3 text-right"><button onclick="removeAdminList('whitelist', '${email}')" class="text-red-500"><i class="fas fa-times"></i></button></td></tr>`);
-                });
+                (adminConfig.whitelist || []).forEach(email => { wl.insertAdjacentHTML('beforeend', `<tr class="border-b dark:border-zinc-700"><td class="p-3 text-xs">${email}</td><td class="p-3 text-right"><button onclick="removeAdminList('whitelist', '${email}')" class="text-red-500"><i class="fas fa-times"></i></button></td></tr>`); });
             }
             const bl = document.getElementById('admin-blacklist-list');
             if(bl) {
                 bl.innerHTML = '';
-                (adminConfig.blacklist || []).forEach(email => {
-                    bl.insertAdjacentHTML('beforeend', `<tr class="border-b dark:border-zinc-700"><td class="p-3 text-xs">${email}</td><td class="p-3 text-right"><button onclick="removeAdminList('blacklist', '${email}')" class="text-red-500"><i class="fas fa-times"></i></button></td></tr>`);
-                });
+                (adminConfig.blacklist || []).forEach(email => { bl.insertAdjacentHTML('beforeend', `<tr class="border-b dark:border-zinc-700"><td class="p-3 text-xs">${email}</td><td class="p-3 text-right"><button onclick="removeAdminList('blacklist', '${email}')" class="text-red-500"><i class="fas fa-times"></i></button></td></tr>`); });
             }
             
             const btnAc = document.getElementById('admin-autoclean-toggle'); if(btnAc) btnAc.checked = adminConfig.autoCleanEnabled || false;
@@ -1114,8 +1046,7 @@
         window.publishMarquee = publishMarquee;
 
         function clearMarquee() {
-            const input = document.getElementById('admin-marquee-input');
-            if(input) input.value = '';
+            const input = document.getElementById('admin-marquee-input'); if(input) input.value = '';
             adminConfig.marquee = '';
             saveAdminConfig();
             logAdminAction('清除跑馬燈', '已清空系統公告');
@@ -1135,7 +1066,6 @@
         function applySystemConfig(configData) {
             adminConfig = { ...adminConfig, ...configData };
             
-            // Marquee
             const mqCont = document.getElementById('global-marquee-container');
             const mqTxt = document.getElementById('global-marquee-text');
             if (adminConfig.marquee && adminConfig.marquee.trim() !== '') {
@@ -1145,7 +1075,6 @@
                 if(mqCont) mqCont.classList.add('hidden');
             }
 
-            // Maintenance Mode Check
             const maintScreen = document.getElementById('maintenance-screen');
             if (maintScreen) {
                 if (adminConfig.maintenance && !isAdmin) {
@@ -1157,26 +1086,20 @@
                 }
             }
 
-            // Whitelist/Blacklist Check for non-admins
             if (currentUser && !isAdmin) {
                 if (adminConfig.blacklistEnabled && adminConfig.blacklist && adminConfig.blacklist.includes(currentUser.email)) {
-                    handleLogout();
-                    alert("你的帳戶已被管理員封鎖。");
+                    handleLogout(); alert("你的帳戶已被管理員封鎖。");
                 }
                 if (adminConfig.whitelistEnabled && adminConfig.whitelist && !adminConfig.whitelist.includes(currentUser.email)) {
-                    handleLogout();
-                    alert("系統目前僅開放白名單用戶登入。");
+                    handleLogout(); alert("系統目前僅開放白名單用戶登入。");
                 }
             }
 
             const viewAdmin = document.getElementById('view-admin');
-            if(viewAdmin && viewAdmin.classList.contains('active')) {
-                renderAdminSettings();
-            }
+            if(viewAdmin && viewAdmin.classList.contains('active')) renderAdminSettings();
         }
         window.applySystemConfig = applySystemConfig;
 
-        // --- Timetable System ---
         function getTimetableDaysConfig() {
             const mode = userSettings.ttMode || '5day'; const cycle = userSettings.ttCycle || 5; let days = []; const weekLabels = ['一', '二', '三', '四', '五', '六', '日'];
             const count = (mode === '5day') ? 5 : (mode === '6day') ? 6 : (mode === '7day') ? 7 : cycle;
@@ -1334,7 +1257,6 @@
         function syncGlobalTimetable() { if(globalTimetable.length === 0) return; customConfirm('同步時間表', '這將覆蓋你的個人修改，確定同步嗎？', 'danger', () => { userTimetable = JSON.parse(JSON.stringify(globalTimetable)); renderTimetableUI(); saveTimetable(); }); }
         window.syncGlobalTimetable = syncGlobalTimetable;
 
-        // --- Live Class Widget Logic (🚀 極致降維優化版) ---
         function updateLiveClassWidget() {
             const widget = document.getElementById('live-class-widget');
             if(!widget) return;
@@ -1345,13 +1267,12 @@
             const now = new Date();
             const currentSignature = now.toDateString() + '_' + tt.length;
             
-            // 🚀 效能極致化：只有日期變更或時間表長度變更時，才重新解析日期與建立陣列 (避免每秒瘋狂產垃圾卡死手機)
             if (cachedScheduleSignature !== currentSignature) {
                 let dayNum = now.getDay(); let dayKey = dayNum === 0 ? 'd7' : 'd' + dayNum;
                 const daysConfig = getTimetableDaysConfig();
                 
                 if(!daysConfig.find(d => d.key === dayKey)) {
-                    cachedSchedule = null; // 放假
+                    cachedSchedule = null; 
                 } else {
                     cachedSchedule = tt.map(row => {
                         const sParts = (row.startTime||"00:00").split(':'); const eParts = (row.endTime||"00:00").split(':');
@@ -1408,7 +1329,6 @@
             
             widget.style.display = 'block';
             
-            // 🚀 效能極致化：Virtual DOM 概念，只在資料有變化時才修改 DOM，避免瀏覽器 Layout Thrashing
             const elCurrentClass = document.getElementById('live-current-class');
             if(elCurrentClass.innerText !== currentState) elCurrentClass.innerText = currentState;
             
@@ -1462,15 +1382,13 @@
             listEnabled.innerHTML = ''; listDisabled.innerHTML = '';
             userSettings.subjects.forEach(sub => {
                 const isEnabled = sub.enabled !== false;
-                // 加入安全的 view-transition-name 讓瀏覽器追蹤元素軌跡
-                const safeId = sub.id.replace(/[^a-zA-Z0-9_]/g, '_');
-                const html = `<div class="premium-card p-4 md:p-5 flex justify-between items-center shadow-sm transition-all duration-300" style="background-color: ${hexToRgba(sub.color, isEnabled ? 0.3 : 0.1)}; view-transition-name: subject_card_${safeId};">
+                const html = `<div class="premium-card p-4 md:p-5 flex justify-between items-center shadow-sm transition-all duration-300" style="background-color: ${hexToRgba(sub.color, isEnabled ? 0.3 : 0.1)};">
                         <div class="flex items-center gap-3 overflow-hidden">
                             <div class="w-5 h-5 rounded-full shadow-sm shrink-0" style="background-color: ${sub.color}"></div>
                             <span class="font-black text-[14px] md:text-[15px] truncate" style="color: var(--theme-text-main)">${sub.name}</span>
                         </div>
                         <div class="flex items-center gap-4 shrink-0">
-                            <label class="ios-toggle spring-action scale-90 origin-right">
+                            <label class="ios-toggle scale-90 origin-right">
                                 <input type="checkbox" ${isEnabled ? 'checked' : ''} onchange="toggleSubjectEnable('${sub.id}', this.checked, this)">
                                 <div class="toggle-track"><div class="toggle-thumb"></div></div>
                             </label>
@@ -1483,7 +1401,6 @@
         }
         window.renderSubjectsPage = renderSubjectsPage;
 
-        // 🌟 終極 0 延遲：移除所有「縮放與位移」動畫，解決「收埋再開返」的閃縮錯覺
         function toggleSubjectEnable(id, isEnabled, el) { 
             const sub = userSettings.subjects.find(s => s.id === id); 
             if(!sub || sub.enabled === isEnabled) return; 
@@ -1491,33 +1408,21 @@
             sub.enabled = isEnabled; 
             lastSettingsSaveTime = Date.now();
             
-            // 將存檔工作推遲 50ms，讓出主線程，確保點擊瞬間零卡頓
             setTimeout(() => saveSettings(), 50); 
             
             const card = el ? el.closest('.premium-card') : null;
             const targetList = isEnabled ? document.getElementById('subjects-list-enabled') : document.getElementById('subjects-list-disabled');
             
             if(card && targetList) {
-                // 1. 關閉過渡動畫，準備瞬間搬移
                 card.style.transition = 'none';
-                
-                // 2. 0 毫秒瞬間搬移到另一個列表
                 if (isEnabled) {
                     targetList.appendChild(card); 
                 } else {
                     targetList.prepend(card);     
                 }
-                
-                // 3. 瞬間改變背景顏色，不改變透明度與大小
                 card.style.backgroundColor = hexToRgba(sub.color, isEnabled ? 0.3 : 0.1);
-                
-                // 4. 強制瀏覽器重繪讓搬移立刻生效
                 void card.offsetWidth; 
-                
-                // 5. 恢復柔和的背景色漸變 (完全不加 transform，卡片就不會亂縮放了！)
                 card.style.transition = 'background-color 0.3s ease';
-                
-                // 同步更新 Chips 標籤
                 buildCustomChips();
             } else {
                 renderSubjectsPage(); 
@@ -1598,8 +1503,9 @@
                 let contentHtml = task.content.replace(/\n/g, '<br>');
                 let urlBtnHtml = task.url ? `<a href="${task.url}" target="_blank" class="block w-full text-center py-2.5 mt-3 bg-white/60 dark:bg-black/30 hover:bg-white dark:hover:bg-black text-blue-500 rounded-xl text-[11px] font-black tracking-wider transition-colors shadow-sm"><i class="fas fa-link mr-1"></i> 點擊開啟附件 / 網頁連結</a>` : '';
 
+                // 移除 stagger-item 避免資料庫變更時整個畫面強制跳動
                 listEl.insertAdjacentHTML('beforeend', `
-                    <div class="premium-card p-5 relative group stagger-item ${task.isImportant ? 'glow-effect' : ''}" style="background-color: ${getCardBg(task.subject)}; border-left: 5px solid ${subColor}; animation-delay: ${index * 0.05}s;">
+                    <div class="premium-card p-5 relative group ${task.isImportant ? 'glow-effect' : ''}" style="background-color: ${getCardBg(task.subject)}; border-left: 5px solid ${subColor};">
                         ${task.isImportant ? `<i class="fas fa-star absolute -top-2 -right-2 text-yellow-400 text-2xl drop-shadow-md z-10"></i>` : ''}
                         <div class="flex justify-between items-start mb-3">
                             <div class="flex items-center gap-2 flex-wrap">
@@ -1607,7 +1513,6 @@
                                 ${task.type === 'test' ? `<span class="px-2 py-0.5 rounded text-[9px] font-bold bg-purple-100 text-purple-700">測驗</span>` : ''}
                                 ${badgeHtml}
                             </div>
-                            <!-- 🌟 傳入 this 實現點擊瞬間動畫 -->
                             ${canEditDelete ? `<div class="flex gap-2 shrink-0"><button onclick="openEditModal('${task.id}', ${task.isPublic})" class="w-7 h-7 rounded-full bg-white/60 text-gray-600 flex items-center justify-center text-xs shadow-sm spring-action"><i class="fas fa-pen"></i></button><button onclick="deleteTask('${task.id}', ${task.isPublic}, this)" class="w-7 h-7 rounded-full bg-white/60 text-red-500 flex items-center justify-center text-xs shadow-sm spring-action"><i class="fas fa-trash"></i></button></div>` : ''}
                         </div>
                         <p class="text-[15px] font-black leading-relaxed mb-1" style="color: var(--theme-text-main)">${contentHtml}</p>
@@ -1617,7 +1522,6 @@
                                 <p class="text-[10px] font-bold opacity-60"><i class="far fa-calendar mr-1"></i> ${task.dueDate} (${getDayOfWeek(task.dueDate)})</p>
                                 ${task.isPublic ? `<p class="text-[10px] font-black mt-1 text-orange-500"><i class="fas fa-bullhorn"></i> 全域廣播</p>` : ''}
                             </div>
-                            <!-- 🌟 傳入 this 實現點擊瞬間動畫 -->
                             <button onclick="completeTask('${task.id}', ${task.isPublic}, this)" class="px-5 py-2.5 rounded-xl text-[11px] font-black shadow-md bg-black dark:bg-white text-white dark:text-black spring-action hover:scale-105 transition-transform"><i class="fas fa-check mr-1"></i> 完成</button>
                         </div>
                     </div>`);
@@ -1629,8 +1533,7 @@
             const listEl = document.getElementById('history-tasks-list'); listEl.innerHTML = '';
             if(historyTasks.length === 0) { listEl.innerHTML = `<div class="text-center py-16 text-sm font-bold opacity-30">暫無歷史紀錄。</div>`; return; }
             historyTasks.forEach((task, index) => { 
-                // 🌟 傳入 this 實現點擊瞬間動畫
-                listEl.insertAdjacentHTML('beforeend', `<div class="premium-card p-4 opacity-50 stagger-item" style="animation-delay: ${index * 0.05}s;"><div class="flex justify-between items-start mb-2">${getSubjectHTML(task.subject)}<button onclick="deleteHistoryTask('${task.id}', this)" class="text-red-500 spring-action hover:text-red-700 transition-colors"><i class="fas fa-times"></i></button></div><p class="text-xs font-bold line-through line-clamp-1">${task.content}</p><p class="text-[9px] mt-2 font-bold opacity-50">完成於: ${new Date(task.completedAt).toLocaleString()}</p></div>`); 
+                listEl.insertAdjacentHTML('beforeend', `<div class="premium-card p-4 opacity-50"><div class="flex justify-between items-start mb-2">${getSubjectHTML(task.subject)}<button onclick="deleteHistoryTask('${task.id}', this)" class="text-red-500 spring-action hover:text-red-700 transition-colors"><i class="fas fa-times"></i></button></div><p class="text-xs font-bold line-through line-clamp-1">${task.content}</p><p class="text-[9px] mt-2 font-bold opacity-50">完成於: ${new Date(task.completedAt).toLocaleString()}</p></div>`); 
             });
         }
         window.renderHistory = renderHistory;
@@ -1645,7 +1548,7 @@
                 publicAssignments.forEach((task, index) => {
                     const subColor = (userSettings.subjects.find(s=>s.name===task.subject)||{}).color||'#e5e5ea';
                     listEl.insertAdjacentHTML('beforeend', `
-                        <div class="flex items-center justify-between p-4 rounded-xl border border-gray-100 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-900/50 shadow-sm stagger-item" style="animation-delay: ${index * 0.05}s;">
+                        <div class="flex items-center justify-between p-4 rounded-xl border border-gray-100 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-900/50 shadow-sm">
                             <div class="flex-1 pr-4">
                                 <div class="flex items-center gap-2 mb-1.5">
                                     <span class="px-2 py-0.5 rounded text-[9px] font-bold" style="background-color: ${subColor}; color: #1d1d1f;">${task.subject}</span>
@@ -1655,7 +1558,7 @@
                             </div>
                             <div class="flex gap-2 shrink-0">
                                 <button onclick="openEditModal('${task.id}', true)" class="w-8 h-8 rounded-full bg-white dark:bg-zinc-700 text-gray-600 dark:text-gray-300 flex items-center justify-center spring-action shadow-sm"><i class="fas fa-pen text-xs"></i></button>
-                                <button onclick="deleteTask('${task.id}', true)" class="w-8 h-8 rounded-full bg-red-50 dark:bg-red-900/30 text-red-500 flex items-center justify-center spring-action shadow-sm"><i class="fas fa-trash text-xs"></i></button>
+                                <button onclick="deleteTask('${task.id}', true, this)" class="w-8 h-8 rounded-full bg-red-50 dark:bg-red-900/30 text-red-500 flex items-center justify-center spring-action shadow-sm"><i class="fas fa-trash text-xs"></i></button>
                             </div>
                         </div>
                     `);
@@ -1676,7 +1579,7 @@
                 if(log.action.includes('維護')) icon = 'fa-tools text-purple-500';
                 
                 listEl.insertAdjacentHTML('beforeend', `
-                    <div class="flex items-start gap-4 p-4 rounded-xl border border-gray-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm relative stagger-item" style="animation-delay: ${index * 0.05}s;">
+                    <div class="flex items-start gap-4 p-4 rounded-xl border border-gray-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm relative">
                         <div class="w-8 h-8 rounded-full bg-gray-50 dark:bg-zinc-800 flex items-center justify-center shrink-0 shadow-sm"><i class="fas ${icon} text-sm"></i></div>
                         <div>
                             <div class="flex items-center gap-2 mb-1"><span class="text-xs font-black">${log.action}</span><span class="text-[9px] font-bold opacity-50">${new Date(log.timestamp).toLocaleString()}</span></div>
@@ -1713,7 +1616,7 @@
                 const statusBadge = isBlocked ? `<span class="bg-red-500 text-white px-2 py-0.5 rounded-md text-[9px] font-black mt-1 inline-block">已封鎖</span>` : '';
                 
                 listEl.insertAdjacentHTML('beforeend', `
-                    <tr class="border-b transition-colors hover:bg-gray-50 dark:hover:bg-zinc-800 stagger-item" style="border-color: var(--theme-border); animation-delay: ${index * 0.05}s;">
+                    <tr class="border-b transition-colors hover:bg-gray-50 dark:hover:bg-zinc-800" style="border-color: var(--theme-border);">
                         <td class="p-4 flex items-center gap-3">
                             <div class="relative"><img src="${u.avatar}" class="w-10 h-10 rounded-full shadow-sm"><div class="absolute bottom-0 right-0 w-3 h-3 ${isBlocked ? 'bg-red-500' : ((new Date() - new Date(u.lastLogin)) < 300000 ? 'bg-green-500' : 'bg-gray-400')} border-2 border-white rounded-full"></div></div>
                             <div><p class="text-xs font-black">${u.name}</p><p class="text-[10px] text-gray-500">${u.email}</p>${statusBadge}</div>
@@ -1749,10 +1652,17 @@
         // --- Data Submission ---
         document.getElementById('add-task-form').onsubmit = (e) => {
             e.preventDefault(); if(!currentUser) return;
+            
+            // 🚀 防止空科目：主動檢查並提示
+            const subject = document.getElementById('task-subject').value;
+            if (!subject) {
+                showToast("請點擊選擇一個科目！");
+                return;
+            }
+
             const btn = e.target.querySelector('button[type="submit"]'); btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
             const isPub = document.getElementById('task-broadcast').checked && isAdmin;
             const taskContent = document.getElementById('task-content').value;
-            const subject = document.getElementById('task-subject').value;
             
             const task = { 
                 content: taskContent, subject: subject, type: document.getElementById('task-type').value, 
@@ -1765,15 +1675,14 @@
                 if (isPub) logAdminAction('發佈廣播', `[${subject}] ${taskContent.substring(0,20)}...`);
                 document.getElementById('add-task-form').reset(); document.getElementById('task-date').value = getNextWeekdayStr(); 
                 document.getElementById('task-subject').value = subject; updateChipStyles();
-                showToast("新增成功"); 
+                showToast("新增任務成功"); 
             }).catch(e => showToast("新增失敗")).finally(() => { btn.disabled = false; btn.innerHTML = '新增任務'; });
         };
 
-        // 🌟 樂觀 UI 升級：點擊完成，卡片極速縮小並在 150ms 內消失，手感零延遲
         function completeTask(id, isPub, el) { 
             const task = allTasks.find(t => t.id === id); if(!task) return; 
 
-            suspendRenderUntil = Date.now() + 500; // 暫停全局畫面重繪 0.5 秒，保護動畫！
+            suspendRenderUntil = Date.now() + 500; 
 
             if(el) {
                 const card = el.closest('.premium-card');
@@ -1781,7 +1690,7 @@
                     card.style.transition = 'all 0.15s cubic-bezier(0.2, 0.8, 0.2, 1)';
                     card.style.transform = 'scale(0.85)';
                     card.style.opacity = '0';
-                    setTimeout(() => { if(card.parentNode) card.remove(); }, 150); // 極速清空
+                    setTimeout(() => { if(card.parentNode) card.remove(); }, 150); 
                 }
             }
 
@@ -1794,10 +1703,9 @@
         }
         window.completeTask = completeTask;
 
-        // 🌟 樂觀 UI 升級：點擊刪除，150ms 瞬間消失
         function deleteTask(id, isPub, el) { 
             customConfirm('刪除任務', '確定要徹底刪除此紀錄嗎？', 'danger', () => { 
-                suspendRenderUntil = Date.now() + 500; // 保護動畫
+                suspendRenderUntil = Date.now() + 500; 
 
                 if(el) {
                     const card = el.closest('.premium-card');
@@ -1815,10 +1723,9 @@
         }
         window.deleteTask = deleteTask;
 
-        // 🌟 樂觀 UI 升級：點擊刪除歷史，150ms 瞬間消失
         function deleteHistoryTask(id, el) { 
             customConfirm('清除紀錄', '徹底刪除此歷史紀錄？', 'danger', () => { 
-                suspendRenderUntil = Date.now() + 500; // 保護動畫
+                suspendRenderUntil = Date.now() + 500; 
 
                 if(el) {
                     const card = el.closest('.premium-card');
@@ -1834,7 +1741,26 @@
         }
         window.deleteHistoryTask = deleteHistoryTask;
 
-        function confirmClearHistory() { if(historyTasks.length === 0) return showToast("沒有紀錄可清除"); customConfirm('徹底清空', '確定要清空所有紀錄嗎？', 'danger', () => { historyTasks.forEach(t => deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'history', t.id))); showToast("歷史紀錄已清空"); }); }
+        function confirmClearHistory() { 
+            if(historyTasks.length === 0) return showToast("沒有紀錄可清除"); 
+            customConfirm('徹底清空', '確定要清空所有紀錄嗎？', 'danger', () => { 
+                suspendRenderUntil = Date.now() + 800; 
+
+                const listEl = document.getElementById('history-tasks-list');
+                if(listEl) {
+                    Array.from(listEl.children).forEach(card => {
+                        card.style.transition = 'all 0.15s ease';
+                        card.style.transform = 'scale(0.85)';
+                        card.style.opacity = '0';
+                    });
+                    setTimeout(() => { listEl.innerHTML = ''; }, 150);
+                }
+
+                Promise.all(historyTasks.map(t => deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'history', t.id))))
+                    .then(() => showToast("歷史紀錄已徹底清空"))
+                    .catch(e => showToast("部分紀錄清除失敗，請重試"));
+            }); 
+        }
         window.confirmClearHistory = confirmClearHistory;
 
         function openEditModal(id, isPub) { 
@@ -1861,7 +1787,6 @@
         }
         window.saveEditTask = saveEditTask;
 
-        // --- Clean Listeners ---
         function clearListeners() {
             if(unsubTasksPub) { unsubTasksPub(); unsubTasksPub = null; }
             if(unsubTasksPriv) { unsubTasksPriv(); unsubTasksPriv = null; }
@@ -1874,7 +1799,6 @@
             if(unsubLogs) { unsubLogs(); unsubLogs = null; }
         }
 
-        // --- Core Listeners & Error Handlers ---
         function setupDataListeners() {
             if(!currentUser) return;
             clearListeners();
@@ -1888,21 +1812,27 @@
             };
             
             let lastSettingsDataStr = "";
+            
             unsubSettings = onSnapshot(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'settings', 'profile'), docSnap => { 
                 if(docSnap.exists()) { 
                     const d = docSnap.data(); 
                     if(d.subjects) d.subjects = d.subjects.map(s => ({...s, enabled: s.enabled !== false})); 
                     
                     const newStr = JSON.stringify(d);
-                    if (lastSettingsDataStr === newStr) return; // 資料無變化，無視！
+                    
+                    // 🚀 防止過度攔截：只有在「非首次載入」且「資料真的沒變」時，才跳過渲染
+                    if (!isFirstLoadSettings && lastSettingsDataStr === newStr) return; 
                     lastSettingsDataStr = newStr;
 
                     userSettings = { ...userSettings, ...d }; 
                 } 
                 
-                // 🌟 終極防護機制：如果是自己最近 1.5 秒內存檔的，一律無視伺服器回傳的強制重繪！
-                if (docSnap.metadata && docSnap.metadata.hasPendingWrites) return;
-                if (Date.now() - lastSettingsSaveTime < 1500) return; 
+                // 🚀 如果不是首次載入，才啟動「防止本地操作中斷」機制
+                if (!isFirstLoadSettings) {
+                    if (docSnap.metadata && docSnap.metadata.hasPendingWrites) return;
+                    if (Date.now() - lastSettingsSaveTime < 1500) return; 
+                }
+                isFirstLoadSettings = false; // 標記首次載入完成
 
                 applyTheme(); 
                 if(document.getElementById('view-subjects').classList.contains('active')) renderSubjectsPage(); 
@@ -1921,7 +1851,6 @@
                     
                     setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'directory', currentUser.uid), { pendingCount: privateAssignments.length, completedCount: historyTasks.length, lastLogin: new Date().toISOString() }, { merge: true }).catch(()=>{});
 
-                    // 🌟 如果目前有「正在刪除」的動畫，把重繪工作推遲 400ms，保證動畫不被卡死
                     if (Date.now() < suspendRenderUntil) {
                         setTimeout(processTasks, 400); 
                         return;
@@ -1934,17 +1863,42 @@
                 }, 80); 
             }
 
-            unsubTasksPub = onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'assignments'), s => { publicAssignments = []; s.forEach(d => publicAssignments.push({ id: d.id, ...d.data(), isPublic: true })); processTasks(); }, handleSnapshotError);
-            unsubTasksPriv = onSnapshot(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'assignments'), s => { privateAssignments = []; s.forEach(d => privateAssignments.push({ id: d.id, ...d.data(), isPublic: false })); processTasks(); }, handleSnapshotError);
+            // 🚀 強制將 id 覆寫在最後面，確保不被假 ID 污染
+            unsubTasksPub = onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'assignments'), s => { 
+                publicAssignments = []; 
+                s.forEach(d => {
+                    let data = d.data();
+                    data.id = d.id; 
+                    data.isPublic = true;
+                    publicAssignments.push(data);
+                }); 
+                processTasks(); 
+            }, handleSnapshotError);
+
+            unsubTasksPriv = onSnapshot(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'assignments'), s => { 
+                privateAssignments = []; 
+                s.forEach(d => {
+                    let data = d.data();
+                    data.id = d.id;
+                    data.isPublic = false;
+                    privateAssignments.push(data);
+                }); 
+                processTasks(); 
+            }, handleSnapshotError);
 
             unsubHist = onSnapshot(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'history'), s => { 
-                historyTasks = []; s.forEach(d => historyTasks.push({ id: d.id, ...d.data() })); historyTasks.sort((a,b) => new Date(b.completedAt) - new Date(a.completedAt)); 
+                historyTasks = []; 
+                s.forEach(d => {
+                    let data = d.data();
+                    data.id = d.id; // 🚀 關鍵修復：覆寫正確的歷史真實 ID
+                    historyTasks.push(data);
+                }); 
+                historyTasks.sort((a,b) => new Date(b.completedAt) - new Date(a.completedAt)); 
                 
                 const doRender = () => {
                     if(document.getElementById('view-history').classList.contains('active')) renderHistory(); 
                 };
 
-                // 保護刪除動畫
                 if (Date.now() < suspendRenderUntil) { setTimeout(doRender, 400); } else { doRender(); }
                 
                 if (adminConfig.autoCleanEnabled && historyTasks.length > 0) {
@@ -1976,7 +1930,6 @@
         }
         window.setupDataListeners = setupDataListeners;
 
-        // --- Auth Email / Google ---
         async function loginEmail() {
             const email = document.getElementById('auth-email').value.trim(); const pwd = document.getElementById('auth-pwd').value.trim();
             if(!email || !pwd) return showToast('請填寫電郵與密碼');
@@ -2038,6 +1991,7 @@
                 }
                 const roleBadge = document.getElementById('profile-modal-role'); roleBadge.innerText = isAdmin ? '管理員 (Admin)' : '學生帳戶'; roleBadge.className = `mb-8 inline-block px-4 py-1.5 rounded-lg text-xs font-bold ${isAdmin ? 'bg-orange-100 text-orange-600' : 'bg-gray-100 text-gray-600'}`;
                 
+                isFirstLoadSettings = true; // 確保重置狀態
                 initDefaultTimetableDay(); setupDataListeners(); switchView('home');
             } else {
                 clearListeners();
