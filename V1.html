@@ -6,6 +6,7 @@
     <title>智慧電子手冊 | Smart E-Handbook</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+HK:wght@400;500;700;900&display=swap');
         
@@ -15,7 +16,7 @@
             --theme-text-main: #1d1d1f;
             --theme-text-sub: #86868b;
             --theme-border: rgba(0,0,0,0.08);
-            --theme-nav: rgba(255,255,255,0.85);
+            --theme-nav: rgba(255,255,255,0.7);
             --theme-accent: #1d1d1f;
             --theme-accent-text: #ffffff;
         }
@@ -26,7 +27,7 @@
             --theme-text-main: #f5f5f7;
             --theme-text-sub: #a1a1a6;
             --theme-border: rgba(255,255,255,0.12);
-            --theme-nav: rgba(28,28,30,0.85);
+            --theme-nav: rgba(28,28,30,0.7);
             --theme-accent: #ffffff;
             --theme-accent-text: #000000;
         }
@@ -40,16 +41,22 @@
             transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s ease;
         }
 
-        /* Views */
-        .app-view { display: none; opacity: 0; transition: opacity 0.3s ease; }
-        .app-view.active { display: block; opacity: 1; animation: fadeIn 0.4s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* 穩定順滑的頁面切換動畫 */
+        .app-view { display: none; }
+        .app-view.active { display: block; animation: viewFadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes viewFadeInUp { 
+            from { opacity: 0; transform: translateY(12px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+
+        /* 列表階梯載入動畫 */
+        .stagger-item { opacity: 0; animation: viewFadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
         /* Premium Cards */
         .premium-card {
             background-color: var(--theme-card);
-            border-radius: 20px;
-            box-shadow: 0 2px 16px rgba(0, 0, 0, 0.03);
+            border-radius: 24px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
             border: 1px solid var(--theme-border);
             transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
         }
@@ -72,16 +79,15 @@
         input[type="time"]::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.6; }
         [data-theme="dark"] input[type="time"]::-webkit-calendar-picker-indicator { filter: invert(1); }
 
-        /* Bottom Nav */
-        .bottom-nav { background-color: var(--theme-nav); backdrop-filter: blur(20px); border-top: 1px solid var(--theme-border); }
-        .nav-item { color: var(--theme-text-sub); transition: all 0.2s ease; }
-        .nav-item.active { color: var(--theme-accent); transform: translateY(-2px); }
+        /* Nav Active State */
+        .nav-item { color: var(--theme-text-sub); transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .nav-item.active { color: var(--theme-accent); transform: scale(1.15); }
 
-        /* Custom Modals */
+        /* Custom Modals 開關動畫 */
         .custom-modal-overlay { opacity: 0; visibility: hidden; transition: all 0.3s ease; backdrop-filter: blur(8px); }
         .custom-modal-overlay.active { opacity: 1; visibility: visible; }
-        .custom-modal-content { transform: scale(0.95); opacity: 0; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); background-color: var(--theme-card); }
-        .custom-modal-overlay.active .custom-modal-content { transform: scale(1); opacity: 1; }
+        .custom-modal-content { transform: scale(0.95) translateY(10px); opacity: 0; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); background-color: var(--theme-card); }
+        .custom-modal-overlay.active .custom-modal-content { transform: scale(1) translateY(0); opacity: 1; }
 
         /* Toast */
         #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; align-items: center; gap: 8px;}
@@ -89,8 +95,8 @@
         .toast.show { transform: translateY(0) scale(1); opacity: 1; }
 
         /* Global Spring Animation */
-        .spring-action { transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important; will-change: transform; }
-        .spring-action:active { transform: scale(0.9) !important; }
+        .spring-action { transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important; will-change: transform; }
+        .spring-action:active { transform: scale(0.92) !important; }
 
         /* Custom Chips */
         .custom-chip { 
@@ -100,53 +106,85 @@
         }
         .custom-chip.selected { font-weight: 800; transform: scale(1.04); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
 
-        /* Scrollbars */
         ::-webkit-scrollbar { display: none; }
         * { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* Auth Inputs */
         .auth-input { width: 100%; padding: 16px; border-radius: 16px; background-color: var(--theme-bg); border: 1px solid var(--theme-border); color: var(--theme-text-main); font-weight: 500; font-size: 14px; transition: all 0.2s ease;}
         .auth-input:focus { outline: none; border-color: var(--theme-accent); background-color: var(--theme-card); box-shadow: 0 0 0 3px rgba(134, 134, 139, 0.1);}
 
-        /* Marquee Animation */
         .animate-marquee { display: inline-block; padding-left: 100%; animation: marquee 15s linear infinite; }
         @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+        .glow-effect { animation: glow 2s ease-in-out infinite alternate; }
+        @keyframes glow { from { box-shadow: 0 0 5px rgba(251, 191, 36, 0.2); } to { box-shadow: 0 0 20px rgba(251, 191, 36, 0.6); } }
     </style>
 </head>
-<body class="min-h-screen flex flex-col pb-24 md:pb-0 md:pl-24 relative overflow-x-hidden">
+<body class="min-h-screen flex flex-col pb-[100px] md:pb-[120px] relative overflow-x-hidden">
 
-    <!-- Global System Marquee (Hidden by default) -->
-    <div id="global-marquee-container" class="hidden w-full bg-orange-100 border-b border-orange-200 text-orange-700 text-[11px] font-black py-1.5 overflow-hidden z-50 sticky top-0">
+    <!-- Global System Marquee -->
+    <div id="global-marquee-container" class="hidden w-full bg-orange-100 border-b border-orange-200 text-orange-700 text-[11px] font-black py-1.5 overflow-hidden z-[70] sticky top-0 shadow-sm">
         <div class="whitespace-nowrap animate-marquee flex items-center">
             <i class="fas fa-bullhorn mr-2"></i> <span id="global-marquee-text"></span>
         </div>
     </div>
 
-    <!-- Side Nav (Desktop) -->
-    <nav class="hidden md:flex flex-col fixed top-0 left-0 h-full w-24 bottom-nav z-40 items-center py-8 gap-8 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
-        <div class="w-12 h-12 rounded-2xl bg-[#1d1d1f] text-white flex items-center justify-center text-xl mb-4 shadow-lg"><i class="fas fa-layer-group"></i></div>
-        <button onclick="switchView('home')" class="nav-item active flex flex-col items-center gap-1.5 w-full spring-action" data-target="home"><i class="fas fa-home text-xl"></i><span class="text-[10px] font-bold">主頁</span></button>
-        <button onclick="switchView('history')" class="nav-item flex flex-col items-center gap-1.5 w-full spring-action" data-target="history"><i class="fas fa-history text-xl"></i><span class="text-[10px] font-bold">歷史</span></button>
-        <button onclick="switchView('timetable')" class="nav-item flex flex-col items-center gap-1.5 w-full spring-action" data-target="timetable"><i class="fas fa-calendar-week text-xl"></i><span class="text-[10px] font-bold">時間表</span></button>
-        <button onclick="switchView('subjects')" class="nav-item flex flex-col items-center gap-1.5 w-full spring-action" data-target="subjects"><i class="fas fa-book text-xl"></i><span class="text-[10px] font-bold">科目</span></button>
-        <button onclick="switchView('settings')" class="nav-item flex flex-col items-center gap-1.5 w-full mt-auto spring-action" data-target="settings"><i class="fas fa-cog text-xl"></i><span class="text-[10px] font-bold">設定</span></button>
-        <button id="nav-admin-btn-desktop" onclick="switchView('admin')" class="nav-item flex flex-col items-center gap-1.5 w-full spring-action hidden text-orange-500" data-target="admin"><i class="fas fa-shield-alt text-xl"></i><span class="text-[10px] font-bold">後台</span></button>
+    <!-- Floating Dock Nav (Desktop) -->
+    <nav class="hidden md:flex flex-row fixed bottom-8 left-1/2 -translate-x-1/2 h-[auto] py-3 px-4 rounded-[32px] bg-white/80 dark:bg-[#1c1c1e]/80 backdrop-blur-3xl border border-gray-200/50 dark:border-zinc-700/50 shadow-2xl z-40 items-center gap-2">
+        <button onclick="switchView('home')" class="nav-item active group relative w-12 h-12 flex items-center justify-center rounded-2xl hover:bg-black/5 dark:hover:bg-white/10 spring-action" data-target="home">
+            <i class="fas fa-home text-[22px]"></i>
+            <span class="absolute -top-12 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-black/90 dark:bg-white/90 text-white dark:text-black text-xs font-bold rounded-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md">主頁</span>
+        </button>
+        <button onclick="switchView('history')" class="nav-item group relative w-12 h-12 flex items-center justify-center rounded-2xl hover:bg-black/5 dark:hover:bg-white/10 spring-action" data-target="history">
+            <i class="fas fa-history text-[22px]"></i>
+            <span class="absolute -top-12 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-black/90 dark:bg-white/90 text-white dark:text-black text-xs font-bold rounded-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md">歷史紀錄</span>
+        </button>
+        <button onclick="switchView('timetable')" class="nav-item group relative w-12 h-12 flex items-center justify-center rounded-2xl hover:bg-black/5 dark:hover:bg-white/10 spring-action" data-target="timetable">
+            <i class="fas fa-calendar-week text-[22px]"></i>
+            <span class="absolute -top-12 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-black/90 dark:bg-white/90 text-white dark:text-black text-xs font-bold rounded-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md">時間表</span>
+        </button>
+        <button onclick="switchView('subjects')" class="nav-item group relative w-12 h-12 flex items-center justify-center rounded-2xl hover:bg-black/5 dark:hover:bg-white/10 spring-action" data-target="subjects">
+            <i class="fas fa-book text-[22px]"></i>
+            <span class="absolute -top-12 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-black/90 dark:bg-white/90 text-white dark:text-black text-xs font-bold rounded-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md">科目管理</span>
+        </button>
+        <button onclick="switchView('settings')" class="nav-item group relative w-12 h-12 flex items-center justify-center rounded-2xl hover:bg-black/5 dark:hover:bg-white/10 spring-action" data-target="settings">
+            <i class="fas fa-cog text-[22px]"></i>
+            <span class="absolute -top-12 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-black/90 dark:bg-white/90 text-white dark:text-black text-xs font-bold rounded-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md">系統設定</span>
+        </button>
+        
+        <!-- Admin Nav -->
+        <div id="nav-admin-divider" class="w-px h-6 bg-gray-200 dark:bg-zinc-700 mx-1 hidden shrink-0"></div>
+        <button id="nav-admin-btn-desktop" onclick="switchView('admin')" class="nav-item group relative w-12 h-12 items-center justify-center rounded-2xl hover:bg-orange-50 dark:hover:bg-orange-900/30 text-orange-500 spring-action hidden" data-target="admin">
+            <i class="fas fa-shield-alt text-[22px]"></i>
+            <span class="absolute -top-12 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-orange-500 text-white text-xs font-bold rounded-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md">超級後台</span>
+        </button>
+    </nav>
+
+    <!-- Floating Dock Nav (Mobile) -->
+    <nav class="md:hidden fixed bottom-6 left-6 right-6 rounded-[28px] bg-white/85 dark:bg-[#1c1c1e]/85 backdrop-blur-3xl border border-gray-200/50 dark:border-zinc-700/50 z-40 px-6 flex justify-between items-center h-[72px] shadow-[0_10px_40px_rgba(0,0,0,0.08)]">
+        <button onclick="switchView('home')" class="nav-item active flex items-center justify-center w-12 h-12 spring-action" data-target="home"><i class="fas fa-home text-[22px]"></i></button>
+        <button onclick="switchView('history')" class="nav-item flex items-center justify-center w-12 h-12 spring-action" data-target="history"><i class="fas fa-history text-[22px]"></i></button>
+        <button onclick="switchView('timetable')" class="nav-item flex items-center justify-center w-12 h-12 spring-action" data-target="timetable"><i class="fas fa-calendar-week text-[22px]"></i></button>
+        <button onclick="switchView('subjects')" class="nav-item flex items-center justify-center w-12 h-12 spring-action" data-target="subjects"><i class="fas fa-book text-[22px]"></i></button>
+        <button onclick="switchView('settings')" class="nav-item flex items-center justify-center w-12 h-12 spring-action" data-target="settings"><i class="fas fa-cog text-[22px]"></i></button>
+        <button id="nav-admin-btn-mobile" onclick="switchView('admin')" class="nav-item items-center justify-center w-12 h-12 text-orange-500 spring-action hidden" data-target="admin"><i class="fas fa-shield-alt text-[22px]"></i></button>
     </nav>
 
     <!-- Top Header -->
-    <header class="px-5 md:px-8 py-5 flex justify-between items-center" style="background-color: var(--theme-bg);">
-        <div>
-            <h1 id="header-title" class="text-2xl md:text-3xl font-black tracking-tight" style="color: var(--theme-text-main)">主頁</h1>
-            <p id="header-subtitle" class="text-[11px] font-bold uppercase tracking-widest mt-1" style="color: var(--theme-text-sub)"></p>
+    <header class="w-full max-w-5xl mx-auto px-5 md:px-8 pt-8 pb-4 flex justify-between items-center bg-transparent">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-[20px] bg-gradient-to-br from-gray-800 to-black dark:from-gray-200 dark:to-white text-white dark:text-black flex items-center justify-center text-[22px] shadow-lg shrink-0"><i class="fas fa-layer-group"></i></div>
+            <div>
+                <h1 id="header-title" class="text-3xl md:text-4xl font-black tracking-tight" style="color: var(--theme-text-main)">主頁</h1>
+                <p id="header-subtitle" class="text-xs font-bold uppercase tracking-widest mt-1 opacity-60" style="color: var(--theme-text-sub)"></p>
+            </div>
         </div>
         <div id="user-profile" class="hidden items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity spring-action" onclick="openModal('profile-modal')">
-            <span id="admin-badge" class="hidden bg-orange-100 text-orange-600 px-2 py-1 rounded-md text-[10px] font-black tracking-wider shadow-sm">ADMIN</span>
-            <img id="user-avatar" src="" class="w-10 h-10 rounded-full border-2" style="border-color: var(--theme-border)">
+            <span id="admin-badge" class="hidden bg-orange-100 text-orange-600 px-2 py-1 rounded-md text-[10px] font-black tracking-wider shadow-sm border border-orange-200">ADMIN</span>
+            <img id="user-avatar" src="" class="w-11 h-11 rounded-full shadow-md border-2 border-white dark:border-zinc-800">
         </div>
     </header>
 
     <!-- MAIN CONTENT AREA -->
-    <main class="flex-1 w-full max-w-5xl mx-auto px-4 md:px-8">
+    <main class="flex-1 w-full max-w-5xl mx-auto px-4 md:px-8 mt-2">
         
         <!-- VIEW: HOME -->
         <section id="view-home" class="app-view active space-y-6">
@@ -187,21 +225,32 @@
                         <div id="subject-chips-add" class="flex gap-2 overflow-x-auto scrollbar-hide pb-1 flex-1 items-center"></div>
                         <input type="hidden" id="task-subject" required>
                     </div>
-                    <div class="flex flex-col md:flex-row gap-3">
-                        <input type="text" id="task-content" class="flex-1 minimal-input rounded-xl p-3.5 text-sm font-medium" placeholder="新增內容..." required>
-                        <div class="flex gap-3">
-                            <input type="date" id="task-date" class="w-full md:w-36 minimal-input rounded-xl p-3 text-xs font-bold cursor-pointer" required>
-                            <button type="submit" class="w-24 md:w-28 py-3 rounded-xl font-bold text-xs shadow-md shrink-0 bg-[#1d1d1f] dark:bg-white text-white dark:text-black spring-action">新增</button>
+                    
+                    <div class="flex flex-col gap-3">
+                        <textarea id="task-content" rows="2" class="w-full minimal-input rounded-xl p-3.5 text-sm font-medium resize-none" placeholder="新增內容... (支援多行排版)" required></textarea>
+                        
+                        <div class="flex flex-col md:flex-row gap-3">
+                            <input type="url" id="task-url" class="flex-1 minimal-input rounded-xl p-3 text-xs font-medium" placeholder="附加連結 (選填，例如 Google Form 連結)">
+                            <div class="flex gap-3">
+                                <label class="flex items-center justify-center gap-1.5 px-3 minimal-input rounded-xl cursor-pointer spring-action shrink-0">
+                                    <input type="checkbox" id="task-important" class="w-3.5 h-3.5 accent-yellow-500 rounded">
+                                    <span class="text-xs font-bold text-yellow-600 dark:text-yellow-500">標記重要</span>
+                                </label>
+                                <input type="date" id="task-date" class="w-full md:w-36 minimal-input rounded-xl p-3 text-xs font-bold cursor-pointer" required>
+                                <button type="submit" class="w-24 md:w-28 py-3 rounded-xl font-bold text-xs shadow-md shrink-0 bg-[#1d1d1f] dark:bg-white text-white dark:text-black spring-action">新增</button>
+                            </div>
                         </div>
                     </div>
-                    <div id="broadcast-toggle-container" class="hidden pt-1">
-                        <label class="flex items-center justify-end cursor-pointer gap-2">
-                            <span class="text-[10px] font-bold text-orange-500">全域廣播</span>
+
+                    <div id="broadcast-toggle-container" class="hidden pt-1 border-t border-dashed mt-2" style="border-color: var(--theme-border);">
+                        <label class="flex items-center justify-end cursor-pointer gap-2 pt-2">
+                            <span class="text-[10px] font-bold text-orange-500">發佈為全域廣播 (全校可見)</span>
                             <input type="checkbox" id="task-broadcast" class="w-4 h-4 accent-orange-500 rounded">
                         </label>
                     </div>
                 </form>
             </div>
+            
             <div>
                 <h2 class="text-lg font-bold tracking-tight mb-3 px-1">未來任務</h2>
                 <div id="subject-chips-filter" class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide px-1"></div>
@@ -213,8 +262,8 @@
         <!-- VIEW: HISTORY -->
         <section id="view-history" class="app-view space-y-4">
             <div class="flex justify-between items-center px-1">
-                <p class="text-sm font-bold" style="color: var(--theme-text-sub)">歷史紀錄</p>
-                <button onclick="confirmClearHistory()" class="text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg text-xs font-bold spring-action">徹底清空</button>
+                <p class="text-sm font-bold" style="color: var(--theme-text-sub)">歷史紀錄 (自動保留 3 天)</p>
+                <button onclick="confirmClearHistory()" class="text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg text-xs font-bold spring-action transition-colors">徹底清空</button>
             </div>
             <div id="history-tasks-list" class="space-y-3"></div>
         </section>
@@ -233,18 +282,58 @@
                 </div>
             </div>
             <div id="timetable-day-selector" class="flex gap-2 overflow-x-auto scrollbar-hide pb-2 px-1"></div>
+            
             <div id="admin-timetable-controls" class="hidden premium-card p-3 border border-orange-200 bg-orange-50/50">
                 <div class="flex justify-between items-center">
                     <span class="text-[11px] font-bold text-orange-600"><i class="fas fa-user-shield mr-1"></i> 管理員</span>
                     <button onclick="saveGlobalTimetable()" class="bg-orange-500 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold shadow-sm spring-action">發佈至全校</button>
                 </div>
             </div>
+
             <div class="premium-card p-4 md:p-6 overflow-hidden">
+                <!-- VIEW MODE -->
                 <div id="timetable-timeline-container" class="flex flex-col">
                     <div class="flex items-center justify-between mb-6"><h2 id="tt-single-day-header" class="text-xl font-black tracking-tight"></h2></div>
                     <div id="timetable-timeline" class="flex flex-col gap-1 pb-2"></div>
                 </div>
+
+                <!-- EDIT MODE -->
                 <div id="timetable-edit-container" class="hidden">
+                    <!-- Advanced Timetable Settings -->
+                    <div class="mb-6 p-5 rounded-2xl bg-gray-50 dark:bg-zinc-800/40 border border-gray-100 dark:border-zinc-800 space-y-5">
+                        <div>
+                            <h4 class="text-[10px] font-bold uppercase tracking-wider mb-3 opacity-60"><i class="fas fa-calendar-day mr-1"></i> 時間表格式</h4>
+                            <div class="flex flex-wrap gap-2">
+                                <button type="button" class="tt-mode-btn custom-chip px-3 py-1.5 text-[11px] flex-shrink-0 spring-action" data-val="5day" onclick="setTTMode('5day')">一至五</button>
+                                <button type="button" class="tt-mode-btn custom-chip px-3 py-1.5 text-[11px] flex-shrink-0 spring-action" data-val="6day" onclick="setTTMode('6day')">一至六</button>
+                                <button type="button" class="tt-mode-btn custom-chip px-3 py-1.5 text-[11px] flex-shrink-0 spring-action" data-val="7day" onclick="setTTMode('7day')">一至日</button>
+                                <button type="button" class="tt-mode-btn custom-chip px-3 py-1.5 text-[11px] flex-shrink-0 spring-action" data-val="cycle" onclick="setTTMode('cycle')">循環日</button>
+                            </div>
+                            <input type="hidden" id="setting-tt-mode" value="5day">
+                            <div id="setting-tt-cycle-container" class="hidden mt-3 flex items-center justify-between bg-white dark:bg-zinc-900 p-2.5 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-700">
+                                <span class="text-[11px] font-bold pl-2 opacity-80">設定總日數 (X)</span>
+                                <input type="number" id="setting-tt-cycle" min="1" max="14" class="w-14 bg-gray-50 dark:bg-zinc-800 rounded-lg p-1.5 text-center text-[11px] font-bold outline-none" onchange="updateTTCycle()">
+                            </div>
+                        </div>
+                        <div class="border-t border-gray-200 dark:border-zinc-700 pt-4">
+                            <h4 class="text-[10px] font-bold uppercase tracking-wider mb-3 opacity-60"><i class="fas fa-clock mr-1"></i> 智能新增時長預設</h4>
+                            <div class="grid grid-cols-3 gap-3">
+                                <div class="bg-white dark:bg-zinc-900 p-2.5 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-700">
+                                    <label class="text-[9px] font-bold opacity-60 block text-center mb-1">課堂(分)</label>
+                                    <input type="number" id="setting-tt-period" class="w-full bg-transparent text-center text-xs font-bold outline-none" value="35" onchange="updateTTSmart()">
+                                </div>
+                                <div class="bg-white dark:bg-zinc-900 p-2.5 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-700">
+                                    <label class="text-[9px] font-bold opacity-60 block text-center mb-1">小息(分)</label>
+                                    <input type="number" id="setting-tt-break" class="w-full bg-transparent text-center text-xs font-bold outline-none" value="15" onchange="updateTTSmart()">
+                                </div>
+                                <div class="bg-white dark:bg-zinc-900 p-2.5 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-700">
+                                    <label class="text-[9px] font-bold opacity-60 block text-center mb-1">午膳(分)</label>
+                                    <input type="number" id="setting-tt-lunch" class="w-full bg-transparent text-center text-xs font-bold outline-none" value="50" onchange="updateTTSmart()">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="overflow-x-auto scrollbar-hide pb-4">
                         <table class="w-full text-center" id="timetable-table">
                             <thead><tr id="tt-edit-header-row" class="border-b" style="border-color: var(--theme-border)"></tr></thead>
@@ -266,30 +355,31 @@
         <!-- VIEW: SUBJECTS -->
         <section id="view-subjects" class="app-view space-y-6">
             <div class="premium-card p-6">
-                <h3 class="text-sm font-bold uppercase tracking-widest mb-4" style="color: var(--theme-text-sub)">新增科目</h3>
+                <h3 class="text-sm font-bold uppercase tracking-widest mb-4" style="color: var(--theme-text-sub)">新增與管理科目</h3>
                 <div class="flex flex-col gap-5">
                     <div>
                         <p class="text-[10px] font-bold uppercase tracking-wider mb-2 opacity-60">科目名稱</p>
                         <div class="flex flex-col md:flex-row gap-3">
                             <input type="text" id="new-subject-name" class="flex-1 minimal-input rounded-xl p-3.5 text-sm font-bold" placeholder="輸入新科目名稱 (例如: 電腦)">
-                            <button onclick="addSubject()" class="w-full md:w-32 px-6 py-3.5 rounded-xl font-bold text-xs shadow-md shrink-0 spring-action" style="background-color: var(--theme-accent); color: var(--theme-accent-text);">新增科目</button>
+                            <div class="flex gap-2 shrink-0">
+                                <button onclick="addSubject()" class="flex-1 md:w-32 px-6 py-3.5 rounded-xl font-bold text-xs shadow-md shrink-0 spring-action" style="background-color: var(--theme-accent); color: var(--theme-accent-text);">新增科目</button>
+                                <button type="button" onclick="resetDefaultSubjects()" class="w-12 py-3.5 rounded-xl font-bold text-xs minimal-input shrink-0 spring-action text-gray-500 bg-gray-50 dark:bg-zinc-800" title="還原所有預設科目"><i class="fas fa-undo"></i></button>
+                            </div>
                         </div>
                     </div>
-                    <div>
+                    <div class="pb-4 border-b" style="border-color: var(--theme-border);">
                         <p class="text-[10px] font-bold uppercase tracking-wider mb-2 opacity-60">專屬顏色</p>
                         <div class="flex flex-wrap gap-2.5 py-1" id="subject-color-picker"></div>
                         <input type="hidden" id="new-subject-color" value="#FFB3BA">
                     </div>
-                </div>
-            </div>
-            <div class="space-y-8">
-                <div>
-                    <h3 class="text-sm font-black mb-4 px-1 border-l-4 border-green-500 pl-3">已啟用的科目 (主頁顯示)</h3>
-                    <div id="subjects-list-enabled" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div>
-                </div>
-                <div>
-                    <h3 class="text-sm font-black mb-4 px-1 border-l-4 border-gray-300 pl-3 opacity-60">隱藏/預設科目</h3>
-                    <div id="subjects-list-disabled" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+                    
+                    <div class="pt-2">
+                        <h3 class="text-xs font-black mb-3 px-1 border-l-4 border-green-500 pl-3">已啟用的科目 (主頁顯示)</h3>
+                        <div id="subjects-list-enabled" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-6"></div>
+                        
+                        <h3 class="text-xs font-black mb-3 px-1 border-l-4 border-gray-300 pl-3 opacity-60">隱藏/預設科目</h3>
+                        <div id="subjects-list-disabled" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -297,7 +387,7 @@
         <!-- VIEW: SETTINGS -->
         <section id="view-settings" class="app-view space-y-6">
             <div class="premium-card p-6 space-y-6">
-                <div id="theme-color-section">
+                <div id="theme-color-section" class="transition-opacity duration-300">
                     <h3 class="text-sm font-bold mb-3" style="color: var(--theme-text-sub)">介面色彩主題</h3>
                     <div class="flex gap-3 flex-wrap">
                         <button onclick="setThemeColor('light-blue')" class="w-10 h-10 rounded-full shadow-md border-4 theme-btn spring-action" data-color="light-blue" style="background-color: #f5f7fa; border-color: #1d1d1f"></button>
@@ -307,35 +397,13 @@
                         <button onclick="setThemeColor('midnight-blue')" class="w-10 h-10 rounded-full shadow-md border-4 theme-btn spring-action" data-color="midnight-blue" style="background-color: #f0f4f8;"></button>
                     </div>
                 </div>
-                <div class="border-t pt-5" style="border-color: var(--theme-border)">
-                    <h4 class="text-sm font-bold mb-3" style="color: var(--theme-text-main)">時間表格式設定</h4>
-                    <div class="flex flex-col gap-4">
-                        <div class="flex flex-wrap gap-2">
-                            <button type="button" class="tt-mode-btn custom-chip px-3 py-1.5 text-[11px] flex-shrink-0 spring-action" data-val="5day" onclick="setTTMode('5day')">星期一至五</button>
-                            <button type="button" class="tt-mode-btn custom-chip px-3 py-1.5 text-[11px] flex-shrink-0 spring-action" data-val="6day" onclick="setTTMode('6day')">星期一至六</button>
-                            <button type="button" class="tt-mode-btn custom-chip px-3 py-1.5 text-[11px] flex-shrink-0 spring-action" data-val="7day" onclick="setTTMode('7day')">星期一至日</button>
-                            <button type="button" class="tt-mode-btn custom-chip px-3 py-1.5 text-[11px] flex-shrink-0 spring-action" data-val="cycle" onclick="setTTMode('cycle')">循環日 (Day X)</button>
-                        </div>
-                        <input type="hidden" id="setting-tt-mode" value="5day">
-                        <div id="setting-tt-cycle-container" class="hidden flex items-center justify-between bg-gray-50/50 dark:bg-zinc-800 p-3 rounded-xl border border-gray-100 dark:border-zinc-700" style="border-color: var(--theme-border);">
-                            <span class="text-xs font-bold" style="color: var(--theme-text-sub)">設定總日數 (X)</span>
-                            <input type="number" id="setting-tt-cycle" min="1" max="14" class="w-16 minimal-input rounded-lg p-2 text-center text-xs font-bold" onchange="updateTTCycle()">
-                        </div>
-                    </div>
-                </div>
-                <div class="border-t pt-5" style="border-color: var(--theme-border)">
-                    <h4 class="text-sm font-bold mb-3" style="color: var(--theme-text-main)">智能新增時間預設</h4>
-                    <div class="grid grid-cols-3 gap-3">
-                        <div><label class="text-[10px] font-bold opacity-60 block mb-1">課堂 (分鐘)</label><input type="number" id="setting-tt-period" class="w-full minimal-input rounded-xl p-2.5 text-center text-xs font-bold" value="35" onchange="updateTTSmart()"></div>
-                        <div><label class="text-[10px] font-bold opacity-60 block mb-1">小息 (分鐘)</label><input type="number" id="setting-tt-break" class="w-full minimal-input rounded-xl p-2.5 text-center text-xs font-bold" value="15" onchange="updateTTSmart()"></div>
-                        <div><label class="text-[10px] font-bold opacity-60 block mb-1">午膳 (分鐘)</label><input type="number" id="setting-tt-lunch" class="w-full minimal-input rounded-xl p-2.5 text-center text-xs font-bold" value="50" onchange="updateTTSmart()"></div>
-                    </div>
-                </div>
+                
                 <div class="flex items-center justify-between border-t pt-6" style="border-color: var(--theme-border)">
                     <div><h4 class="text-sm font-bold">深色模式</h4><p class="text-[10px] opacity-60">完全沉浸式深黑體驗</p></div>
-                    <label class="relative inline-flex items-center cursor-pointer">
+                    <!-- Tailwind Native Toggle for Dark Mode -->
+                    <label class="relative inline-flex items-center cursor-pointer shrink-0">
                         <input type="checkbox" id="dark-mode-toggle" class="sr-only peer" onchange="toggleDarkMode(this.checked)">
-                        <div class="w-12 h-6 bg-gray-300 rounded-full peer-checked:bg-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full peer-checked:after:bg-black"></div>
+                        <div class="w-11 h-6 bg-gray-300 dark:bg-zinc-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
                     </label>
                 </div>
             </div>
@@ -347,6 +415,7 @@
                 <button class="admin-tab-btn custom-chip selected px-4 py-2 text-xs font-bold spring-action flex-shrink-0" style="background-color: var(--theme-text-main); color: var(--theme-card); border-color: var(--theme-text-main);" onclick="switchAdminTab('overview')">系統概覽</button>
                 <button class="admin-tab-btn custom-chip px-4 py-2 text-xs font-bold spring-action flex-shrink-0" style="background-color: transparent; color: var(--theme-text-sub); border: 1px solid var(--theme-text-sub);" onclick="switchAdminTab('users')">用戶管理</button>
                 <button class="admin-tab-btn custom-chip px-4 py-2 text-xs font-bold spring-action flex-shrink-0" style="background-color: transparent; color: var(--theme-text-sub); border: 1px solid var(--theme-text-sub);" onclick="switchAdminTab('broadcasts')">廣播任務</button>
+                <button class="admin-tab-btn custom-chip px-4 py-2 text-xs font-bold spring-action flex-shrink-0" style="background-color: transparent; color: var(--theme-text-sub); border: 1px solid var(--theme-text-sub);" onclick="switchAdminTab('logs')">操作日誌</button>
                 <button class="admin-tab-btn custom-chip px-4 py-2 text-xs font-bold spring-action flex-shrink-0" style="background-color: transparent; color: var(--theme-text-sub); border: 1px solid var(--theme-text-sub);" onclick="switchAdminTab('settings')">核心設定</button>
             </div>
 
@@ -365,7 +434,7 @@
                     </div>
                     <div class="premium-card p-6 border-none shadow-md relative overflow-hidden text-white" style="background: linear-gradient(135deg, #fb923c 0%, #f97316 100%);">
                         <i class="fas fa-bullhorn absolute -right-4 -bottom-4 text-6xl opacity-10"></i>
-                        <p class="text-xs font-bold mb-2 opacity-80"><i class="fas fa-broadcast-tower mr-1"></i> 廣播任務總數</p>
+                        <p class="text-xs font-bold mb-2 opacity-80"><i class="fas fa-broadcast-tower mr-1"></i> 活躍廣播總數</p>
                         <h3 id="admin-stat-broadcasts" class="text-4xl font-black">0</h3>
                     </div>
                 </div>
@@ -374,7 +443,7 @@
             <!-- Tab: Users -->
             <div id="admin-tab-users" class="admin-tab-content space-y-4" style="display: none;">
                 <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
-                    <button class="w-full md:w-auto px-4 py-3 rounded-xl font-bold text-xs bg-orange-500 text-white shadow-md spring-action"><i class="fas fa-broom mr-1"></i> 掃描未驗證</button>
+                    <button class="w-full md:w-auto px-4 py-3 rounded-xl font-bold text-xs bg-orange-500 text-white shadow-md spring-action"><i class="fas fa-broom mr-1"></i> 清理無效帳號</button>
                     <input type="text" id="admin-user-search" onkeyup="renderAdminUsers()" class="w-full md:w-64 minimal-input rounded-xl p-3 text-xs font-bold" placeholder="搜尋用戶名字或 Email...">
                 </div>
                 <div class="premium-card overflow-hidden">
@@ -383,8 +452,9 @@
                             <thead>
                                 <tr class="border-b" style="border-color: var(--theme-border); color: var(--theme-text-sub);">
                                     <th class="p-4 text-[10px] font-bold uppercase tracking-wider">用戶資訊</th>
-                                    <th class="p-4 text-[10px] font-bold uppercase tracking-wider">身份權限</th>
-                                    <th class="p-4 text-[10px] font-bold uppercase tracking-wider">最後上線</th>
+                                    <th class="p-4 text-[10px] font-bold uppercase tracking-wider text-center">進度概況</th>
+                                    <th class="p-4 text-[10px] font-bold uppercase tracking-wider">身份/狀態</th>
+                                    <th class="p-4 text-[10px] font-bold uppercase tracking-wider text-center">操作詳情</th>
                                 </tr>
                             </thead>
                             <tbody id="admin-users-list"></tbody>
@@ -413,14 +483,38 @@
                 </div>
             </div>
 
+            <!-- Tab: Logs -->
+            <div id="admin-tab-logs" class="admin-tab-content space-y-4" style="display: none;">
+                <div class="premium-card p-6">
+                    <div class="flex justify-between items-center mb-6 border-b pb-4" style="border-color: var(--theme-border);">
+                        <h3 class="text-sm font-black tracking-tight"><i class="fas fa-list-alt text-gray-500 mr-2"></i>系統操作日誌</h3>
+                        <span class="text-[10px] font-bold opacity-50">僅保留最近 100 筆</span>
+                    </div>
+                    <div id="admin-logs-list" class="space-y-4 max-h-[60vh] overflow-y-auto pr-2"></div>
+                </div>
+            </div>
+
             <!-- Tab: Settings -->
             <div id="admin-tab-settings" class="admin-tab-content space-y-6" style="display: none;">
                 <div class="premium-card p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center gap-2"><i class="fas fa-broom text-blue-500 text-lg"></i><h3 class="font-black text-sm">自動清理歷史紀錄</h3></div>
+                        <!-- Tailwind Native Toggle -->
+                        <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                            <input type="checkbox" id="admin-autoclean-toggle" class="sr-only peer" onchange="toggleAdminSetting('autoClean', this.checked)">
+                            <div class="w-11 h-6 bg-gray-300 dark:bg-zinc-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                        </label>
+                    </div>
+                    <p class="text-xs font-bold opacity-60">開啟後，系統會自動在背景刪除學生端完成時間超過 3 天的紀錄，大幅節省資料庫空間與成本。</p>
+                </div>
+
+                <div class="premium-card p-6">
                     <div class="flex items-center justify-between mb-4 pb-4 border-b" style="border-color: var(--theme-border);">
                         <div class="flex items-center gap-2"><i class="fas fa-shield-check text-green-500 text-lg"></i><h3 class="font-black text-sm">白名單系統</h3></div>
-                        <label class="relative inline-flex items-center cursor-pointer spring-action">
+                        <!-- Tailwind Native Toggle -->
+                        <label class="relative inline-flex items-center cursor-pointer shrink-0">
                             <input type="checkbox" id="admin-whitelist-toggle" class="sr-only peer" onchange="toggleAdminSetting('whitelist', this.checked)">
-                            <div class="w-10 h-6 bg-gray-300 dark:bg-zinc-700 rounded-full peer-checked:bg-green-500 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
+                            <div class="w-11 h-6 bg-gray-300 dark:bg-zinc-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
                         </label>
                     </div>
                     <div class="flex gap-2 mb-4">
@@ -437,9 +531,10 @@
                 <div class="premium-card p-6">
                     <div class="flex items-center justify-between mb-4 pb-4 border-b" style="border-color: var(--theme-border);">
                         <div class="flex items-center gap-2"><i class="fas fa-ban text-red-500 text-lg"></i><h3 class="font-black text-sm">黑名單系統</h3></div>
-                        <label class="relative inline-flex items-center cursor-pointer spring-action">
+                        <!-- Tailwind Native Toggle -->
+                        <label class="relative inline-flex items-center cursor-pointer shrink-0">
                             <input type="checkbox" id="admin-blacklist-toggle" class="sr-only peer" onchange="toggleAdminSetting('blacklist', this.checked)">
-                            <div class="w-10 h-6 bg-gray-300 dark:bg-zinc-700 rounded-full peer-checked:bg-red-500 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
+                            <div class="w-11 h-6 bg-gray-300 dark:bg-zinc-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500"></div>
                         </label>
                     </div>
                     <div class="flex gap-2 mb-4">
@@ -479,60 +574,82 @@
         </section>
     </main>
 
-    <!-- Mobile Bottom Nav -->
-    <nav class="md:hidden fixed bottom-0 left-0 w-full bottom-nav z-40 px-6 flex justify-between items-center h-20">
-        <button onclick="switchView('home')" class="nav-item active flex flex-col items-center gap-1 spring-action" data-target="home"><i class="fas fa-home text-xl"></i><span class="text-[9px] font-bold">主頁</span></button>
-        <button onclick="switchView('history')" class="nav-item flex flex-col items-center gap-1 spring-action" data-target="history"><i class="fas fa-history text-xl"></i><span class="text-[9px] font-bold">歷史</span></button>
-        <button onclick="switchView('timetable')" class="nav-item flex flex-col items-center gap-1 spring-action" data-target="timetable"><i class="fas fa-calendar-week text-xl"></i><span class="text-[9px] font-bold">時間表</span></button>
-        <button onclick="switchView('subjects')" class="nav-item flex flex-col items-center gap-1 spring-action" data-target="subjects"><i class="fas fa-book text-xl"></i><span class="text-[9px] font-bold">科目</span></button>
-        <button onclick="switchView('settings')" class="nav-item flex flex-col items-center gap-1 spring-action" data-target="settings"><i class="fas fa-cog text-xl"></i><span class="text-[9px] font-bold">設定</span></button>
-        <button id="nav-admin-btn-mobile" onclick="switchView('admin')" class="nav-item flex flex-col items-center gap-1 spring-action hidden text-orange-500" data-target="admin"><i class="fas fa-shield-alt text-xl"></i><span class="text-[9px] font-bold">後台</span></button>
-    </nav>
-
     <!-- Login/Register Screen -->
-    <div id="login-screen" class="fixed inset-0 z-[200] flex flex-col items-center justify-center p-6" style="background-color: var(--theme-bg);">
-        <i class="fas fa-layer-group text-5xl mb-6" style="color: var(--theme-text-main)"></i>
-        <h2 class="text-2xl font-black mb-2 tracking-tight" style="color: var(--theme-text-main)">電子手冊系統</h2>
-        <p class="text-xs mb-8 font-medium" style="color: var(--theme-text-sub)">極簡・智能・高效管理</p>
-        
-        <div class="w-full max-w-xs bg-white dark:bg-[#1c1c1e] p-6 rounded-[24px] shadow-xl border border-gray-100 dark:border-gray-800 mb-6">
-            <h3 class="text-sm font-bold mb-4 text-center">電郵登入 / 註冊</h3>
-            <div class="space-y-3 mb-5">
-                <input type="email" id="auth-email" class="auth-input" placeholder="電郵地址 (Email)">
-                <input type="password" id="auth-pwd" class="auth-input" placeholder="密碼 (最少 6 位)">
+    <div id="login-screen" class="fixed inset-0 z-[200] flex flex-col items-center justify-center p-6 bg-cover bg-center" style="background-image: radial-gradient(circle at top right, rgba(167, 139, 250, 0.15), transparent 40%), radial-gradient(circle at bottom left, rgba(52, 211, 153, 0.15), transparent 40%); background-color: var(--theme-bg);">
+        <div class="w-full max-w-sm bg-white/80 dark:bg-[#1c1c1e]/80 backdrop-blur-2xl p-8 rounded-[32px] shadow-2xl border border-white/50 dark:border-zinc-700/50 flex flex-col items-center">
+            <div class="w-16 h-16 rounded-[20px] bg-gradient-to-br from-gray-800 to-black dark:from-gray-100 dark:to-white text-white dark:text-black flex items-center justify-center text-3xl mb-5 shadow-lg"><i class="fas fa-layer-group"></i></div>
+            <h2 class="text-2xl font-black mb-1.5 tracking-tight text-center" style="color: var(--theme-text-main)">智慧電子手冊</h2>
+            <p class="text-xs mb-8 font-bold text-center opacity-50" style="color: var(--theme-text-sub)">為師生打造的專屬學習助手</p>
+            
+            <div class="w-full space-y-3 mb-6">
+                <div class="relative">
+                    <i class="fas fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                    <input type="email" id="auth-email" class="w-full pl-11 pr-4 py-3.5 rounded-xl bg-gray-50/80 dark:bg-zinc-900/80 border border-gray-100 dark:border-zinc-800 focus:border-black dark:focus:border-white focus:bg-white dark:focus:bg-black text-sm font-bold transition-all outline-none" placeholder="電郵地址">
+                </div>
+                <div class="relative">
+                    <i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                    <input type="password" id="auth-pwd" class="w-full pl-11 pr-4 py-3.5 rounded-xl bg-gray-50/80 dark:bg-zinc-900/80 border border-gray-100 dark:border-zinc-800 focus:border-black dark:focus:border-white focus:bg-white dark:focus:bg-black text-sm font-bold transition-all outline-none" placeholder="密碼 (最少 6 位)">
+                </div>
+                
+                <div class="flex gap-3 pt-3">
+                    <button onclick="loginEmail()" class="flex-1 py-3.5 rounded-xl font-black text-xs bg-[#1d1d1f] dark:bg-white text-white dark:text-black shadow-[0_8px_16px_rgba(0,0,0,0.1)] hover:scale-[1.02] transition-transform spring-action">登入</button>
+                    <button onclick="registerEmail()" class="flex-1 py-3.5 rounded-xl font-bold text-xs bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-zinc-700 transition-colors spring-action">註冊帳號</button>
+                </div>
             </div>
-            <div class="flex gap-2">
-                <button onclick="loginEmail()" class="flex-1 py-3.5 rounded-xl font-bold text-xs bg-[#1d1d1f] dark:bg-white text-white dark:text-black spring-action shadow-md">登入</button>
-                <button onclick="registerEmail()" class="flex-1 py-3.5 rounded-xl font-bold text-xs minimal-input spring-action border border-gray-200">註冊新帳號</button>
-            </div>
-        </div>
 
-        <div class="w-full max-w-xs space-y-3">
-            <div class="flex items-center gap-3 mb-4 opacity-50">
-                <div class="flex-1 h-px bg-gray-400"></div><span class="text-[10px] font-bold uppercase">或使用其他方式</span><div class="flex-1 h-px bg-gray-400"></div>
+            <div class="w-full flex items-center gap-3 mb-6 opacity-40">
+                <div class="flex-1 h-px bg-current"></div><span class="text-[9px] font-black uppercase tracking-widest">其他登入方式</span><div class="flex-1 h-px bg-current"></div>
             </div>
-            <button onclick="loginGoogle()" class="w-full flex items-center justify-center gap-2 bg-white text-black font-bold py-3.5 rounded-xl shadow-md border border-gray-100 text-sm spring-action">
-                <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-4 h-4"> Google 快速登入
-            </button>
-            <button onclick="loginAnon()" class="w-full flex items-center justify-center gap-2 minimal-input font-bold py-3.5 rounded-xl text-sm spring-action">
-                以訪客身份預覽
-            </button>
+            
+            <div class="w-full space-y-3">
+                <button onclick="loginGoogle()" class="w-full flex items-center justify-center gap-3 bg-white dark:bg-zinc-900 text-black dark:text-white font-bold py-3.5 rounded-xl shadow-sm border border-gray-200 dark:border-zinc-800 text-xs hover:bg-gray-50 dark:hover:bg-zinc-800 transition-all spring-action">
+                    <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-4 h-4"> 繼續使用 Google
+                </button>
+                <button onclick="loginAnon()" class="w-full flex items-center justify-center gap-2 bg-transparent text-gray-500 font-bold py-3.5 rounded-xl text-xs hover:bg-gray-50 dark:hover:bg-zinc-900 transition-colors spring-action">
+                    以訪客身份預覽
+                </button>
+            </div>
         </div>
     </div>
 
-    <!-- Modals -->
+    <!-- Timetable Cell Modal -->
     <div id="tt-cell-modal" class="custom-modal-overlay fixed inset-0 z-[350] flex items-center justify-center p-4 bg-black/40">
-        <div class="custom-modal-content w-full max-w-sm rounded-[24px] p-6 text-center shadow-2xl border border-gray-200">
+        <div class="custom-modal-content w-full max-w-sm rounded-[24px] p-6 text-center shadow-2xl border border-gray-200 dark:border-zinc-800">
             <h3 class="text-base font-bold mb-4">快速填入科目</h3>
             <div id="tt-cell-chips" class="flex flex-wrap justify-center gap-2 mb-4 max-h-[40vh] overflow-y-auto pr-1"></div>
             <div class="flex items-center gap-2 mb-4">
                 <input type="text" id="tt-cell-custom" class="flex-1 minimal-input rounded-xl p-3 text-xs font-medium" placeholder="自訂內容...">
-                <button onclick="saveTTCellCustom()" class="px-5 py-3 rounded-xl font-bold text-xs bg-black text-white spring-action">確定</button>
+                <button onclick="saveTTCellCustom()" class="px-5 py-3 rounded-xl font-bold text-xs bg-[#1d1d1f] dark:bg-white text-white dark:text-black spring-action">確定</button>
             </div>
             <button onclick="closeModal('tt-cell-modal')" class="w-full py-3 rounded-xl font-bold text-xs minimal-input spring-action">取消</button>
         </div>
     </div>
 
+    <!-- User Action Modal (Admin Only) -->
+    <div id="user-details-modal" class="custom-modal-overlay fixed inset-0 z-[400] flex items-center justify-center p-4 bg-black/50">
+        <div class="custom-modal-content w-full max-w-sm rounded-[24px] p-6 shadow-2xl relative border border-gray-200 dark:border-zinc-800">
+            <button onclick="closeModal('user-details-modal')" class="absolute top-5 right-5 text-gray-400 hover:text-black dark:hover:text-white spring-action"><i class="fas fa-times"></i></button>
+            <div class="flex items-center gap-4 mb-6 border-b pb-6" style="border-color: var(--theme-border);">
+                <img id="modal-user-avatar" src="" class="w-16 h-16 rounded-full shadow-sm">
+                <div>
+                    <h3 id="modal-user-name" class="text-lg font-black leading-tight"></h3>
+                    <p id="modal-user-email" class="text-xs font-bold opacity-60"></p>
+                    <span id="modal-user-status" class="mt-2 inline-block px-2 py-0.5 rounded text-[9px] font-bold"></span>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3 mb-6">
+                <div class="p-4 rounded-xl bg-gray-50 dark:bg-zinc-800 text-center"><p class="text-[10px] font-bold opacity-60 mb-1">待處理功課</p><h4 id="modal-user-pending" class="text-xl font-black text-orange-500">0</h4></div>
+                <div class="p-4 rounded-xl bg-gray-50 dark:bg-zinc-800 text-center"><p class="text-[10px] font-bold opacity-60 mb-1">歷史完成紀錄</p><h4 id="modal-user-completed" class="text-xl font-black text-green-500">0</h4></div>
+            </div>
+            <div class="flex flex-col gap-2">
+                <button id="modal-btn-block" class="w-full py-3.5 rounded-xl font-bold text-xs bg-red-50 text-red-600 hover:bg-red-500 hover:text-white transition-colors spring-action hidden"><i class="fas fa-ban mr-1"></i> 封鎖此帳戶 (加入黑名單)</button>
+                <button id="modal-btn-unblock" class="w-full py-3.5 rounded-xl font-bold text-xs bg-green-50 text-green-600 hover:bg-green-500 hover:text-white transition-colors spring-action hidden"><i class="fas fa-unlock mr-1"></i> 解除封鎖</button>
+            </div>
+            <input type="hidden" id="modal-user-email-hidden">
+        </div>
+    </div>
+
+    <!-- Standard Profile Modal -->
     <div id="profile-modal" class="custom-modal-overlay fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/40">
         <div class="custom-modal-content w-full max-w-xs rounded-[24px] p-8 text-center shadow-2xl relative">
             <button onclick="closeModal('profile-modal')" class="absolute top-5 right-5 text-gray-400 spring-action"><i class="fas fa-times"></i></button>
@@ -544,7 +661,8 @@
         </div>
     </div>
 
-    <div id="custom-dialog" class="custom-modal-overlay fixed inset-0 z-[400] flex items-center justify-center p-4 bg-black/40">
+    <!-- Confirm Dialog -->
+    <div id="custom-dialog" class="custom-modal-overlay fixed inset-0 z-[500] flex items-center justify-center p-4 bg-black/60">
         <div class="custom-modal-content w-full max-w-sm rounded-[24px] p-6 text-center shadow-2xl">
             <div id="dialog-icon" class="w-12 h-12 rounded-full mx-auto flex items-center justify-center text-xl mb-4"></div>
             <h3 id="dialog-title" class="text-lg font-bold mb-2"></h3>
@@ -556,16 +674,18 @@
         </div>
     </div>
 
+    <!-- Edit Task Modal -->
     <div id="edit-modal" class="custom-modal-overlay fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/40">
         <div class="custom-modal-content w-full max-w-sm rounded-[24px] p-6 shadow-2xl text-left border border-gray-200">
-            <h3 class="text-lg font-bold mb-5">修改功課紀錄</h3>
+            <h3 class="text-lg font-bold mb-5">修改紀錄</h3>
             <div class="space-y-4">
                 <div class="w-full overflow-hidden">
                     <p class="text-[10px] font-bold uppercase tracking-wider mb-2 opacity-60">更改科目</p>
                     <div id="subject-chips-edit" class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide flex-nowrap w-full"></div>
                     <input type="hidden" id="edit-subject">
                 </div>
-                <input type="text" id="edit-content" class="w-full minimal-input rounded-xl p-3.5 text-sm font-medium box-border">
+                <textarea id="edit-content" rows="2" class="w-full minimal-input rounded-xl p-3.5 text-sm font-medium resize-none box-border"></textarea>
+                <input type="url" id="edit-url" class="w-full minimal-input rounded-xl p-3.5 text-xs font-medium box-border" placeholder="附加連結 (可選)">
                 <input type="date" id="edit-date" class="w-full minimal-input rounded-xl p-3.5 text-xs font-bold box-border">
             </div>
             <div class="flex gap-3 mt-6">
@@ -609,16 +729,17 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // --- 全域狀態 (Global State) ---
-        let currentUser = null, isAdmin = false;
+        // State variables
+        let currentUser = null;
+        let isAdmin = false;
         const ADMIN_EMAIL = 'chimhinhin@gmail.com';
         
         let allTasks = [], publicAssignments = [], privateAssignments = [], historyTasks = [];
         let globalTimetable = [], userTimetable = [], isEditingTimetable = false;
         let editingTaskId = null, editingTaskIsPublic = false, ttEditingCell = { row: null, dayKey: null };
         let currentTimetableDay = 'd1';
-        let adminConfig = { marquee: '', maintenance: false, whitelistEnabled: false, whitelist: ['chimhinhin@gmail.com'], blacklistEnabled: false, blacklist: [] };
-        let adminUsersList = []; // 真實用戶名單
+        let adminConfig = { marquee: '', maintenance: false, autoCleanEnabled: false, whitelistEnabled: false, whitelist: ['chimhinhin@gmail.com'], blacklistEnabled: false, blacklist: [] };
+        let adminUsersList = []; let systemAuditLogs = [];
 
         const subjectColors = ['#FFB3BA','#BAE1FF','#BAFFC9','#FFDFBA','#E8DFF5','#DAEAF6','#E2F0CB','#F3B0C3','#CBAACB','#FDFD96','#FFC4C4','#FFD1B3','#FFF2B2','#C4FAC7','#C4E4FF','#E2D4F0','#FAD4D8','#D0E3F0','#D9E8B8','#F0A1B7','#C09DC0','#F5F587','#E5B2C6','#B2D5D0'];
         const defaultSubjects = [
@@ -651,8 +772,7 @@
         const themeColors = { 'light-blue': { bg: '#f5f7fa', card: '#ffffff' }, 'pure-white': { bg: '#ffffff', card: '#f5f5f7' }, 'mint-green': { bg: '#f0fdf4', card: '#ffffff' }, 'soft-peach': { bg: '#fff1f2', card: '#ffffff' }, 'midnight-blue':{ bg: '#f0f4f8', card: '#ffffff' } };
 
         let userSettings = { theme: 'light-blue', isDark: false, ttMode: '5day', ttCycle: 5, ttPeriodMins: 35, ttBreakMins: 15, ttLunchMins: 50, subjects: defaultSubjects };
-        
-        let unsubTasksPub = null, unsubTasksPriv = null, unsubHist = null, unsubSettings = null, unsubTTGlobal = null, unsubTTPriv = null, unsubAdmin = null, unsubAdminUsers = null;
+        let unsubTasksPub = null, unsubTasksPriv = null, unsubHist = null, unsubSettings = null, unsubTTGlobal = null, unsubTTPriv = null, unsubAdmin = null, unsubAdminUsers = null, unsubLogs = null;
         let liveClassInterval = null;
 
         // --- Core Utility Functions ---
@@ -667,10 +787,8 @@
 
         function showToast(msg) { const container = document.getElementById('toast-container'); const toast = document.createElement('div'); toast.className = `toast show`; toast.innerText = msg; container.appendChild(toast); setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 400); }, 3000); }
         window.showToast = showToast;
-
         function openModal(id) { document.getElementById(id).classList.add('active'); }
         window.openModal = openModal;
-
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }
         window.closeModal = closeModal;
 
@@ -686,17 +804,20 @@
 
         function switchView(viewId) {
             document.querySelectorAll('.app-view').forEach(el => el.classList.remove('active'));
-            document.getElementById(`view-${viewId}`).classList.add('active');
+            const viewTarget = document.getElementById(`view-${viewId}`);
+            if(viewTarget) viewTarget.classList.add('active');
+            
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             document.querySelectorAll(`.nav-item[data-target="${viewId}"]`).forEach(el => el.classList.add('active'));
-            const titles = { 'home':'主頁', 'history':'歷史紀錄', 'timetable':'時間表', 'subjects':'管理科目', 'settings':'系統設定', 'admin':'超級管理中心' };
-            document.getElementById('header-title').innerText = titles[viewId];
+            const titles = { 'home':'主頁', 'history':'歷史紀錄', 'timetable':'時間表', 'subjects':'科目管理', 'settings':'系統設定', 'admin':'超級管理中心' };
+            document.getElementById('header-title').innerText = titles[viewId] || '智慧電子手冊';
             document.getElementById('header-subtitle').innerText = new Date().toLocaleDateString('zh-HK', { month: 'short', day: 'numeric', weekday: 'short' });
+
             if(viewId === 'home') renderHome();
             if(viewId === 'history') renderHistory();
-            if(viewId === 'timetable') renderTimetableUI();
+            if(viewId === 'timetable') { renderTimetableUI(); updateTTModeChips(); }
             if(viewId === 'subjects') renderSubjectsPage();
-            if(viewId === 'settings') updateTTModeChips();
+            if(viewId === 'settings') renderSubjectsPage();
             if(viewId === 'admin') renderAdmin();
         }
         window.switchView = switchView;
@@ -705,43 +826,44 @@
             if(userSettings.isDark) { document.documentElement.setAttribute('data-theme', 'dark'); document.documentElement.style.removeProperty('--theme-bg'); document.documentElement.style.removeProperty('--theme-card'); document.getElementById('theme-color-section').style.display = 'none'; } 
             else { document.documentElement.removeAttribute('data-theme'); const tc = themeColors[userSettings.theme] || themeColors['light-blue']; document.documentElement.style.setProperty('--theme-bg', tc.bg); document.documentElement.style.setProperty('--theme-card', tc.card); document.getElementById('theme-color-section').style.display = 'block'; }
             document.getElementById('dark-mode-toggle').checked = userSettings.isDark;
-            document.getElementById('setting-tt-cycle').value = userSettings.ttCycle || 5;
-            document.getElementById('setting-tt-period').value = userSettings.ttPeriodMins || 35;
-            document.getElementById('setting-tt-break').value = userSettings.ttBreakMins || 15;
-            document.getElementById('setting-tt-lunch').value = userSettings.ttLunchMins || 50;
+            const ttCycleNode = document.getElementById('setting-tt-cycle'); if (ttCycleNode) ttCycleNode.value = userSettings.ttCycle || 5;
+            const ttPeriodNode = document.getElementById('setting-tt-period'); if (ttPeriodNode) ttPeriodNode.value = userSettings.ttPeriodMins || 35;
+            const ttBreakNode = document.getElementById('setting-tt-break'); if (ttBreakNode) ttBreakNode.value = userSettings.ttBreakMins || 15;
+            const ttLunchNode = document.getElementById('setting-tt-lunch'); if (ttLunchNode) ttLunchNode.value = userSettings.ttLunchMins || 50;
             document.querySelectorAll('.theme-btn').forEach(btn => btn.style.borderColor = (btn.dataset.color === userSettings.theme) ? 'var(--theme-text-main)' : 'transparent');
-            buildCustomChips(); 
-            updateTTModeChips();
+            buildCustomChips(); updateTTModeChips();
         }
         window.applyTheme = applyTheme;
 
         function setThemeColor(colorId) { userSettings.theme = colorId; userSettings.isDark = false; applyTheme(); saveSettings(); }
         window.setThemeColor = setThemeColor;
-
         function toggleDarkMode(isDark) { userSettings.isDark = isDark; applyTheme(); saveSettings(); }
         window.toggleDarkMode = toggleDarkMode;
 
         function updateTTModeChips() {
             const currentMode = userSettings.ttMode || '5day';
-            document.getElementById('setting-tt-mode').value = currentMode;
+            const modeInput = document.getElementById('setting-tt-mode');
+            if (modeInput) modeInput.value = currentMode;
             document.querySelectorAll('.tt-mode-btn').forEach(btn => {
                 if(btn.dataset.val === currentMode) { btn.classList.add('selected'); btn.style.backgroundColor = 'var(--theme-text-main)'; btn.style.color = 'var(--theme-card)'; btn.style.borderColor = 'var(--theme-text-main)'; } 
                 else { btn.classList.remove('selected'); btn.style.backgroundColor = 'transparent'; btn.style.color = 'var(--theme-text-sub)'; btn.style.borderColor = 'var(--theme-text-sub)'; }
             });
-            document.getElementById('setting-tt-cycle-container').style.display = (currentMode === 'cycle') ? 'flex' : 'none';
+            const cycleCont = document.getElementById('setting-tt-cycle-container');
+            if (cycleCont) cycleCont.style.display = (currentMode === 'cycle') ? 'flex' : 'none';
         }
         window.updateTTModeChips = updateTTModeChips;
 
         function setTTMode(mode) { userSettings.ttMode = mode; updateTTModeChips(); saveSettings(); renderTimetableUI(); }
         window.setTTMode = setTTMode;
-
         function updateTTCycle() { userSettings.ttCycle = parseInt(document.getElementById('setting-tt-cycle').value) || 5; saveSettings(); renderTimetableUI(); }
         window.updateTTCycle = updateTTCycle;
-
         function updateTTSmart() { userSettings.ttPeriodMins = parseInt(document.getElementById('setting-tt-period').value) || 35; userSettings.ttBreakMins = parseInt(document.getElementById('setting-tt-break').value) || 15; userSettings.ttLunchMins = parseInt(document.getElementById('setting-tt-lunch').value) || 50; saveSettings(); }
         window.updateTTSmart = updateTTSmart;
-
-        async function saveSettings() { if(currentUser) await setDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'settings', 'profile'), userSettings); }
+        function saveSettings() { 
+            if(currentUser) {
+                setDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'settings', 'profile'), userSettings).catch(err => console.warn("設定儲存失敗", err));
+            }
+        }
         window.saveSettings = saveSettings;
 
         function setTaskType(type, btnEl) { document.querySelectorAll('.type-toggle-btn').forEach(btn => { btn.classList.remove('active'); btn.classList.add('text-[var(--theme-text-sub)]'); }); btnEl.classList.add('active'); btnEl.classList.remove('text-[var(--theme-text-sub)]'); document.getElementById('task-type').value = type; }
@@ -749,23 +871,23 @@
 
         function buildCustomChips() {
             const addCont = document.getElementById('subject-chips-add'); const filterCont = document.getElementById('subject-chips-filter'); const editCont = document.getElementById('subject-chips-edit'); const ttCont = document.getElementById('tt-cell-chips');
-            if(!addCont || !filterCont || !editCont || !ttCont) return;
-            addCont.innerHTML = ''; filterCont.innerHTML = ''; editCont.innerHTML = ''; ttCont.innerHTML = '';
+            if(!addCont || !filterCont || !editCont) return;
+            addCont.innerHTML = ''; filterCont.innerHTML = ''; editCont.innerHTML = ''; if(ttCont) ttCont.innerHTML = '';
             filterCont.insertAdjacentHTML('beforeend', `<button type="button" class="custom-chip px-3 py-1.5 text-[11px] flex-shrink-0 spring-action" data-subject="all" onclick="setSubjectFilter('all')">所有科目</button>`);
             const enabledSubjects = userSettings.subjects.filter(s => s.enabled !== false);
             enabledSubjects.forEach(sub => {
                 addCont.insertAdjacentHTML('beforeend', `<button type="button" class="custom-chip px-3 py-1.5 text-[11px] flex-shrink-0 spring-action" data-subject="${sub.name}" onclick="setSubjectAdd('${sub.name}')">${sub.name}</button>`);
                 filterCont.insertAdjacentHTML('beforeend', `<button type="button" class="custom-chip px-3 py-1.5 text-[11px] flex-shrink-0 spring-action" data-subject="${sub.name}" onclick="setSubjectFilter('${sub.name}')">${sub.name}</button>`);
                 editCont.insertAdjacentHTML('beforeend', `<button type="button" class="custom-chip px-3 py-1.5 text-[11px] flex-shrink-0 spring-action" data-subject="${sub.name}" onclick="setSubjectEdit('${sub.name}')">${sub.name}</button>`);
-                ttCont.insertAdjacentHTML('beforeend', `<button type="button" class="custom-chip px-4 py-2 text-xs shadow-sm" style="background-color: ${sub.color}; border: 1.5px solid ${sub.color}; color: #1d1d1f;" onclick="saveTTCellDirect('${sub.name}')">${sub.name}</button>`);
+                if(ttCont) ttCont.insertAdjacentHTML('beforeend', `<button type="button" class="custom-chip px-4 py-2 text-xs shadow-sm" style="background-color: ${sub.color}; border: 1.5px solid ${sub.color}; color: #1d1d1f;" onclick="saveTTCellDirect('${sub.name}')">${sub.name}</button>`);
             });
-            ttCont.insertAdjacentHTML('beforeend', `<button type="button" class="custom-chip px-4 py-2 text-xs border border-gray-300 spring-action" onclick="saveTTCellDirect('')">清除</button>`);
+            if(ttCont) ttCont.insertAdjacentHTML('beforeend', `<button type="button" class="custom-chip px-4 py-2 text-xs border border-gray-300 spring-action" onclick="saveTTCellDirect('')">清除</button>`);
             updateChipStyles();
         }
         window.buildCustomChips = buildCustomChips;
 
         function updateChipStyles() {
-            const currentAdd = document.getElementById('task-subject').value; const currentFilter = document.getElementById('filter-subject').value; const currentEdit = document.getElementById('edit-subject').value;
+            const currentAdd = document.getElementById('task-subject')?.value || ''; const currentFilter = document.getElementById('filter-subject')?.value || ''; const currentEdit = document.getElementById('edit-subject')?.value || '';
             const applyStyle = (chip, isSelected, sub) => {
                 if (sub === 'all') { chip.style.backgroundColor = isSelected ? 'var(--theme-text-main)' : 'transparent'; chip.style.color = isSelected ? 'var(--theme-card)' : 'var(--theme-text-main)'; chip.style.borderColor = 'var(--theme-text-main)'; } 
                 else { chip.style.backgroundColor = isSelected ? hexToRgba(sub.color, 0.4) : 'transparent'; chip.style.color = 'var(--theme-text-main)'; chip.style.borderColor = sub.color; }
@@ -779,24 +901,174 @@
 
         function setSubjectAdd(val) { document.getElementById('task-subject').value = val; updateChipStyles(); }
         window.setSubjectAdd = setSubjectAdd;
-
         function setSubjectFilter(val) { document.getElementById('filter-subject').value = val; updateChipStyles(); renderHome(); }
         window.setSubjectFilter = setSubjectFilter;
-
         function setSubjectEdit(val) { document.getElementById('edit-subject').value = val; updateChipStyles(); }
         window.setSubjectEdit = setSubjectEdit;
 
+        // --- Admin Functions ---
+        async function saveAdminConfig() {
+            if(!isAdmin) return;
+            try {
+                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'system'), adminConfig);
+            } catch(e) { console.warn("Admin config save failed", e); }
+        }
+        window.saveAdminConfig = saveAdminConfig;
+
+        function logAdminAction(action, details) {
+            if (!isAdmin) return;
+            addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'auditLogs'), { action, details, admin: currentUser.email, timestamp: new Date().toISOString() }).catch(e => console.warn('日誌寫入失敗', e));
+        }
+
+        function toggleAdminSetting(key, val) {
+            if (key === 'autoClean') adminConfig.autoCleanEnabled = val;
+            if (key === 'whitelist') adminConfig.whitelistEnabled = val;
+            if (key === 'blacklist') adminConfig.blacklistEnabled = val;
+            saveAdminConfig();
+            logAdminAction('更新系統設定', `更改 ${key} 狀態為 ${val}`);
+        }
+        window.toggleAdminSetting = toggleAdminSetting;
+
+        function addAdminList(listName) {
+            const input = document.getElementById(`admin-${listName}-input`);
+            const email = input.value.trim();
+            if(!email) return;
+            if(!adminConfig[listName].includes(email)) {
+                adminConfig[listName].push(email);
+                saveAdminConfig();
+                logAdminAction(`更新${listName}`, `新增電郵: ${email}`);
+                input.value = '';
+                showToast('已新增');
+                renderAdminSettings();
+            }
+        }
+        window.addAdminList = addAdminList;
+
+        function removeAdminList(listName, email) {
+            adminConfig[listName] = adminConfig[listName].filter(e => e !== email);
+            saveAdminConfig();
+            logAdminAction(`更新${listName}`, `移除電郵: ${email}`);
+            showToast('已移除');
+            renderAdminSettings();
+        }
+        window.removeAdminList = removeAdminList;
+
+        function renderAdminSettings() {
+            const wl = document.getElementById('admin-whitelist-list');
+            if(wl) {
+                wl.innerHTML = '';
+                adminConfig.whitelist.forEach(email => {
+                    wl.insertAdjacentHTML('beforeend', `<tr class="border-b dark:border-zinc-700"><td class="p-3 text-xs">${email}</td><td class="p-3 text-right"><button onclick="removeAdminList('whitelist', '${email}')" class="text-red-500"><i class="fas fa-times"></i></button></td></tr>`);
+                });
+            }
+            const bl = document.getElementById('admin-blacklist-list');
+            if(bl) {
+                bl.innerHTML = '';
+                adminConfig.blacklist.forEach(email => {
+                    bl.insertAdjacentHTML('beforeend', `<tr class="border-b dark:border-zinc-700"><td class="p-3 text-xs">${email}</td><td class="p-3 text-right"><button onclick="removeAdminList('blacklist', '${email}')" class="text-red-500"><i class="fas fa-times"></i></button></td></tr>`);
+                });
+            }
+            
+            const btnAc = document.getElementById('admin-autoclean-toggle'); if(btnAc) btnAc.checked = adminConfig.autoCleanEnabled || false;
+            const btnWl = document.getElementById('admin-whitelist-toggle'); if(btnWl) btnWl.checked = adminConfig.whitelistEnabled || false;
+            const btnBl = document.getElementById('admin-blacklist-toggle'); if(btnBl) btnBl.checked = adminConfig.blacklistEnabled || false;
+            
+            const btnOnline = document.getElementById('admin-maint-online');
+            const btnOffline = document.getElementById('admin-maint-offline');
+            if (btnOnline && btnOffline) {
+                if (adminConfig.maintenance) {
+                    btnOnline.className = "flex-1 py-4 rounded-xl border-2 border-transparent bg-gray-50 text-gray-400 flex flex-col items-center justify-center gap-2 spring-action dark:bg-zinc-800";
+                    btnOffline.className = "flex-1 py-4 rounded-xl border-2 border-red-500 bg-red-50 text-red-600 flex flex-col items-center justify-center gap-2 spring-action dark:bg-red-900/30";
+                } else {
+                    btnOnline.className = "flex-1 py-4 rounded-xl border-2 border-green-500 bg-green-50 text-green-600 flex flex-col items-center justify-center gap-2 spring-action dark:bg-green-900/30";
+                    btnOffline.className = "flex-1 py-4 rounded-xl border-2 border-transparent bg-gray-50 text-gray-400 flex flex-col items-center justify-center gap-2 spring-action dark:bg-zinc-800";
+                }
+            }
+        }
+        window.renderAdminSettings = renderAdminSettings;
+
+        function publishMarquee() {
+            const txt = document.getElementById('admin-marquee-input').value.trim();
+            adminConfig.marquee = txt;
+            saveAdminConfig();
+            logAdminAction('發佈跑馬燈', `公告內容: ${txt}`);
+            showToast('跑馬燈已發佈');
+        }
+        window.publishMarquee = publishMarquee;
+
+        function clearMarquee() {
+            const input = document.getElementById('admin-marquee-input');
+            if(input) input.value = '';
+            adminConfig.marquee = '';
+            saveAdminConfig();
+            logAdminAction('清除跑馬燈', '已清空系統公告');
+            showToast('跑馬燈已清空');
+        }
+        window.clearMarquee = clearMarquee;
+
+        function setMaintenanceMode(mode) {
+            adminConfig.maintenance = (mode === 'maintenance');
+            saveAdminConfig();
+            logAdminAction('切換維護模式', `系統狀態變更為: ${mode}`);
+            renderAdminSettings();
+            showToast(mode === 'maintenance' ? '已進入維護模式' : '已恢復正常運作');
+        }
+        window.setMaintenanceMode = setMaintenanceMode;
+
+        function applySystemConfig(configData) {
+            adminConfig = { ...adminConfig, ...configData };
+            
+            // Marquee
+            const mqCont = document.getElementById('global-marquee-container');
+            const mqTxt = document.getElementById('global-marquee-text');
+            if (adminConfig.marquee && adminConfig.marquee.trim() !== '') {
+                if(mqTxt) mqTxt.innerText = adminConfig.marquee;
+                if(mqCont) mqCont.classList.remove('hidden');
+            } else {
+                if(mqCont) mqCont.classList.add('hidden');
+            }
+
+            // Maintenance Mode Check
+            const maintScreen = document.getElementById('maintenance-screen');
+            if (maintScreen) {
+                if (adminConfig.maintenance && !isAdmin) {
+                    maintScreen.classList.remove('hidden');
+                    maintScreen.style.display = 'flex';
+                } else {
+                    maintScreen.classList.add('hidden');
+                    maintScreen.style.display = 'none';
+                }
+            }
+
+            // Whitelist/Blacklist Check for non-admins
+            if (currentUser && !isAdmin) {
+                if (adminConfig.blacklistEnabled && adminConfig.blacklist.includes(currentUser.email)) {
+                    handleLogout();
+                    alert("你的帳戶已被管理員封鎖。");
+                }
+                if (adminConfig.whitelistEnabled && !adminConfig.whitelist.includes(currentUser.email)) {
+                    handleLogout();
+                    alert("系統目前僅開放白名單用戶登入。");
+                }
+            }
+
+            const viewAdmin = document.getElementById('view-admin');
+            if(viewAdmin && viewAdmin.classList.contains('active')) {
+                renderAdminSettings();
+            }
+        }
+        window.applySystemConfig = applySystemConfig;
+
+        // --- Timetable System ---
         function getTimetableDaysConfig() {
             const mode = userSettings.ttMode || '5day'; const cycle = userSettings.ttCycle || 5; let days = []; const weekLabels = ['一', '二', '三', '四', '五', '六', '日'];
             const count = (mode === '5day') ? 5 : (mode === '6day') ? 6 : (mode === '7day') ? 7 : cycle;
             for(let i=0; i<count; i++) days.push({ key: `d${i+1}`, label: (mode === 'cycle') ? `Day ${i+1}` : `星期${weekLabels[i]}` });
             return days;
         }
-        window.getTimetableDaysConfig = getTimetableDaysConfig;
 
         function initDefaultTimetableDay() {
-            const daysConfig = getTimetableDaysConfig();
-            const todayIndex = new Date().getDay(); 
+            const daysConfig = getTimetableDaysConfig(); const todayIndex = new Date().getDay(); 
             const mapDayToKey = { 1: 'd1', 2: 'd2', 3: 'd3', 4: 'd4', 5: 'd5', 6: 'd6', 0: 'd7' };
             let targetKey = mapDayToKey[todayIndex];
             if(!daysConfig.find(d => d.key === targetKey)) targetKey = 'd1';
@@ -808,10 +1080,8 @@
 
         function toggleTimetableMode(edit) { 
             isEditingTimetable = edit; 
-            document.getElementById('tt-view-actions').classList.toggle('hidden', edit); 
-            document.getElementById('tt-edit-actions').classList.toggle('hidden', !edit); 
-            document.getElementById('timetable-timeline-container').classList.toggle('hidden', edit);
-            document.getElementById('timetable-edit-container').classList.toggle('hidden', !edit);
+            document.getElementById('tt-view-actions').classList.toggle('hidden', edit); document.getElementById('tt-edit-actions').classList.toggle('hidden', !edit); 
+            document.getElementById('timetable-timeline-container').classList.toggle('hidden', edit); document.getElementById('timetable-edit-container').classList.toggle('hidden', !edit);
             renderTimetableUI(); 
         }
         window.toggleTimetableMode = toggleTimetableMode;
@@ -824,20 +1094,16 @@
             else if(type === 'break') { duration = parseInt(userSettings.ttBreakMins) || 15; fillText = '小息'; }
             else if(type === 'lunch') { duration = parseInt(userSettings.ttLunchMins) || 50; fillText = '午膳'; }
             
-            let [h, m] = startStr.split(':').map(Number);
-            let date = new Date(); date.setHours(h, m, 0, 0);
-            date.setMinutes(date.getMinutes() + duration);
+            let [h, m] = startStr.split(':').map(Number); let date = new Date(); date.setHours(h, m, 0, 0); date.setMinutes(date.getMinutes() + duration);
             let endStr = `${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
             let newRow = { startTime: startStr, endTime: endStr };
             if(fillText) { const daysConfig = getTimetableDaysConfig(); daysConfig.forEach(d => { newRow[d.key] = fillText; }); }
-            userTimetable.push(newRow);
-            renderTimetableUI();
+            userTimetable.push(newRow); renderTimetableUI();
         }
         window.addSmartRow = addSmartRow;
 
         function renderTimetableUI() {
-            const daysConfig = getTimetableDaysConfig();
-            const dataToRender = userTimetable.length > 0 ? userTimetable : globalTimetable;
+            const daysConfig = getTimetableDaysConfig(); const dataToRender = userTimetable.length > 0 ? userTimetable : globalTimetable;
 
             dataToRender.forEach(r => {
                 if(r.time && !r.startTime) { let parts = r.time.split('-'); r.startTime = parts[0]?.trim() || ''; r.endTime = parts[1]?.trim() || ''; }
@@ -846,8 +1112,7 @@
             });
 
             if(!isEditingTimetable) {
-                const selectorCont = document.getElementById('timetable-day-selector');
-                selectorCont.innerHTML = '';
+                const selectorCont = document.getElementById('timetable-day-selector'); selectorCont.innerHTML = '';
                 daysConfig.forEach(d => {
                     const isSelected = d.key === currentTimetableDay;
                     const style = isSelected ? `background-color: var(--theme-text-main); color: var(--theme-card);` : `border: 1px solid var(--theme-text-sub); color: var(--theme-text-sub);`;
@@ -855,21 +1120,16 @@
                 });
 
                 document.getElementById('tt-single-day-header').innerText = daysConfig.find(d => d.key === currentTimetableDay)?.label || '';
-                const timelineCont = document.getElementById('timetable-timeline');
-                timelineCont.innerHTML = '';
+                const timelineCont = document.getElementById('timetable-timeline'); timelineCont.innerHTML = '';
 
                 if(dataToRender.length === 0) {
                     timelineCont.innerHTML = `<div class="py-10 text-[11px] font-bold opacity-50 text-center">尚未設定時間表</div>`;
                 } else {
                     dataToRender.forEach((row, i) => {
-                        let cellVal = row[currentTimetableDay] || '';
-                        let sub = userSettings.subjects.find(s => s.name === cellVal);
+                        let cellVal = row[currentTimetableDay] || ''; let sub = userSettings.subjects.find(s => s.name === cellVal);
                         let subColor = sub ? sub.color : 'var(--theme-text-sub)';
-                        let isBreak = cellVal.includes('小息');
-                        let isLunch = cellVal.includes('午膳');
-                        if (isBreak) subColor = '#AAB7B8';
-                        if (isLunch) subColor = '#FFB3BA';
-                        if (!cellVal) subColor = 'transparent';
+                        let isBreak = cellVal.includes('小息'); let isLunch = cellVal.includes('午膳');
+                        if (isBreak) subColor = '#AAB7B8'; if (isLunch) subColor = '#FFB3BA'; if (!cellVal) subColor = 'transparent';
 
                         let bgStyle = cellVal ? `background-color: ${hexToRgba(subColor, 0.15)}; border-color: ${subColor}` : `background-color: transparent; border-color: var(--theme-border)`;
                         let textStyle = cellVal ? `color: var(--theme-text-main)` : `color: var(--theme-text-sub)`;
@@ -877,18 +1137,11 @@
 
                         timelineCont.insertAdjacentHTML('beforeend', `
                             <div class="flex gap-3 min-h-[60px]">
-                                <div class="flex flex-col items-end w-10 shrink-0 pt-2">
-                                    <span class="text-[11px] font-black" style="color: var(--theme-text-main)">${row.startTime||'--'}</span>
-                                    <span class="text-[9px] font-bold opacity-50">${row.endTime||'--'}</span>
-                                </div>
-                                <div class="relative flex flex-col items-center pt-3">
-                                    <div class="w-2.5 h-2.5 rounded-full z-10" style="background-color: ${cellVal ? subColor : 'var(--theme-border)'};"></div>
-                                    ${lineHtml}
-                                </div>
+                                <div class="flex flex-col items-end w-10 shrink-0 pt-2"><span class="text-[11px] font-black" style="color: var(--theme-text-main)">${row.startTime||'--'}</span><span class="text-[9px] font-bold opacity-50">${row.endTime||'--'}</span></div>
+                                <div class="relative flex flex-col items-center pt-3"><div class="w-2.5 h-2.5 rounded-full z-10" style="background-color: ${cellVal ? subColor : 'var(--theme-border)'};"></div>${lineHtml}</div>
                                 <div class="flex-1 pb-4">
                                     <div class="rounded-xl p-3 shadow-sm border-l-4 flex items-center gap-2" style="${bgStyle}">
-                                        ${isBreak ? '<i class="fas fa-mug-hot text-xs opacity-60"></i>' : ''}
-                                        ${isLunch ? '<i class="fas fa-utensils text-xs opacity-60"></i>' : ''}
+                                        ${isBreak ? '<i class="fas fa-mug-hot text-xs opacity-60"></i>' : ''} ${isLunch ? '<i class="fas fa-utensils text-xs opacity-60"></i>' : ''}
                                         <span class="font-black text-xs" style="${textStyle}">${cellVal || '空堂'}</span>
                                     </div>
                                 </div>
@@ -899,42 +1152,25 @@
             }
 
             if(isEditingTimetable) {
-                const thead = document.getElementById('tt-edit-header-row');
-                const tbody = document.getElementById('timetable-body');
-
+                const thead = document.getElementById('tt-edit-header-row'); const tbody = document.getElementById('timetable-body');
                 let thHtml = `<th class="py-2 px-1 text-[11px] font-bold opacity-60 sticky left-0 z-10" style="background-color: var(--theme-card);">時間</th>`;
                 daysConfig.forEach(d => { thHtml += `<th class="py-2 px-2 text-[11px] font-bold min-w-[50px] whitespace-nowrap">${d.label}</th>`; });
                 thHtml += `<th class="py-2 px-1 text-[10px] font-bold opacity-60">刪除</th>`;
-                thead.innerHTML = thHtml;
-                tbody.innerHTML = '';
-
+                thead.innerHTML = thHtml; tbody.innerHTML = '';
                 if(dataToRender.length === 0) userTimetable = [{startTime: '08:00', endTime: '08:35'}];
 
                 dataToRender.forEach((row, rIdx) => {
                     let tr = document.createElement('tr'); tr.className = "border-b border-dashed"; tr.style.borderColor = "var(--theme-border)";
-                    let html = `<td class="p-1 sticky left-0 z-10 w-[70px] min-w-[70px]" style="background-color: var(--theme-card);">
-                        <div class="flex flex-col gap-1 items-center">
-                            <input type="time" class="w-full text-center text-[10px] font-bold minimal-input rounded p-1" value="${row.startTime||''}" onchange="updateTT(${rIdx}, 'startTime', this.value)">
-                            <input type="time" class="w-full text-center text-[10px] font-bold minimal-input rounded p-1" value="${row.endTime||''}" onchange="updateTT(${rIdx}, 'endTime', this.value)">
-                        </div>
-                    </td>`;
+                    let html = `<td class="p-1 sticky left-0 z-10 w-[70px] min-w-[70px]" style="background-color: var(--theme-card);"><div class="flex flex-col gap-1 items-center"><input type="time" class="w-full text-center text-[10px] font-bold minimal-input rounded p-1" value="${row.startTime||''}" onchange="updateTT(${rIdx}, 'startTime', this.value)"><input type="time" class="w-full text-center text-[10px] font-bold minimal-input rounded p-1" value="${row.endTime||''}" onchange="updateTT(${rIdx}, 'endTime', this.value)"></div></td>`;
                     
                     daysConfig.forEach(d => {
-                        const cellVal = row[d.key] || '';
-                        let cellColor = (userSettings.subjects.find(s => s.name === cellVal) || {}).color || 'var(--theme-border)';
-                        if(cellVal.includes('小息')) cellColor = '#AAB7B8';
-                        if(cellVal.includes('午膳')) cellColor = '#FFB3BA';
-
-                        html += `<td class="p-1 min-w-[55px]">
-                            <button onclick="openTTCellModal(${rIdx}, '${d.key}')" class="w-full h-11 minimal-input rounded-lg text-[10px] font-bold flex items-center justify-center px-1" style="color: var(--theme-text-main); border: 1.5px solid ${cellVal ? cellColor : 'var(--theme-border)'}; background-color: ${cellVal ? hexToRgba(cellColor, 0.4) : 'var(--theme-bg)'}">
-                                ${cellVal || '<i class="fas fa-plus opacity-20"></i>'}
-                            </button>
-                        </td>`;
+                        const cellVal = row[d.key] || ''; let cellColor = (userSettings.subjects.find(s => s.name === cellVal) || {}).color || 'var(--theme-border)';
+                        if(cellVal.includes('小息')) cellColor = '#AAB7B8'; if(cellVal.includes('午膳')) cellColor = '#FFB3BA';
+                        html += `<td class="p-1 min-w-[55px]"><button onclick="openTTCellModal(${rIdx}, '${d.key}')" class="w-full h-11 minimal-input rounded-lg text-[10px] font-bold flex items-center justify-center px-1" style="color: var(--theme-text-main); border: 1.5px solid ${cellVal ? cellColor : 'var(--theme-border)'}; background-color: ${cellVal ? hexToRgba(cellColor, 0.4) : 'var(--theme-bg)'}">${cellVal || '<i class="fas fa-plus opacity-20"></i>'}</button></td>`;
                     });
 
                     html += `<td class="p-1 w-[40px] text-center"><button onclick="removeTTRow(${rIdx})" class="text-red-400 hover:text-red-600 w-7 h-7 rounded-full hover:bg-red-50 spring-action"><i class="fas fa-trash-alt text-[10px]"></i></button></td>`;
-                    tr.innerHTML = html;
-                    tbody.appendChild(tr);
+                    tr.innerHTML = html; tbody.appendChild(tr);
                 });
             }
             document.getElementById('btn-sync-timetable').classList.toggle('hidden', globalTimetable.length === 0 || isEditingTimetable);
@@ -943,11 +1179,15 @@
 
         function updateTT(idx, field, val) { userTimetable[idx][field] = val; }
         window.updateTT = updateTT;
-
         function removeTTRow(idx) { userTimetable.splice(idx, 1); renderTimetableUI(); }
         window.removeTTRow = removeTTRow;
-
-        function openTTCellModal(rIdx, dayKey) { ttEditingCell = { row: rIdx, dayKey: dayKey }; document.getElementById('tt-cell-custom').value = ''; openModal('tt-cell-modal'); }
+        
+        function openTTCellModal(rIdx, dayKey) { 
+            ttEditingCell = { row: rIdx, dayKey: dayKey }; 
+            const customInput = document.getElementById('tt-cell-custom');
+            if (customInput) customInput.value = ''; 
+            openModal('tt-cell-modal'); 
+        }
         window.openTTCellModal = openTTCellModal;
 
         function saveTTCellDirect(val) { userTimetable[ttEditingCell.row][ttEditingCell.dayKey] = val; closeModal('tt-cell-modal'); renderTimetableUI(); }
@@ -956,12 +1196,24 @@
         function saveTTCellCustom() { const val = document.getElementById('tt-cell-custom').value.trim(); saveTTCellDirect(val); }
         window.saveTTCellCustom = saveTTCellCustom;
 
-        async function saveTimetable() { if(!currentUser) return; await setDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'timetable', 'personal'), { data: JSON.stringify(userTimetable) }); showToast("時間表已儲存"); toggleTimetableMode(false); }
+        function saveTimetable() { 
+            if(!currentUser) return; 
+            setDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'timetable', 'personal'), { data: JSON.stringify(userTimetable) })
+            .then(() => { showToast("時間表已儲存"); toggleTimetableMode(false); })
+            .catch(e => console.warn('時間表儲存失敗', e)); 
+        }
         window.saveTimetable = saveTimetable;
-
-        async function saveGlobalTimetable() { if(!isAdmin) return; customConfirm('全校時間表', '確定要將目前畫面上的時間表發佈給全校嗎？', 'normal', async () => { await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'timetables', 'global'), { data: JSON.stringify(userTimetable) }); showToast("全校時間表已發佈"); }); }
+        
+        function saveGlobalTimetable() { 
+            if(!isAdmin) return; 
+            customConfirm('全校時間表', '確定要將目前畫面上的時間表發佈給全校嗎？', 'normal', () => { 
+                setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'timetables', 'global'), { data: JSON.stringify(userTimetable) })
+                .then(() => { logAdminAction('更新時間表', '發佈全校統一時間表'); showToast("全校時間表已發佈"); })
+                .catch(e => console.warn('全校時間表發佈失敗', e));
+            }); 
+        }
         window.saveGlobalTimetable = saveGlobalTimetable;
-
+        
         function syncGlobalTimetable() { if(globalTimetable.length === 0) return; customConfirm('同步時間表', '這將覆蓋你的個人修改，確定同步嗎？', 'danger', () => { userTimetable = JSON.parse(JSON.stringify(globalTimetable)); renderTimetableUI(); saveTimetable(); }); }
         window.syncGlobalTimetable = syncGlobalTimetable;
 
@@ -993,8 +1245,7 @@
             }).sort((a,b) => a.start - b.start);
             
             let currentState = "課堂已結束"; let nextState = "明日請早"; let countdownTarget = null;
-            let timerLabel = ""; let currentBgColor = "var(--theme-bg)";
-            let iconHtml = `<i class="fas fa-check-circle text-xl opacity-50" style="color: var(--theme-text-main)"></i>`;
+            let timerLabel = ""; let currentBgColor = "var(--theme-bg)"; let iconHtml = `<i class="fas fa-check-circle text-xl opacity-50" style="color: var(--theme-text-main)"></i>`;
             let periodStart = null; let periodEnd = null; let isBreak = false;
             
             if(now < classesToday[0].start) {
@@ -1069,17 +1320,18 @@
             listEnabled.innerHTML = ''; listDisabled.innerHTML = '';
             userSettings.subjects.forEach(sub => {
                 const isEnabled = sub.enabled !== false;
-                const html = `<div class="premium-card p-4 flex justify-between items-center shadow-sm" style="background-color: ${hexToRgba(sub.color, isEnabled ? 0.3 : 0.1)};">
-                        <div class="flex items-center gap-3">
-                            <div class="w-4 h-4 rounded-full shadow-sm" style="background-color: ${sub.color}"></div>
-                            <span class="font-black text-sm" style="color: var(--theme-text-main)">${sub.name}</span>
+                const html = `<div class="premium-card p-3 md:p-4 flex justify-between items-center shadow-sm transition-all duration-300" style="background-color: ${hexToRgba(sub.color, isEnabled ? 0.3 : 0.1)};">
+                        <div class="flex items-center gap-3 overflow-hidden">
+                            <div class="w-4 h-4 rounded-full shadow-sm shrink-0" style="background-color: ${sub.color}"></div>
+                            <span class="font-black text-[13px] md:text-sm truncate" style="color: var(--theme-text-main)">${sub.name}</span>
                         </div>
-                        <div class="flex items-center gap-4">
-                            <label class="relative inline-flex items-center cursor-pointer spring-action">
-                                <input type="checkbox" class="sr-only peer" ${isEnabled ? 'checked' : ''} onchange="toggleSubjectEnable('${sub.id}', this.checked)">
-                                <div class="w-10 h-6 bg-gray-300 dark:bg-zinc-700 rounded-full peer-checked:bg-green-500 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
+                        <div class="flex items-center gap-3 shrink-0">
+                            <!-- 純 Tailwind iOS 風格開關 -->
+                            <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                                <input type="checkbox" class="sr-only peer" ${isEnabled ? 'checked' : ''} onchange="toggleSubjectEnable('${sub.id}', this.checked, this)">
+                                <div class="w-11 h-6 bg-gray-300 dark:bg-zinc-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
                             </label>
-                            <button onclick="deleteSubject('${sub.id}')" class="text-red-500 opacity-40 hover:opacity-100 spring-action"><i class="fas fa-trash"></i></button>
+                            <button onclick="deleteSubject('${sub.id}')" class="text-red-500/50 hover:text-red-500 w-8 h-8 flex items-center justify-center rounded-full hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors spring-action shrink-0"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>`;
                 if(isEnabled) listEnabled.insertAdjacentHTML('beforeend', html); else listDisabled.insertAdjacentHTML('beforeend', html);
@@ -1088,7 +1340,20 @@
         }
         window.renderSubjectsPage = renderSubjectsPage;
 
-        function toggleSubjectEnable(id, isEnabled) { const sub = userSettings.subjects.find(s => s.id === id); if(sub) { sub.enabled = isEnabled; saveSettings(); renderSubjectsPage(); } }
+        function toggleSubjectEnable(id, isEnabled, el) { 
+            const sub = userSettings.subjects.find(s => s.id === id); 
+            if(sub) { 
+                sub.enabled = isEnabled; 
+                const card = el ? el.closest('.premium-card') : null;
+                if(card) {
+                    card.style.backgroundColor = hexToRgba(sub.color, isEnabled ? 0.3 : 0.1);
+                    card.style.transform = 'scale(0.95)';
+                    card.style.opacity = '0.5';
+                }
+                saveSettings(); 
+                setTimeout(() => { renderSubjectsPage(); }, 350); 
+            } 
+        }
         window.toggleSubjectEnable = toggleSubjectEnable;
 
         function addSubject() { const name = document.getElementById('new-subject-name').value.trim(); if(!name) return; userSettings.subjects.push({ id: 'sub_' + Date.now(), name, color: document.getElementById('new-subject-color').value, enabled: true }); document.getElementById('new-subject-name').value = ''; saveSettings(); renderSubjectsPage(); showToast('已新增科目'); }
@@ -1096,6 +1361,22 @@
 
         function deleteSubject(id) { customConfirm('刪除科目', '確定要刪除此科目嗎？', 'danger', () => { userSettings.subjects = userSettings.subjects.filter(s => s.id !== id); saveSettings(); renderSubjectsPage(); }); }
         window.deleteSubject = deleteSubject;
+
+        function resetDefaultSubjects() {
+            customConfirm('還原預設科目', '這將會補回所有預設的香港學校科目（不會刪除你已自訂的科目），確定嗎？', 'normal', () => {
+                const existingNames = userSettings.subjects.map(s => s.name);
+                let added = false;
+                defaultSubjects.forEach(ds => {
+                    if (!existingNames.includes(ds.name)) {
+                        userSettings.subjects.push({ ...ds, id: 'sub_' + Date.now() + Math.floor(Math.random()*1000) });
+                        added = true;
+                    }
+                });
+                if(added) { saveSettings(); renderSubjectsPage(); showToast('預設科目已成功還原'); }
+                else { showToast('所有預設科目已存在'); }
+            });
+        }
+        window.resetDefaultSubjects = resetDefaultSubjects;
 
         function getCardBg(subName) {
             const sub = userSettings.subjects.find(s => s.name === subName);
@@ -1110,11 +1391,11 @@
         }
 
         function renderHome() {
-            const listEl = document.getElementById('home-tasks-list'); const filterVal = document.getElementById('filter-subject').value;
+            const listEl = document.getElementById('home-tasks-list'); const filterVal = document.getElementById('filter-subject')?.value || 'all';
             listEl.innerHTML = '';
             let filtered = allTasks.filter(t => filterVal === 'all' || t.subject === filterVal);
             if(filtered.length === 0) { listEl.innerHTML = `<div class="text-center py-20 text-sm font-bold opacity-30"><i class="fas fa-check-circle text-5xl mb-4 block"></i>目前沒有未完成任務。</div>`; return; }
-            filtered.forEach(task => {
+            filtered.forEach((task, index) => {
                 const canEditDelete = task.createdBy === currentUser.uid || (task.isPublic && isAdmin);
                 const subColor = (userSettings.subjects.find(s=>s.name===task.subject)||{}).color||'#e5e5ea';
                 
@@ -1127,22 +1408,28 @@
                 else if (diffDays === 1) badgeHtml = `<span class="bg-orange-100 text-orange-600 px-2 py-1 rounded-md text-[10px] font-black tracking-widest shadow-sm border border-orange-200">聽日要交</span>`;
                 else badgeHtml = `<span class="bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-gray-300 px-2 py-1 rounded-md text-[10px] font-black tracking-widest shadow-sm border border-gray-200 dark:border-zinc-700">餘 ${diffDays} 日</span>`;
 
-                listEl.insertAdjacentHTML('beforeend', `<div class="premium-card p-5 relative group" style="background-color: ${getCardBg(task.subject)}; border-left: 5px solid ${subColor};">
+                let contentHtml = task.content.replace(/\n/g, '<br>');
+                let urlBtnHtml = task.url ? `<a href="${task.url}" target="_blank" class="block w-full text-center py-2.5 mt-3 bg-white/60 dark:bg-black/30 hover:bg-white dark:hover:bg-black text-blue-500 rounded-xl text-[11px] font-black tracking-wider transition-colors shadow-sm"><i class="fas fa-link mr-1"></i> 點擊開啟附件 / 網頁連結</a>` : '';
+
+                listEl.insertAdjacentHTML('beforeend', `
+                    <div class="premium-card p-5 relative group stagger-item ${task.isImportant ? 'glow-effect' : ''}" style="background-color: ${getCardBg(task.subject)}; border-left: 5px solid ${subColor}; animation-delay: ${index * 0.05}s;">
+                        ${task.isImportant ? `<i class="fas fa-star absolute -top-2 -right-2 text-yellow-400 text-2xl drop-shadow-md z-10"></i>` : ''}
                         <div class="flex justify-between items-start mb-3">
-                            <div class="flex items-center gap-2">
+                            <div class="flex items-center gap-2 flex-wrap">
                                 ${getSubjectHTML(task.subject)}
                                 ${task.type === 'test' ? `<span class="px-2 py-0.5 rounded text-[9px] font-bold bg-purple-100 text-purple-700">測驗</span>` : ''}
                                 ${badgeHtml}
                             </div>
-                            ${canEditDelete ? `<div class="flex gap-2"><button onclick="openEditModal('${task.id}', ${task.isPublic})" class="w-7 h-7 rounded-full bg-white/60 text-gray-600 flex items-center justify-center text-xs shadow-sm spring-action"><i class="fas fa-pen"></i></button><button onclick="deleteTask('${task.id}', ${task.isPublic})" class="w-7 h-7 rounded-full bg-white/60 text-red-500 flex items-center justify-center text-xs shadow-sm spring-action"><i class="fas fa-trash"></i></button></div>` : ''}
+                            ${canEditDelete ? `<div class="flex gap-2 shrink-0"><button onclick="openEditModal('${task.id}', ${task.isPublic})" class="w-7 h-7 rounded-full bg-white/60 text-gray-600 flex items-center justify-center text-xs shadow-sm spring-action"><i class="fas fa-pen"></i></button><button onclick="deleteTask('${task.id}', ${task.isPublic})" class="w-7 h-7 rounded-full bg-white/60 text-red-500 flex items-center justify-center text-xs shadow-sm spring-action"><i class="fas fa-trash"></i></button></div>` : ''}
                         </div>
-                        <p class="text-[15px] font-black leading-relaxed mb-4" style="color: var(--theme-text-main)">${task.content}</p>
-                        <div class="flex justify-between items-end border-t pt-3 border-black/5">
+                        <p class="text-[15px] font-black leading-relaxed mb-1" style="color: var(--theme-text-main)">${contentHtml}</p>
+                        ${urlBtnHtml}
+                        <div class="flex justify-between items-end border-t pt-3 mt-4 border-black/5">
                             <div>
                                 <p class="text-[10px] font-bold opacity-60"><i class="far fa-calendar mr-1"></i> ${task.dueDate} (${getDayOfWeek(task.dueDate)})</p>
                                 ${task.isPublic ? `<p class="text-[10px] font-black mt-1 text-orange-500"><i class="fas fa-bullhorn"></i> 全域廣播</p>` : ''}
                             </div>
-                            <button onclick="completeTask('${task.id}', ${task.isPublic})" class="px-4 py-2 rounded-xl text-[11px] font-black shadow-md bg-black text-white spring-action"><i class="fas fa-check mr-1"></i> 完成</button>
+                            <button onclick="completeTask('${task.id}', ${task.isPublic})" class="px-5 py-2.5 rounded-xl text-[11px] font-black shadow-md bg-black dark:bg-white text-white dark:text-black spring-action hover:scale-105 transition-transform"><i class="fas fa-check mr-1"></i> 完成</button>
                         </div>
                     </div>`);
             });
@@ -1152,7 +1439,9 @@
         function renderHistory() {
             const listEl = document.getElementById('history-tasks-list'); listEl.innerHTML = '';
             if(historyTasks.length === 0) { listEl.innerHTML = `<div class="text-center py-16 text-sm font-bold opacity-30">暫無歷史紀錄。</div>`; return; }
-            historyTasks.forEach(task => { listEl.insertAdjacentHTML('beforeend', `<div class="premium-card p-4 opacity-50"><div class="flex justify-between items-start mb-2">${getSubjectHTML(task.subject)}<button onclick="deleteHistoryTask('${task.id}')" class="text-red-500 spring-action"><i class="fas fa-times"></i></button></div><p class="text-xs font-bold line-through">${task.content}</p><p class="text-[9px] mt-2 font-bold opacity-50">完成於: ${new Date(task.completedAt).toLocaleString()}</p></div>`); });
+            historyTasks.forEach((task, index) => { 
+                listEl.insertAdjacentHTML('beforeend', `<div class="premium-card p-4 opacity-50 stagger-item" style="animation-delay: ${index * 0.05}s;"><div class="flex justify-between items-start mb-2">${getSubjectHTML(task.subject)}<button onclick="deleteHistoryTask('${task.id}')" class="text-red-500 spring-action hover:text-red-700 transition-colors"><i class="fas fa-times"></i></button></div><p class="text-xs font-bold line-through line-clamp-1">${task.content}</p><p class="text-[9px] mt-2 font-bold opacity-50">完成於: ${new Date(task.completedAt).toLocaleString()}</p></div>`); 
+            });
         }
         window.renderHistory = renderHistory;
 
@@ -1163,16 +1452,16 @@
             if (publicAssignments.length === 0) {
                 listEl.innerHTML = `<div class="text-center py-10 text-sm font-bold opacity-30">目前沒有活躍的全域廣播。</div>`;
             } else {
-                publicAssignments.forEach(task => {
+                publicAssignments.forEach((task, index) => {
                     const subColor = (userSettings.subjects.find(s=>s.name===task.subject)||{}).color||'#e5e5ea';
                     listEl.insertAdjacentHTML('beforeend', `
-                        <div class="flex items-center justify-between p-4 rounded-xl border border-gray-100 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-900/50 shadow-sm">
-                            <div>
+                        <div class="flex items-center justify-between p-4 rounded-xl border border-gray-100 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-900/50 shadow-sm stagger-item" style="animation-delay: ${index * 0.05}s;">
+                            <div class="flex-1 pr-4">
                                 <div class="flex items-center gap-2 mb-1.5">
                                     <span class="px-2 py-0.5 rounded text-[9px] font-bold" style="background-color: ${subColor}; color: #1d1d1f;">${task.subject}</span>
                                     <span class="text-[10px] font-bold text-gray-500">${task.dueDate} 到期</span>
                                 </div>
-                                <p class="text-sm font-black text-gray-800 dark:text-gray-200">${task.content}</p>
+                                <p class="text-sm font-black text-gray-800 dark:text-gray-200 line-clamp-2">${task.content}</p>
                             </div>
                             <div class="flex gap-2 shrink-0">
                                 <button onclick="openEditModal('${task.id}', true)" class="w-8 h-8 rounded-full bg-white dark:bg-zinc-700 text-gray-600 dark:text-gray-300 flex items-center justify-center spring-action shadow-sm"><i class="fas fa-pen text-xs"></i></button>
@@ -1186,162 +1475,202 @@
         }
         window.renderAdmin = renderAdmin;
 
+        function renderAdminLogs() {
+            const listEl = document.getElementById('admin-logs-list'); if(!listEl) return; listEl.innerHTML = '';
+            if(systemAuditLogs.length === 0) { listEl.innerHTML = `<div class="text-center py-10 text-sm font-bold opacity-30">目前沒有任何日誌紀錄。</div>`; return; }
+            systemAuditLogs.forEach((log, index) => {
+                let icon = 'fa-info-circle text-gray-400';
+                if(log.action.includes('廣播')) icon = 'fa-bullhorn text-blue-500';
+                if(log.action.includes('封鎖')) icon = 'fa-ban text-red-500';
+                if(log.action.includes('時間表')) icon = 'fa-calendar-alt text-orange-500';
+                if(log.action.includes('維護')) icon = 'fa-tools text-purple-500';
+                
+                listEl.insertAdjacentHTML('beforeend', `
+                    <div class="flex items-start gap-4 p-4 rounded-xl border border-gray-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm relative stagger-item" style="animation-delay: ${index * 0.05}s;">
+                        <div class="w-8 h-8 rounded-full bg-gray-50 dark:bg-zinc-800 flex items-center justify-center shrink-0 shadow-sm"><i class="fas ${icon} text-sm"></i></div>
+                        <div>
+                            <div class="flex items-center gap-2 mb-1"><span class="text-xs font-black">${log.action}</span><span class="text-[9px] font-bold opacity-50">${new Date(log.timestamp).toLocaleString()}</span></div>
+                            <p class="text-[11px] font-bold text-gray-600 dark:text-gray-400 mb-1">${log.details}</p>
+                            <p class="text-[9px] font-bold text-blue-500 bg-blue-50 dark:bg-blue-900/30 inline-block px-1.5 py-0.5 rounded">操作員: ${log.admin}</p>
+                        </div>
+                    </div>`);
+            });
+        }
+        window.renderAdminLogs = renderAdminLogs;
+
         function switchAdminTab(tabId) {
             document.querySelectorAll('.admin-tab-content').forEach(el => el.style.display = 'none');
             document.getElementById(`admin-tab-${tabId}`).style.display = 'block';
-            document.querySelectorAll('.admin-tab-btn').forEach(el => {
-                el.classList.remove('selected'); el.style.backgroundColor = 'transparent'; el.style.color = 'var(--theme-text-sub)'; el.style.borderColor = 'var(--theme-text-sub)';
-            });
+            document.querySelectorAll('.admin-tab-btn').forEach(el => { el.classList.remove('selected'); el.style.backgroundColor = 'transparent'; el.style.color = 'var(--theme-text-sub)'; el.style.borderColor = 'var(--theme-text-sub)'; });
             const activeBtn = Array.from(document.querySelectorAll('.admin-tab-btn')).find(el => el.getAttribute('onclick').includes(tabId));
             if(activeBtn) { activeBtn.classList.add('selected'); activeBtn.style.backgroundColor = 'var(--theme-text-main)'; activeBtn.style.color = 'var(--theme-card)'; activeBtn.style.borderColor = 'var(--theme-text-main)'; }
+            
+            if (tabId === 'settings') renderAdminSettings();
         }
         window.switchAdminTab = switchAdminTab;
 
         function renderAdminUsers() {
-            const listEl = document.getElementById('admin-users-list');
-            if(!listEl) return;
-            listEl.innerHTML = '';
-            
+            const listEl = document.getElementById('admin-users-list'); if(!listEl) return; listEl.innerHTML = '';
             const searchTerm = (document.getElementById('admin-user-search')?.value || '').toLowerCase();
             let filteredUsers = adminUsersList.filter(u => u.name.toLowerCase().includes(searchTerm) || u.email.toLowerCase().includes(searchTerm));
             
             document.getElementById('admin-stat-users').innerText = adminUsersList.length;
-            const activeCount = adminUsersList.filter(u => u.lastLogin && ((new Date() - new Date(u.lastLogin)) < 86400000)).length;
-            document.getElementById('admin-stat-active').innerText = activeCount;
+            document.getElementById('admin-stat-active').innerText = adminUsersList.filter(u => u.lastLogin && ((new Date() - new Date(u.lastLogin)) < 86400000)).length;
 
-            filteredUsers.sort((a,b) => new Date(b.lastLogin || 0) - new Date(a.lastLogin || 0)).forEach(u => {
+            filteredUsers.sort((a,b) => new Date(b.lastLogin || 0) - new Date(a.lastLogin || 0)).forEach((u, index) => {
                 const roleColor = u.role === '管理員' ? 'bg-purple-100 text-purple-600' : 'bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-gray-300';
-                const timeStr = timeAgo(u.lastLogin);
-                const isOnline = (new Date() - new Date(u.lastLogin)) < 300000; // 5 mins
+                const isBlocked = adminConfig.blacklist.includes(u.email);
+                const statusBadge = isBlocked ? `<span class="bg-red-500 text-white px-2 py-0.5 rounded-md text-[9px] font-black mt-1 inline-block">已封鎖</span>` : '';
                 
                 listEl.insertAdjacentHTML('beforeend', `
-                    <tr class="border-b transition-colors hover:bg-gray-50 dark:hover:bg-zinc-800" style="border-color: var(--theme-border);">
+                    <tr class="border-b transition-colors hover:bg-gray-50 dark:hover:bg-zinc-800 stagger-item" style="border-color: var(--theme-border); animation-delay: ${index * 0.05}s;">
                         <td class="p-4 flex items-center gap-3">
-                            <div class="relative"><img src="${u.avatar}" class="w-10 h-10 rounded-full shadow-sm"><div class="absolute bottom-0 right-0 w-3 h-3 ${isOnline ? 'bg-green-500' : 'bg-gray-400'} border-2 border-white rounded-full"></div></div>
-                            <div><p class="text-xs font-black">${u.name}</p><p class="text-[10px] text-gray-500">${u.email}</p></div>
+                            <div class="relative"><img src="${u.avatar}" class="w-10 h-10 rounded-full shadow-sm"><div class="absolute bottom-0 right-0 w-3 h-3 ${isBlocked ? 'bg-red-500' : ((new Date() - new Date(u.lastLogin)) < 300000 ? 'bg-green-500' : 'bg-gray-400')} border-2 border-white rounded-full"></div></div>
+                            <div><p class="text-xs font-black">${u.name}</p><p class="text-[10px] text-gray-500">${u.email}</p>${statusBadge}</div>
+                        </td>
+                        <td class="p-4 text-center">
+                            <div class="flex gap-2 justify-center"><div class="text-center"><span class="block text-xs font-black text-orange-500">${u.pendingCount||0}</span><span class="text-[9px] opacity-50 font-bold">待處理</span></div><div class="w-px h-6 bg-gray-200 dark:bg-zinc-700"></div><div class="text-center"><span class="block text-xs font-black text-green-500">${u.completedCount||0}</span><span class="text-[9px] opacity-50 font-bold">已完成</span></div></div>
                         </td>
                         <td class="p-4"><span class="px-3 py-1 rounded-md text-[10px] font-bold ${roleColor}">${u.role}</span></td>
-                        <td class="p-4 text-[10px] font-bold text-gray-500">${timeStr}</td>
+                        <td class="p-4 text-center"><button onclick="openUserModal('${u.uid}')" class="px-3 py-2 rounded-lg bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200 dark:hover:bg-zinc-700 text-xs font-bold spring-action transition-colors">查看詳情</button></td>
                     </tr>
                 `);
             });
         }
         window.renderAdminUsers = renderAdminUsers;
 
-        function renderAdminSettings() {
-            document.getElementById('admin-whitelist-toggle').checked = adminConfig.whitelistEnabled;
-            document.getElementById('admin-blacklist-toggle').checked = adminConfig.blacklistEnabled;
+        function openUserModal(uid) {
+            const user = adminUsersList.find(u => u.uid === uid); if(!user) return;
+            document.getElementById('modal-user-avatar').src = user.avatar; document.getElementById('modal-user-name').innerText = user.name;
+            document.getElementById('modal-user-email').innerText = user.email; document.getElementById('modal-user-email-hidden').value = user.email;
+            document.getElementById('modal-user-pending').innerText = user.pendingCount || 0; document.getElementById('modal-user-completed').innerText = user.completedCount || 0;
             
-            const wList = document.getElementById('admin-whitelist-list'); wList.innerHTML = '';
-            adminConfig.whitelist.forEach(email => { wList.insertAdjacentHTML('beforeend', `<tr class="border-b" style="border-color: var(--theme-border);"><td class="p-3 text-xs font-bold">${email}</td><td class="p-3 text-center"><button onclick="removeAdminList('whitelist', '${email}')" class="text-red-500 hover:text-red-700 spring-action"><i class="fas fa-trash-alt"></i></button></td></tr>`); });
-            if(adminConfig.whitelist.length === 0) wList.innerHTML = '<tr><td colspan="2" class="p-6 text-center text-[10px] font-bold opacity-50">白名單目前為空</td></tr>';
-
-            const bList = document.getElementById('admin-blacklist-list'); bList.innerHTML = '';
-            adminConfig.blacklist.forEach(email => { bList.insertAdjacentHTML('beforeend', `<tr class="border-b" style="border-color: var(--theme-border);"><td class="p-3 text-xs font-bold">${email}</td><td class="p-3 text-center"><button onclick="removeAdminList('blacklist', '${email}')" class="text-red-500 hover:text-red-700 spring-action"><i class="fas fa-trash-alt"></i></button></td></tr>`); });
-            if(adminConfig.blacklist.length === 0) bList.innerHTML = '<tr><td colspan="2" class="p-6 text-center text-[10px] font-bold opacity-50">黑名單目前為空</td></tr>';
-
-            const maintOnlineBtn = document.getElementById('admin-maint-online'); const maintOfflineBtn = document.getElementById('admin-maint-offline');
-            if(adminConfig.maintenance) {
-                maintOnlineBtn.className = "flex-1 py-4 rounded-xl border-2 border-transparent bg-gray-50 dark:bg-zinc-800 text-gray-400 flex flex-col items-center justify-center gap-2 spring-action";
-                maintOfflineBtn.className = "flex-1 py-4 rounded-xl border-2 border-red-500 bg-red-50 dark:bg-red-900/30 text-red-600 flex flex-col items-center justify-center gap-2 spring-action";
-            } else {
-                maintOnlineBtn.className = "flex-1 py-4 rounded-xl border-2 border-green-500 bg-green-50 dark:bg-green-900/30 text-green-600 flex flex-col items-center justify-center gap-2 spring-action";
-                maintOfflineBtn.className = "flex-1 py-4 rounded-xl border-2 border-transparent bg-gray-50 dark:bg-zinc-800 text-gray-400 flex flex-col items-center justify-center gap-2 spring-action";
-            }
+            const isBlocked = adminConfig.blacklist.includes(user.email);
+            const statusEl = document.getElementById('modal-user-status');
+            if (isBlocked) { statusEl.innerText = "已封鎖帳戶"; statusEl.className = "mt-2 inline-block px-2 py-0.5 rounded text-[9px] font-bold bg-red-100 text-red-600"; document.getElementById('modal-btn-block').classList.add('hidden'); document.getElementById('modal-btn-unblock').classList.remove('hidden'); } 
+            else { statusEl.innerText = "正常活躍中"; statusEl.className = "mt-2 inline-block px-2 py-0.5 rounded text-[9px] font-bold bg-green-100 text-green-600"; document.getElementById('modal-btn-block').classList.remove('hidden'); document.getElementById('modal-btn-unblock').classList.add('hidden'); }
+            openModal('user-details-modal');
         }
-        window.renderAdminSettings = renderAdminSettings;
+        window.openUserModal = openUserModal;
 
-        async function toggleAdminSetting(type, isEnabled) { adminConfig[`${type}Enabled`] = isEnabled; await saveAdminConfig(); }
-        window.toggleAdminSetting = toggleAdminSetting;
-        async function addAdminList(type) { const input = document.getElementById(`admin-${type}-input`); const email = input.value.trim(); if(!email) return; if(!adminConfig[type].includes(email)) { adminConfig[type].push(email); input.value = ''; await saveAdminConfig(); } }
-        window.addAdminList = addAdminList;
-        async function removeAdminList(type, email) { adminConfig[type] = adminConfig[type].filter(e => e !== email); await saveAdminConfig(); }
-        window.removeAdminList = removeAdminList;
-        async function publishMarquee() { const text = document.getElementById('admin-marquee-input').value.trim(); adminConfig.marquee = text; await saveAdminConfig(); showToast("跑馬燈已發佈"); }
-        window.publishMarquee = publishMarquee;
-        async function clearMarquee() { document.getElementById('admin-marquee-input').value = ''; adminConfig.marquee = ''; await saveAdminConfig(); showToast("跑馬燈已清空"); }
-        window.clearMarquee = clearMarquee;
-        
-        async function setMaintenanceMode(mode) { 
-            if(mode === 'maintenance') { customConfirm('開啟維護模式', '開啟後所有非管理員學生將被阻擋，確定開啟嗎？', 'danger', async () => { adminConfig.maintenance = true; await saveAdminConfig(); showToast("維護模式已開啟"); }); } 
-            else { adminConfig.maintenance = false; await saveAdminConfig(); showToast("系統已恢復正常運作"); }
-        }
-        window.setMaintenanceMode = setMaintenanceMode;
+        document.getElementById('modal-btn-block').onclick = () => { const email = document.getElementById('modal-user-email-hidden').value; if(!adminConfig.blacklist.includes(email)) { adminConfig.blacklist.push(email); saveAdminConfig(); logAdminAction('封鎖用戶', `已封鎖帳戶: ${email}`); showToast('用戶已封鎖'); closeModal('user-details-modal'); } };
+        document.getElementById('modal-btn-unblock').onclick = () => { const email = document.getElementById('modal-user-email-hidden').value; adminConfig.blacklist = adminConfig.blacklist.filter(e => e !== email); saveAdminConfig(); logAdminAction('解除封鎖', `已解除封鎖帳戶: ${email}`); showToast('用戶已解封'); closeModal('user-details-modal'); };
 
-        async function saveAdminConfig() { if(isAdmin) await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'system'), adminConfig); }
-        window.saveAdminConfig = saveAdminConfig;
-
-        function applySystemConfig(config) {
-            adminConfig = { ...adminConfig, ...config };
-            const marqueeCont = document.getElementById('global-marquee-container');
-            if(adminConfig.marquee) { marqueeCont.classList.remove('hidden'); document.getElementById('global-marquee-text').innerText = adminConfig.marquee; }
-            else { marqueeCont.classList.add('hidden'); }
-
-            const maintScreen = document.getElementById('maintenance-screen');
-            if(adminConfig.maintenance && !isAdmin) { maintScreen.style.display = 'flex'; }
-            else { maintScreen.style.display = 'none'; }
-
-            if(!isAdmin && currentUser) {
-                if(adminConfig.whitelistEnabled && !adminConfig.whitelist.includes(currentUser.email)) { showToast("您的帳戶不在白名單內"); setTimeout(() => handleLogout(), 2000); }
-                if(adminConfig.blacklistEnabled && adminConfig.blacklist.includes(currentUser.email)) { showToast("您的帳戶已被停權"); setTimeout(() => handleLogout(), 2000); }
-            }
-            if(document.getElementById('view-admin').classList.contains('active')) renderAdminSettings();
-        }
-        window.applySystemConfig = applySystemConfig;
-
-        document.getElementById('add-task-form').onsubmit = async (e) => {
+        // --- Data Submission ---
+        document.getElementById('add-task-form').onsubmit = (e) => {
             e.preventDefault(); if(!currentUser) return;
             const btn = e.target.querySelector('button[type="submit"]'); btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
             const isPub = document.getElementById('task-broadcast').checked && isAdmin;
-            const task = { content: document.getElementById('task-content').value, subject: document.getElementById('task-subject').value, type: document.getElementById('task-type').value, dueDate: document.getElementById('task-date').value, createdAt: new Date().toISOString(), createdBy: currentUser.uid };
-            try { await addDoc(collection(db, 'artifacts', appId, isPub ? 'public/data/assignments' : `users/${currentUser.uid}/assignments`), task); document.getElementById('task-content').value = ''; document.getElementById('task-date').value = getNextWeekdayStr(); showToast("新增成功"); } catch(e) { showToast("新增失敗"); } finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-plus mr-1"></i> 新增'; }
+            const taskContent = document.getElementById('task-content').value;
+            const subject = document.getElementById('task-subject').value;
+            
+            const task = { 
+                content: taskContent, subject: subject, type: document.getElementById('task-type').value, 
+                dueDate: document.getElementById('task-date').value, 
+                url: document.getElementById('task-url').value.trim(), isImportant: document.getElementById('task-important').checked,
+                createdAt: new Date().toISOString(), createdBy: currentUser.uid 
+            };
+            
+            addDoc(collection(db, 'artifacts', appId, isPub ? 'public/data/assignments' : `users/${currentUser.uid}/assignments`), task).then(() => {
+                if (isPub) logAdminAction('發佈廣播', `[${subject}] ${taskContent.substring(0,20)}...`);
+                document.getElementById('add-task-form').reset(); document.getElementById('task-date').value = getNextWeekdayStr(); 
+                document.getElementById('task-subject').value = subject; updateChipStyles();
+                showToast("新增成功"); 
+            }).catch(e => showToast("新增失敗")).finally(() => { btn.disabled = false; btn.innerHTML = '新增'; });
         };
 
-        async function completeTask(id, isPub) { 
+        function completeTask(id, isPub) { 
             const task = allTasks.find(t => t.id === id); if(!task) return; 
-            try { await addDoc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'history'), { ...task, completedAt: new Date().toISOString() }); await deleteDoc(doc(db, 'artifacts', appId, isPub ? 'public/data/assignments' : `users/${currentUser.uid}/assignments`, id)); showToast("任務已完成！紀錄已封存"); } catch(e) { showToast("操作失敗"); } 
+            addDoc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'history'), { ...task, completedAt: new Date().toISOString() })
+            .then(() => deleteDoc(doc(db, 'artifacts', appId, isPub ? 'public/data/assignments' : `users/${currentUser.uid}/assignments`, id)))
+            .then(() => {
+                confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ['#FFB3BA', '#BAE1FF', '#BAFFC9', '#1d1d1f'] });
+                showToast("任務已完成！紀錄已封存"); 
+            }).catch(e => showToast("操作失敗"));
         }
         window.completeTask = completeTask;
 
-        function deleteTask(id, isPub) { customConfirm('刪除任務', '確定要徹底刪除此紀錄嗎？', 'danger', async () => { try { await deleteDoc(doc(db, 'artifacts', appId, isPub ? 'public/data/assignments' : `users/${currentUser.uid}/assignments`, id)); showToast("已刪除"); } catch(e) {} }); }
+        function deleteTask(id, isPub) { customConfirm('刪除任務', '確定要徹底刪除此紀錄嗎？', 'danger', () => { deleteDoc(doc(db, 'artifacts', appId, isPub ? 'public/data/assignments' : `users/${currentUser.uid}/assignments`, id)).then(() => { if(isPub) logAdminAction('刪除廣播', `撤回了廣播任務 ID: ${id}`); showToast("已刪除"); }).catch(e => {}); }); }
         window.deleteTask = deleteTask;
 
-        function deleteHistoryTask(id) { customConfirm('清除紀錄', '徹底刪除此歷史紀錄？', 'danger', async () => { await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'history', id)); showToast("紀錄已刪除"); }); }
+        function deleteHistoryTask(id) { customConfirm('清除紀錄', '徹底刪除此歷史紀錄？', 'danger', () => { deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'history', id)).then(() => showToast("紀錄已刪除")); }); }
         window.deleteHistoryTask = deleteHistoryTask;
 
         function confirmClearHistory() { if(historyTasks.length === 0) return showToast("沒有紀錄可清除"); customConfirm('徹底清空', '確定要清空所有紀錄嗎？', 'danger', () => { historyTasks.forEach(t => deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'history', t.id))); showToast("歷史紀錄已清空"); }); }
         window.confirmClearHistory = confirmClearHistory;
 
-        function openEditModal(id, isPub) { const task = allTasks.find(t => t.id === id); if(!task) return; editingTaskId = id; editingTaskIsPublic = isPub; document.getElementById('edit-content').value = task.content; document.getElementById('edit-subject').value = task.subject; document.getElementById('edit-date').value = task.dueDate; updateChipStyles(); openModal('edit-modal'); }
+        function openEditModal(id, isPub) { 
+            const task = allTasks.find(t => t.id === id); if(!task) return; 
+            editingTaskId = id; editingTaskIsPublic = isPub; 
+            document.getElementById('edit-content').value = task.content; document.getElementById('edit-subject').value = task.subject; 
+            document.getElementById('edit-date').value = task.dueDate; document.getElementById('edit-url').value = task.url || '';
+            
+            const editCont = document.getElementById('subject-chips-edit'); editCont.innerHTML = '';
+            userSettings.subjects.filter(s => s.enabled !== false).forEach(sub => {
+                editCont.insertAdjacentHTML('beforeend', `<button type="button" class="custom-chip px-3 py-1.5 text-[11px] flex-shrink-0 spring-action" data-subject="${sub.name}" onclick="setSubjectEdit('${sub.name}')">${sub.name}</button>`);
+            });
+            updateChipStyles(); openModal('edit-modal'); 
+        }
         window.openEditModal = openEditModal;
 
-        async function saveEditTask() { try { await updateDoc(doc(db, 'artifacts', appId, editingTaskIsPublic ? 'public/data/assignments' : `users/${currentUser.uid}/assignments`, editingTaskId), { content: document.getElementById('edit-content').value, subject: document.getElementById('edit-subject').value, dueDate: document.getElementById('edit-date').value }); showToast("修改成功"); closeModal('edit-modal'); } catch(e) { showToast("修改失敗"); } }
+        function saveEditTask() { 
+            updateDoc(doc(db, 'artifacts', appId, editingTaskIsPublic ? 'public/data/assignments' : `users/${currentUser.uid}/assignments`, editingTaskId), { 
+                content: document.getElementById('edit-content').value, subject: document.getElementById('edit-subject').value, dueDate: document.getElementById('edit-date').value, url: document.getElementById('edit-url').value.trim()
+            }).then(() => {
+                if (editingTaskIsPublic) logAdminAction('修改廣播', `更新了廣播任務 ID: ${editingTaskId}`);
+                showToast("修改成功"); closeModal('edit-modal'); 
+            }).catch(e => showToast("修改失敗"));
+        }
         window.saveEditTask = saveEditTask;
 
+        // --- Core Listeners & Error Handlers ---
         function setupDataListeners() {
             if(!currentUser) return;
-            unsubSettings = onSnapshot(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'settings', 'profile'), docSnap => { if(docSnap.exists()) { const d = docSnap.data(); if(d.subjects) d.subjects = d.subjects.map(s => ({...s, enabled: s.enabled !== false})); userSettings = { ...userSettings, ...d }; } applyTheme(); renderSubjectsPage(); renderHome(); if(document.getElementById('view-timetable').classList.contains('active')) renderTimetableUI(); });
+            
+            const handleSnapshotError = (err) => {
+                console.warn("Firestore 讀取被拒絕，請檢查資料庫規則設定:", err.message);
+                if (err.code === 'permission-denied' && !window.hasShownRuleWarning) {
+                    showToast("權限被拒絕，請管理員更新 Firebase 規則！");
+                    window.hasShownRuleWarning = true;
+                }
+            };
+            
+            unsubSettings = onSnapshot(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'settings', 'profile'), docSnap => { 
+                if(docSnap.exists()) { const d = docSnap.data(); if(d.subjects) d.subjects = d.subjects.map(s => ({...s, enabled: s.enabled !== false})); userSettings = { ...userSettings, ...d }; } 
+                applyTheme(); renderSubjectsPage(); renderHome(); if(document.getElementById('view-timetable').classList.contains('active')) renderTimetableUI(); 
+            }, handleSnapshotError);
             
             function processTasks() { 
-                allTasks = [...publicAssignments, ...privateAssignments].sort((a,b) => new Date(a.dueDate) - new Date(b.dueDate)); 
+                allTasks = [...publicAssignments, ...privateAssignments].sort((a,b) => { if(a.isImportant && !b.isImportant) return -1; if(!a.isImportant && b.isImportant) return 1; return new Date(a.dueDate) - new Date(b.dueDate); }); 
                 if(document.getElementById('view-home').classList.contains('active')) renderHome(); 
                 if(document.getElementById('view-admin') && document.getElementById('view-admin').classList.contains('active')) renderAdmin();
+                setDoc(doc(db, 'artifacts', appId, 'directory', currentUser.uid), { pendingCount: privateAssignments.length, completedCount: historyTasks.length, lastLogin: new Date().toISOString() }, { merge: true }).catch(()=>{});
             }
 
-            unsubTasksPub = onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'assignments'), s => { publicAssignments = []; s.forEach(d => publicAssignments.push({ id: d.id, ...d.data(), isPublic: true })); processTasks(); });
-            unsubTasksPriv = onSnapshot(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'assignments'), s => { privateAssignments = []; s.forEach(d => privateAssignments.push({ id: d.id, ...d.data(), isPublic: false })); processTasks(); });
+            unsubTasksPub = onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'assignments'), s => { publicAssignments = []; s.forEach(d => publicAssignments.push({ id: d.id, ...d.data(), isPublic: true })); processTasks(); }, handleSnapshotError);
+            unsubTasksPriv = onSnapshot(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'assignments'), s => { privateAssignments = []; s.forEach(d => privateAssignments.push({ id: d.id, ...d.data(), isPublic: false })); processTasks(); }, handleSnapshotError);
 
-            unsubHist = onSnapshot(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'history'), s => { historyTasks = []; s.forEach(d => historyTasks.push({ id: d.id, ...d.data() })); historyTasks.sort((a,b) => new Date(b.completedAt) - new Date(a.completedAt)); if(document.getElementById('view-history').classList.contains('active')) renderHistory(); });
+            unsubHist = onSnapshot(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'history'), s => { 
+                historyTasks = []; s.forEach(d => historyTasks.push({ id: d.id, ...d.data() })); historyTasks.sort((a,b) => new Date(b.completedAt) - new Date(a.completedAt)); 
+                if(document.getElementById('view-history').classList.contains('active')) renderHistory(); 
+                
+                if (adminConfig.autoCleanEnabled && historyTasks.length > 0) {
+                    historyTasks.forEach(t => {
+                        const daysOld = (new Date() - new Date(t.completedAt)) / (1000 * 60 * 60 * 24);
+                        if(daysOld > 3) deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'history', t.id)).catch(()=>{});
+                    });
+                }
+            }, handleSnapshotError);
 
-            unsubTTGlobal = onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'timetables', 'global'), d => { if(d.exists() && d.data().data) globalTimetable = JSON.parse(d.data().data); if(document.getElementById('view-timetable').classList.contains('active')) renderTimetableUI(); startLiveWidget(); });
-            unsubTTPriv = onSnapshot(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'timetable', 'personal'), d => { if(d.exists() && d.data().data) userTimetable = JSON.parse(d.data().data); if(document.getElementById('view-timetable').classList.contains('active')) renderTimetableUI(); startLiveWidget(); });
+            unsubTTGlobal = onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'timetables', 'global'), d => { if(d.exists() && d.data().data) globalTimetable = JSON.parse(d.data().data); if(document.getElementById('view-timetable').classList.contains('active')) renderTimetableUI(); startLiveWidget(); }, handleSnapshotError);
+            unsubTTPriv = onSnapshot(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'timetable', 'personal'), d => { if(d.exists() && d.data().data) userTimetable = JSON.parse(d.data().data); if(document.getElementById('view-timetable').classList.contains('active')) renderTimetableUI(); startLiveWidget(); }, handleSnapshotError);
             
-            unsubAdmin = onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'system'), d => { if(d.exists()) applySystemConfig(d.data()); });
+            unsubAdmin = onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'system'), d => { if(d.exists()) applySystemConfig(d.data()); }, handleSnapshotError);
 
             if(isAdmin) {
-                unsubAdminUsers = onSnapshot(collection(db, 'artifacts', appId, 'directory'), snap => {
-                    adminUsersList = []; snap.forEach(d => adminUsersList.push(d.data())); renderAdminUsers();
-                });
+                unsubAdminUsers = onSnapshot(collection(db, 'artifacts', appId, 'directory'), snap => { adminUsersList = []; snap.forEach(d => adminUsersList.push({uid: d.id, ...d.data()})); if(document.getElementById('view-admin').classList.contains('active')) renderAdminUsers(); }, handleSnapshotError);
+                const logsQuery = query(collection(db, 'artifacts', appId, 'public', 'data', 'auditLogs'));
+                unsubLogs = onSnapshot(logsQuery, snap => { systemAuditLogs = []; snap.forEach(d => systemAuditLogs.push(d.data())); systemAuditLogs.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp)); systemAuditLogs = systemAuditLogs.slice(0, 100); if(document.getElementById('view-admin').classList.contains('active')) renderAdminLogs(); }, handleSnapshotError);
             }
         }
         window.setupDataListeners = setupDataListeners;
@@ -1384,24 +1713,23 @@
 
                 isAdmin = (user.email === ADMIN_EMAIL);
                 
-                // Sync User Directory for Admin
-                const userProfileData = { uid: user.uid, name: user.displayName || '學生帳戶', email: user.email || '訪客', avatar: avatarUrl, lastLogin: new Date().toISOString(), role: isAdmin ? '管理員' : '普通用戶' };
-                setDoc(doc(db, 'artifacts', appId, 'directory', user.uid), userProfileData, { merge: true }).catch(e=>console.log("Directory sync hidden"));
+                const userProfileData = { uid: user.uid, name: user.displayName || '學生帳戶', email: user.email || '訪客', avatar: avatarUrl, role: isAdmin ? '管理員' : '普通用戶' };
+                setDoc(doc(db, 'artifacts', appId, 'directory', user.uid), userProfileData, { merge: true }).catch(e=>{});
 
                 if(isAdmin) { 
-                    document.getElementById('admin-badge').classList.remove('hidden'); 
-                    document.getElementById('broadcast-toggle-container').classList.remove('hidden'); 
-                    document.getElementById('admin-timetable-controls').classList.remove('hidden'); 
-                    const navDesktop = document.getElementById('nav-admin-btn-desktop'); if(navDesktop) navDesktop.classList.remove('hidden');
-                    const navMobile = document.getElementById('nav-admin-btn-mobile'); if(navMobile) navMobile.classList.remove('hidden');
+                    document.getElementById('admin-badge').classList.remove('hidden'); document.getElementById('broadcast-toggle-container').classList.remove('hidden'); document.getElementById('admin-timetable-controls').classList.remove('hidden'); 
+                    
+                    const navDesktop = document.getElementById('nav-admin-btn-desktop'); if(navDesktop) { navDesktop.classList.remove('hidden'); navDesktop.classList.add('flex'); }
+                    const navDivider = document.getElementById('nav-admin-divider'); if(navDivider) { navDivider.classList.remove('hidden'); navDivider.classList.add('block'); }
+                    const navMobile = document.getElementById('nav-admin-btn-mobile'); if(navMobile) { navMobile.classList.remove('hidden'); navMobile.classList.add('flex'); }
                 } else {
-                    const navDesktop = document.getElementById('nav-admin-btn-desktop'); if(navDesktop) navDesktop.classList.add('hidden');
-                    const navMobile = document.getElementById('nav-admin-btn-mobile'); if(navMobile) navMobile.classList.add('hidden');
+                    const navDesktop = document.getElementById('nav-admin-btn-desktop'); if(navDesktop) { navDesktop.classList.add('hidden'); navDesktop.classList.remove('flex'); }
+                    const navDivider = document.getElementById('nav-admin-divider'); if(navDivider) { navDivider.classList.add('hidden'); navDivider.classList.remove('block'); }
+                    const navMobile = document.getElementById('nav-admin-btn-mobile'); if(navMobile) { navMobile.classList.add('hidden'); navMobile.classList.remove('flex'); }
                 }
                 const roleBadge = document.getElementById('profile-modal-role'); roleBadge.innerText = isAdmin ? '管理員 (Admin)' : '學生帳戶'; roleBadge.className = `mb-8 inline-block px-4 py-1.5 rounded-lg text-xs font-bold ${isAdmin ? 'bg-orange-100 text-orange-600' : 'bg-gray-100 text-gray-600'}`;
                 
-                initDefaultTimetableDay();
-                setupDataListeners(); switchView('home');
+                initDefaultTimetableDay(); setupDataListeners(); switchView('home');
             } else {
                 if (loginScreen) loginScreen.style.display = 'flex'; closeModal('profile-modal');
                 isAdmin = false;
