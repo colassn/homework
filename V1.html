@@ -1428,45 +1428,59 @@
             const due = new Date(task.dueDate); due.setHours(0,0,0,0); const todayDate = new Date(); todayDate.setHours(0,0,0,0); const diffDays = Math.round((due - todayDate) / (1000 * 60 * 60 * 24));
             
             let badgeHtml = '';
-            if (diffDays < 0) badgeHtml = `<span class="text-white bg-[var(--danger-color)] px-3 py-1.5 rounded-[10px] text-xs md:text-[13px] font-black shadow-md tracking-wide flex items-center gap-1.5"><i class="fas fa-exclamation-triangle"></i> 過期 ${Math.abs(diffDays)} 日</span>`;
-            else if (diffDays === 0) badgeHtml = `<span class="text-[#d48806] bg-[#FFDFBA] px-3 py-1.5 rounded-[10px] text-xs md:text-[13px] font-black shadow-md animate-pulse tracking-wide flex items-center gap-1.5"><i class="fas fa-fire"></i> 今天交</span>`;
-            else if (diffDays === 1) badgeHtml = `<span class="text-[#5b9bd5] bg-[#BAE1FF] px-3 py-1.5 rounded-[10px] text-xs md:text-[13px] font-black shadow-sm tracking-wide flex items-center gap-1.5"><i class="fas fa-clock"></i> 聽日交</span>`;
-            else badgeHtml = `<span class="text-[var(--text-secondary)] bg-[var(--surface-inset)] px-3 py-1.5 rounded-[10px] text-xs md:text-[13px] font-black border border-[var(--border-color)] tracking-wide flex items-center gap-1.5"><i class="far fa-hourglass"></i> 餘 ${diffDays} 日</span>`;
+            if (diffDays < 0) badgeHtml = `<span class="text-white bg-[var(--danger-color)] px-2.5 py-1 rounded-[8px] text-[10px] md:text-[11px] font-black shadow-sm tracking-wide flex items-center gap-1.5"><i class="fas fa-exclamation-triangle"></i> 過期 ${Math.abs(diffDays)} 日</span>`;
+            else if (diffDays === 0) badgeHtml = `<span class="text-[#d48806] bg-[#FFDFBA] px-2.5 py-1 rounded-[8px] text-[10px] md:text-[11px] font-black shadow-sm animate-pulse tracking-wide flex items-center gap-1.5"><i class="fas fa-fire"></i> 今天交</span>`;
+            else if (diffDays === 1) badgeHtml = `<span class="text-[#5b9bd5] bg-[#BAE1FF] px-2.5 py-1 rounded-[8px] text-[10px] md:text-[11px] font-black shadow-sm tracking-wide flex items-center gap-1.5"><i class="fas fa-clock"></i> 聽日交</span>`;
+            else badgeHtml = `<span class="text-[var(--text-secondary)] bg-[var(--surface-inset)] px-2.5 py-1 rounded-[8px] text-[10px] md:text-[11px] font-black border border-[var(--border-color)] tracking-wide flex items-center gap-1.5"><i class="far fa-hourglass"></i> 餘 ${diffDays} 日</span>`;
 
             let contentHtml = task.content.replace(/\n/g, '<br>');
-            let urlBtnHtml = task.url ? `<a href="${task.url}" target="_blank" class="inline-flex items-center text-[11px] md:text-xs font-bold mt-1.5 px-3 py-1.5 rounded-[10px] transition-colors shadow-sm" style="color: var(--accent-primary); background-color: var(--accent-10);"><i class="fas fa-link mr-1.5"></i> 網頁連結</a>` : '';
+            let urlBtnHtml = task.url ? `<a href="${task.url}" target="_blank" class="inline-flex items-center text-[10px] md:text-[11px] font-bold px-3 py-1.5 rounded-[8px] transition-colors shadow-sm" style="color: var(--accent-primary); background-color: var(--accent-10);"><i class="fas fa-link mr-1.5"></i> 網頁連結</a>` : '';
 
             let div = document.createElement('div'); 
             div.className = `ios-card relative overflow-hidden group border border-[var(--border-color)]`; 
-            div.style.backgroundColor = 'var(--surface-color)'; div.style.borderLeft = `5px solid ${subColor}`;
+            div.style.backgroundColor = 'var(--surface-color)'; 
+            div.style.borderLeft = `5px solid ${subColor}`;
             
             div.innerHTML = `
-                <div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.05] dark:opacity-[0.03] z-0 overflow-hidden">
-                    <span class="text-[6rem] font-black whitespace-nowrap tracking-tighter" style="color: ${subColor}">${task.subject}</span>
+                <!-- 20% 完美透明度浮水印 -->
+                <div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20 dark:opacity-20 z-0 overflow-hidden">
+                    <span class="text-[6rem] md:text-[7rem] font-black whitespace-nowrap tracking-tighter" style="color: ${subColor}">${task.subject}</span>
                 </div>
+                
                 <div class="relative z-10 flex min-h-[100px]">
-                    <div class="w-14 md:w-16 shrink-0 flex flex-col items-center justify-start pt-4 pb-4 border-r border-[var(--border-color)] bg-[var(--surface-inset)]/30 backdrop-blur-sm">
-                        <span class="text-[9px] md:text-[10px] font-black text-[var(--text-secondary)] opacity-50 mb-3">#${index + 1}</span>
-                        <button onclick="triggerComplete(this, '${task.id}', ${task.isPublic})" class="w-7 h-7 md:w-8 md:h-8 rounded-full border-[2px] border-[var(--text-secondary)] opacity-50 flex items-center justify-center transition-all duration-300 btn-spring group/check shadow-sm bg-[var(--surface-color)] relative z-20 hover:opacity-100 hover:border-[var(--accent-primary)]">
-                            <i class="fas fa-check text-[10px] md:text-xs opacity-0 transition-opacity duration-300"></i>
+                    <!-- 左側欄：全新人體工學排版 (窄身、按鈕置頂、序號置底) -->
+                    <div class="w-12 md:w-14 shrink-0 flex flex-col items-center justify-between py-3 border-r border-[var(--border-color)] bg-[var(--surface-inset)]/40 backdrop-blur-sm">
+                        
+                        <!-- 1. 置頂：圓形完成按鈕 -->
+                        <button onclick="triggerComplete(this, '${task.id}', ${task.isPublic})" class="w-6 h-6 md:w-7 md:h-7 rounded-full border-[1.5px] border-[var(--text-secondary)] opacity-50 flex items-center justify-center transition-all duration-300 btn-spring group/check shadow-sm bg-[var(--surface-color)] relative z-20 hover:opacity-100 hover:border-[var(--accent-primary)] mb-1">
+                            <i class="fas fa-check text-[9px] md:text-[10px] opacity-0 transition-opacity duration-300"></i>
                         </button>
-                        <div class="mt-4 flex-1 flex items-center justify-center">
-                            <span class="text-[12px] md:text-[14px] font-bold tracking-widest text-[var(--text-primary)] opacity-80" style="writing-mode: vertical-rl; text-orientation: upright;">${task.subject}</span>
+                        
+                        <!-- 2. 居中：垂直科目名 -->
+                        <div class="flex-1 flex items-center justify-center py-2">
+                            <span class="text-[12px] md:text-[13px] font-bold tracking-widest text-[var(--text-primary)] opacity-80" style="writing-mode: vertical-rl; text-orientation: upright;">${task.subject}</span>
                         </div>
+                        
+                        <!-- 3. 置底：序號點綴 -->
+                        <span class="text-[9px] md:text-[10px] font-black text-[var(--text-secondary)] opacity-50 mt-1">#${index + 1}</span>
                     </div>
-                    <div class="flex-1 p-4 md:p-5 flex flex-col justify-center">
-                        <div class="flex justify-between items-start mb-3">
-                            <div class="flex items-center gap-2 flex-wrap">
+                    
+                    <!-- 右側欄：主要內容 (加入微弱毛玻璃確保文字清晰) -->
+                    <div class="flex-1 p-3.5 md:p-4 flex flex-col justify-center bg-[var(--surface-color)]/60 backdrop-blur-sm">
+                        <div class="flex justify-between items-start mb-2.5">
+                            <div class="flex items-center gap-1.5 flex-wrap">
                                 ${badgeHtml}
-                                ${task.type === 'test' ? `<span class="px-2.5 py-1 rounded-[8px] text-[11px] font-bold bg-purple-500/10 text-purple-600">測驗</span>` : ''}
-                                ${task.isPublic ? `<span class="px-2.5 py-1 rounded-[8px] text-[11px] font-bold transition-colors" style="color: var(--accent-primary); background-color: var(--accent-10);">廣播</span>` : ''}
+                                ${task.type === 'test' ? `<span class="px-2 py-0.5 rounded-[6px] text-[9px] font-bold bg-purple-500/10 text-purple-600">測驗</span>` : ''}
+                                ${task.isPublic ? `<span class="px-2 py-0.5 rounded-[6px] text-[9px] font-bold transition-colors" style="color: var(--accent-primary); background-color: var(--accent-10);">廣播</span>` : ''}
                             </div>
                             ${canEditDelete ? `<button onclick="openEditModal('${task.id}', ${task.isPublic})" class="text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-colors p-1 relative z-20"><i class="fas fa-ellipsis-h text-sm"></i></button>` : ''}
                         </div>
-                        <p class="text-[15px] md:text-[16px] font-bold leading-relaxed mb-3 text-[var(--text-primary)] drop-shadow-sm">${contentHtml}</p>
-                        ${urlBtnHtml}
-                        <div class="flex justify-between items-center mt-auto pt-3 border-t border-[var(--border-color)]">
-                            <p class="text-[10px] md:text-[11px] font-bold opacity-50 text-[var(--text-secondary)]"><i class="far fa-calendar-alt mr-1"></i>${task.dueDate} (${getDayOfWeek(task.dueDate)})</p>
+                        
+                        <p class="text-[14px] md:text-[15px] font-bold leading-relaxed mb-3 text-[var(--text-primary)] drop-shadow-sm pl-0.5">${contentHtml}</p>
+                        
+                        <div class="flex justify-between items-end mt-auto pt-3 border-t border-[var(--border-color)]">
+                            <p class="text-[9px] md:text-[10px] font-bold opacity-60 text-[var(--text-secondary)] mb-0.5"><i class="far fa-calendar-alt mr-1"></i>${task.dueDate} (${getDayOfWeek(task.dueDate)})</p>
+                            ${urlBtnHtml}
                         </div>
                     </div>
                 </div>
