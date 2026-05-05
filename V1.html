@@ -11,24 +11,24 @@
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+HK:wght@400;500;700;900&display=swap');
         
         :root {
-            /* 預設值 (會被 JS 的主題引擎覆寫) */
-            --bg-color: #f0f6ff; 
+            /* Apple 原生極簡中性色彩 */
+            --bg-color: #f2f2f7; 
             --surface-color: #ffffff;
-            --surface-hover: #f8fafc;
-            --text-primary: #1e293b;
-            --text-secondary: #64748b;
-            --border-color: rgba(15, 23, 42, 0.08);
+            --surface-inset: #f2f2f7; 
+            --text-primary: #1c1c1e;
+            --text-secondary: #8e8e93;
+            --border-color: rgba(0, 0, 0, 0.05);
             
+            /* 強調色 (會被 JS 動態切換) */
             --accent-primary: #7baaf7; 
             --accent-primary-hover: #6495ed;
             --accent-10: rgba(123, 170, 247, 0.1);
             --accent-20: rgba(123, 170, 247, 0.2);
-            --accent-30: rgba(123, 170, 247, 0.3);
             
             --accent-text: #ffffff;
-            --danger-color: #ef4444;
-            --danger-10: rgba(239, 68, 68, 0.1);
-            --header-bg: rgba(240, 246, 255, 0.75);
+            --danger-color: #ff3b30;
+            --danger-10: rgba(255, 59, 48, 0.1);
+            --header-bg: rgba(242, 242, 247, 0.85);
             
             /* 極致順滑物理動畫曲線 */
             --spring: cubic-bezier(0.25, 1, 0.4, 1);
@@ -36,13 +36,17 @@
         }
 
         [data-theme="dark"] {
-            /* 深色模式變數由 JS 動態設定，這裡僅作 Fallback */
-            --text-primary: #f8fafc;
-            --text-secondary: #94a3b8;
-            --border-color: rgba(255,255,255,0.1);
+            /* 沉浸式深色模式 */
+            --bg-color: #000000;
+            --surface-color: #1c1c1e;
+            --surface-inset: #2c2c2e;
+            --text-primary: #f2f2f7;
+            --text-secondary: #98989d;
+            --border-color: rgba(255,255,255,0.08);
             --accent-text: #ffffff;
-            --danger-color: #f87171;
-            --danger-10: rgba(248, 113, 113, 0.15);
+            --danger-color: #ff453a;
+            --danger-10: rgba(255, 69, 58, 0.15);
+            --header-bg: rgba(0, 0, 0, 0.85);
         }
 
         body {
@@ -57,110 +61,126 @@
 
         /* 視圖切換動畫 */
         .app-view { display: none; }
-        .app-view.active { display: block; animation: viewFadeIn 0.5s var(--spring) forwards; }
+        .app-view.active { display: block; animation: viewFadeIn 0.4s var(--spring) forwards; }
         @keyframes viewFadeIn { 
-            0% { opacity: 0; transform: translateY(16px) scale(0.98); filter: blur(4px); } 
+            0% { opacity: 0; transform: translateY(8px) scale(0.99); filter: blur(2px); } 
             100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); } 
         }
 
-        /* 高級卡片設計 */
-        .glass-card {
+        /* 高級無邊框卡片 (更緊湊) */
+        .ios-card {
             background-color: var(--surface-color);
-            border-radius: 24px; 
-            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.03), 0 1px 2px rgba(0,0,0,0.01);
-            border: 1px solid var(--border-color);
-            transition: all 0.4s var(--spring);
+            border-radius: 20px; 
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+            transition: all 0.3s var(--spring);
             position: relative;
             overflow: hidden;
         }
 
-        /* 統計儀表板卡片 (帶微動畫) */
+        /* 統計儀表板卡片 */
         .stat-card {
             background-color: var(--surface-color);
-            border-radius: 20px;
-            border: 1px solid var(--border-color);
-            padding: 16px;
+            border-radius: 16px;
+            padding: 12px 14px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             transition: all 0.3s var(--spring-bouncy);
             cursor: pointer;
-            position: relative;
-            overflow: hidden;
-        }
-        .stat-card::after {
-            content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent); opacity: 0; transition: opacity 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+            border: 1px solid var(--border-color);
         }
         .stat-card:hover {
-            transform: translateY(-4px) scale(1.02);
-            box-shadow: 0 12px 32px var(--accent-10);
-            border-color: var(--accent-primary);
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 24px var(--accent-10);
         }
-        .stat-card:hover::after { opacity: 1; }
-        .stat-card:active { transform: translateY(0) scale(0.96); }
+        .stat-card:active { transform: translateY(0) scale(0.98); }
 
-        /* 美化的自訂輸入框 */
-        .beautiful-input-group {
-            position: relative;
-            background-color: var(--bg-color);
-            border-radius: 16px;
-            padding: 4px;
+        /* iOS 原生風格無邊框輸入框 (緊湊版) */
+        .ios-input-group {
+            display: flex;
+            align-items: center;
+            background-color: var(--surface-inset);
+            border-radius: 12px;
+            padding: 2px 12px;
             transition: all 0.3s var(--spring);
-            border: 1px solid transparent;
+            border: 1.5px solid transparent;
         }
-        .beautiful-input-group:focus-within {
+        .ios-input-group:focus-within {
             background-color: var(--surface-color);
             border-color: var(--accent-primary);
-            box-shadow: 0 4px 16px var(--accent-10);
-            transform: translateY(-2px);
+            box-shadow: 0 2px 10px var(--accent-10);
         }
-        .beautiful-input {
+        .ios-input {
             width: 100%;
             background: transparent;
             border: none;
             color: var(--text-primary);
-            padding: 12px 16px;
-            font-size: 15px;
+            padding: 8px 0;
+            font-size: 14px;
             font-weight: 600;
             outline: none;
         }
-        .beautiful-input::placeholder { color: var(--text-secondary); opacity: 0.5; }
+        .ios-input::placeholder { color: var(--text-secondary); opacity: 0.6; font-weight: 500; }
         
         input[type="time"], input[type="date"] { appearance: none; -webkit-appearance: none; }
         input[type="time"]::-webkit-calendar-picker-indicator, input[type="date"]::-webkit-calendar-picker-indicator { 
             position: absolute; left: 0; top: 0; width: 100%; height: 100%; margin: 0; padding: 0; cursor: pointer; opacity: 0; 
         }
+
+        /* iOS 原生分段控制器 (Segmented Control) */
+        .ios-segmented-control {
+            display: flex;
+            background-color: var(--surface-inset);
+            border-radius: 10px;
+            padding: 2px;
+            position: relative;
+        }
+        .ios-segment-btn {
+            flex: 1;
+            padding: 6px 0;
+            font-size: 12px;
+            font-weight: 700;
+            border-radius: 8px;
+            color: var(--text-secondary);
+            transition: all 0.3s var(--spring);
+            z-index: 2;
+            position: relative;
+        }
+        .ios-segment-btn.active {
+            color: var(--text-primary);
+            background-color: var(--surface-color);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        }
+        
+        /* 漸變立體按鈕 */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-primary-hover));
+            color: var(--accent-text);
+            box-shadow: 0 4px 12px var(--accent-20);
+        }
         
         /* 按鈕微動畫 */
         .btn-spring { 
-            transition: all 0.2s var(--spring-bouncy), filter 0.2s ease, background-color 0.2s ease; 
+            transition: transform 0.2s var(--spring-bouncy), filter 0.2s ease, opacity 0.2s ease; 
             will-change: transform; cursor: pointer; touch-action: manipulation; 
         }
-        .btn-spring:active { transform: scale(0.92); filter: brightness(0.9); }
+        .btn-spring:active { transform: scale(0.95); filter: brightness(0.9); }
         .btn-spring:hover { filter: brightness(1.05); }
-
-        /* Grouped List Style */
-        .grouped-list {
-            background-color: var(--surface-color); border-radius: 20px;
-            overflow: hidden; border: 1px solid var(--border-color); box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
-        }
-        .grouped-item { border-bottom: 1px solid var(--border-color); transition: background-color 0.2s ease; }
-        .grouped-item:last-child { border-bottom: none; }
-        .grouped-item:active { background-color: var(--bg-color); }
 
         /* Custom Modal (全螢幕懸浮) */
         .modern-modal-overlay { 
-            opacity: 0; visibility: hidden; transition: all 0.4s var(--spring); 
-            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); 
-            background-color: rgba(15,23,42,0.4); 
+            opacity: 0; visibility: hidden; transition: all 0.3s var(--spring); 
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); 
+            background-color: rgba(0,0,0,0.3); 
             display: flex; align-items: center; justify-content: center; z-index: 1000; 
         }
-        [data-theme="dark"] .modern-modal-overlay { background-color: rgba(0,0,0,0.6); }
+        [data-theme="dark"] .modern-modal-overlay { background-color: rgba(0,0,0,0.7); }
         .modern-modal-overlay.active { opacity: 1; visibility: visible; }
         .modern-modal-content { 
-            background-color: var(--surface-color); transition: all 0.4s var(--spring); 
-            box-shadow: 0 24px 64px rgba(0,0,0,0.15); border: 1px solid var(--border-color);
-            transform: scale(0.9) translateY(20px); opacity: 0; border-radius: 28px;
+            background-color: var(--surface-color); transition: all 0.3s var(--spring); 
+            box-shadow: 0 16px 40px rgba(0,0,0,0.15); border: 1px solid var(--border-color);
+            transform: scale(0.95) translateY(10px); opacity: 0; border-radius: 24px;
             max-height: 85vh; display: flex; flex-direction: column;
         }
         .modern-modal-overlay.active .modern-modal-content { transform: scale(1) translateY(0); opacity: 1; }
@@ -168,44 +188,48 @@
         @media (max-width: 768px) {
             .modern-modal-overlay { align-items: flex-end; padding: 0; }
             .modern-modal-content { 
-                transform: translateY(100%); border-radius: 32px 32px 0 0; 
+                transform: translateY(100%); border-radius: 24px 24px 0 0; 
                 width: 100% !important; max-width: 100% !important; margin: 0; 
-                padding-bottom: calc(env(safe-area-inset-bottom) + 20px); 
+                padding-bottom: calc(env(safe-area-inset-bottom) + 16px); 
             }
             .modern-modal-overlay.active .modern-modal-content { transform: translateY(0); }
         }
 
-        /* 導航列 */
-        .nav-item { color: var(--text-secondary); transition: all 0.3s var(--spring); }
-        .nav-item.active { color: var(--accent-primary); transform: scale(1.1) translateY(-2px); filter: drop-shadow(0 4px 8px var(--accent-30)); }
+        /* 導航列 (緊湊版) */
+        .nav-item { color: var(--text-secondary); transition: all 0.3s var(--spring); border-radius: 100px; display: flex; align-items: center; justify-content: center; }
+        .nav-item.active { 
+            color: var(--accent-primary); 
+            background-color: var(--accent-10);
+            transform: scale(1.05); 
+        }
 
         /* Custom Chips */
         .custom-chip { 
-            cursor: pointer; user-select: none; border-radius: 12px; position: relative; 
-            border: 1px solid var(--border-color); font-weight: 700;
-            transition: all 0.3s var(--spring); display: inline-flex; align-items: center; justify-content: center;
-            padding: 8px 16px; font-size: 13px; background-color: var(--surface-color); color: var(--text-primary);
+            cursor: pointer; user-select: none; border-radius: 8px; position: relative; 
+            font-weight: 700; transition: all 0.2s var(--spring); display: inline-flex; align-items: center; justify-content: center;
+            padding: 6px 12px; font-size: 12px; background-color: var(--surface-inset); color: var(--text-primary);
         }
         .custom-chip.selected { 
             background-color: var(--accent-primary) !important; color: var(--accent-text) !important; 
-            border-color: var(--accent-primary) !important; transform: scale(1.05); box-shadow: 0 4px 12px var(--accent-20); 
+            transform: scale(1.03); box-shadow: 0 2px 8px var(--accent-20); 
         }
-        .custom-chip:hover:not(.selected) { background-color: var(--surface-hover); }
+        .custom-chip:hover:not(.selected) { filter: brightness(0.95); }
 
         /* Toast */
-        #toast-container { position: fixed; top: calc(env(safe-area-inset-top, 24px) + 60px); left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none;}
-        .toast { background-color: var(--accent-primary); color: var(--accent-text); transition: all 0.4s var(--spring); transform: translateY(-24px) scale(0.9); opacity: 0; border-radius: 100px; padding: 14px 28px; font-weight: 700; font-size: 14px; box-shadow: 0 12px 32px var(--accent-30); backdrop-filter: blur(12px); display: flex; align-items: center;}
+        #toast-container { position: fixed; top: calc(env(safe-area-inset-top, 16px) + 50px); left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none;}
+        .toast { background-color: var(--text-primary); color: var(--bg-color); transition: all 0.3s var(--spring); transform: translateY(-16px) scale(0.95); opacity: 0; border-radius: 100px; padding: 10px 20px; font-weight: 700; font-size: 13px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); backdrop-filter: blur(8px); display: flex; align-items: center;}
+        [data-theme="dark"] .toast { background-color: #ffffff; color: #000000; }
         .toast.show { transform: translateY(0) scale(1); opacity: 1; }
 
-        /* Custom Toggle Switch */
+        /* Custom Toggle Switch (縮小版) */
         .ios-toggle { position: relative; display: inline-flex; align-items: center; cursor: pointer; flex-shrink: 0; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
         .ios-toggle input { display: none; }
-        .ios-toggle .toggle-track { width: 48px; height: 28px; background-color: var(--border-color); border-radius: 999px; transition: background-color 0.3s var(--spring); position: relative; }
-        .ios-toggle .toggle-thumb { position: absolute; top: 2px; left: 2px; width: 24px; height: 24px; background-color: #ffffff; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.15); transition: transform 0.3s var(--spring), width 0.2s ease; }
+        .ios-toggle .toggle-track { width: 40px; height: 24px; background-color: var(--border-color); border-radius: 999px; transition: background-color 0.3s var(--spring); position: relative; }
+        .ios-toggle .toggle-thumb { position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; background-color: #ffffff; border-radius: 50%; box-shadow: 0 2px 6px rgba(0,0,0,0.15); transition: transform 0.3s var(--spring), width 0.2s ease; }
         .ios-toggle input:checked + .toggle-track { background-color: var(--accent-primary); }
-        .ios-toggle input:checked + .toggle-track .toggle-thumb { transform: translateX(20px); }
-        .ios-toggle:active .toggle-thumb { width: 32px; }
-        .ios-toggle input:checked:active + .toggle-track .toggle-thumb { transform: translateX(12px); }
+        .ios-toggle input:checked + .toggle-track .toggle-thumb { transform: translateX(16px); }
+        .ios-toggle:active .toggle-thumb { width: 26px; }
+        .ios-toggle input:checked:active + .toggle-track .toggle-thumb { transform: translateX(10px); }
 
         ::-webkit-scrollbar { display: none; }
         * { -ms-overflow-style: none; scrollbar-width: none; }
@@ -219,241 +243,238 @@
         .glass-header {
             position: sticky; top: 0; z-index: 50;
             background-color: var(--header-bg);
-            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
-            border-bottom: 1px solid var(--border-color);
-            transition: background-color 0.4s ease;
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            transition: background-color 0.3s ease;
+            box-shadow: 0 1px 0 var(--border-color);
         }
         
         .task-list-container { overflow-y: auto; overflow-x: hidden; padding: 4px; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col pb-[100px] md:pb-[120px] relative">
+<body class="min-h-screen flex flex-col pb-[80px] md:pb-[100px] relative">
 
     <!-- Global System Marquee -->
-    <div id="global-marquee-container" class="hidden w-full text-white text-[11px] font-bold py-2 overflow-hidden z-[70] flex items-center transition-colors duration-300" style="background-color: var(--accent-primary);">
+    <div id="global-marquee-container" class="hidden w-full text-white text-[10px] font-bold py-1.5 overflow-hidden z-[70] flex items-center transition-colors duration-300" style="background-color: var(--accent-primary);">
         <div class="whitespace-nowrap animate-marquee flex items-center">
             <i class="fas fa-bullhorn mr-2"></i> <span id="global-marquee-text"></span>
         </div>
     </div>
 
-    <!-- Sticky Glass Header -->
-    <header class="glass-header w-full px-5 md:px-10 py-4 flex justify-between items-center pt-[max(env(safe-area-inset-top),16px)]">
-        <div class="flex items-center gap-4">
-            <div class="w-10 h-10 rounded-2xl text-white flex items-center justify-center text-lg shadow-md shrink-0 transition-colors duration-300" style="background-color: var(--accent-primary);">
-                <i class="fas fa-book-open"></i>
-            </div>
-            <div>
-                <h1 id="header-title" class="text-xl md:text-2xl font-black tracking-tight leading-tight">主頁</h1>
-                <p id="header-subtitle" class="text-xs font-bold opacity-50 uppercase tracking-widest mt-0.5"></p>
-            </div>
+    <!-- Apple Native Compact Header -->
+    <header class="glass-header w-full px-4 md:px-8 py-3 flex justify-between items-center pt-[max(env(safe-area-inset-top),12px)]">
+        <div class="flex flex-col justify-center">
+            <p id="header-subtitle" class="text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-colors duration-300 mb-0.5 opacity-80" style="color: var(--accent-primary);"></p>
+            <h1 id="header-title" class="text-[24px] md:text-3xl font-black tracking-tight leading-none text-[var(--text-primary)]">主頁</h1>
         </div>
-        <div id="user-profile" class="hidden items-center gap-3 cursor-pointer btn-spring" onclick="openModal('profile-modal')">
-            <span id="admin-badge" class="hidden text-white px-2 py-1 rounded-[6px] text-[9px] font-black tracking-widest shadow-sm" style="background-color: var(--accent-primary);">ADMIN</span>
-            <img id="user-avatar" src="" class="w-9 h-9 rounded-full shadow-sm border border-[var(--border-color)] object-cover">
+        <div id="user-profile" class="hidden items-center gap-2 cursor-pointer btn-spring" onclick="openModal('profile-modal')">
+            <span id="admin-badge" class="hidden text-white px-1.5 py-0.5 rounded-full text-[8px] font-black tracking-widest shadow-sm transition-colors duration-300" style="background-color: var(--accent-primary);">ADMIN</span>
+            <img id="user-avatar" src="" class="w-8 h-8 md:w-9 md:h-9 rounded-full object-cover shadow-sm bg-[var(--surface-color)] border border-[var(--border-color)]">
         </div>
     </header>
 
     <!-- Floating Dock Nav (Desktop) -->
-    <nav class="hidden md:flex flex-row fixed bottom-8 left-1/2 -translate-x-1/2 py-3 px-5 rounded-[24px] bg-[var(--surface-color)] backdrop-blur-3xl border border-[var(--border-color)] shadow-[0_12px_48px_rgba(0,0,0,0.08)] z-40 items-center gap-2">
-        <button onclick="switchView('home')" class="nav-item active group relative w-12 h-12 flex items-center justify-center rounded-xl hover:bg-[var(--bg-color)] btn-spring" data-target="home">
-            <i class="fas fa-home text-[22px]"></i>
+    <nav class="hidden md:flex flex-row fixed bottom-6 left-1/2 -translate-x-1/2 py-2 px-4 rounded-[20px] bg-[var(--surface-color)] backdrop-blur-3xl border border-[var(--border-color)] shadow-[0_8px_32px_rgba(0,0,0,0.06)] z-40 items-center gap-1.5">
+        <button onclick="switchView('home')" class="nav-item active group relative w-10 h-10 flex items-center justify-center rounded-xl btn-spring" data-target="home">
+            <i class="fas fa-home text-[18px]"></i>
         </button>
-        <button onclick="switchView('history')" class="nav-item group relative w-12 h-12 flex items-center justify-center rounded-xl hover:bg-[var(--bg-color)] btn-spring" data-target="history">
-            <i class="fas fa-history text-[22px]"></i>
+        <button onclick="switchView('history')" class="nav-item group relative w-10 h-10 flex items-center justify-center rounded-xl btn-spring" data-target="history">
+            <i class="fas fa-history text-[18px]"></i>
         </button>
-        <button onclick="switchView('timetable')" class="nav-item group relative w-12 h-12 flex items-center justify-center rounded-xl hover:bg-[var(--bg-color)] btn-spring" data-target="timetable">
-            <i class="fas fa-calendar-week text-[22px]"></i>
+        <button onclick="switchView('timetable')" class="nav-item group relative w-10 h-10 flex items-center justify-center rounded-xl btn-spring" data-target="timetable">
+            <i class="fas fa-calendar-week text-[18px]"></i>
         </button>
-        <button onclick="switchView('subjects')" class="nav-item group relative w-12 h-12 flex items-center justify-center rounded-xl hover:bg-[var(--bg-color)] btn-spring" data-target="subjects">
-            <i class="fas fa-shapes text-[22px]"></i>
+        <button onclick="switchView('subjects')" class="nav-item group relative w-10 h-10 flex items-center justify-center rounded-xl btn-spring" data-target="subjects">
+            <i class="fas fa-shapes text-[18px]"></i>
         </button>
-        <button onclick="switchView('settings')" class="nav-item group relative w-12 h-12 flex items-center justify-center rounded-xl hover:bg-[var(--bg-color)] btn-spring" data-target="settings">
-            <i class="fas fa-sliders-h text-[22px]"></i>
+        <button onclick="switchView('settings')" class="nav-item group relative w-10 h-10 flex items-center justify-center rounded-xl btn-spring" data-target="settings">
+            <i class="fas fa-sliders-h text-[18px]"></i>
         </button>
-        <div id="nav-admin-divider" class="w-px h-6 bg-[var(--border-color)] mx-2 hidden shrink-0"></div>
-        <button id="nav-admin-btn-desktop" onclick="switchView('admin')" class="nav-item group relative w-12 h-12 items-center justify-center rounded-xl hover:bg-[var(--accent-10)] btn-spring hidden" data-target="admin" style="color: var(--accent-primary);">
-            <i class="fas fa-shield-alt text-[22px]"></i>
+        <div id="nav-admin-divider" class="w-px h-5 bg-[var(--border-color)] mx-1.5 hidden shrink-0"></div>
+        <button id="nav-admin-btn-desktop" onclick="switchView('admin')" class="nav-item group relative w-10 h-10 items-center justify-center hover:bg-[var(--accent-10)] btn-spring hidden" data-target="admin" style="color: var(--accent-primary);">
+            <i class="fas fa-shield-alt text-[18px]"></i>
         </button>
     </nav>
 
     <!-- Floating Dock Nav (Mobile) -->
-    <nav class="md:hidden fixed bottom-6 left-5 right-5 rounded-[28px] bg-[var(--surface-color)]/90 backdrop-blur-3xl border border-[var(--border-color)] z-40 px-5 flex justify-between items-center h-[68px] shadow-[0_12px_40px_rgba(0,0,0,0.1)]">
-        <button onclick="switchView('home')" class="nav-item active w-11 h-11 flex items-center justify-center btn-spring" data-target="home"><i class="fas fa-home text-[22px]"></i></button>
-        <button onclick="switchView('history')" class="nav-item w-11 h-11 flex items-center justify-center btn-spring" data-target="history"><i class="fas fa-history text-[22px]"></i></button>
-        <button onclick="switchView('timetable')" class="nav-item w-11 h-11 flex items-center justify-center btn-spring" data-target="timetable"><i class="fas fa-calendar-week text-[22px]"></i></button>
-        <button onclick="switchView('subjects')" class="nav-item w-11 h-11 flex items-center justify-center btn-spring" data-target="subjects"><i class="fas fa-shapes text-[22px]"></i></button>
-        <button onclick="switchView('settings')" class="nav-item w-11 h-11 flex items-center justify-center btn-spring" data-target="settings"><i class="fas fa-sliders-h text-[22px]"></i></button>
-        <button id="nav-admin-btn-mobile" onclick="switchView('admin')" class="nav-item w-11 h-11 items-center justify-center btn-spring hidden" data-target="admin" style="color: var(--accent-primary);"><i class="fas fa-shield-alt text-[22px]"></i></button>
+    <nav class="md:hidden fixed bottom-5 left-4 right-4 rounded-full bg-[var(--surface-color)]/95 backdrop-blur-3xl border border-[var(--border-color)] z-40 px-3 py-1.5 flex justify-between items-center shadow-[0_8px_24px_rgba(0,0,0,0.05)] transition-shadow duration-500">
+        <button onclick="switchView('home')" class="nav-item active w-10 h-10 btn-spring" data-target="home"><i class="fas fa-home text-[18px]"></i></button>
+        <button onclick="switchView('history')" class="nav-item w-10 h-10 btn-spring" data-target="history"><i class="fas fa-history text-[18px]"></i></button>
+        <button onclick="switchView('timetable')" class="nav-item w-10 h-10 btn-spring" data-target="timetable"><i class="fas fa-calendar-week text-[18px]"></i></button>
+        <button onclick="switchView('subjects')" class="nav-item w-10 h-10 btn-spring" data-target="subjects"><i class="fas fa-shapes text-[18px]"></i></button>
+        <button onclick="switchView('settings')" class="nav-item w-10 h-10 btn-spring" data-target="settings"><i class="fas fa-sliders-h text-[18px]"></i></button>
+        <button id="nav-admin-btn-mobile" onclick="switchView('admin')" class="nav-item w-10 h-10 items-center justify-center btn-spring hidden" data-target="admin" style="color: var(--accent-primary);"><i class="fas fa-shield-alt text-[18px]"></i></button>
     </nav>
 
     <!-- MAIN CONTENT AREA -->
-    <main class="flex-1 w-full max-w-5xl mx-auto px-4 md:px-8 mt-6">
+    <main class="flex-1 w-full max-w-5xl mx-auto px-4 md:px-8 mt-4">
         
         <!-- VIEW: HOME -->
         <section id="view-home" class="app-view active">
             
             <!-- Live Class Widget -->
-            <div id="live-class-widget" class="glass-card mb-6 border-l-4 transition-colors duration-300" style="display: none; border-left-color: var(--accent-primary);">
-                <div class="p-5 flex items-center justify-between">
-                    <div class="flex items-center gap-4">
-                        <div id="live-current-bg" class="w-12 h-12 rounded-[14px] flex items-center justify-center shadow-inner transition-colors duration-500"></div>
+            <div id="live-class-widget" class="ios-card mb-5 border-l-4 transition-colors duration-300" style="display: none; border-left-color: var(--accent-primary);">
+                <div class="p-4 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div id="live-current-bg" class="w-10 h-10 rounded-[12px] flex items-center justify-center shadow-inner transition-colors duration-500"></div>
                         <div>
-                            <p class="text-[10px] font-bold uppercase tracking-widest mb-1 opacity-50">正在進行</p>
-                            <h3 id="live-current-class" class="text-xl font-black tracking-tight leading-none transition-colors duration-300" style="color: var(--accent-primary);">載入中...</h3>
+                            <p class="text-[9px] font-bold uppercase tracking-widest mb-0.5 opacity-50">正在進行</p>
+                            <h3 id="live-current-class" class="text-lg font-black tracking-tight leading-none transition-colors duration-300" style="color: var(--accent-primary);">載入中...</h3>
                         </div>
                     </div>
                     <div id="live-timer-container" class="flex flex-col items-end">
-                        <p class="text-[10px] font-bold uppercase tracking-widest mb-1 opacity-50">倒數</p>
-                        <span id="live-timer-value" class="font-mono text-base font-black tracking-wider bg-[var(--bg-color)] px-3 py-1 rounded-[8px]">00:00</span>
+                        <p class="text-[9px] font-bold uppercase tracking-widest mb-0.5 opacity-50">倒數</p>
+                        <span id="live-timer-value" class="font-mono text-sm font-black tracking-wider bg-[var(--surface-inset)] px-2 py-0.5 rounded-[6px]">00:00</span>
                     </div>
                 </div>
-                <div class="w-full h-[3px] bg-[var(--bg-color)]">
+                <div class="w-full h-[3px] bg-[var(--surface-inset)]">
                     <div id="live-progress-bar" class="h-full transition-all duration-1000 ease-linear rounded-r-full" style="width: 0%; background-color: var(--accent-primary);"></div>
                 </div>
             </div>
 
-            <!-- Dashboard Stats (粉彩四卡) -->
-            <h2 class="text-lg font-black tracking-tight mb-4 px-1">作業分佈</h2>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <!-- Dashboard Stats (精緻縮放版) -->
+            <h2 class="text-base font-black tracking-tight mb-3 px-1">作業分佈</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
                 <div class="stat-card" onclick="openDashboardModal('today')">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="w-10 h-10 rounded-full bg-[#FFDFBA] text-[#d48806] dark:bg-[#d48806]/30 flex items-center justify-center"><i class="fas fa-sun text-lg"></i></div>
-                        <i class="fas fa-chevron-right text-xs opacity-30 mt-2"></i>
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="w-8 h-8 rounded-full bg-[#FFDFBA] text-[#d48806] dark:bg-[#d48806]/30 flex items-center justify-center"><i class="fas fa-sun text-sm"></i></div>
+                        <i class="fas fa-chevron-right text-[10px] opacity-30 mt-1.5"></i>
                     </div>
                     <div>
-                        <p class="text-xs font-bold opacity-60 mb-1">今日要交</p>
-                        <h3 class="text-3xl font-black" id="count-today">0</h3>
+                        <p class="text-[11px] font-bold opacity-60 mb-0.5">今日要交</p>
+                        <h3 class="text-2xl font-black" id="count-today">0</h3>
                     </div>
                 </div>
                 <div class="stat-card" onclick="openDashboardModal('tomorrow')">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="w-10 h-10 rounded-full bg-[#BAE1FF] text-[#5b9bd5] dark:bg-[#5b9bd5]/30 flex items-center justify-center"><i class="fas fa-cloud text-lg"></i></div>
-                        <i class="fas fa-chevron-right text-xs opacity-30 mt-2"></i>
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="w-8 h-8 rounded-full bg-[#BAE1FF] text-[#5b9bd5] dark:bg-[#5b9bd5]/30 flex items-center justify-center"><i class="fas fa-cloud text-sm"></i></div>
+                        <i class="fas fa-chevron-right text-[10px] opacity-30 mt-1.5"></i>
                     </div>
                     <div>
-                        <p class="text-xs font-bold opacity-60 mb-1">明日要交</p>
-                        <h3 class="text-3xl font-black" id="count-tomorrow">0</h3>
+                        <p class="text-[11px] font-bold opacity-60 mb-0.5">明日要交</p>
+                        <h3 class="text-2xl font-black" id="count-tomorrow">0</h3>
                     </div>
                 </div>
                 <div class="stat-card" onclick="openDashboardModal('future')">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="w-10 h-10 rounded-full bg-[#E8DFF5] text-[#9b76b0] dark:bg-[#9b76b0]/30 flex items-center justify-center"><i class="far fa-calendar-alt text-lg"></i></div>
-                        <i class="fas fa-chevron-right text-xs opacity-30 mt-2"></i>
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="w-8 h-8 rounded-full bg-[#E8DFF5] text-[#9b76b0] dark:bg-[#9b76b0]/30 flex items-center justify-center"><i class="far fa-calendar-alt text-sm"></i></div>
+                        <i class="fas fa-chevron-right text-[10px] opacity-30 mt-1.5"></i>
                     </div>
                     <div>
-                        <p class="text-xs font-bold opacity-60 mb-1">將來功課</p>
-                        <h3 class="text-3xl font-black" id="count-future">0</h3>
+                        <p class="text-[11px] font-bold opacity-60 mb-0.5">將來功課</p>
+                        <h3 class="text-2xl font-black" id="count-future">0</h3>
                     </div>
                 </div>
                 <div class="stat-card" onclick="openDashboardModal('test')">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="w-10 h-10 rounded-full bg-[#BAFFC9] text-[#4ea771] dark:bg-[#4ea771]/30 flex items-center justify-center"><i class="fas fa-pen-nib text-lg"></i></div>
-                        <i class="fas fa-chevron-right text-xs opacity-30 mt-2"></i>
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="w-8 h-8 rounded-full bg-[#BAFFC9] text-[#4ea771] dark:bg-[#4ea771]/30 flex items-center justify-center"><i class="fas fa-pen-nib text-sm"></i></div>
+                        <i class="fas fa-chevron-right text-[10px] opacity-30 mt-1.5"></i>
                     </div>
                     <div>
-                        <p class="text-xs font-bold opacity-60 mb-1">考試及測驗</p>
-                        <h3 class="text-3xl font-black" id="count-test">0</h3>
+                        <p class="text-[11px] font-bold opacity-60 mb-0.5">考試及測驗</p>
+                        <h3 class="text-2xl font-black" id="count-test">0</h3>
                     </div>
                 </div>
             </div>
 
-            <!-- Beautiful Add Task Form -->
-            <div class="glass-card p-6 md:p-8 mb-8">
-                <h2 class="text-sm font-black uppercase tracking-widest opacity-50 mb-5">新增任務</h2>
-                <form id="add-task-form" class="space-y-4">
+            <!-- Beautiful Add Task Form (Apple Style Compact) -->
+            <div class="ios-card p-5 md:p-6 mb-6">
+                <h2 class="text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)] mb-4 flex items-center"><i class="fas fa-plus-circle mr-2 opacity-50"></i>新增任務</h2>
+                <form id="add-task-form" class="space-y-3">
+                    
+                    <!-- 內容輸入 -->
+                    <div class="ios-input-group items-start py-1">
+                        <i class="fas fa-pen text-[var(--text-secondary)] opacity-40 mr-2 mt-2.5 text-sm"></i>
+                        <textarea id="task-content" rows="2" class="ios-input resize-none text-sm" placeholder="輸入功課或測驗內容..." required></textarea>
+                    </div>
+
                     <!-- 科目選擇 -->
                     <div class="relative w-full overflow-hidden">
-                        <div id="subject-chips-add" class="flex gap-2 scroll-smooth-x pb-2"></div>
+                        <div id="subject-chips-add" class="flex gap-2 scroll-smooth-x pb-1"></div>
                     </div>
                     <input type="hidden" id="task-subject">
-
-                    <!-- 內容輸入 -->
-                    <div class="beautiful-input-group">
-                        <textarea id="task-content" rows="2" class="beautiful-input resize-none" placeholder="輸入功課或測驗內容..." required></textarea>
-                    </div>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <!-- 日期選擇 (偽裝成按鈕) -->
-                        <div class="beautiful-input-group relative flex items-center px-4">
-                            <i class="far fa-calendar text-lg opacity-80 mr-3 transition-colors duration-300" style="color: var(--accent-primary);"></i>
-                            <span id="date-display-add" class="font-bold text-sm pointer-events-none">選擇日期</span>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <!-- 日期選擇 -->
+                        <div class="ios-input-group relative cursor-pointer py-1.5">
+                            <i class="far fa-calendar text-[var(--text-secondary)] opacity-40 mr-2 text-sm"></i>
+                            <span id="date-display-add" class="font-bold text-sm pointer-events-none w-full py-1 text-[var(--text-primary)]">選擇日期</span>
                             <input type="date" id="task-date" class="absolute inset-0 opacity-0 cursor-pointer" onchange="document.getElementById('date-display-add').innerText = this.value" required>
                         </div>
                         
-                        <!-- 類型選擇 -->
-                        <div class="flex p-1 rounded-[16px] bg-[var(--bg-color)]">
-                            <button type="button" class="type-toggle-btn active flex-1 rounded-[12px] text-sm font-bold btn-spring bg-[var(--surface-color)] shadow-sm py-2 transition-colors duration-300" data-val="homework" onclick="setTaskType('homework', this)" style="color: var(--accent-primary);">功課</button>
-                            <button type="button" class="type-toggle-btn text-[var(--text-secondary)] flex-1 rounded-[12px] text-sm font-bold btn-spring py-2 transition-colors duration-300" data-val="test" onclick="setTaskType('test', this)">測驗</button>
+                        <!-- 原生分段控制器 -->
+                        <div class="ios-segmented-control">
+                            <button type="button" class="ios-segment-btn active" data-val="homework" onclick="setTaskType('homework', this)">功課</button>
+                            <button type="button" class="ios-segment-btn" data-val="test" onclick="setTaskType('test', this)">測驗</button>
                             <input type="hidden" id="task-type" value="homework">
                         </div>
                     </div>
 
-                    <div class="beautiful-input-group flex items-center px-4">
-                        <i class="fas fa-link text-lg opacity-80 mr-3 transition-colors duration-300" style="color: var(--accent-primary);"></i>
-                        <input type="url" id="task-url" class="beautiful-input !px-0" placeholder="附加網頁連結 (選填)">
+                    <div class="ios-input-group py-1.5">
+                        <i class="fas fa-link text-[var(--text-secondary)] opacity-40 mr-2 text-sm"></i>
+                        <input type="url" id="task-url" class="ios-input text-sm" placeholder="附加網頁連結 (選填)">
                     </div>
                     
                     <!-- 廣播 (Admin) -->
-                    <div id="broadcast-toggle-container" class="hidden pt-2">
-                        <label class="flex items-center justify-between cursor-pointer w-full p-4 rounded-xl btn-spring" style="background-color: var(--accent-10);">
-                            <span class="text-xs font-bold transition-colors duration-300" style="color: var(--accent-primary);"><i class="fas fa-bullhorn mr-2"></i>全域廣播 (全校可見)</span>
-                            <div class="ios-toggle scale-90"><input type="checkbox" id="task-broadcast"><div class="toggle-track"><div class="toggle-thumb"></div></div></div>
+                    <div id="broadcast-toggle-container" class="hidden pt-2 border-t border-[var(--border-color)] mt-3">
+                        <label class="flex items-center justify-between cursor-pointer w-full p-2.5 rounded-[12px] btn-spring bg-[var(--surface-inset)]">
+                            <span class="text-xs font-bold text-orange-500"><i class="fas fa-bullhorn mr-1.5"></i>發佈全域廣播</span>
+                            <div class="ios-toggle scale-[0.8]"><input type="checkbox" id="task-broadcast"><div class="toggle-track"><div class="toggle-thumb"></div></div></div>
                         </label>
                     </div>
 
-                    <button type="submit" class="w-full py-4 rounded-[16px] font-black text-sm text-[var(--accent-text)] btn-spring shadow-lg hover:shadow-xl mt-2 transition-colors duration-300" style="background-color: var(--accent-primary);">新增項目</button>
+                    <button type="submit" class="w-full py-3 rounded-[12px] font-bold text-sm btn-primary btn-spring mt-3">新增項目</button>
                 </form>
             </div>
             
             <!-- Tasks List Preview -->
-            <div class="flex items-center justify-between mb-4 px-1">
-                <h2 class="text-lg font-black tracking-tight">所有未來任務</h2>
+            <div class="flex items-center justify-between mb-3 px-1">
+                <h2 class="text-lg font-black tracking-tight">未來任務</h2>
             </div>
-            <div id="subject-chips-filter" class="flex gap-2 scroll-smooth-x pb-3 px-1 mb-2"></div>
+            <div id="subject-chips-filter" class="flex gap-2 scroll-smooth-x pb-2 px-1 mb-1"></div>
             <input type="hidden" id="filter-subject" value="all">
-            <div id="home-tasks-list" class="space-y-4"></div>
+            <div id="home-tasks-list" class="space-y-3"></div>
         </section>
 
         <!-- VIEW: HISTORY -->
-        <section id="view-history" class="app-view max-w-3xl mx-auto space-y-6">
-            <div class="flex justify-between items-center px-2">
-                <p class="text-sm font-bold opacity-50 uppercase tracking-widest">歷史紀錄</p>
-                <button onclick="confirmClearHistory()" class="px-4 py-2 rounded-full text-xs font-bold btn-spring" style="color: var(--danger-color); background-color: var(--danger-10);">清空全部</button>
+        <section id="view-history" class="app-view max-w-3xl mx-auto space-y-5">
+            <div class="flex justify-between items-center px-1">
+                <h2 class="text-xl font-black tracking-tight">歷史紀錄</h2>
+                <button onclick="confirmClearHistory()" class="px-3 py-1.5 rounded-full text-[11px] font-bold btn-spring" style="color: var(--danger-color); background-color: var(--danger-10);">清空全部</button>
             </div>
-            <div id="history-tasks-list" class="space-y-4"></div>
+            <div id="history-tasks-list" class="space-y-3"></div>
         </section>
 
         <!-- VIEW: TIMETABLE -->
-        <section id="view-timetable" class="app-view space-y-6 max-w-5xl mx-auto">
-            <div class="flex justify-between items-center px-2">
-                <!-- 視圖切換 (單日/全週) -->
-                <div id="tt-view-toggle-container" class="flex p-1 bg-[var(--bg-color)] rounded-[14px]">
-                    <button onclick="setTTViewMode('day')" id="tt-btn-day" class="px-4 py-1.5 rounded-[10px] text-xs font-bold bg-[var(--surface-color)] shadow-sm text-[var(--text-primary)] transition-all">單日</button>
-                    <button onclick="setTTViewMode('week')" id="tt-btn-week" class="px-4 py-1.5 rounded-[10px] text-xs font-bold text-[var(--text-secondary)] transition-all">全週</button>
+        <section id="view-timetable" class="app-view space-y-5 max-w-5xl mx-auto">
+            <div class="flex justify-between items-center px-1">
+                <!-- 原生分段控制器 (Segmented Control) -->
+                <div id="tt-view-toggle-container" class="ios-segmented-control w-[140px]">
+                    <button type="button" class="ios-segment-btn active" id="tt-btn-day" onclick="setTTViewMode('day')">單日</button>
+                    <button type="button" class="ios-segment-btn" id="tt-btn-week" onclick="setTTViewMode('week')">全週</button>
                 </div>
 
                 <div id="tt-view-actions" class="flex gap-2 shrink-0 ml-auto">
-                    <button onclick="syncGlobalTimetable()" class="px-4 py-2 rounded-full text-xs font-bold btn-spring hidden transition-colors duration-300" id="btn-sync-timetable" style="background-color: var(--accent-10); color: var(--accent-primary);"><i class="fas fa-sync-alt"></i></button>
-                    <button onclick="toggleTimetableMode(true)" class="px-4 py-2 rounded-full text-xs font-bold text-white btn-spring transition-colors duration-300" style="background-color: var(--accent-primary);"><i class="fas fa-edit mr-1.5"></i>編輯</button>
+                    <button onclick="syncGlobalTimetable()" class="px-3 py-1.5 rounded-full text-[11px] font-bold btn-spring hidden transition-colors duration-300" id="btn-sync-timetable" style="background-color: var(--accent-10); color: var(--accent-primary);"><i class="fas fa-sync-alt"></i></button>
+                    <button onclick="toggleTimetableMode(true)" class="px-3 py-1.5 rounded-full text-[11px] font-bold text-white btn-spring transition-colors duration-300" style="background-color: var(--accent-primary);">編輯</button>
                 </div>
                 <div id="tt-edit-actions" class="flex items-center gap-2 shrink-0 ml-auto hidden">
-                    <button onclick="toggleTimetableMode(false)" class="px-4 py-2 rounded-full text-xs font-bold bg-[var(--bg-color)] btn-spring">取消</button>
-                    <button onclick="saveTimetable()" class="px-4 py-2 rounded-full text-xs font-bold text-white btn-spring transition-colors duration-300" style="background-color: var(--accent-primary);"><i class="fas fa-check mr-1.5"></i>完成</button>
+                    <button onclick="toggleTimetableMode(false)" class="px-3 py-1.5 rounded-full text-[11px] font-bold bg-[var(--surface-inset)] btn-spring">取消</button>
+                    <button onclick="saveTimetable()" class="px-3 py-1.5 rounded-full text-[11px] font-bold text-white btn-spring transition-colors duration-300" style="background-color: var(--accent-primary);">完成</button>
                 </div>
             </div>
             
-            <div id="admin-timetable-controls" class="hidden glass-card p-4 border-l-4" style="border-left-color: var(--accent-primary);">
+            <div id="admin-timetable-controls" class="hidden ios-card p-3 border-l-4" style="border-left-color: var(--accent-primary);">
                 <div class="flex justify-between items-center">
-                    <span class="text-xs font-bold transition-colors duration-300" style="color: var(--accent-primary);"><i class="fas fa-user-shield mr-2"></i>全校時間表管理</span>
-                    <button onclick="saveGlobalTimetable()" class="text-white px-4 py-2 rounded-full text-xs font-bold btn-spring transition-colors duration-300" style="background-color: var(--accent-primary);">發佈至全校</button>
+                    <span class="text-[11px] font-bold transition-colors duration-300" style="color: var(--accent-primary);"><i class="fas fa-user-shield mr-1.5"></i>全校時間表管理</span>
+                    <button onclick="saveGlobalTimetable()" class="text-white px-3 py-1.5 rounded-full text-[11px] font-bold btn-spring transition-colors duration-300" style="background-color: var(--accent-primary);">發佈至全校</button>
                 </div>
             </div>
 
-            <div class="glass-card p-5 md:p-8 overflow-hidden">
+            <div class="ios-card p-4 md:p-6 overflow-hidden">
                 <!-- VIEW MODE -->
                 <div id="timetable-timeline-container" class="flex flex-col">
-                    <div id="timetable-day-selector" class="flex gap-2 scroll-smooth-x mb-6"></div>
-                    <h2 id="tt-single-day-header" class="text-2xl font-black tracking-tight mb-6 transition-colors duration-300" style="color: var(--accent-primary);"></h2>
+                    <div id="timetable-day-selector" class="flex gap-2 scroll-smooth-x mb-5"></div>
+                    <h2 id="tt-single-day-header" class="text-xl font-black tracking-tight mb-5 transition-colors duration-300" style="color: var(--accent-primary);"></h2>
                     <div id="timetable-timeline" class="flex flex-col relative">
                         <!-- Content dynamically injected here -->
                     </div>
@@ -461,208 +482,210 @@
 
                 <!-- EDIT MODE -->
                 <div id="timetable-edit-container" class="hidden">
-                    <div class="mb-6 p-5 rounded-[20px] bg-[var(--bg-color)] space-y-5">
+                    <div class="mb-5 p-4 rounded-[16px] bg-[var(--surface-inset)] space-y-4">
                         <div class="flex flex-wrap gap-2 items-center">
-                            <button type="button" class="tt-mode-btn custom-chip text-xs btn-spring" data-val="5day" onclick="setTTMode('5day')">一至五</button>
-                            <button type="button" class="tt-mode-btn custom-chip text-xs btn-spring" data-val="6day" onclick="setTTMode('6day')">一至六</button>
-                            <button type="button" class="tt-mode-btn custom-chip text-xs btn-spring" data-val="7day" onclick="setTTMode('7day')">一至日</button>
-                            <button type="button" class="tt-mode-btn custom-chip text-xs btn-spring" data-val="cycle" onclick="setTTMode('cycle')">循環日</button>
+                            <button type="button" class="custom-chip text-[11px] btn-spring selected" data-val="5day" onclick="setTTMode('5day')">一至五</button>
+                            <button type="button" class="custom-chip text-[11px] btn-spring" data-val="6day" onclick="setTTMode('6day')">一至六</button>
+                            <button type="button" class="custom-chip text-[11px] btn-spring" data-val="7day" onclick="setTTMode('7day')">一至日</button>
+                            <button type="button" class="custom-chip text-[11px] btn-spring" data-val="cycle" onclick="setTTMode('cycle')">循環日</button>
                         </div>
                         <input type="hidden" id="setting-tt-mode" value="5day">
-                        <div id="setting-tt-cycle-container" class="hidden flex items-center gap-3">
-                            <span class="text-xs font-bold opacity-60">總日數</span>
-                            <div class="beautiful-input-group w-24"><input type="number" id="setting-tt-cycle" min="1" max="14" class="beautiful-input !py-1 text-center" onchange="updateTTCycle()"></div>
+                        <div id="setting-tt-cycle-container" class="hidden flex items-center gap-2">
+                            <span class="text-[11px] font-bold opacity-60">總日數</span>
+                            <div class="ios-input-group w-20 !p-1"><input type="number" id="setting-tt-cycle" min="1" max="14" class="ios-input !py-1 text-center text-xs" onchange="updateTTCycle()"></div>
                         </div>
-                        <div class="border-t border-[var(--border-color)] pt-4 mt-2">
-                            <div class="flex justify-between items-center p-4 rounded-xl transition-colors duration-300" style="background-color: var(--accent-10);">
+                        <div class="border-t border-[var(--border-color)] pt-3 mt-1">
+                            <div class="flex justify-between items-center p-3 rounded-xl transition-colors duration-300" style="background-color: var(--accent-10);">
                                 <div>
-                                    <span class="text-xs font-bold block mb-1 transition-colors duration-300" style="color: var(--accent-primary);"><i class="fas fa-link mr-1.5"></i>智能時間聯動</span>
-                                    <span class="text-[10px] font-medium transition-colors duration-300" style="color: var(--accent-primary); opacity: 0.7;">修改結束時間時，自動平移後續所有課堂</span>
+                                    <span class="text-xs font-bold block mb-0.5 transition-colors duration-300" style="color: var(--accent-primary);">智能時間聯動</span>
+                                    <span class="text-[9px] font-medium transition-colors duration-300" style="color: var(--accent-primary); opacity: 0.7;">自動平移後續課堂</span>
                                 </div>
-                                <label class="ios-toggle scale-75 origin-right">
+                                <label class="ios-toggle scale-[0.6] origin-right">
                                     <input type="checkbox" id="setting-auto-cascade" checked onchange="toggleAutoCascade(this.checked)">
                                     <div class="toggle-track"><div class="toggle-thumb"></div></div>
                                 </label>
                             </div>
                         </div>
-                        <div class="border-t border-[var(--border-color)] pt-4 grid grid-cols-3 gap-3">
-                            <div class="beautiful-input-group"><label class="text-[9px] font-bold opacity-50 px-2 pt-1 block text-center">課堂(分)</label><input type="number" id="setting-tt-period" class="beautiful-input !py-1 text-center" value="35" onchange="updateTTSmart()"></div>
-                            <div class="beautiful-input-group"><label class="text-[9px] font-bold opacity-50 px-2 pt-1 block text-center">小息(分)</label><input type="number" id="setting-tt-break" class="beautiful-input !py-1 text-center" value="15" onchange="updateTTSmart()"></div>
-                            <div class="beautiful-input-group"><label class="text-[9px] font-bold opacity-50 px-2 pt-1 block text-center">午膳(分)</label><input type="number" id="setting-tt-lunch" class="beautiful-input !py-1 text-center" value="50" onchange="updateTTSmart()"></div>
+                        <div class="border-t border-[var(--border-color)] pt-3 grid grid-cols-3 gap-2">
+                            <div class="ios-input-group flex-col !items-stretch !p-1"><label class="text-[9px] font-bold opacity-50 text-center w-full block">課堂(分)</label><input type="number" id="setting-tt-period" class="ios-input !py-0.5 text-center text-xs" value="35" onchange="updateTTSmart()"></div>
+                            <div class="ios-input-group flex-col !items-stretch !p-1"><label class="text-[9px] font-bold opacity-50 text-center w-full block">小息(分)</label><input type="number" id="setting-tt-break" class="ios-input !py-0.5 text-center text-xs" value="15" onchange="updateTTSmart()"></div>
+                            <div class="ios-input-group flex-col !items-stretch !p-1"><label class="text-[9px] font-bold opacity-50 text-center w-full block">午膳(分)</label><input type="number" id="setting-tt-lunch" class="ios-input !py-0.5 text-center text-xs" value="50" onchange="updateTTSmart()"></div>
                         </div>
                     </div>
 
-                    <div class="overflow-x-auto scrollbar-hide pb-4">
+                    <div class="overflow-x-auto scrollbar-hide pb-3">
                         <table class="w-full text-center border-collapse text-xs" id="timetable-table">
                             <thead><tr id="tt-edit-header-row" class="border-b border-[var(--border-color)]"></tr></thead>
                             <tbody id="timetable-body"></tbody>
                         </table>
                     </div>
-                    <div class="mt-4 pt-4 border-t border-[var(--border-color)] flex gap-3">
-                        <button onclick="addSmartRow('class')" class="flex-1 py-3 rounded-[14px] text-xs font-bold text-white btn-spring transition-colors duration-300" style="background-color: var(--accent-primary);"><i class="fas fa-plus mr-1"></i> 課堂</button>
-                        <button onclick="addSmartRow('break')" class="flex-1 py-3 rounded-[14px] text-xs font-bold bg-[var(--bg-color)] btn-spring">小息</button>
-                        <button onclick="addSmartRow('lunch')" class="flex-1 py-3 rounded-[14px] text-xs font-bold bg-[var(--bg-color)] btn-spring">午膳</button>
+                    <div class="mt-3 pt-3 border-t border-[var(--border-color)] flex gap-2">
+                        <button onclick="addSmartRow('class')" class="flex-1 py-2.5 rounded-[12px] text-xs font-bold text-white btn-spring transition-colors duration-300" style="background-color: var(--accent-primary);"><i class="fas fa-plus mr-1"></i> 課堂</button>
+                        <button onclick="addSmartRow('break')" class="flex-1 py-2.5 rounded-[12px] text-xs font-bold bg-[var(--surface-inset)] btn-spring">小息</button>
+                        <button onclick="addSmartRow('lunch')" class="flex-1 py-2.5 rounded-[12px] text-xs font-bold bg-[var(--surface-inset)] btn-spring">午膳</button>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- VIEW: SUBJECTS (Evolution Upgrade) -->
-        <section id="view-subjects" class="app-view max-w-4xl mx-auto space-y-8">
-            <div class="glass-card p-6 md:p-8 relative overflow-hidden">
-                <div class="flex justify-between items-center mb-6 relative z-10">
-                    <h3 class="text-sm font-black uppercase tracking-widest opacity-50">建立新科目</h3>
-                    <button type="button" onclick="resetDefaultSubjects()" class="text-[11px] font-bold btn-spring px-3 py-1.5 rounded-full transition-colors duration-300" style="color: var(--accent-primary); background-color: var(--accent-10);"><i class="fas fa-undo mr-1.5"></i>還原預設</button>
+        <!-- VIEW: SUBJECTS -->
+        <section id="view-subjects" class="app-view max-w-4xl mx-auto space-y-6">
+            <h2 class="text-xl font-black tracking-tight px-1">科目管理</h2>
+            <div class="ios-card p-5 md:p-6 relative overflow-hidden">
+                <div class="flex justify-between items-center mb-5 relative z-10">
+                    <h3 class="text-xs font-bold uppercase tracking-widest opacity-50">建立新科目</h3>
+                    <button type="button" onclick="resetDefaultSubjects()" class="text-[10px] font-bold btn-spring px-2.5 py-1 rounded-full transition-colors duration-300" style="color: var(--accent-primary); background-color: var(--accent-10);"><i class="fas fa-undo mr-1"></i>預設</button>
                 </div>
                 
-                <div class="flex flex-col md:flex-row gap-4 mb-5 relative z-10">
-                    <div class="beautiful-input-group flex-1 flex items-center px-3">
-                        <i class="fas fa-book opacity-80 mr-2 transition-colors duration-300" style="color: var(--accent-primary);"></i>
-                        <input type="text" id="new-subject-name" class="beautiful-input !px-2" placeholder="輸入科目名稱 (如: 歷史、化學...)">
+                <div class="flex flex-col md:flex-row gap-3 mb-4 relative z-10">
+                    <div class="ios-input-group flex-1 flex items-center px-3 py-1">
+                        <i class="fas fa-book opacity-40 mr-2 text-sm"></i>
+                        <input type="text" id="new-subject-name" class="ios-input text-sm" placeholder="輸入科目名稱 (如: 歷史...)">
                     </div>
-                    <button onclick="addSubject()" class="w-full md:w-auto px-8 py-3.5 rounded-[16px] font-black text-sm text-[var(--accent-text)] btn-spring shadow-lg shrink-0 transition-colors duration-300" style="background-color: var(--accent-primary);">
-                        <i class="fas fa-plus mr-2"></i>新增
+                    <button onclick="addSubject()" class="w-full md:w-auto px-6 py-2.5 rounded-[12px] font-bold text-sm btn-primary btn-spring shrink-0">
+                        新增
                     </button>
                 </div>
                 
-                <div class="bg-[var(--bg-color)] p-4 md:p-5 rounded-[20px] relative z-10">
-                    <p class="text-[10px] font-bold uppercase tracking-wider mb-3 opacity-60"><i class="fas fa-palette mr-1.5"></i>選擇專屬顏色</p>
-                    <div class="flex flex-wrap gap-3" id="subject-color-picker"></div>
+                <div class="bg-[var(--surface-inset)] p-3.5 rounded-[16px] relative z-10">
+                    <p class="text-[9px] font-bold uppercase tracking-wider mb-2.5 opacity-60">選擇專屬顏色</p>
+                    <div class="flex flex-wrap gap-2.5" id="subject-color-picker"></div>
                     <input type="hidden" id="new-subject-color" value="#FFB3BA">
                 </div>
             </div>
 
             <div>
-                <div class="flex items-center mb-4 px-2">
-                    <h3 class="text-sm font-black opacity-80 uppercase tracking-widest">已啟用科目</h3>
-                    <span id="enabled-sub-count" class="ml-3 text-[var(--accent-text)] px-2 py-0.5 rounded-full text-[10px] font-bold shadow-sm transition-colors duration-300" style="background-color: var(--accent-primary);">0</span>
+                <div class="flex items-center mb-3 px-1">
+                    <h3 class="text-xs font-bold opacity-80 uppercase tracking-widest">已啟用科目</h3>
+                    <span id="enabled-sub-count" class="ml-2 text-[var(--accent-text)] px-1.5 py-0.5 rounded-full text-[9px] font-bold shadow-sm transition-colors duration-300" style="background-color: var(--accent-primary);">0</span>
                 </div>
-                <div id="subjects-list-enabled" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                <div id="subjects-list-enabled" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
             </div>
             
-            <div class="pt-6 border-t border-[var(--border-color)]">
-                <h3 class="text-xs font-bold mb-4 px-2 opacity-40 uppercase tracking-widest">已隱藏科目 (不顯示於選單)</h3>
-                <div id="subjects-list-disabled" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            <div class="pt-5 border-t border-[var(--border-color)]">
+                <h3 class="text-[10px] font-bold mb-3 px-1 opacity-40 uppercase tracking-widest">已隱藏科目</h3>
+                <div id="subjects-list-disabled" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
             </div>
         </section>
 
         <!-- VIEW: SETTINGS -->
-        <section id="view-settings" class="app-view max-w-2xl mx-auto space-y-6">
+        <section id="view-settings" class="app-view max-w-2xl mx-auto space-y-5">
+            <h2 class="text-xl font-black tracking-tight px-1">設定</h2>
             
             <!-- 帳戶卡片 -->
-            <div class="glass-card p-5 flex items-center justify-between">
-                <div class="flex items-center gap-4">
-                    <img id="settings-avatar" src="" class="w-14 h-14 rounded-full object-cover shadow-sm border-2 border-[var(--border-color)]">
+            <div class="ios-card p-4 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <img id="settings-avatar" src="" class="w-12 h-12 rounded-full object-cover shadow-sm border border-[var(--border-color)]">
                     <div>
-                        <h3 id="settings-name" class="text-lg font-black"></h3>
-                        <p id="settings-email" class="text-xs opacity-50 font-bold"></p>
+                        <h3 id="settings-name" class="text-base font-black"></h3>
+                        <p id="settings-email" class="text-[10px] opacity-50 font-bold"></p>
                     </div>
                 </div>
-                <button onclick="handleLogout()" class="w-10 h-10 rounded-full flex items-center justify-center btn-spring" style="color: var(--danger-color); background-color: var(--danger-10);"><i class="fas fa-sign-out-alt"></i></button>
             </div>
 
             <!-- 外觀設定 -->
-            <div class="glass-card overflow-hidden">
-                <div class="p-4 bg-[var(--border-color)]/30 border-b border-[var(--border-color)]">
-                    <h3 class="text-[10px] font-black uppercase tracking-widest opacity-50"><i class="fas fa-paint-brush mr-2"></i>外觀設定</h3>
+            <div class="ios-card overflow-hidden">
+                <div class="p-3 bg-[var(--surface-inset)] border-b border-[var(--border-color)]">
+                    <h3 class="text-[9px] font-bold uppercase tracking-widest opacity-50">外觀設定</h3>
                 </div>
-                <div class="p-5 flex justify-between items-center border-b border-[var(--border-color)]">
+                <div class="p-4 flex justify-between items-center border-b border-[var(--border-color)]">
                     <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-full bg-gray-800 text-white flex items-center justify-center shadow-sm"><i class="fas fa-moon text-xs"></i></div>
+                        <div class="w-7 h-7 rounded-full bg-[#1c1c1e] text-white flex items-center justify-center shadow-sm"><i class="fas fa-moon text-[10px]"></i></div>
                         <div>
-                            <span class="text-sm font-bold block mb-0.5">深色模式</span>
-                            <span class="text-[10px] opacity-50 block">沉浸式深黑介面</span>
+                            <span class="text-[13px] font-bold block">深色模式</span>
                         </div>
                     </div>
-                    <label class="ios-toggle scale-90 origin-right"><input type="checkbox" id="dark-mode-toggle" onchange="toggleDarkMode(this.checked)"><div class="toggle-track"><div class="toggle-thumb"></div></div></label>
+                    <label class="ios-toggle scale-[0.8] origin-right"><input type="checkbox" id="dark-mode-toggle" onchange="toggleDarkMode(this.checked)"><div class="toggle-track"><div class="toggle-thumb"></div></div></label>
                 </div>
-                <div id="theme-color-section" class="p-5">
-                    <span class="text-xs font-bold block mb-4 opacity-70">介面強調色彩 (馬卡龍色系)</span>
-                    <div class="flex gap-4 flex-wrap">
-                        <button onclick="setThemeColor('macaron-blue')" class="w-10 h-10 rounded-full shadow-sm theme-btn btn-spring border-2" data-color="macaron-blue" style="background-color: #7baaf7;"></button>
-                        <button onclick="setThemeColor('macaron-green')" class="w-10 h-10 rounded-full shadow-sm theme-btn btn-spring border-2" data-color="macaron-green" style="background-color: #7bc9a6;"></button>
-                        <button onclick="setThemeColor('macaron-pink')" class="w-10 h-10 rounded-full shadow-sm theme-btn btn-spring border-2" data-color="macaron-pink" style="background-color: #f391a0;"></button>
-                        <button onclick="setThemeColor('macaron-purple')" class="w-10 h-10 rounded-full shadow-sm theme-btn btn-spring border-2" data-color="macaron-purple" style="background-color: #b491c8;"></button>
-                        <button onclick="setThemeColor('macaron-peach')" class="w-10 h-10 rounded-full shadow-sm theme-btn btn-spring border-2" data-color="macaron-peach" style="background-color: #f3a683;"></button>
+                <div id="theme-color-section" class="p-4">
+                    <span class="text-[11px] font-bold block mb-3 opacity-80">介面強調色彩</span>
+                    <div class="flex gap-3 flex-wrap">
+                        <button onclick="setThemeColor('macaron-blue')" class="w-8 h-8 rounded-full shadow-sm theme-btn btn-spring border-2" data-color="macaron-blue" style="background-color: #7baaf7;"></button>
+                        <button onclick="setThemeColor('macaron-green')" class="w-8 h-8 rounded-full shadow-sm theme-btn btn-spring border-2" data-color="macaron-green" style="background-color: #7bc9a6;"></button>
+                        <button onclick="setThemeColor('macaron-pink')" class="w-8 h-8 rounded-full shadow-sm theme-btn btn-spring border-2" data-color="macaron-pink" style="background-color: #f391a0;"></button>
+                        <button onclick="setThemeColor('macaron-purple')" class="w-8 h-8 rounded-full shadow-sm theme-btn btn-spring border-2" data-color="macaron-purple" style="background-color: #b491c8;"></button>
+                        <button onclick="setThemeColor('macaron-peach')" class="w-8 h-8 rounded-full shadow-sm theme-btn btn-spring border-2" data-color="macaron-peach" style="background-color: #f3a683;"></button>
                     </div>
                 </div>
             </div>
 
             <!-- 其他系統操作 -->
-            <div class="glass-card overflow-hidden">
-                <div class="p-4 bg-[var(--border-color)]/30 border-b border-[var(--border-color)]">
-                    <h3 class="text-[10px] font-black uppercase tracking-widest opacity-50"><i class="fas fa-cogs mr-2"></i>系統操作</h3>
+            <div class="ios-card overflow-hidden">
+                <div class="p-3 bg-[var(--surface-inset)] border-b border-[var(--border-color)]">
+                    <h3 class="text-[9px] font-bold uppercase tracking-widest opacity-50">系統操作</h3>
                 </div>
-                <button onclick="confirmClearHistory()" class="w-full p-5 flex justify-between items-center btn-spring text-left hover:bg-[var(--surface-hover)] transition-colors">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-full flex items-center justify-center" style="color: var(--danger-color); background-color: var(--danger-10);"><i class="fas fa-trash-alt text-xs"></i></div>
-                        <span class="text-sm font-bold" style="color: var(--danger-color);">清空所有歷史紀錄</span>
-                    </div>
+                <button onclick="confirmClearHistory()" class="w-full p-4 flex justify-between items-center btn-spring text-left hover:bg-[var(--surface-inset)] transition-colors border-b border-[var(--border-color)]">
+                    <span class="text-[13px] font-bold" style="color: var(--danger-color);">清空歷史紀錄</span>
+                    <i class="fas fa-chevron-right text-[10px] opacity-30"></i>
+                </button>
+                <button onclick="handleLogout()" class="w-full p-4 flex justify-between items-center btn-spring text-left hover:bg-[var(--surface-inset)] transition-colors">
+                    <span class="text-[13px] font-bold" style="color: var(--danger-color);">登出帳號</span>
                     <i class="fas fa-chevron-right text-[10px] opacity-30"></i>
                 </button>
             </div>
         </section>
 
         <!-- VIEW: ADMIN -->
-        <section id="view-admin" class="app-view space-y-6 max-w-4xl mx-auto">
-            <div class="flex gap-2 scroll-smooth-x pb-2 border-b border-[var(--border-color)]">
-                <button class="admin-tab-btn custom-chip selected text-xs btn-spring" onclick="switchAdminTab('overview')">概覽</button>
-                <button class="admin-tab-btn custom-chip text-xs btn-spring" onclick="switchAdminTab('users')">用戶</button>
-                <button class="admin-tab-btn custom-chip text-xs btn-spring" onclick="switchAdminTab('broadcasts')">廣播</button>
-                <button class="admin-tab-btn custom-chip text-xs btn-spring" onclick="switchAdminTab('settings')">設定</button>
+        <section id="view-admin" class="app-view space-y-5 max-w-4xl mx-auto">
+            <h2 class="text-xl font-black tracking-tight px-1">控制中心</h2>
+            <div class="ios-segmented-control w-full overflow-x-auto">
+                <button class="ios-segment-btn active min-w-[70px]" onclick="switchAdminTab('overview')">概覽</button>
+                <button class="ios-segment-btn min-w-[70px]" onclick="switchAdminTab('users')">用戶</button>
+                <button class="ios-segment-btn min-w-[70px]" onclick="switchAdminTab('broadcasts')">廣播</button>
+                <button class="ios-segment-btn min-w-[70px]" onclick="switchAdminTab('settings')">設定</button>
             </div>
 
             <div id="admin-tab-overview" class="admin-tab-content space-y-4">
-                <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    <div class="glass-card p-5 text-white border-none transition-colors duration-300" style="background-color: var(--accent-primary);">
-                        <p class="text-xs font-bold mb-2 opacity-70">總用戶</p>
-                        <h3 id="admin-stat-users" class="text-4xl font-black">0</h3>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    <div class="ios-card p-4 text-white border-none transition-colors duration-300" style="background-color: var(--accent-primary);">
+                        <p class="text-[10px] font-bold mb-1.5 opacity-80">總用戶</p>
+                        <h3 id="admin-stat-users" class="text-3xl font-black">0</h3>
                     </div>
-                    <div class="glass-card p-5">
-                        <p class="text-xs font-bold mb-2 opacity-50">活躍 (24h)</p>
-                        <h3 id="admin-stat-active" class="text-4xl font-black transition-colors duration-300" style="color: var(--accent-primary);">0</h3>
+                    <div class="ios-card p-4">
+                        <p class="text-[10px] font-bold mb-1.5 opacity-50">活躍 (24h)</p>
+                        <h3 id="admin-stat-active" class="text-3xl font-black transition-colors duration-300" style="color: var(--accent-primary);">0</h3>
                     </div>
-                    <div class="glass-card p-5 col-span-2 md:col-span-1 border-l-4 border-orange-500">
-                        <p class="text-xs font-bold mb-2 opacity-50">廣播任務</p>
-                        <h3 id="admin-stat-broadcasts" class="text-4xl font-black text-orange-500">0</h3>
+                    <div class="ios-card p-4 col-span-2 md:col-span-1">
+                        <p class="text-[10px] font-bold mb-1.5 opacity-50">廣播任務</p>
+                        <h3 id="admin-stat-broadcasts" class="text-3xl font-black text-orange-500">0</h3>
                     </div>
                 </div>
             </div>
 
             <div id="admin-tab-users" class="admin-tab-content space-y-4" style="display: none;">
-                <div class="beautiful-input-group flex items-center px-4">
-                    <i class="fas fa-search opacity-80 mr-2 transition-colors duration-300" style="color: var(--accent-primary);"></i>
-                    <input type="text" id="admin-user-search" onkeyup="renderAdminUsers()" class="beautiful-input !px-0" placeholder="搜尋用戶...">
+                <div class="ios-input-group flex items-center px-3 py-1">
+                    <i class="fas fa-search opacity-40 mr-2 text-sm transition-colors duration-300"></i>
+                    <input type="text" id="admin-user-search" onkeyup="renderAdminUsers()" class="ios-input text-sm" placeholder="搜尋用戶...">
                 </div>
-                <div id="admin-users-list" class="space-y-3"></div>
+                <div id="admin-users-list" class="space-y-2.5"></div>
             </div>
 
-            <div id="admin-tab-broadcasts" class="admin-tab-content space-y-5" style="display: none;">
-                <div class="flex gap-4">
-                    <button class="flex-1 py-4 rounded-[16px] bg-[var(--bg-color)] font-bold text-sm btn-spring transition-colors duration-300" style="color: var(--accent-primary);" onclick="switchView('timetable'); toggleTimetableMode(true);"><i class="fas fa-calendar-alt mr-2 opacity-50"></i>全校時間表</button>
-                    <button class="flex-1 py-4 rounded-[16px] text-white font-bold text-sm btn-spring transition-colors duration-300" style="background-color: var(--accent-primary);" onclick="switchView('home'); document.getElementById('task-content').focus();"><i class="fas fa-plus mr-2"></i>新增廣播</button>
+            <div id="admin-tab-broadcasts" class="admin-tab-content space-y-4" style="display: none;">
+                <div class="flex gap-3">
+                    <button class="flex-1 py-3 rounded-[14px] bg-[var(--surface-color)] border border-[var(--border-color)] font-bold text-xs btn-spring transition-colors duration-300 shadow-sm" style="color: var(--accent-primary);" onclick="switchView('timetable'); toggleTimetableMode(true);"><i class="fas fa-calendar-alt mr-1.5 opacity-50"></i>時間表</button>
+                    <button class="flex-1 py-3 rounded-[14px] btn-primary font-bold text-xs btn-spring" onclick="switchView('home'); document.getElementById('task-content').focus();"><i class="fas fa-plus mr-1.5"></i>新增廣播</button>
                 </div>
-                <div id="admin-broadcast-list" class="space-y-4"></div>
+                <div id="admin-broadcast-list" class="space-y-3"></div>
             </div>
 
-            <div id="admin-tab-settings" class="admin-tab-content space-y-6" style="display: none;">
-                <div class="glass-card p-6">
-                    <h3 class="text-sm font-black mb-5">全域設定</h3>
-                    <div class="space-y-5">
+            <div id="admin-tab-settings" class="admin-tab-content space-y-5" style="display: none;">
+                <div class="ios-card p-5">
+                    <h3 class="text-xs font-black mb-4">全域設定</h3>
+                    <div class="space-y-4">
                         <div class="flex justify-between items-center">
-                            <div><span class="text-sm font-bold block mb-1">自動清理</span><span class="text-[10px] opacity-50">刪除超過3天的歷史</span></div>
-                            <label class="ios-toggle"><input type="checkbox" id="admin-autoclean-toggle" onchange="toggleAdminSetting('autoClean', this.checked)"><div class="toggle-track"><div class="toggle-thumb"></div></div></label>
+                            <div><span class="text-[13px] font-bold block mb-0.5">自動清理</span><span class="text-[9px] opacity-50">刪除超過3天的歷史</span></div>
+                            <label class="ios-toggle scale-[0.8] origin-right"><input type="checkbox" id="admin-autoclean-toggle" onchange="toggleAdminSetting('autoClean', this.checked)"><div class="toggle-track"><div class="toggle-thumb"></div></div></label>
                         </div>
                         <div class="flex justify-between items-center">
-                            <div><span class="text-sm font-bold text-[var(--danger-color)] block mb-1">維護模式</span><span class="text-[10px] opacity-50">暫停所有學生登入</span></div>
-                            <label class="ios-toggle"><input type="checkbox" id="admin-maint-toggle" onchange="setMaintenanceMode(this.checked ? 'maintenance' : 'online')"><div class="toggle-track"><div class="toggle-thumb"></div></div></label>
+                            <div><span class="text-[13px] font-bold text-[var(--danger-color)] block mb-0.5">維護模式</span><span class="text-[9px] opacity-50">暫停所有學生登入</span></div>
+                            <label class="ios-toggle scale-[0.8] origin-right"><input type="checkbox" id="admin-maint-toggle" onchange="setMaintenanceMode(this.checked ? 'maintenance' : 'online')"><div class="toggle-track"><div class="toggle-thumb"></div></div></label>
                         </div>
                         <div>
-                            <span class="text-xs font-bold block mb-2 opacity-60">跑馬燈公告</span>
-                            <div class="beautiful-input-group flex items-center px-2">
-                                <input type="text" id="admin-marquee-input" class="beautiful-input" placeholder="輸入公告內容...">
-                                <button onclick="publishMarquee()" class="px-4 py-2 rounded-[12px] text-white font-bold text-xs btn-spring mr-1 transition-colors duration-300" style="background-color: var(--accent-primary);">發佈</button>
-                                <button onclick="clearMarquee()" class="w-10 h-10 flex items-center justify-center rounded-[12px] bg-[var(--bg-color)] font-bold text-xs btn-spring"><i class="fas fa-trash-alt opacity-50 text-red-500"></i></button>
+                            <span class="text-[11px] font-bold block mb-2 opacity-60">跑馬燈公告</span>
+                            <div class="ios-input-group flex items-center px-2 py-1">
+                                <input type="text" id="admin-marquee-input" class="ios-input text-sm" placeholder="公告內容...">
+                                <button onclick="publishMarquee()" class="px-3 py-1.5 rounded-[8px] text-white font-bold text-[11px] btn-spring mr-1 transition-colors duration-300" style="background-color: var(--accent-primary);">發佈</button>
+                                <button onclick="clearMarquee()" class="w-7 h-7 flex items-center justify-center rounded-[8px] bg-[var(--surface-inset)] font-bold text-[11px] btn-spring"><i class="fas fa-trash-alt opacity-50 text-red-500"></i></button>
                             </div>
                         </div>
                     </div>
@@ -672,159 +695,170 @@
     </main>
 
     <!-- Login Screen -->
-    <div id="login-screen" class="fixed inset-0 z-[200] flex flex-col items-center justify-center p-5 bg-[var(--bg-color)]">
-        <div class="w-full max-w-sm glass-card p-10 flex flex-col items-center border-none shadow-2xl">
-            <div class="w-16 h-16 rounded-[20px] text-[var(--accent-text)] flex items-center justify-center text-3xl mb-6 shadow-xl transition-colors duration-300" style="background-color: var(--accent-primary);"><i class="fas fa-layer-group"></i></div>
-            <h2 class="text-2xl font-black mb-2 tracking-tight">智慧電子手冊</h2>
-            <p class="text-xs mb-8 font-bold opacity-40 uppercase tracking-widest">Smart E-Handbook</p>
+    <div id="login-screen" class="fixed inset-0 z-[200] flex flex-col items-center justify-center p-4 bg-[var(--bg-color)]">
+        <div class="w-full max-w-sm ios-card p-8 flex flex-col items-center border-none shadow-xl">
+            <div class="w-14 h-14 rounded-[16px] text-[var(--accent-text)] flex items-center justify-center text-2xl mb-5 shadow-lg transition-colors duration-300" style="background-color: var(--accent-primary);"><i class="fas fa-layer-group"></i></div>
+            <h2 class="text-xl font-black mb-1.5 tracking-tight">智慧電子手冊</h2>
+            <p class="text-[10px] mb-6 font-bold opacity-40 uppercase tracking-widest">Smart E-Handbook</p>
             
-            <div class="w-full space-y-4 mb-8">
-                <div class="beautiful-input-group flex items-center px-4"><i class="fas fa-envelope opacity-60 mr-3 transition-colors duration-300" style="color: var(--accent-primary);"></i><input type="email" id="auth-email" class="beautiful-input !px-0" placeholder="電郵地址"></div>
-                <div class="beautiful-input-group flex items-center px-4"><i class="fas fa-lock opacity-60 mr-3 transition-colors duration-300" style="color: var(--accent-primary);"></i><input type="password" id="auth-pwd" class="beautiful-input !px-0" placeholder="密碼 (最少 6 位)"></div>
-                <div class="flex gap-3 pt-2">
-                    <button onclick="loginEmail()" class="flex-1 py-3.5 rounded-[16px] font-black text-sm text-[var(--accent-text)] btn-spring shadow-lg transition-colors duration-300" style="background-color: var(--accent-primary);">登入</button>
-                    <button onclick="registerEmail()" class="flex-1 py-3.5 rounded-[16px] font-bold text-sm bg-[var(--bg-color)] btn-spring transition-colors duration-300" style="color: var(--accent-primary);">註冊</button>
+            <div class="w-full space-y-3 mb-6">
+                <div class="ios-input-group flex items-center px-3 py-1"><i class="fas fa-envelope opacity-40 mr-2 text-sm"></i><input type="email" id="auth-email" class="ios-input text-sm" placeholder="電郵地址"></div>
+                <div class="ios-input-group flex items-center px-3 py-1"><i class="fas fa-lock opacity-40 mr-2 text-sm"></i><input type="password" id="auth-pwd" class="ios-input text-sm" placeholder="密碼 (最少 6 位)"></div>
+                <div class="flex gap-2 pt-1">
+                    <button onclick="loginEmail()" class="flex-1 py-3 rounded-[12px] font-black text-sm btn-primary btn-spring">登入</button>
+                    <button onclick="registerEmail()" class="flex-1 py-3 rounded-[12px] font-bold text-sm bg-[var(--surface-inset)] btn-spring transition-colors duration-300">註冊</button>
                 </div>
             </div>
 
-            <div class="w-full space-y-3">
-                <button onclick="loginGoogle()" class="w-full flex items-center justify-center gap-3 bg-[var(--surface-color)] border border-[var(--border-color)] font-bold py-3.5 rounded-[16px] text-sm btn-spring shadow-sm">
-                    <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5"> 繼續使用 Google
+            <div class="w-full space-y-2.5">
+                <button onclick="loginGoogle()" class="w-full flex items-center justify-center gap-2 bg-[var(--surface-color)] border border-[var(--border-color)] font-bold py-3 rounded-[12px] text-xs btn-spring shadow-sm">
+                    <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-4 h-4"> Google 登入
                 </button>
-                <button onclick="loginAnon()" class="w-full font-bold py-3 text-xs opacity-50 hover:opacity-100 transition-opacity">訪客預覽</button>
+                <button onclick="loginAnon()" class="w-full font-bold py-2 text-[11px] opacity-50 hover:opacity-100 transition-opacity">訪客預覽</button>
             </div>
         </div>
     </div>
 
     <!-- Dashboard Detail Modal -->
     <div id="dashboard-modal" class="modern-modal-overlay fixed inset-0">
-        <div class="modern-modal-content w-full max-w-lg p-6 md:p-8">
-            <div class="flex justify-between items-center mb-6 border-b border-[var(--border-color)] pb-4">
-                <div class="flex items-center gap-3">
-                    <div id="dash-modal-icon" class="w-10 h-10 rounded-full flex items-center justify-center text-lg shadow-sm"></div>
-                    <h3 id="dash-modal-title" class="text-xl font-black"></h3>
+        <div class="modern-modal-content w-full max-w-lg p-5 md:p-6">
+            <div class="flex justify-between items-center mb-4 border-b border-[var(--border-color)] pb-3">
+                <div class="flex items-center gap-2.5">
+                    <div id="dash-modal-icon" class="w-8 h-8 rounded-full flex items-center justify-center text-sm shadow-sm"></div>
+                    <h3 id="dash-modal-title" class="text-lg font-black"></h3>
                 </div>
-                <button onclick="closeModal('dashboard-modal')" class="w-10 h-10 rounded-full bg-[var(--bg-color)] btn-spring flex items-center justify-center text-gray-500 hover:bg-gray-200"><i class="fas fa-times"></i></button>
+                <button onclick="closeModal('dashboard-modal')" class="w-8 h-8 rounded-full bg-[var(--surface-inset)] btn-spring flex items-center justify-center text-[var(--text-secondary)]"><i class="fas fa-times text-xs"></i></button>
             </div>
-            <div id="dash-modal-list" class="task-list-container space-y-4 flex-1"></div>
+            <div id="dash-modal-list" class="task-list-container space-y-3 flex-1"></div>
         </div>
     </div>
 
     <!-- Edit Task Modal -->
     <div id="edit-modal" class="modern-modal-overlay fixed inset-0">
-        <div class="modern-modal-content w-full max-w-md p-6 md:p-8">
-            <h3 class="text-xl font-black mb-6">修改任務</h3>
-            <div class="space-y-5">
+        <div class="modern-modal-content w-full max-w-sm p-6">
+            <h3 class="text-lg font-black mb-4">修改任務</h3>
+            <div class="space-y-4">
                 <div>
-                    <p class="text-[10px] font-bold uppercase opacity-50 mb-2">更改科目</p>
-                    <div id="subject-chips-edit" class="flex gap-2 scroll-smooth-x pb-2"></div>
+                    <p class="text-[9px] font-bold uppercase opacity-50 mb-1.5">更改科目</p>
+                    <div id="subject-chips-edit" class="flex gap-2 scroll-smooth-x pb-1"></div>
                     <input type="hidden" id="edit-subject">
                 </div>
-                <div class="beautiful-input-group"><textarea id="edit-content" rows="3" class="beautiful-input resize-none" placeholder="內容"></textarea></div>
-                <div class="beautiful-input-group flex items-center px-4"><i class="fas fa-link opacity-50 mr-3 transition-colors duration-300" style="color: var(--accent-primary);"></i><input type="url" id="edit-url" class="beautiful-input !px-0" placeholder="附加連結"></div>
-                <div class="beautiful-input-group flex items-center px-4"><i class="far fa-calendar opacity-50 mr-3 transition-colors duration-300" style="color: var(--accent-primary);"></i><input type="date" id="edit-date" class="beautiful-input !px-0"></div>
+                <div class="ios-input-group py-1"><textarea id="edit-content" rows="3" class="ios-input resize-none text-sm" placeholder="內容"></textarea></div>
+                <div class="ios-input-group flex items-center px-3 py-1"><i class="fas fa-link opacity-40 mr-2 text-sm"></i><input type="url" id="edit-url" class="ios-input text-sm" placeholder="附加連結"></div>
+                <div class="ios-input-group flex items-center px-3 py-1"><i class="far fa-calendar opacity-40 mr-2 text-sm"></i><input type="date" id="edit-date" class="ios-input text-sm"></div>
             </div>
-            <div class="flex gap-3 mt-8">
-                <button onclick="closeModal('edit-modal')" class="flex-1 py-4 rounded-[16px] font-bold text-sm bg-[var(--bg-color)] btn-spring">取消</button>
-                <button onclick="saveEditTask()" class="flex-1 py-4 rounded-[16px] font-black text-sm text-white btn-spring shadow-lg transition-colors duration-300" style="background-color: var(--accent-primary);">儲存變更</button>
+            <div class="flex gap-2 mt-6">
+                <button onclick="closeModal('edit-modal')" class="flex-1 py-3 rounded-[12px] font-bold text-xs bg-[var(--surface-inset)] btn-spring">取消</button>
+                <button onclick="saveEditTask()" class="flex-1 py-3 rounded-[12px] font-black text-xs btn-primary btn-spring">儲存</button>
             </div>
         </div>
     </div>
 
     <!-- Edit Subject Modal -->
     <div id="edit-subject-modal" class="modern-modal-overlay fixed inset-0">
-        <div class="modern-modal-content w-full max-w-sm p-6 md:p-8">
-            <h3 class="text-xl font-black mb-6">編輯科目</h3>
-            <div class="space-y-5">
-                <div class="beautiful-input-group flex items-center px-3">
-                    <i class="fas fa-pen opacity-80 mr-2 transition-colors duration-300" style="color: var(--accent-primary);"></i>
-                    <input type="text" id="edit-sub-name" class="beautiful-input !px-2" placeholder="科目名稱">
+        <div class="modern-modal-content w-full max-w-sm p-6">
+            <h3 class="text-lg font-black mb-4">編輯科目</h3>
+            <div class="space-y-4">
+                <div class="ios-input-group flex items-center px-3 py-1">
+                    <i class="fas fa-pen opacity-40 mr-2 text-sm"></i>
+                    <input type="text" id="edit-sub-name" class="ios-input text-sm" placeholder="科目名稱">
                 </div>
-                <div class="bg-[var(--bg-color)] p-4 rounded-[16px]">
-                    <p class="text-[10px] font-bold uppercase tracking-wider mb-3 opacity-60">更換專屬顏色</p>
-                    <div class="flex flex-wrap gap-2.5" id="edit-subject-color-picker"></div>
+                <div class="bg-[var(--surface-inset)] p-3.5 rounded-[16px]">
+                    <p class="text-[9px] font-bold uppercase tracking-wider mb-2 opacity-60">更換專屬顏色</p>
+                    <div class="flex flex-wrap gap-2" id="edit-subject-color-picker"></div>
                     <input type="hidden" id="edit-sub-color">
                     <input type="hidden" id="edit-sub-id">
                 </div>
             </div>
-            <div class="flex gap-3 mt-8">
-                <button onclick="closeModal('edit-subject-modal')" class="flex-1 py-3.5 rounded-[16px] font-bold text-sm bg-[var(--bg-color)] btn-spring text-[var(--text-secondary)]">取消</button>
-                <button onclick="saveEditSubject()" class="flex-1 py-3.5 rounded-[16px] font-black text-sm text-white btn-spring shadow-md transition-colors duration-300" style="background-color: var(--accent-primary);">儲存設定</button>
+            <div class="flex gap-2 mt-6">
+                <button onclick="closeModal('edit-subject-modal')" class="flex-1 py-3 rounded-[12px] font-bold text-xs bg-[var(--surface-inset)] btn-spring text-[var(--text-secondary)]">取消</button>
+                <button onclick="saveEditSubject()" class="flex-1 py-3 rounded-[12px] font-black text-xs btn-primary btn-spring">儲存</button>
             </div>
         </div>
     </div>
 
     <!-- Custom Confirm Dialog -->
     <div id="custom-dialog" class="modern-modal-overlay fixed inset-0">
-        <div class="modern-modal-content w-full max-w-xs p-8 text-center">
-            <div id="dialog-icon" class="w-16 h-16 rounded-full mx-auto flex items-center justify-center text-3xl mb-6"></div>
-            <h3 id="dialog-title" class="text-xl font-black mb-2"></h3>
-            <p id="dialog-message" class="text-sm mb-8 opacity-60 leading-relaxed"></p>
-            <div class="flex gap-3">
-                <button id="dialog-cancel" class="flex-1 py-3.5 rounded-[16px] font-bold text-sm bg-[var(--bg-color)] btn-spring hidden">取消</button>
-                <button id="dialog-confirm" class="flex-1 py-3.5 rounded-[16px] font-black text-sm text-white btn-spring shadow-md transition-colors duration-300" style="background-color: var(--accent-primary);">確認</button>
+        <div class="modern-modal-content w-full max-w-xs p-6 text-center">
+            <div id="dialog-icon" class="w-12 h-12 rounded-full mx-auto flex items-center justify-center text-2xl mb-4"></div>
+            <h3 id="dialog-title" class="text-base font-black mb-1.5"></h3>
+            <p id="dialog-message" class="text-[11px] mb-6 opacity-60 leading-relaxed"></p>
+            <div class="flex gap-2">
+                <button id="dialog-cancel" class="flex-1 py-3 rounded-[12px] font-bold text-xs bg-[var(--surface-inset)] btn-spring hidden">取消</button>
+                <button id="dialog-confirm" class="flex-1 py-3 rounded-[12px] font-black text-xs btn-primary btn-spring">確認</button>
             </div>
         </div>
     </div>
 
     <!-- Timetable Cell Modal -->
     <div id="tt-cell-modal" class="modern-modal-overlay fixed inset-0">
-        <div class="modern-modal-content w-full max-w-sm p-6 text-center">
-            <h3 class="text-base font-black mb-4">填入科目</h3>
-            <div class="flex items-center justify-center gap-2 mb-4 bg-[var(--bg-color)] p-2.5 rounded-[14px]">
+        <div class="modern-modal-content w-full max-w-sm p-5 text-center">
+            <h3 class="text-sm font-black mb-3">填入科目</h3>
+            <div class="flex items-center justify-center gap-2 mb-3 bg-[var(--surface-inset)] p-2 rounded-[12px]">
                 <label class="flex items-center gap-2 cursor-pointer w-full justify-center">
-                    <input type="checkbox" id="tt-cell-apply-row" class="w-4 h-4 rounded border-gray-300">
-                    <span class="text-xs font-bold text-[var(--text-secondary)]">同時套用至本列所有日子</span>
+                    <input type="checkbox" id="tt-cell-apply-row" class="w-3.5 h-3.5 rounded border-gray-300">
+                    <span class="text-[11px] font-bold text-[var(--text-secondary)]">套用至本列所有日子</span>
                 </label>
             </div>
-            <div id="tt-cell-chips" class="flex flex-wrap justify-center gap-2 mb-5 max-h-[30vh] overflow-y-auto"></div>
-            <div class="beautiful-input-group flex items-center px-2 mb-5">
-                <input type="text" id="tt-cell-custom" class="beautiful-input" placeholder="自訂內容...">
-                <button onclick="saveTTCellCustom()" class="px-4 py-2 rounded-[12px] font-bold text-xs text-white btn-spring transition-colors duration-300" style="background-color: var(--accent-primary);">確定</button>
+            <div id="tt-cell-chips" class="flex flex-wrap justify-center gap-2 mb-4 max-h-[25vh] overflow-y-auto"></div>
+            <div class="ios-input-group flex items-center px-2 py-0.5 mb-4">
+                <input type="text" id="tt-cell-custom" class="ios-input text-xs" placeholder="自訂內容...">
+                <button onclick="saveTTCellCustom()" class="px-3 py-1.5 rounded-[8px] font-bold text-[10px] text-white btn-spring transition-colors duration-300" style="background-color: var(--accent-primary);">確定</button>
             </div>
-            <button onclick="closeModal('tt-cell-modal')" class="w-full py-3 rounded-[16px] font-bold text-sm bg-[var(--bg-color)] btn-spring">取消</button>
+            <button onclick="closeModal('tt-cell-modal')" class="w-full py-2.5 rounded-[12px] font-bold text-xs bg-[var(--surface-inset)] btn-spring">取消</button>
         </div>
     </div>
 
+    <!-- User Details Modal -->
     <div id="user-details-modal" class="modern-modal-overlay fixed inset-0">
-        <div class="modern-modal-content w-full max-w-sm p-8 relative">
-            <button onclick="closeModal('user-details-modal')" class="absolute top-5 right-5 text-xl opacity-30 hover:opacity-100 btn-spring"><i class="fas fa-times"></i></button>
-            <div class="flex items-center gap-4 mb-6 border-b border-[var(--border-color)] pb-6">
-                <img id="modal-user-avatar" src="" class="w-16 h-16 rounded-full object-cover shadow-sm">
-                <div>
-                    <h3 id="modal-user-name" class="text-lg font-black mb-1"></h3>
-                    <p id="modal-user-email" class="text-xs opacity-50 mb-2"></p>
-                    <span id="modal-user-status" class="px-2 py-1 rounded-[6px] text-[10px] font-bold"></span>
+        <div class="modern-modal-content w-full max-w-sm p-0 relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-20 transition-colors duration-300 pointer-events-none" style="background-color: var(--accent-10);"></div>
+            <button onclick="closeModal('user-details-modal')" class="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full bg-[var(--surface-color)] shadow-sm text-[var(--text-secondary)] btn-spring z-50"><i class="fas fa-times text-xs"></i></button>
+            
+            <div class="relative z-10 pt-8 pb-5 px-5">
+                <div class="flex items-center gap-3 mb-5 border-b border-[var(--border-color)] pb-5">
+                    <img id="modal-user-avatar" src="" class="w-16 h-16 rounded-full object-cover shadow-sm border-2 border-[var(--surface-color)] bg-[var(--surface-color)]">
+                    <div>
+                        <h3 id="modal-user-name" class="text-base font-black mb-0.5"></h3>
+                        <p id="modal-user-email" class="text-[10px] font-bold opacity-50 mb-1.5"></p>
+                        <span id="modal-user-status" class="px-2 py-0.5 rounded-[6px] text-[9px] font-black tracking-wider"></span>
+                    </div>
                 </div>
-            </div>
-            <div class="flex gap-4 mb-8 text-center">
-                <div class="flex-1 p-3 rounded-2xl bg-[var(--bg-color)] border border-[var(--border-color)]"><h4 id="modal-user-pending" class="text-2xl font-black mb-1 text-orange-500">0</h4><p class="text-[10px] font-bold opacity-50">待處理</p></div>
-                <div class="flex-1 p-3 rounded-2xl bg-[var(--bg-color)] border border-[var(--border-color)]"><h4 id="modal-user-completed" class="text-2xl font-black mb-1 text-green-500">0</h4><p class="text-[10px] font-bold opacity-50">已完成</p></div>
-            </div>
-            <div class="flex flex-col gap-3">
-                <button id="modal-btn-block" class="w-full py-3.5 rounded-[16px] font-bold text-sm text-[var(--danger-color)] bg-[var(--danger-color)]/10 btn-spring hidden">封鎖帳戶</button>
-                <button id="modal-btn-unblock" class="w-full py-3.5 rounded-[16px] font-bold text-sm text-green-500 bg-green-500/10 btn-spring hidden">解除封鎖</button>
+                <div class="flex gap-3 mb-5 text-center">
+                    <div class="flex-1 p-2.5 rounded-[16px] bg-[var(--surface-inset)]"><h4 id="modal-user-pending" class="text-xl font-black mb-0.5 text-orange-500">0</h4><p class="text-[9px] font-bold opacity-50 tracking-widest">待處理</p></div>
+                    <div class="flex-1 p-2.5 rounded-[16px] bg-[var(--surface-inset)]"><h4 id="modal-user-completed" class="text-xl font-black mb-0.5 text-green-500">0</h4><p class="text-[9px] font-bold opacity-50 tracking-widest">已完成</p></div>
+                </div>
+                <div class="flex flex-col gap-2">
+                    <button id="modal-btn-block" class="w-full py-3 rounded-[12px] font-black text-xs text-[var(--danger-color)] bg-[var(--danger-10)] btn-spring hidden"><i class="fas fa-ban mr-1.5"></i>封鎖帳戶</button>
+                    <button id="modal-btn-unblock" class="w-full py-3 rounded-[12px] font-black text-xs text-green-600 bg-green-500/10 btn-spring hidden"><i class="fas fa-unlock mr-1.5"></i>解除封鎖</button>
+                </div>
             </div>
             <input type="hidden" id="modal-user-email-hidden">
         </div>
     </div>
 
+    <!-- Profile Modal -->
     <div id="profile-modal" class="modern-modal-overlay fixed inset-0">
-        <div class="modern-modal-content w-full max-w-xs p-8 text-center relative">
-            <button onclick="closeModal('profile-modal')" class="absolute top-4 right-4 text-lg opacity-30 btn-spring"><i class="fas fa-times"></i></button>
-            <img id="profile-modal-avatar" src="" class="w-20 h-20 rounded-full mx-auto mb-4 object-cover shadow-md border-4 border-[var(--bg-color)]">
-            <h3 id="profile-modal-name" class="text-xl font-black mb-1 transition-colors duration-300" style="color: var(--accent-primary);"></h3>
-            <p id="profile-modal-email" class="text-xs opacity-50 mb-4"></p>
-            <div id="profile-modal-role" class="mb-6 inline-block px-3 py-1 rounded-[8px] text-[10px] font-bold transition-colors duration-300" style="color: var(--accent-primary); background-color: var(--accent-10);"></div>
-            <button onclick="handleLogout()" class="w-full py-3.5 rounded-[16px] font-bold text-sm text-[var(--danger-color)] btn-spring" style="background-color: var(--danger-10);">安全登出</button>
+        <div class="modern-modal-content w-full max-w-[280px] p-0 text-center relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-20 transition-colors duration-300 pointer-events-none" style="background-color: var(--accent-10);"></div>
+            <button onclick="closeModal('profile-modal')" class="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full bg-[var(--surface-color)] shadow-sm text-[var(--text-secondary)] btn-spring z-50"><i class="fas fa-times text-xs"></i></button>
+            
+            <div class="relative z-10 pt-10 pb-5 px-5">
+                <img id="profile-modal-avatar" src="" class="w-20 h-20 rounded-full mx-auto mb-3 object-cover shadow-md border-[3px] border-[var(--surface-color)] bg-[var(--surface-color)]">
+                <h3 id="profile-modal-name" class="text-lg font-black mb-0.5 transition-colors duration-300" style="color: var(--accent-primary);"></h3>
+                <p id="profile-modal-email" class="text-[10px] font-bold opacity-50 mb-3"></p>
+                <div id="profile-modal-role" class="mb-5 inline-block px-3 py-1 rounded-full text-[9px] font-black tracking-widest uppercase transition-colors duration-300" style="color: var(--accent-primary); background-color: var(--accent-10);"></div>
+                
+                <button onclick="handleLogout()" class="w-full py-3 rounded-[12px] font-black text-xs text-[var(--danger-color)] btn-spring transition-colors" style="background-color: var(--danger-10);">安全登出</button>
+            </div>
         </div>
     </div>
 
-    <div id="maintenance-screen" class="fixed inset-0 z-[1000] hidden flex-col items-center justify-center p-8 text-center backdrop-blur-2xl bg-[var(--bg-color)]/90">
-        <i class="fas fa-tools text-6xl mb-6 opacity-30 animate-pulse transition-colors duration-300" style="color: var(--accent-primary);"></i>
-        <h2 class="text-3xl font-black mb-3 tracking-tight">系統維護中</h2>
-        <p class="text-sm font-medium opacity-60 max-w-sm mb-10 leading-relaxed">管理員正在進行系統升級，請稍後再試。</p>
-        <button onclick="loginGoogle()" class="px-6 py-3.5 rounded-[16px] font-black text-sm text-white shadow-xl btn-spring transition-colors duration-300" style="background-color: var(--accent-primary);">管理員登入</button>
+    <div id="maintenance-screen" class="fixed inset-0 z-[1000] hidden flex-col items-center justify-center p-6 text-center backdrop-blur-2xl bg-[var(--bg-color)]/90">
+        <i class="fas fa-tools text-5xl mb-4 opacity-30 animate-pulse transition-colors duration-300" style="color: var(--accent-primary);"></i>
+        <h2 class="text-2xl font-black mb-2 tracking-tight">系統維護中</h2>
+        <p class="text-xs font-medium opacity-60 max-w-xs mb-8 leading-relaxed">管理員正在進行系統升級，請稍後再試。</p>
+        <button onclick="loginGoogle()" class="px-5 py-3 rounded-[14px] font-black text-xs text-white shadow-xl btn-spring transition-colors duration-300" style="background-color: var(--accent-primary);">管理員登入</button>
     </div>
 
     <div id="toast-container"></div>
@@ -850,42 +884,42 @@
         let adminConfig = { marquee: '', maintenance: false, autoCleanEnabled: false, whitelistEnabled: false, whitelist: ['chimhinhin@gmail.com'], blacklistEnabled: false, blacklist: [] };
         let adminUsersList = []; let systemAuditLogs = [];
 
-        // 馬卡龍粉彩色系 (Macaron Pastel Colors)
+        // 馬卡龍粉彩色系
         const subjectColors = ['#FFB3BA','#BAE1FF','#BAFFC9','#FFDFBA','#E8DFF5','#DAEAF6','#E2F0CB','#F3B0C3','#CBAACB','#FDFD96','#FFC4C4','#FFD1B3','#FFF2B2','#C4FAC7','#C4E4FF','#E2D4F0','#FAD4D8','#D0E3F0','#D9E8B8','#F0A1B7','#C09DC0','#F5F587','#E5B2C6','#B2D5D0'];
         const defaultSubjects = [
             { id: 'sub_hk_1', name: '中國語文', color: '#FFB3BA', enabled: true },
             { id: 'sub_hk_2', name: '英國語文', color: '#BAE1FF', enabled: true },
-            { id: 'sub_hk_3', name: '數學', color: '#BAFFC9', enabled: true },
-            { id: 'sub_hk_4', name: '常識', color: '#FFDFBA', enabled: true },
-            { id: 'sub_hk_5', name: '公社科', color: '#E8DFF5', enabled: true },
-            { id: 'sub_hk_6', name: '物理', color: '#DAEAF6', enabled: false },
-            { id: 'sub_hk_7', name: '化學', color: '#E2F0CB', enabled: false },
-            { id: 'sub_hk_8', name: '生物', color: '#F3B0C3', enabled: false },
-            { id: 'sub_hk_9', name: '綜合科學', color: '#CBAACB', enabled: false },
-            { id: 'sub_hk_10', name: 'ICT', color: '#FDFD96', enabled: false },
-            { id: 'sub_hk_11', name: '電腦', color: '#FFC4C4', enabled: false },
-            { id: 'sub_hk_12', name: '中國文學', color: '#FFD1B3', enabled: false },
-            { id: 'sub_hk_13', name: '經濟', color: '#FFF2B2', enabled: false },
-            { id: 'sub_hk_14', name: '地理', color: '#C4FAC7', enabled: false },
-            { id: 'sub_hk_15', name: '歷史', color: '#C4E4FF', enabled: false },
-            { id: 'sub_hk_16', name: '中國歷史', color: '#E2D4F0', enabled: false },
-            { id: 'sub_hk_17', name: '視覺藝術', color: '#FAD4D8', enabled: false },
-            { id: 'sub_hk_18', name: '音樂', color: '#D0E3F0', enabled: false },
-            { id: 'sub_hk_19', name: '體育', color: '#D9E8B8', enabled: false },
-            { id: 'sub_hk_20', name: '企會財', color: '#F0A1B7', enabled: false },
-            { id: 'sub_hk_21', name: '旅遊與款待', color: '#C09DC0', enabled: false },
-            { id: 'sub_hk_22', name: '宗教', color: '#F5F587', enabled: false },
-            { id: 'sub_hk_23', name: '家政', color: '#E5B2C6', enabled: false },
-            { id: 'sub_hk_24', name: '設計與科技', color: '#B2D5D0', enabled: false }
+            { id: 'sub_hk_3', name: '數學', color: '#10b981', enabled: true },
+            { id: 'sub_hk_4', name: '常識', color: '#f59e0b', enabled: true },
+            { id: 'sub_hk_5', name: '公社科', color: '#8b5cf6', enabled: true },
+            { id: 'sub_hk_6', name: '物理', color: '#06b6d4', enabled: false },
+            { id: 'sub_hk_7', name: '化學', color: '#ec4899', enabled: false },
+            { id: 'sub_hk_8', name: '生物', color: '#f43f5e', enabled: false },
+            { id: 'sub_hk_9', name: '綜合科學', color: '#14b8a6', enabled: false },
+            { id: 'sub_hk_10', name: 'ICT', color: '#84cc16', enabled: false },
+            { id: 'sub_hk_11', name: '電腦', color: '#6366f1', enabled: false },
+            { id: 'sub_hk_12', name: '中國文學', color: '#f97316', enabled: false },
+            { id: 'sub_hk_13', name: '經濟', color: '#0ea5e9', enabled: false },
+            { id: 'sub_hk_14', name: '地理', color: '#d946ef', enabled: false },
+            { id: 'sub_hk_15', name: '歷史', color: '#64748b', enabled: false },
+            { id: 'sub_hk_16', name: '中國歷史', color: '#ff6b6b', enabled: false },
+            { id: 'sub_hk_17', name: '視覺藝術', color: '#3b82f6', enabled: false },
+            { id: 'sub_hk_18', name: '音樂', color: '#10b981', enabled: false },
+            { id: 'sub_hk_19', name: '體育', color: '#f59e0b', enabled: false },
+            { id: 'sub_hk_20', name: '企會財', color: '#8b5cf6', enabled: false },
+            { id: 'sub_hk_21', name: '旅遊與款待', color: '#06b6d4', enabled: false },
+            { id: 'sub_hk_22', name: '宗教', color: '#ec4899', enabled: false },
+            { id: 'sub_hk_23', name: '家政', color: '#f43f5e', enabled: false },
+            { id: 'sub_hk_24', name: '設計與科技', color: '#14b8a6', enabled: false }
         ];
 
-        // 系統強調色主題引擎 (馬卡龍系)
+        // 系統強調色主題引擎
         const themeColors = { 
-            'macaron-blue': { primary: '#7baaf7', hover: '#6495ed', bg: '#f0f6ff', card: '#ffffff', darkBg: '#0f172a', darkCard: '#1e293b' }, 
-            'macaron-green': { primary: '#7bc9a6', hover: '#5eb58f', bg: '#f0fdf4', card: '#ffffff', darkBg: '#022c22', darkCard: '#064e3b' }, 
-            'macaron-pink': { primary: '#f391a0', hover: '#e27586', bg: '#fff0f3', card: '#ffffff', darkBg: '#4c0519', darkCard: '#881337' }, 
-            'macaron-purple': { primary: '#b491c8', hover: '#9b76b0', bg: '#faf5ff', card: '#ffffff', darkBg: '#2e1065', darkCard: '#4c1d95' }, 
-            'macaron-peach': { primary: '#f3a683', hover: '#df8f6c', bg: '#fff7ed', card: '#ffffff', darkBg: '#431407', darkCard: '#7c2d12' } 
+            'macaron-blue': { primary: '#7baaf7', hover: '#6495ed' }, 
+            'macaron-green': { primary: '#7bc9a6', hover: '#5eb58f' }, 
+            'macaron-pink': { primary: '#f391a0', hover: '#e27586' }, 
+            'macaron-purple': { primary: '#b491c8', hover: '#9b76b0' }, 
+            'macaron-peach': { primary: '#f3a683', hover: '#df8f6c' } 
         };
 
         let ttViewMode = 'day';
@@ -904,7 +938,7 @@
         document.getElementById('date-display-add').innerText = document.getElementById('task-date').value;
 
         // Custom UI Replacements
-        function showToast(msg) { const container = document.getElementById('toast-container'); const toast = document.createElement('div'); toast.className = `toast show`; toast.innerHTML = `<i class="fas fa-info-circle mr-2"></i>${msg}`; container.appendChild(toast); setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 400); }, 3000); } window.showToast = showToast;
+        function showToast(msg) { const container = document.getElementById('toast-container'); const toast = document.createElement('div'); toast.className = `toast show`; toast.innerHTML = `<i class="fas fa-info-circle mr-1.5"></i>${msg}`; container.appendChild(toast); setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 400); }, 3000); } window.showToast = showToast;
         function openModal(id) { document.getElementById(id).classList.add('active'); } window.openModal = openModal;
         function closeModal(id) { document.getElementById(id).classList.remove('active'); } window.closeModal = closeModal;
 
@@ -912,8 +946,8 @@
             const overlay = document.getElementById('custom-dialog'); document.getElementById('dialog-title').innerText = title; document.getElementById('dialog-message').innerText = message;
             const iconEl = document.getElementById('dialog-icon'); const confirmBtn = document.getElementById('dialog-confirm'); const cancelBtn = document.getElementById('dialog-cancel');
             cancelBtn.classList.remove('hidden');
-            if(type === 'danger') { iconEl.className = 'w-16 h-16 rounded-full mx-auto flex items-center justify-center text-2xl mb-4 text-[var(--danger-color)]'; iconEl.style.backgroundColor = 'var(--danger-10)'; iconEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i>'; confirmBtn.style.backgroundColor = 'var(--danger-color)'; confirmBtn.style.color = '#fff'; }
-            else { iconEl.className = 'w-16 h-16 rounded-full mx-auto flex items-center justify-center text-2xl mb-4 text-[var(--accent-primary)]'; iconEl.style.backgroundColor = 'var(--accent-10)'; iconEl.innerHTML = '<i class="fas fa-question"></i>'; confirmBtn.style.backgroundColor = 'var(--accent-primary)'; confirmBtn.style.color = 'var(--accent-text)'; }
+            if(type === 'danger') { iconEl.className = 'w-12 h-12 rounded-full mx-auto flex items-center justify-center text-xl mb-3 text-[var(--danger-color)]'; iconEl.style.backgroundColor = 'var(--danger-10)'; iconEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i>'; confirmBtn.className = 'flex-1 py-3 rounded-[12px] font-black text-xs text-white btn-spring shadow-md'; confirmBtn.style.background = 'var(--danger-color)'; }
+            else { iconEl.className = 'w-12 h-12 rounded-full mx-auto flex items-center justify-center text-xl mb-3 text-[var(--accent-primary)]'; iconEl.style.backgroundColor = 'var(--accent-10)'; iconEl.innerHTML = '<i class="fas fa-question"></i>'; confirmBtn.className = 'flex-1 py-3 rounded-[12px] font-black text-xs btn-primary btn-spring'; }
             confirmBtn.onclick = () => { overlay.classList.remove('active'); onConfirm(); }; cancelBtn.onclick = () => { overlay.classList.remove('active'); }; overlay.classList.add('active');
         } window.customConfirm = customConfirm;
 
@@ -927,7 +961,7 @@
             const viewTarget = document.getElementById(`view-${viewId}`); if(viewTarget) viewTarget.classList.add('active');
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             document.querySelectorAll(`.nav-item[data-target="${viewId}"]`).forEach(el => el.classList.add('active'));
-            const titles = { 'home':'主頁', 'history':'歷史紀錄', 'timetable':'時間表', 'subjects':'科目管理', 'settings':'系統設定', 'admin':'控制中心' };
+            const titles = { 'home':'主頁', 'history':'歷史紀錄', 'timetable':'時間表', 'subjects':'科目管理', 'settings':'設定', 'admin':'控制中心' };
             document.getElementById('header-title').innerText = titles[viewId] || '主頁';
             setGreeting(); window.scrollTo({top: 0, behavior: 'smooth'});
             if(viewId === 'home') renderHome(); if(viewId === 'history') renderHistory(); if(viewId === 'timetable') { renderTimetableUI(); updateTTModeChips(); }
@@ -937,23 +971,12 @@
         function applyTheme() {
             if(userSettings.isDark) { document.documentElement.setAttribute('data-theme', 'dark'); } else { document.documentElement.removeAttribute('data-theme'); }
             
-            // 動態產生全域色彩
             const tc = themeColors[userSettings.theme] || themeColors['macaron-blue'];
             document.documentElement.style.setProperty('--accent-primary', tc.primary);
             document.documentElement.style.setProperty('--accent-primary-hover', tc.hover);
             document.documentElement.style.setProperty('--accent-10', hexToRgba(tc.primary, 0.1));
             document.documentElement.style.setProperty('--accent-20', hexToRgba(tc.primary, 0.2));
             document.documentElement.style.setProperty('--accent-30', hexToRgba(tc.primary, 0.3));
-            
-            if (userSettings.isDark) {
-                document.documentElement.style.setProperty('--bg-color', tc.darkBg);
-                document.documentElement.style.setProperty('--surface-color', tc.darkCard);
-                document.documentElement.style.setProperty('--header-bg', hexToRgba(tc.darkBg, 0.85));
-            } else {
-                document.documentElement.style.setProperty('--bg-color', tc.bg);
-                document.documentElement.style.setProperty('--surface-color', tc.card);
-                document.documentElement.style.setProperty('--header-bg', hexToRgba(tc.bg, 0.85));
-            }
 
             document.getElementById('dark-mode-toggle').checked = userSettings.isDark;
             const ttCycleNode = document.getElementById('setting-tt-cycle'); if (ttCycleNode) ttCycleNode.value = userSettings.ttCycle || 5;
@@ -973,6 +996,12 @@
             });
             
             buildCustomChips(); updateTTModeChips();
+            
+            // Re-render task list segment control properly
+            const type = document.getElementById('task-type').value;
+            document.querySelectorAll('.ios-segment-btn').forEach(b => {
+               if(b.dataset.val === type) b.classList.add('active'); else b.classList.remove('active');
+            });
         } window.applyTheme = applyTheme;
 
         function setThemeColor(colorId) { userSettings.theme = colorId; applyTheme(); saveSettings(); } window.setThemeColor = setThemeColor;
@@ -991,8 +1020,8 @@
         function saveSettings() { if(currentUser) { lastSettingsSaveTime = Date.now(); setDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'settings', 'profile'), userSettings).catch(()=>{}); } } window.saveSettings = saveSettings;
 
         function setTaskType(type, btnEl) { 
-            document.querySelectorAll('.type-toggle-btn').forEach(btn => { btn.classList.remove('active', 'bg-[var(--surface-color)]', 'shadow-sm'); btn.style.color = 'var(--text-secondary)'; }); 
-            btnEl.classList.add('active', 'bg-[var(--surface-color)]', 'shadow-sm'); btnEl.style.color = 'var(--accent-primary)'; 
+            document.querySelectorAll('.ios-segment-btn[data-val]').forEach(btn => { btn.classList.remove('active'); }); 
+            btnEl.classList.add('active'); 
             document.getElementById('task-type').value = type; 
         } window.setTaskType = setTaskType;
 
@@ -1006,11 +1035,11 @@
             if (!userSettings.subjects || userSettings.subjects.length === 0) userSettings.subjects = defaultSubjects;
             
             userSettings.subjects.filter(s => s.enabled !== false).forEach(sub => {
-                const mkBtn = (name, parent, fn) => { let b = document.createElement('button'); b.type='button'; b.className='custom-chip flex-shrink-0 spring-action'; b.dataset.subject=name; b.innerHTML=`<span class="w-2.5 h-2.5 rounded-full mr-1.5" style="background-color:${sub.color}"></span>${name}`; b.onclick = fn; parent.appendChild(b); };
+                const mkBtn = (name, parent, fn) => { let b = document.createElement('button'); b.type='button'; b.className='custom-chip flex-shrink-0 spring-action'; b.dataset.subject=name; b.innerHTML=`<span class="w-2 h-2 rounded-full mr-1.5" style="background-color:${sub.color}"></span>${name}`; b.onclick = fn; parent.appendChild(b); };
                 mkBtn(sub.name, addFrag, () => setSubjectAdd(sub.name)); mkBtn(sub.name, filterFrag, () => setSubjectFilter(sub.name)); mkBtn(sub.name, editFrag, () => setSubjectEdit(sub.name));
-                if(ttCont) { let tBtn = document.createElement('button'); tBtn.type = 'button'; tBtn.className = 'px-4 py-2 rounded-xl text-xs font-bold spring-action'; tBtn.style.backgroundColor = hexToRgba(sub.color, 0.2); tBtn.style.color = sub.color; tBtn.innerText = sub.name; tBtn.onclick = () => saveTTCellDirect(sub.name); ttFrag.appendChild(tBtn); }
+                if(ttCont) { let tBtn = document.createElement('button'); tBtn.type = 'button'; tBtn.className = 'px-3 py-1.5 rounded-[10px] text-xs font-bold spring-action'; tBtn.style.backgroundColor = hexToRgba(sub.color, 0.2); tBtn.style.color = sub.color; tBtn.innerText = sub.name; tBtn.onclick = () => saveTTCellDirect(sub.name); ttFrag.appendChild(tBtn); }
             });
-            if(ttCont) { let clrBtn = document.createElement('button'); clrBtn.type = 'button'; clrBtn.className = 'px-4 py-2 rounded-xl text-xs font-bold spring-action opacity-60 hover:opacity-100 transition-opacity'; clrBtn.style.backgroundColor = 'var(--bg-color)'; clrBtn.innerText = '清除'; clrBtn.onclick = () => saveTTCellDirect(''); ttFrag.appendChild(clrBtn); }
+            if(ttCont) { let clrBtn = document.createElement('button'); clrBtn.type = 'button'; clrBtn.className = 'px-3 py-1.5 rounded-[10px] text-xs font-bold spring-action opacity-60 hover:opacity-100 transition-opacity'; clrBtn.style.backgroundColor = 'var(--surface-inset)'; clrBtn.innerText = '清除'; clrBtn.onclick = () => saveTTCellDirect(''); ttFrag.appendChild(clrBtn); }
             addCont.appendChild(addFrag); filterCont.appendChild(filterFrag); editCont.appendChild(editFrag); if(ttCont) ttCont.appendChild(ttFrag);
             updateChipStyles();
         } window.buildCustomChips = buildCustomChips;
@@ -1035,7 +1064,7 @@
         function removeAdminList(listName, email) { if (!adminConfig[listName]) return; adminConfig[listName] = adminConfig[listName].filter(e => e !== email); saveAdminConfig(); logAdminAction(`名單更新`, `${listName} - ${email}`); showToast('已移除'); renderAdminSettings(); } window.removeAdminList = removeAdminList;
 
         function renderAdminSettings() {
-            const renderList = (id, arr, name) => { const el = document.getElementById(id); if(!el) return; el.innerHTML = ''; (arr || []).forEach(e => { el.insertAdjacentHTML('beforeend', `<div class="flex justify-between items-center p-3 bg-[var(--surface-color)] rounded-[12px] mb-2 border border-[var(--border-color)]"><span class="text-xs font-bold">${e}</span><button onclick="removeAdminList('${name}', '${e}')" class="text-red-500 hover:scale-110 transition-transform"><i class="fas fa-times"></i></button></div>`); }); };
+            const renderList = (id, arr, name) => { const el = document.getElementById(id); if(!el) return; el.innerHTML = ''; (arr || []).forEach(e => { el.insertAdjacentHTML('beforeend', `<div class="flex justify-between items-center p-2.5 bg-[var(--surface-color)] rounded-[10px] mb-2 border border-[var(--border-color)]"><span class="text-xs font-bold">${e}</span><button onclick="removeAdminList('${name}', '${e}')" class="text-red-500 hover:scale-110 transition-transform"><i class="fas fa-times text-xs"></i></button></div>`); }); };
             renderList('admin-whitelist-list', adminConfig.whitelist, 'whitelist'); renderList('admin-blacklist-list', adminConfig.blacklist, 'blacklist');
             const chk = (id, key) => { const el = document.getElementById(id); if(el) el.checked = adminConfig[key] || false; };
             chk('admin-autoclean-toggle', 'autoCleanEnabled'); chk('admin-whitelist-toggle', 'whitelistEnabled'); chk('admin-blacklist-toggle', 'blacklistEnabled'); chk('admin-maint-toggle', 'maintenance');
@@ -1066,8 +1095,8 @@
 
         function setTTViewMode(mode) {
             ttViewMode = mode;
-            document.getElementById('tt-btn-day').className = mode === 'day' ? 'px-4 py-1.5 rounded-[10px] text-xs font-bold bg-[var(--surface-color)] shadow-sm text-[var(--text-primary)] transition-all' : 'px-4 py-1.5 rounded-[10px] text-xs font-bold text-[var(--text-secondary)] transition-all';
-            document.getElementById('tt-btn-week').className = mode === 'week' ? 'px-4 py-1.5 rounded-[10px] text-xs font-bold bg-[var(--surface-color)] shadow-sm text-[var(--text-primary)] transition-all' : 'px-4 py-1.5 rounded-[10px] text-xs font-bold text-[var(--text-secondary)] transition-all';
+            document.querySelectorAll('.ios-segment-btn[id^="tt-btn-"]').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`tt-btn-${mode}`).classList.add('active');
             renderTimetableUI();
         } window.setTTViewMode = setTTViewMode;
 
@@ -1097,20 +1126,20 @@
             const headerTitle = document.getElementById('tt-single-day-header');
 
             if(!isEditingTimetable) {
-                ttToggleCont.style.display = 'flex';
+                if(ttToggleCont) ttToggleCont.style.display = 'flex';
                 
                 if (ttViewMode === 'day') {
                     selectorCont.style.display = 'flex';
                     const fragSel = document.createDocumentFragment(); selectorCont.innerHTML = '';
                     daysConfig.forEach(d => {
                         const isSelected = d.key === currentTimetableDay;
-                        let btn = document.createElement('button'); btn.className = `custom-chip text-xs flex-shrink-0 spring-action ${isSelected?'selected':''}`; btn.innerText = d.label; btn.onclick = () => setTimetableDay(d.key); fragSel.appendChild(btn);
+                        let btn = document.createElement('button'); btn.className = `custom-chip text-[11px] flex-shrink-0 spring-action ${isSelected?'selected':''}`; btn.innerText = d.label; btn.onclick = () => setTimetableDay(d.key); fragSel.appendChild(btn);
                     }); selectorCont.appendChild(fragSel);
 
                     headerTitle.innerText = daysConfig.find(d => d.key === currentTimetableDay)?.label || '';
-                    timelineCont.innerHTML = `<div class="absolute left-[48px] top-4 bottom-4 w-px bg-[var(--border-color)] z-0 hidden sm:block"></div>`;
+                    timelineCont.innerHTML = `<div class="absolute left-[44px] top-3 bottom-3 w-px bg-[var(--border-color)] z-0 hidden sm:block"></div>`;
 
-                    if(dataToRender.length === 0) { timelineCont.innerHTML += `<div class="py-16 text-sm font-bold opacity-30 text-center relative z-10"><i class="fas fa-calendar-times text-4xl mb-3 block"></i>尚未設定時間表</div>`; } 
+                    if(dataToRender.length === 0) { timelineCont.innerHTML += `<div class="py-12 text-xs font-bold opacity-30 text-center relative z-10"><i class="fas fa-calendar-times text-3xl mb-2 block"></i>尚未設定時間表</div>`; } 
                     else {
                         const fragTl = document.createDocumentFragment();
                         const now = new Date(); const nowMins = now.getHours() * 60 + now.getMinutes();
@@ -1128,17 +1157,17 @@
 
                             let bgStyle = cellVal ? `background-color: ${hexToRgba(subColor, isActiveClass ? 0.2 : 0.08)}; border-color: ${isActiveClass ? subColor : 'transparent'}` : `background-color: transparent; border-color: transparent`;
                             
-                            let div = document.createElement('div'); div.className = "flex gap-4 min-h-[64px] relative z-10 group";
+                            let div = document.createElement('div'); div.className = "flex gap-3 min-h-[56px] relative z-10 group";
                             div.innerHTML = `
-                                <div class="flex flex-col items-end w-[44px] shrink-0 pt-2"><span class="text-[11px] font-black" style="color: ${isActiveClass ? 'var(--accent-primary)' : 'var(--text-primary)'}">${row.startTime||'--'}</span></div>
-                                <div class="relative flex flex-col items-center pt-3 hidden sm:flex">
-                                    <div class="w-3 h-3 rounded-full z-10 transition-transform ${isActiveClass ? 'scale-125 border-2 animate-pulse' : 'group-hover:scale-125 border-[3px] border-[var(--surface-color)]'} shadow-sm" style="background-color: ${cellVal ? subColor : 'var(--border-color)'}; border-color: ${isActiveClass ? 'var(--accent-primary)' : ''}"></div>
+                                <div class="flex flex-col items-end w-[40px] shrink-0 pt-2"><span class="text-[10px] font-black" style="color: ${isActiveClass ? 'var(--accent-primary)' : 'var(--text-primary)'}">${row.startTime||'--'}</span></div>
+                                <div class="relative flex flex-col items-center pt-2.5 hidden sm:flex">
+                                    <div class="w-2.5 h-2.5 rounded-full z-10 transition-transform ${isActiveClass ? 'scale-125 border-2 animate-pulse' : 'group-hover:scale-125 border-[2px] border-[var(--surface-color)]'} shadow-sm" style="background-color: ${cellVal ? subColor : 'var(--border-color)'}; border-color: ${isActiveClass ? 'var(--accent-primary)' : ''}"></div>
                                 </div>
-                                <div class="flex-1 pb-4">
-                                    <div class="rounded-[16px] p-4 shadow-sm border flex items-center gap-3 transition-transform ${isActiveClass ? 'translate-x-1 ring-2 ring-opacity-30' : 'group-hover:translate-x-1'}" style="${bgStyle}; ${isActiveClass ? 'ring-color: var(--accent-primary)' : ''}">
-                                        ${isBreak ? '<i class="fas fa-mug-hot text-xs opacity-50"></i>' : ''} ${isLunch ? '<i class="fas fa-utensils text-xs opacity-50"></i>' : ''}
-                                        <span class="font-bold text-sm text-[var(--text-primary)]">${cellVal || '空堂'}</span>
-                                        ${isActiveClass ? '<span class="ml-auto text-[10px] font-black px-2.5 py-1 rounded-full" style="color: var(--accent-primary); background-color: var(--accent-10);"><i class="fas fa-circle text-[8px] animate-pulse mr-1"></i>現在</span>' : ''}
+                                <div class="flex-1 pb-3">
+                                    <div class="rounded-[14px] p-3 shadow-sm border flex items-center gap-2 transition-transform ${isActiveClass ? 'translate-x-1 ring-2 ring-opacity-30' : 'group-hover:translate-x-1'}" style="${bgStyle}; ${isActiveClass ? 'ring-color: var(--accent-primary)' : ''}">
+                                        ${isBreak ? '<i class="fas fa-mug-hot text-[10px] opacity-50"></i>' : ''} ${isLunch ? '<i class="fas fa-utensils text-[10px] opacity-50"></i>' : ''}
+                                        <span class="font-bold text-[13px] text-[var(--text-primary)]">${cellVal || '空堂'}</span>
+                                        ${isActiveClass ? '<span class="ml-auto text-[9px] font-black px-2 py-0.5 rounded-full" style="color: var(--accent-primary); background-color: var(--accent-10);"><i class="fas fa-circle text-[6px] animate-pulse mr-1"></i>現在</span>' : ''}
                                     </div>
                                 </div>`;
                             fragTl.appendChild(div);
@@ -1149,24 +1178,24 @@
                     headerTitle.innerText = '全週總覽';
                     timelineCont.innerHTML = '';
                     
-                    if(dataToRender.length === 0) { timelineCont.innerHTML = `<div class="py-16 text-sm font-bold opacity-30 text-center relative z-10"><i class="fas fa-table text-4xl mb-3 block"></i>尚未設定時間表</div>`; } 
+                    if(dataToRender.length === 0) { timelineCont.innerHTML = `<div class="py-12 text-sm font-bold opacity-30 text-center relative z-10"><i class="fas fa-table text-3xl mb-2 block"></i>尚未設定時間表</div>`; } 
                     else {
-                        let tableHtml = `<div class="overflow-x-auto scrollbar-hide pb-2"><table class="w-full text-center border-collapse text-xs"><thead><tr class="border-b border-[var(--border-color)]">`;
-                        tableHtml += `<th class="py-3 px-2 font-bold opacity-50 sticky left-0 z-10 bg-[var(--surface-color)]">時間</th>`;
-                        daysConfig.forEach(d => { tableHtml += `<th class="py-3 px-2 font-bold min-w-[70px] whitespace-nowrap text-[var(--text-primary)]">${d.label}</th>`; });
+                        let tableHtml = `<div class="overflow-x-auto scrollbar-hide pb-2"><table class="w-full text-center border-collapse text-[11px]"><thead><tr class="border-b border-[var(--border-color)]">`;
+                        tableHtml += `<th class="py-2 px-1 font-bold opacity-50 sticky left-0 z-10 bg-[var(--surface-color)]">時間</th>`;
+                        daysConfig.forEach(d => { tableHtml += `<th class="py-2 px-1 font-bold min-w-[60px] whitespace-nowrap text-[var(--text-primary)]">${d.label}</th>`; });
                         tableHtml += `</tr></thead><tbody>`;
 
                         dataToRender.forEach(row => {
-                            tableHtml += `<tr class="border-b border-[var(--border-color)] last:border-0 hover:bg-[var(--surface-hover)] transition-colors">`;
-                            tableHtml += `<td class="p-2 sticky left-0 z-10 bg-[var(--surface-color)]"><div class="text-[11px] font-black text-[var(--text-primary)]">${row.startTime||''}</div><div class="text-[9px] font-bold text-[var(--text-secondary)] mt-0.5">${row.endTime||''}</div></td>`;
+                            tableHtml += `<tr class="border-b border-[var(--border-color)] last:border-0 hover:bg-[var(--surface-inset)] transition-colors">`;
+                            tableHtml += `<td class="p-1.5 sticky left-0 z-10 bg-[var(--surface-color)]"><div class="text-[10px] font-black text-[var(--text-primary)]">${row.startTime||''}</div><div class="text-[9px] font-bold text-[var(--text-secondary)]">${row.endTime||''}</div></td>`;
                             daysConfig.forEach(d => {
                                 const cellVal = row[d.key] || '';
                                 let sub = userSettings.subjects.find(s=>s.name===cellVal);
                                 let cellColor = sub ? sub.color : 'var(--border-color)';
                                 if(cellVal.includes('小息')) cellColor = '#8e8e93'; if(cellVal.includes('午膳')) cellColor = '#ff6b6b';
                                 
-                                if(!cellVal) { tableHtml += `<td class="p-2"></td>`; } 
-                                else { tableHtml += `<td class="p-1.5"><div class="px-2 py-2 rounded-[10px] text-[10px] font-bold mx-auto w-full max-w-[80px] truncate" style="background-color: ${hexToRgba(cellColor, 0.15)}; color: ${cellColor}">${cellVal}</div></td>`; }
+                                if(!cellVal) { tableHtml += `<td class="p-1"></td>`; } 
+                                else { tableHtml += `<td class="p-1"><div class="px-1.5 py-1.5 rounded-[8px] text-[9px] font-bold mx-auto w-full max-w-[70px] truncate" style="background-color: ${hexToRgba(cellColor, 0.15)}; color: ${cellColor}">${cellVal}</div></td>`; }
                             });
                             tableHtml += `</tr>`;
                         });
@@ -1175,29 +1204,29 @@
                     }
                 }
             } else {
-                ttToggleCont.style.display = 'none';
+                if(ttToggleCont) ttToggleCont.style.display = 'none';
                 selectorCont.style.display = 'none';
                 headerTitle.innerText = '編輯時間表';
 
                 const thead = document.getElementById('tt-edit-header-row'); const tbody = document.getElementById('timetable-body');
-                let thHtml = `<th class="py-3 px-2 font-bold opacity-50 sticky left-0 z-10 bg-[var(--surface-color)]">時間</th>`; daysConfig.forEach(d => { thHtml += `<th class="py-3 px-2 font-bold min-w-[70px] whitespace-nowrap">${d.label}</th>`; }); thHtml += `<th class="py-3 px-2 font-bold opacity-50">刪除</th>`; thead.innerHTML = thHtml; tbody.innerHTML = '';
+                let thHtml = `<th class="py-2 px-1 font-bold opacity-50 sticky left-0 z-10 bg-[var(--surface-color)]">時間</th>`; daysConfig.forEach(d => { thHtml += `<th class="py-2 px-1 font-bold min-w-[60px] whitespace-nowrap">${d.label}</th>`; }); thHtml += `<th class="py-2 px-1 font-bold opacity-50">刪除</th>`; thead.innerHTML = thHtml; tbody.innerHTML = '';
                 if(dataToRender.length === 0) userTimetable = [{startTime: '08:00', endTime: '08:35'}];
                 const fragBody = document.createDocumentFragment();
                 dataToRender.forEach((row, rIdx) => {
-                    let tr = document.createElement('tr'); tr.className = "border-b border-[var(--border-color)] hover:bg-[var(--surface-hover)] transition-colors";
-                    let html = `<td class="p-2 sticky left-0 z-10 w-[80px] bg-[var(--surface-color)]"><div class="flex flex-col gap-1.5 items-center"><div class="beautiful-input-group !p-1 w-full"><input type="time" class="beautiful-input !py-1 text-center text-[11px] font-bold" value="${row.startTime||''}" onchange="updateTT(${rIdx}, 'startTime', this.value)"></div><div class="beautiful-input-group !p-1 w-full"><input type="time" class="beautiful-input !py-1 text-center text-[11px] font-bold" value="${row.endTime||''}" onchange="updateTT(${rIdx}, 'endTime', this.value)"></div></div></td>`;
+                    let tr = document.createElement('tr'); tr.className = "border-b border-[var(--border-color)] hover:bg-[var(--surface-inset)] transition-colors";
+                    let html = `<td class="p-1.5 sticky left-0 z-10 w-[70px] bg-[var(--surface-color)]"><div class="flex flex-col gap-1 items-center"><div class="ios-input-group !p-0.5 w-full !rounded-[6px]"><input type="time" class="ios-input !py-0.5 text-center text-[10px] font-bold" value="${row.startTime||''}" onchange="updateTT(${rIdx}, 'startTime', this.value)"></div><div class="ios-input-group !p-0.5 w-full !rounded-[6px]"><input type="time" class="ios-input !py-0.5 text-center text-[10px] font-bold" value="${row.endTime||''}" onchange="updateTT(${rIdx}, 'endTime', this.value)"></div></div></td>`;
                     daysConfig.forEach(d => {
                         const cellVal = row[d.key] || ''; let cellColor = (userSettings.subjects.find(s => s.name === cellVal) || {}).color || 'var(--border-color)';
                         if(cellVal.includes('小息')) cellColor = '#8e8e93'; if(cellVal.includes('午膳')) cellColor = '#ff6b6b';
                         let isEmpty = !cellVal;
                         let bgCol = isEmpty ? 'transparent' : hexToRgba(cellColor, 0.12);
-                        let borderStyle = isEmpty ? '2px dashed var(--border-color)' : `2px solid transparent`;
+                        let borderStyle = isEmpty ? '1.5px dashed var(--border-color)' : `1.5px solid transparent`;
                         let textCol = isEmpty ? 'var(--text-secondary)' : cellColor;
-                        let iconHtml = isEmpty ? '<i class="fas fa-plus opacity-40 text-base"></i>' : cellVal;
+                        let iconHtml = isEmpty ? '<i class="fas fa-plus opacity-40 text-sm"></i>' : cellVal;
                         
-                        html += `<td class="p-1.5"><button onclick="openTTCellModal(${rIdx}, '${d.key}')" class="w-full h-12 rounded-[14px] text-xs font-bold truncate btn-spring flex items-center justify-center mx-auto transition-all hover:bg-[var(--bg-color)] shadow-sm" style="color: ${textCol}; border: ${borderStyle}; background-color: ${bgCol}">${iconHtml}</button></td>`;
+                        html += `<td class="p-1"><button onclick="openTTCellModal(${rIdx}, '${d.key}')" class="w-full h-10 rounded-[10px] text-[11px] font-bold truncate btn-spring flex items-center justify-center mx-auto transition-all shadow-sm" style="color: ${textCol}; border: ${borderStyle}; background-color: ${bgCol}">${iconHtml}</button></td>`;
                     });
-                    html += `<td class="p-2 text-center"><button onclick="removeTTRow(${rIdx})" class="w-9 h-9 rounded-full btn-spring flex items-center justify-center mx-auto transition-colors" style="color: var(--danger-color); background-color: var(--danger-10);"><i class="fas fa-minus text-sm"></i></button></td>`;
+                    html += `<td class="p-1.5 text-center"><button onclick="removeTTRow(${rIdx})" class="text-[var(--danger-color)] w-7 h-7 rounded-full bg-[var(--danger-10)] btn-spring flex items-center justify-center mx-auto transition-colors hover:bg-[var(--danger-color)] hover:text-white"><i class="fas fa-minus text-xs"></i></button></td>`;
                     tr.innerHTML = html; fragBody.appendChild(tr);
                 }); tbody.appendChild(fragBody);
             }
@@ -1257,18 +1286,18 @@
                     }).sort((a,b) => a.startMs - b.startMs);
                 } cachedScheduleSignature = currentSignature;
             }
-            if(!cachedSchedule) { widget.style.display = 'block'; document.getElementById('live-current-class').innerText = "放假中"; document.getElementById('live-timer-container').style.display = 'none'; document.getElementById('live-current-bg').style.backgroundColor = "transparent"; document.getElementById('live-current-bg').innerHTML = `<i class="fas fa-bed text-2xl" style="color: var(--accent-primary);"></i>`; document.getElementById('live-progress-bar').style.width = '0%'; return; }
-            const nowMs = now.getTime(); let currentState = "課堂結束"; let countdownTargetMs = null; let currentBgColor = "transparent"; let iconHtml = `<i class="fas fa-check-circle text-2xl" style="color: var(--accent-primary);"></i>`; let periodStartMs = null; let periodEndMs = null;
-            if(nowMs < cachedSchedule[0].startMs) { currentState = "即將上課"; countdownTargetMs = cachedSchedule[0].startMs; iconHtml = `<i class="fas fa-clock text-2xl" style="color: var(--accent-primary);"></i>`; } 
+            if(!cachedSchedule) { widget.style.display = 'block'; document.getElementById('live-current-class').innerText = "放假中"; document.getElementById('live-timer-container').style.display = 'none'; document.getElementById('live-current-bg').style.backgroundColor = "transparent"; document.getElementById('live-current-bg').innerHTML = `<i class="fas fa-bed text-xl" style="color: var(--accent-primary);"></i>`; document.getElementById('live-progress-bar').style.width = '0%'; return; }
+            const nowMs = now.getTime(); let currentState = "課堂結束"; let countdownTargetMs = null; let currentBgColor = "transparent"; let iconHtml = `<i class="fas fa-check-circle text-xl" style="color: var(--accent-primary);"></i>`; let periodStartMs = null; let periodEndMs = null;
+            if(nowMs < cachedSchedule[0].startMs) { currentState = "即將上課"; countdownTargetMs = cachedSchedule[0].startMs; iconHtml = `<i class="fas fa-clock text-xl" style="color: var(--accent-primary);"></i>`; } 
             else if (nowMs >= cachedSchedule[cachedSchedule.length-1].endMs) { currentState = "放學"; document.getElementById('live-progress-bar').style.width = '100%'; } 
             else {
                 for(let i=0; i<cachedSchedule.length; i++) {
                     let c = cachedSchedule[i];
                     if(nowMs >= c.startMs && nowMs < c.endMs) {
                         currentState = c.name; countdownTargetMs = c.endMs; periodStartMs = c.startMs; periodEndMs = c.endMs; const sub = userSettings.subjects.find(s => s.name === currentState);
-                        if(currentState.includes('小息')) { currentBgColor = '#8e8e93'; iconHtml = `<i class="fas fa-mug-hot text-white text-lg"></i>`; } else if(currentState.includes('午膳')) { currentBgColor = '#ff6b6b'; iconHtml = `<i class="fas fa-utensils text-white text-lg"></i>`; } else if(sub) { currentBgColor = sub.color; iconHtml = `<span class="text-lg font-black text-white">${currentState.charAt(0)}</span>`; } else { currentBgColor = 'var(--accent-primary)'; iconHtml = `<i class="fas fa-book-open text-white text-lg"></i>`; } break;
+                        if(currentState.includes('小息')) { currentBgColor = '#8e8e93'; iconHtml = `<i class="fas fa-mug-hot text-white text-[10px]"></i>`; } else if(currentState.includes('午膳')) { currentBgColor = '#ff6b6b'; iconHtml = `<i class="fas fa-utensils text-white text-[10px]"></i>`; } else if(sub) { currentBgColor = sub.color; iconHtml = `<span class="text-[13px] font-black text-white">${currentState.charAt(0)}</span>`; } else { currentBgColor = 'var(--accent-primary)'; iconHtml = `<i class="fas fa-book-open text-white text-[10px]"></i>`; } break;
                     }
-                    if(i+1 < cachedSchedule.length && nowMs >= c.endMs && nowMs < cachedSchedule[i+1].startMs) { currentState = "小息 / 空堂"; countdownTargetMs = cachedSchedule[i+1].startMs; periodStartMs = c.endMs; periodEndMs = cachedSchedule[i+1].startMs; currentBgColor = 'var(--border-color)'; iconHtml = `<i class="fas fa-mug-hot text-[var(--text-secondary)] text-lg"></i>`; break; }
+                    if(i+1 < cachedSchedule.length && nowMs >= c.endMs && nowMs < cachedSchedule[i+1].startMs) { currentState = "小息 / 空堂"; countdownTargetMs = cachedSchedule[i+1].startMs; periodStartMs = c.endMs; periodEndMs = cachedSchedule[i+1].startMs; currentBgColor = 'var(--border-color)'; iconHtml = `<i class="fas fa-mug-hot text-[var(--text-secondary)] text-[10px]"></i>`; break; }
                 }
             }
             widget.style.display = 'block'; document.getElementById('live-current-class').innerText = currentState;
@@ -1293,11 +1322,11 @@
             subjectColors.forEach(hex => {
                 const btn = document.createElement('button');
                 const isActive = hex === activeColor;
-                btn.className = `w-8 h-8 rounded-full transition-transform spring-action ${isActive ? 'scale-110 shadow-sm border-[3px] border-[var(--surface-color)] ring-2 ring-[var(--text-primary)]' : 'border border-transparent'}`;
+                btn.className = `w-7 h-7 rounded-full transition-transform spring-action ${isActive ? 'scale-110 shadow-sm border-[2px] border-[var(--surface-color)] ring-2 ring-[var(--text-primary)]' : 'border border-transparent'}`;
                 btn.style.backgroundColor = hex;
                 btn.onclick = () => {
-                    Array.from(container.children).forEach(b => { b.className = 'w-8 h-8 rounded-full transition-transform spring-action border border-transparent'; });
-                    btn.className = 'w-8 h-8 rounded-full transition-transform spring-action scale-110 shadow-sm border-[3px] border-[var(--surface-color)] ring-2 ring-[var(--text-primary)]';
+                    Array.from(container.children).forEach(b => { b.className = 'w-7 h-7 rounded-full transition-transform spring-action border border-transparent'; });
+                    btn.className = 'w-7 h-7 rounded-full transition-transform spring-action scale-110 shadow-sm border-[2px] border-[var(--surface-color)] ring-2 ring-[var(--text-primary)]';
                     hiddenInput.value = hex;
                 };
                 frag.appendChild(btn);
@@ -1323,21 +1352,21 @@
                 const taskCount = allTasks.filter(t => t.subject === sub.name).length;
 
                 const div = document.createElement('div'); 
-                div.className = `glass-card p-3 md:p-4 flex justify-between items-center transition-all duration-300 group ${isEnabled ? '' : 'opacity-60 grayscale'}`;
+                div.className = `ios-card p-3 flex justify-between items-center transition-all duration-300 group ${isEnabled ? '' : 'opacity-50 grayscale'}`;
                 div.innerHTML = `
-                    <div class="flex items-center gap-3 md:gap-4 overflow-hidden">
-                        <div class="w-10 h-10 md:w-12 md:h-12 rounded-[12px] md:rounded-[14px] flex items-center justify-center shrink-0 shadow-inner" style="background-color: ${hexToRgba(sub.color, 0.15)}; color: ${sub.color}">
-                            <span class="font-black text-lg md:text-xl">${sub.name.charAt(0)}</span>
+                    <div class="flex items-center gap-3 overflow-hidden">
+                        <div class="w-10 h-10 rounded-[10px] flex items-center justify-center shrink-0 shadow-inner" style="background-color: ${hexToRgba(sub.color, 0.15)}; color: ${sub.color}">
+                            <span class="font-black text-base">${sub.name.charAt(0)}</span>
                         </div>
                         <div class="flex flex-col">
-                            <span class="font-bold text-sm md:text-base truncate text-[var(--text-primary)] leading-tight mb-0.5">${sub.name}</span>
-                            <span class="text-[10px] font-bold opacity-50">${taskCount} 項待處理任務</span>
+                            <span class="font-bold text-[13px] truncate text-[var(--text-primary)] leading-tight mb-0.5">${sub.name}</span>
+                            <span class="text-[9px] font-bold opacity-50">${taskCount} 項待處理任務</span>
                         </div>
                     </div>
-                    <div class="flex items-center gap-1.5 md:gap-2 shrink-0">
-                        <button onclick="openEditSubjectModal('${sub.id}')" class="w-8 h-8 rounded-full flex items-center justify-center btn-spring transition-colors" style="color: var(--accent-primary); background-color: var(--accent-10);" title="編輯科目"><i class="fas fa-pen text-[10px]"></i></button>
-                        <label class="ios-toggle scale-[0.65] origin-center mx-1"><input type="checkbox" ${isEnabled ? 'checked' : ''} onchange="toggleSubjectEnable('${sub.id}', this.checked, this)"><div class="toggle-track"><div class="toggle-thumb"></div></div></label>
-                        <button onclick="deleteSubject('${sub.id}')" class="w-8 h-8 flex items-center justify-center rounded-full btn-spring transition-colors" style="color: var(--danger-color); background-color: var(--danger-10);" title="刪除"><i class="fas fa-trash text-[10px]"></i></button>
+                    <div class="flex items-center gap-1 shrink-0">
+                        <button onclick="openEditSubjectModal('${sub.id}')" class="w-7 h-7 rounded-full flex items-center justify-center btn-spring transition-colors" style="color: var(--accent-primary); background-color: var(--accent-10);" title="編輯科目"><i class="fas fa-pen text-[9px]"></i></button>
+                        <label class="ios-toggle scale-[0.6] origin-center mx-0.5"><input type="checkbox" ${isEnabled ? 'checked' : ''} onchange="toggleSubjectEnable('${sub.id}', this.checked, this)"><div class="toggle-track"><div class="toggle-thumb"></div></div></label>
+                        <button onclick="deleteSubject('${sub.id}')" class="w-7 h-7 flex items-center justify-center rounded-full btn-spring transition-colors" style="color: var(--danger-color); background-color: var(--danger-10);" title="刪除"><i class="fas fa-trash text-[9px]"></i></button>
                     </div>`;
                 if(isEnabled) fragEnabled.appendChild(div); else fragDisabled.appendChild(div);
             }); 
@@ -1392,7 +1421,6 @@
             sub.color = newColor;
             saveSettings();
             
-            // 智慧連動：自動更新舊任務的科目名稱 (僅限個人任務)
             if(oldName !== newName && currentUser) {
                 let updatedCount = 0;
                 allTasks.forEach(t => {
@@ -1401,18 +1429,16 @@
                         updatedCount++;
                     }
                 });
-                if(updatedCount > 0) showToast(`科目已更新，並自動連動 ${updatedCount} 項任務`);
-                else showToast("科目設定已更新");
+                if(updatedCount > 0) showToast(`已連動更新 ${updatedCount} 項任務`);
+                else showToast("設定已更新");
             } else {
-                showToast("科目設定已更新");
+                showToast("設定已更新");
             }
             
-            renderSubjectsPage();
-            renderHome();
-            closeModal('edit-subject-modal');
+            renderSubjectsPage(); renderHome(); closeModal('edit-subject-modal');
         } window.saveEditSubject = saveEditSubject;
 
-        function getSubjectHTML(subName) { const sub = userSettings.subjects.find(s => s.name === subName); const color = sub ? sub.color : 'var(--text-secondary)'; return `<span class="px-2 py-1 rounded-[8px] text-[10px] font-bold inline-flex items-center" style="background-color: ${hexToRgba(color, 0.15)}; color: ${color};">${subName}</span>`; }
+        function getSubjectHTML(subName) { const sub = userSettings.subjects.find(s => s.name === subName); const color = sub ? sub.color : 'var(--text-secondary)'; return `<span class="px-2 py-0.5 rounded-[6px] text-[9px] font-bold inline-flex items-center" style="background-color: ${hexToRgba(color, 0.15)}; color: ${color};">${subName}</span>`; }
 
         // Dashboard Calculation Logic
         function updateDashboardCounts() {
@@ -1445,11 +1471,11 @@
                 'test': {t: '考試及測驗', i: 'fa-pen-nib text-[#4ea771]', bg: 'bg-[#BAFFC9] dark:bg-[#4ea771]/30'} 
             };
             document.getElementById('dash-modal-title').innerText = titles[category].t;
-            document.getElementById('dash-modal-icon').className = `w-12 h-12 rounded-full flex items-center justify-center text-xl shadow-sm ${titles[category].bg}`;
+            document.getElementById('dash-modal-icon').className = `w-10 h-10 rounded-full flex items-center justify-center text-lg shadow-sm ${titles[category].bg}`;
             document.getElementById('dash-modal-icon').innerHTML = `<i class="fas ${titles[category].i}"></i>`;
 
             const listEl = document.getElementById('dash-modal-list'); listEl.innerHTML = '';
-            if(filtered.length === 0) { listEl.innerHTML = `<div class="text-center py-10 opacity-30 font-bold text-sm"><i class="fas fa-check-circle text-4xl mb-3 block"></i>此分類沒有任務</div>`; } 
+            if(filtered.length === 0) { listEl.innerHTML = `<div class="text-center py-8 opacity-30 font-bold text-xs"><i class="fas fa-check-circle text-3xl mb-2 block"></i>此分類沒有任務</div>`; } 
             else {
                 const frag = document.createDocumentFragment();
                 filtered.forEach(task => frag.appendChild(createTaskCard(task, true)));
@@ -1462,32 +1488,32 @@
             const canEditDelete = task.createdBy === currentUser.uid || (task.isPublic && isAdmin); const subColor = (userSettings.subjects.find(s=>s.name===task.subject)||{}).color||'var(--text-secondary)';
             const due = new Date(task.dueDate); due.setHours(0,0,0,0); const todayDate = new Date(); todayDate.setHours(0,0,0,0); const diffDays = Math.round((due - todayDate) / (1000 * 60 * 60 * 24));
             let badgeHtml = '';
-            if (diffDays < 0) badgeHtml = `<span class="text-[var(--danger-color)] bg-[var(--danger-10)] px-2 py-0.5 rounded text-[10px] font-bold">過期 ${Math.abs(diffDays)} 日</span>`;
-            else if (diffDays === 0) badgeHtml = `<span class="text-[#d48806] bg-[#FFDFBA]/50 px-2 py-0.5 rounded text-[10px] font-bold">今天交</span>`;
-            else if (diffDays === 1) badgeHtml = `<span class="text-[#5b9bd5] bg-[#BAE1FF]/50 px-2 py-0.5 rounded text-[10px] font-bold">聽日交</span>`;
-            else badgeHtml = `<span class="text-[var(--text-secondary)] bg-[var(--bg-color)] px-2 py-0.5 rounded text-[10px] font-bold">餘 ${diffDays} 日</span>`;
+            if (diffDays < 0) badgeHtml = `<span class="text-[var(--danger-color)] bg-[var(--danger-10)] px-2 py-0.5 rounded text-[9px] font-bold">過期 ${Math.abs(diffDays)} 日</span>`;
+            else if (diffDays === 0) badgeHtml = `<span class="text-[#d48806] bg-[#FFDFBA]/50 px-2 py-0.5 rounded text-[9px] font-bold">今天交</span>`;
+            else if (diffDays === 1) badgeHtml = `<span class="text-[#5b9bd5] bg-[#BAE1FF]/50 px-2 py-0.5 rounded text-[9px] font-bold">聽日交</span>`;
+            else badgeHtml = `<span class="text-[var(--text-secondary)] bg-[var(--surface-inset)] px-2 py-0.5 rounded text-[9px] font-bold">餘 ${diffDays} 日</span>`;
 
             let contentHtml = task.content.replace(/\n/g, '<br>');
-            let urlBtnHtml = task.url ? `<a href="${task.url}" target="_blank" class="inline-flex items-center text-[11px] font-bold mt-2 px-3 py-1.5 rounded-[8px] transition-colors" style="color: var(--accent-primary); background-color: var(--accent-10);"><i class="fas fa-link mr-1.5"></i> 附件連結</a>` : '';
+            let urlBtnHtml = task.url ? `<a href="${task.url}" target="_blank" class="inline-flex items-center text-[10px] font-bold mt-1.5 px-2.5 py-1 rounded-[6px] transition-colors" style="color: var(--accent-primary); background-color: var(--accent-10);"><i class="fas fa-link mr-1"></i> 附件</a>` : '';
 
-            let div = document.createElement('div'); div.className = `glass-card p-4 relative border-l-4`; div.style.borderLeftColor = subColor;
+            let div = document.createElement('div'); div.className = `ios-card p-4 relative border-l-4`; div.style.borderLeftColor = subColor;
             div.innerHTML = `
-                    <div class="flex justify-between items-start mb-3">
-                        <div class="flex items-center gap-2">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="flex items-center gap-1.5">
                             ${getSubjectHTML(task.subject)}
-                            ${task.type === 'test' ? `<span class="px-2 py-1 rounded-[6px] text-[9px] font-bold bg-purple-500/10 text-purple-500">測驗</span>` : ''}
-                            ${task.isPublic ? `<span class="px-2 py-1 rounded-[6px] text-[9px] font-bold transition-colors" style="color: var(--accent-primary); background-color: var(--accent-10);">廣播</span>` : ''}
+                            ${task.type === 'test' ? `<span class="px-1.5 py-0.5 rounded-[6px] text-[8px] font-bold bg-purple-500/10 text-purple-500">測驗</span>` : ''}
+                            ${task.isPublic ? `<span class="px-1.5 py-0.5 rounded-[6px] text-[8px] font-bold transition-colors" style="color: var(--accent-primary); background-color: var(--accent-10);">廣播</span>` : ''}
                         </div>
-                        <div class="flex gap-3 items-center">
+                        <div class="flex gap-2 items-center">
                             ${badgeHtml}
-                            ${canEditDelete ? `<button onclick="openEditModal('${task.id}', ${task.isPublic})" class="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"><i class="fas fa-ellipsis-h"></i></button>` : ''}
+                            ${canEditDelete ? `<button onclick="openEditModal('${task.id}', ${task.isPublic})" class="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"><i class="fas fa-ellipsis-h text-xs"></i></button>` : ''}
                         </div>
                     </div>
-                    <p class="text-sm font-bold leading-relaxed mb-2" style="color: var(--text-primary)">${contentHtml}</p>
+                    <p class="text-[14px] font-bold leading-relaxed mb-1.5" style="color: var(--text-primary)">${contentHtml}</p>
                     ${urlBtnHtml}
                     <div class="flex justify-between items-center mt-3 pt-3 border-t border-[var(--border-color)]">
-                        <p class="text-[10px] font-medium opacity-50"><i class="far fa-calendar-alt mr-1"></i>${task.dueDate} (${getDayOfWeek(task.dueDate)})</p>
-                        <button onclick="completeTask('${task.id}', ${task.isPublic}, this)" class="px-4 py-2 rounded-[12px] text-[11px] font-bold bg-[var(--bg-color)] hover:bg-[var(--surface-hover)] btn-spring text-green-600"><i class="fas fa-check mr-1.5"></i>完成</button>
+                        <p class="text-[9px] font-medium opacity-50"><i class="far fa-calendar-alt mr-1"></i>${task.dueDate} (${getDayOfWeek(task.dueDate)})</p>
+                        <button onclick="completeTask('${task.id}', ${task.isPublic}, this)" class="px-3 py-1.5 rounded-[10px] text-[10px] font-bold bg-[var(--surface-inset)] hover:bg-[var(--bg-color)] btn-spring text-green-600"><i class="fas fa-check mr-1"></i>完成</button>
                     </div>`;
             return div;
         }
@@ -1496,29 +1522,29 @@
             updateDashboardCounts();
             const listEl = document.getElementById('home-tasks-list'); const filterVal = document.getElementById('filter-subject')?.value || 'all'; listEl.innerHTML = '';
             let filtered = allTasks.filter(t => filterVal === 'all' || t.subject === filterVal);
-            if(filtered.length === 0) { listEl.innerHTML = `<div class="text-center py-16 text-sm font-bold opacity-30"><i class="fas fa-check-circle text-4xl mb-4 block" style="color: var(--accent-primary);"></i>目前無任務</div>`; return; }
+            if(filtered.length === 0) { listEl.innerHTML = `<div class="text-center py-12 text-xs font-bold opacity-30"><i class="fas fa-check-circle text-3xl mb-3 block" style="color: var(--text-secondary);"></i>目前無任務</div>`; return; }
             const frag = document.createDocumentFragment(); filtered.forEach((task) => frag.appendChild(createTaskCard(task))); listEl.appendChild(frag);
         } window.renderHome = renderHome;
 
         function renderHistory() {
             const listEl = document.getElementById('history-tasks-list'); listEl.innerHTML = '';
-            if(historyTasks.length === 0) { listEl.innerHTML = `<div class="text-center py-16 text-sm font-bold opacity-30">暫無紀錄</div>`; return; }
+            if(historyTasks.length === 0) { listEl.innerHTML = `<div class="text-center py-12 text-xs font-bold opacity-30">暫無紀錄</div>`; return; }
             const frag = document.createDocumentFragment();
             historyTasks.forEach((task, index) => { 
-                let div = document.createElement('div'); div.className = "glass-card p-4 opacity-60 hover:opacity-100 transition-opacity";
-                div.innerHTML = `<div class="flex justify-between items-start mb-2"><div class="flex items-center gap-2">${getSubjectHTML(task.subject)}</div><button onclick="deleteHistoryTask('${task.id}', this)" class="w-6 h-6 spring-action rounded-full flex items-center justify-center" style="color: var(--danger-color); background-color: var(--danger-10);"><i class="fas fa-times text-[10px]"></i></button></div><p class="text-xs font-bold line-through line-clamp-1 mb-2">${task.content}</p><p class="text-[10px] font-bold opacity-40">完成於: ${new Date(task.completedAt).toLocaleString()}</p>`;
+                let div = document.createElement('div'); div.className = "ios-card p-3.5 opacity-60 hover:opacity-100 transition-opacity";
+                div.innerHTML = `<div class="flex justify-between items-start mb-2"><div class="flex items-center gap-1.5">${getSubjectHTML(task.subject)}</div><button onclick="deleteHistoryTask('${task.id}', this)" class="w-5 h-5 spring-action rounded-full flex items-center justify-center" style="color: var(--danger-color); background-color: var(--danger-10);"><i class="fas fa-times text-[9px]"></i></button></div><p class="text-xs font-bold line-through line-clamp-1 mb-1.5">${task.content}</p><p class="text-[9px] font-medium opacity-40">完成於: ${new Date(task.completedAt).toLocaleString()}</p>`;
                 frag.appendChild(div);
             }); listEl.appendChild(frag);
         } window.renderHistory = renderHistory;
 
         function renderAdmin() {
             const listEl = document.getElementById('admin-broadcast-list'); if(!listEl) return; listEl.innerHTML = '';
-            if (publicAssignments.length === 0) { listEl.innerHTML = `<div class="text-center py-8 text-sm font-bold opacity-30">無廣播。</div>`; } 
+            if (publicAssignments.length === 0) { listEl.innerHTML = `<div class="text-center py-6 text-xs font-bold opacity-30">無廣播。</div>`; } 
             else {
                 const frag = document.createDocumentFragment();
                 publicAssignments.forEach((task, index) => {
-                    let div = document.createElement('div'); div.className = "glass-card p-4 flex justify-between items-center";
-                    div.innerHTML = `<div class="flex-1 pr-4"><div class="flex gap-2 mb-1.5">${getSubjectHTML(task.subject)}<span class="text-[9px] opacity-50 flex items-center">${task.dueDate}</span></div><p class="text-sm font-bold line-clamp-1">${task.content}</p></div><button onclick="deleteTask('${task.id}', true, this)" class="w-10 h-10 rounded-full btn-spring" style="color: var(--danger-color); background-color: var(--danger-10);"><i class="fas fa-trash text-sm"></i></button>`;
+                    let div = document.createElement('div'); div.className = "ios-card p-3.5 flex justify-between items-center";
+                    div.innerHTML = `<div class="flex-1 pr-3"><div class="flex gap-2 mb-1">${getSubjectHTML(task.subject)}<span class="text-[9px] opacity-50 flex items-center">${task.dueDate}</span></div><p class="text-xs font-bold line-clamp-1">${task.content}</p></div><button onclick="deleteTask('${task.id}', true, this)" class="w-8 h-8 rounded-full btn-spring flex items-center justify-center" style="color: var(--danger-color); background-color: var(--danger-10);"><i class="fas fa-trash text-[10px]"></i></button>`;
                     frag.appendChild(div);
                 }); listEl.appendChild(frag);
             } document.getElementById('admin-stat-broadcasts').innerText = publicAssignments.length;
@@ -1530,8 +1556,8 @@
             document.getElementById('admin-stat-users').innerText = adminUsersList.length; document.getElementById('admin-stat-active').innerText = adminUsersList.filter(u => u.lastLogin && ((new Date() - new Date(u.lastLogin)) < 86400000)).length;
             const frag = document.createDocumentFragment();
             filteredUsers.sort((a,b) => new Date(b.lastLogin || 0) - new Date(a.lastLogin || 0)).forEach((u, index) => {
-                let div = document.createElement('div'); div.className = "glass-card p-4 flex justify-between items-center";
-                div.innerHTML = `<div class="flex items-center gap-3"><img src="${u.avatar}" class="w-10 h-10 rounded-full object-cover"><div><p class="text-sm font-bold">${u.name}</p><p class="text-[10px] opacity-50">${u.email}</p></div></div><button onclick="openUserModal('${u.uid}')" class="px-4 py-2 bg-[var(--bg-color)] rounded-[12px] text-xs font-bold btn-spring transition-colors" style="color: var(--accent-primary);">查看</button>`;
+                let div = document.createElement('div'); div.className = "ios-card p-3 flex justify-between items-center";
+                div.innerHTML = `<div class="flex items-center gap-2.5"><img src="${u.avatar}" class="w-8 h-8 rounded-full object-cover"><div><p class="text-xs font-bold">${u.name}</p><p class="text-[9px] opacity-50">${u.email}</p></div></div><button onclick="openUserModal('${u.uid}')" class="px-3 py-1.5 bg-[var(--surface-inset)] rounded-[10px] text-[10px] font-bold btn-spring transition-colors" style="color: var(--accent-primary);">查看</button>`;
                 frag.appendChild(div);
             }); listEl.appendChild(frag);
         } window.renderAdminUsers = renderAdminUsers;
@@ -1542,8 +1568,8 @@
             document.getElementById('modal-user-email').innerText = user.email; document.getElementById('modal-user-email-hidden').value = user.email;
             document.getElementById('modal-user-pending').innerText = user.pendingCount || 0; document.getElementById('modal-user-completed').innerText = user.completedCount || 0;
             const isBlocked = adminConfig.blacklist && adminConfig.blacklist.includes(user.email); const statusEl = document.getElementById('modal-user-status');
-            if (isBlocked) { statusEl.innerText = "已封鎖"; statusEl.className = "px-2 py-1 rounded-[6px] text-[10px] font-bold"; statusEl.style.backgroundColor = 'var(--danger-10)'; statusEl.style.color = 'var(--danger-color)'; document.getElementById('modal-btn-block').classList.add('hidden'); document.getElementById('modal-btn-unblock').classList.remove('hidden'); } 
-            else { statusEl.innerText = "正常"; statusEl.className = "px-2 py-1 rounded-[6px] text-[10px] font-bold bg-green-500/10 text-green-500"; document.getElementById('modal-btn-block').classList.remove('hidden'); document.getElementById('modal-btn-unblock').classList.add('hidden'); }
+            if (isBlocked) { statusEl.innerText = "已封鎖"; statusEl.className = "px-2 py-0.5 rounded-[4px] text-[9px] font-bold"; statusEl.style.backgroundColor = 'var(--danger-10)'; statusEl.style.color = 'var(--danger-color)'; document.getElementById('modal-btn-block').classList.add('hidden'); document.getElementById('modal-btn-unblock').classList.remove('hidden'); } 
+            else { statusEl.innerText = "正常活躍"; statusEl.className = "px-2 py-0.5 rounded-[4px] text-[9px] font-bold bg-green-500/10 text-green-500"; document.getElementById('modal-btn-block').classList.remove('hidden'); document.getElementById('modal-btn-unblock').classList.add('hidden'); }
             openModal('user-details-modal');
         } window.openUserModal = openUserModal;
 
@@ -1568,16 +1594,16 @@
 
         function completeTask(id, isPub, el) { 
             const task = allTasks.find(t => t.id === id); if(!task) return; suspendRenderUntil = Date.now() + 500; 
-            if(el) { const card = el.closest('.glass-card'); if(card) { card.style.transition = 'all 0.3s var(--spring)'; card.style.transform = 'scale(0.9)'; card.style.opacity = '0'; setTimeout(() => { if(card.parentNode) card.remove(); updateDashboardCounts(); }, 300); } }
+            if(el) { const card = el.closest('.ios-card'); if(card) { card.style.transition = 'all 0.3s var(--spring)'; card.style.transform = 'scale(0.9)'; card.style.opacity = '0'; setTimeout(() => { if(card.parentNode) card.remove(); updateDashboardCounts(); }, 300); } }
             addDoc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'history'), { ...task, completedAt: new Date().toISOString() })
             .then(() => deleteDoc(doc(db, 'artifacts', appId, isPub ? 'public' : 'users', isPub ? 'data' : currentUser.uid, 'assignments', id)))
-            .then(() => { confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors:['#3b82f6', '#10b981', '#ffffff']}); showToast("太棒了！已完成"); }).catch(e=>{});
+            .then(() => { confetti({ particleCount: 80, spread: 60, origin: { y: 0.6 }, colors:['#7baaf7', '#10b981', '#ffffff']}); showToast("太棒了！已完成"); }).catch(e=>{});
         } window.completeTask = completeTask;
 
         function deleteTask(id, isPub, el) { 
             customConfirm('刪除', '確定刪除嗎？', 'danger', () => { 
                 suspendRenderUntil = Date.now() + 500; 
-                if(el) { const card = el.closest('.glass-card'); if(card) { card.style.transition = 'all 0.3s var(--spring)'; card.style.transform = 'scale(0.9)'; card.style.opacity = '0'; setTimeout(() => { if(card.parentNode) card.remove(); updateDashboardCounts(); }, 300); } }
+                if(el) { const card = el.closest('.ios-card'); if(card) { card.style.transition = 'all 0.3s var(--spring)'; card.style.transform = 'scale(0.9)'; card.style.opacity = '0'; setTimeout(() => { if(card.parentNode) card.remove(); updateDashboardCounts(); }, 300); } }
                 deleteDoc(doc(db, 'artifacts', appId, isPub ? 'public' : 'users', isPub ? 'data' : currentUser.uid, 'assignments', id)).then(() => { showToast("已刪除"); }).catch(e => {}); 
             }); 
         } window.deleteTask = deleteTask;
@@ -1585,7 +1611,7 @@
         function deleteHistoryTask(id, el) { 
             customConfirm('清除', '刪除紀錄？', 'danger', () => { 
                 suspendRenderUntil = Date.now() + 500; 
-                if(el) { const card = el.closest('.glass-card'); if(card) { card.style.transition = 'all 0.3s var(--spring)'; card.style.transform = 'scale(0.9)'; card.style.opacity = '0'; setTimeout(() => { if(card.parentNode) card.remove(); }, 300); } }
+                if(el) { const card = el.closest('.ios-card'); if(card) { card.style.transition = 'all 0.3s var(--spring)'; card.style.transform = 'scale(0.9)'; card.style.opacity = '0'; setTimeout(() => { if(card.parentNode) card.remove(); }, 300); } }
                 deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'history', id)).then(() => showToast("已清除")); 
             }); 
         } window.deleteHistoryTask = deleteHistoryTask;
