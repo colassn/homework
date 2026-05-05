@@ -24,6 +24,7 @@
             --accent-primary-hover: #6495ed;
             --accent-10: rgba(123, 170, 247, 0.1);
             --accent-20: rgba(123, 170, 247, 0.2);
+            --accent-30: rgba(123, 170, 247, 0.3);
             
             --accent-text: #ffffff;
             --danger-color: #ff3b30;
@@ -59,7 +60,6 @@
             overflow-x: hidden;
         }
 
-        /* 視圖切換動畫 */
         .app-view { display: none; }
         .app-view.active { display: block; animation: viewFadeIn 0.4s var(--spring) forwards; }
         @keyframes viewFadeIn { 
@@ -67,7 +67,6 @@
             100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); } 
         }
 
-        /* 高級無邊框卡片 (更緊湊) */
         .ios-card {
             background-color: var(--surface-color);
             border-radius: 20px; 
@@ -77,49 +76,33 @@
             overflow: hidden;
         }
 
-        /* 統計儀表板卡片 */
         .stat-card {
             background-color: var(--surface-color);
             border-radius: 16px;
             padding: 12px 14px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
+            display: flex; flex-direction: column; justify-content: space-between;
             transition: all 0.3s var(--spring-bouncy);
             cursor: pointer;
             box-shadow: 0 2px 8px rgba(0,0,0,0.02);
             border: 1px solid var(--border-color);
         }
-        .stat-card:hover {
-            transform: translateY(-2px) scale(1.02);
-            box-shadow: 0 8px 24px var(--accent-10);
-        }
+        .stat-card:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 8px 24px var(--accent-10); }
         .stat-card:active { transform: translateY(0) scale(0.98); }
 
-        /* iOS 原生風格無邊框輸入框 (緊湊版) */
         .ios-input-group {
-            display: flex;
-            align-items: center;
+            display: flex; align-items: center;
             background-color: var(--surface-inset);
-            border-radius: 12px;
-            padding: 2px 12px;
+            border-radius: 12px; padding: 2px 12px;
             transition: all 0.3s var(--spring);
             border: 1.5px solid transparent;
         }
         .ios-input-group:focus-within {
-            background-color: var(--surface-color);
-            border-color: var(--accent-primary);
+            background-color: var(--surface-color); border-color: var(--accent-primary);
             box-shadow: 0 2px 10px var(--accent-10);
         }
         .ios-input {
-            width: 100%;
-            background: transparent;
-            border: none;
-            color: var(--text-primary);
-            padding: 8px 0;
-            font-size: 14px;
-            font-weight: 600;
-            outline: none;
+            width: 100%; background: transparent; border: none;
+            color: var(--text-primary); padding: 8px 0; font-size: 14px; font-weight: 600; outline: none;
         }
         .ios-input::placeholder { color: var(--text-secondary); opacity: 0.6; font-weight: 500; }
         
@@ -128,39 +111,23 @@
             position: absolute; left: 0; top: 0; width: 100%; height: 100%; margin: 0; padding: 0; cursor: pointer; opacity: 0; 
         }
 
-        /* iOS 原生分段控制器 (Segmented Control) */
         .ios-segmented-control {
-            display: flex;
-            background-color: var(--surface-inset);
-            border-radius: 10px;
-            padding: 2px;
-            position: relative;
+            display: flex; background-color: var(--surface-inset); border-radius: 10px; padding: 2px; position: relative;
         }
         .ios-segment-btn {
-            flex: 1;
-            padding: 6px 0;
-            font-size: 12px;
-            font-weight: 700;
-            border-radius: 8px;
-            color: var(--text-secondary);
-            transition: all 0.3s var(--spring);
-            z-index: 2;
-            position: relative;
+            flex: 1; padding: 6px 0; font-size: 12px; font-weight: 700; border-radius: 8px;
+            color: var(--text-secondary); transition: all 0.3s var(--spring); z-index: 2; position: relative;
         }
         .ios-segment-btn.active {
-            color: var(--text-primary);
-            background-color: var(--surface-color);
+            color: var(--text-primary); background-color: var(--surface-color);
             box-shadow: 0 1px 4px rgba(0,0,0,0.08);
         }
         
-        /* 漸變立體按鈕 */
         .btn-primary {
             background: linear-gradient(135deg, var(--accent-primary), var(--accent-primary-hover));
-            color: var(--accent-text);
-            box-shadow: 0 4px 12px var(--accent-20);
+            color: var(--accent-text); box-shadow: 0 4px 12px var(--accent-20);
         }
         
-        /* 按鈕微動畫 */
         .btn-spring { 
             transition: transform 0.2s var(--spring-bouncy), filter 0.2s ease, opacity 0.2s ease; 
             will-change: transform; cursor: pointer; touch-action: manipulation; 
@@ -168,7 +135,6 @@
         .btn-spring:active { transform: scale(0.95); filter: brightness(0.9); }
         .btn-spring:hover { filter: brightness(1.05); }
 
-        /* Custom Modal (全螢幕懸浮) */
         .modern-modal-overlay { 
             opacity: 0; visibility: hidden; transition: all 0.3s var(--spring); 
             backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); 
@@ -195,33 +161,22 @@
             .modern-modal-overlay.active .modern-modal-content { transform: translateY(0); }
         }
 
-        /* 導航列 (緊湊版) */
         .nav-item { color: var(--text-secondary); transition: all 0.3s var(--spring); border-radius: 100px; display: flex; align-items: center; justify-content: center; }
-        .nav-item.active { 
-            color: var(--accent-primary); 
-            background-color: var(--accent-10);
-            transform: scale(1.05); 
-        }
+        .nav-item.active { color: var(--accent-primary); background-color: var(--accent-10); transform: scale(1.05); }
 
-        /* Custom Chips */
         .custom-chip { 
             cursor: pointer; user-select: none; border-radius: 8px; position: relative; 
             font-weight: 700; transition: all 0.2s var(--spring); display: inline-flex; align-items: center; justify-content: center;
             padding: 6px 12px; font-size: 12px; background-color: var(--surface-inset); color: var(--text-primary);
         }
-        .custom-chip.selected { 
-            background-color: var(--accent-primary) !important; color: var(--accent-text) !important; 
-            transform: scale(1.03); box-shadow: 0 2px 8px var(--accent-20); 
-        }
+        .custom-chip.selected { background-color: var(--accent-primary) !important; color: var(--accent-text) !important; transform: scale(1.03); box-shadow: 0 2px 8px var(--accent-20); }
         .custom-chip:hover:not(.selected) { filter: brightness(0.95); }
 
-        /* Toast */
         #toast-container { position: fixed; top: calc(env(safe-area-inset-top, 16px) + 50px); left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none;}
         .toast { background-color: var(--text-primary); color: var(--bg-color); transition: all 0.3s var(--spring); transform: translateY(-16px) scale(0.95); opacity: 0; border-radius: 100px; padding: 10px 20px; font-weight: 700; font-size: 13px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); backdrop-filter: blur(8px); display: flex; align-items: center;}
         [data-theme="dark"] .toast { background-color: #ffffff; color: #000000; }
         .toast.show { transform: translateY(0) scale(1); opacity: 1; }
 
-        /* Custom Toggle Switch (縮小版) */
         .ios-toggle { position: relative; display: inline-flex; align-items: center; cursor: pointer; flex-shrink: 0; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
         .ios-toggle input { display: none; }
         .ios-toggle .toggle-track { width: 40px; height: 24px; background-color: var(--border-color); border-radius: 999px; transition: background-color 0.3s var(--spring); position: relative; }
@@ -239,7 +194,6 @@
         .animate-marquee { display: inline-block; padding-left: 100%; animation: marquee 15s linear infinite; }
         @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
 
-        /* Sticky Glass Header */
         .glass-header {
             position: sticky; top: 0; z-index: 50;
             background-color: var(--header-bg);
@@ -247,8 +201,6 @@
             transition: background-color 0.3s ease;
             box-shadow: 0 1px 0 var(--border-color);
         }
-        
-        .task-list-container { overflow-y: auto; overflow-x: hidden; padding: 4px; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col pb-[80px] md:pb-[100px] relative">
@@ -274,25 +226,13 @@
 
     <!-- Floating Dock Nav (Desktop) -->
     <nav class="hidden md:flex flex-row fixed bottom-6 left-1/2 -translate-x-1/2 py-2 px-4 rounded-[20px] bg-[var(--surface-color)] backdrop-blur-3xl border border-[var(--border-color)] shadow-[0_8px_32px_rgba(0,0,0,0.06)] z-40 items-center gap-1.5">
-        <button onclick="switchView('home')" class="nav-item active group relative w-10 h-10 flex items-center justify-center rounded-xl btn-spring" data-target="home">
-            <i class="fas fa-home text-[18px]"></i>
-        </button>
-        <button onclick="switchView('history')" class="nav-item group relative w-10 h-10 flex items-center justify-center rounded-xl btn-spring" data-target="history">
-            <i class="fas fa-history text-[18px]"></i>
-        </button>
-        <button onclick="switchView('timetable')" class="nav-item group relative w-10 h-10 flex items-center justify-center rounded-xl btn-spring" data-target="timetable">
-            <i class="fas fa-calendar-week text-[18px]"></i>
-        </button>
-        <button onclick="switchView('subjects')" class="nav-item group relative w-10 h-10 flex items-center justify-center rounded-xl btn-spring" data-target="subjects">
-            <i class="fas fa-shapes text-[18px]"></i>
-        </button>
-        <button onclick="switchView('settings')" class="nav-item group relative w-10 h-10 flex items-center justify-center rounded-xl btn-spring" data-target="settings">
-            <i class="fas fa-sliders-h text-[18px]"></i>
-        </button>
+        <button onclick="switchView('home')" class="nav-item active group relative w-10 h-10 flex items-center justify-center rounded-xl btn-spring" data-target="home"><i class="fas fa-home text-[18px]"></i></button>
+        <button onclick="switchView('history')" class="nav-item group relative w-10 h-10 flex items-center justify-center rounded-xl btn-spring" data-target="history"><i class="fas fa-history text-[18px]"></i></button>
+        <button onclick="switchView('timetable')" class="nav-item group relative w-10 h-10 flex items-center justify-center rounded-xl btn-spring" data-target="timetable"><i class="fas fa-calendar-week text-[18px]"></i></button>
+        <button onclick="switchView('subjects')" class="nav-item group relative w-10 h-10 flex items-center justify-center rounded-xl btn-spring" data-target="subjects"><i class="fas fa-shapes text-[18px]"></i></button>
+        <button onclick="switchView('settings')" class="nav-item group relative w-10 h-10 flex items-center justify-center rounded-xl btn-spring" data-target="settings"><i class="fas fa-sliders-h text-[18px]"></i></button>
         <div id="nav-admin-divider" class="w-px h-5 bg-[var(--border-color)] mx-1.5 hidden shrink-0"></div>
-        <button id="nav-admin-btn-desktop" onclick="switchView('admin')" class="nav-item group relative w-10 h-10 items-center justify-center hover:bg-[var(--accent-10)] btn-spring hidden" data-target="admin" style="color: var(--accent-primary);">
-            <i class="fas fa-shield-alt text-[18px]"></i>
-        </button>
+        <button id="nav-admin-btn-desktop" onclick="switchView('admin')" class="nav-item group relative w-10 h-10 items-center justify-center hover:bg-[var(--accent-10)] btn-spring hidden" data-target="admin" style="color: var(--accent-primary);"><i class="fas fa-shield-alt text-[18px]"></i></button>
     </nav>
 
     <!-- Floating Dock Nav (Mobile) -->
@@ -331,7 +271,7 @@
                 </div>
             </div>
 
-            <!-- Dashboard Stats (精緻縮放版) -->
+            <!-- Dashboard Stats -->
             <h2 class="text-base font-black tracking-tight mb-3 px-1">作業分佈</h2>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
                 <div class="stat-card" onclick="openDashboardModal('today')">
@@ -376,32 +316,27 @@
                 </div>
             </div>
 
-            <!-- Beautiful Add Task Form (Apple Style Compact) -->
+            <!-- Beautiful Add Task Form -->
             <div class="ios-card p-5 md:p-6 mb-6">
                 <h2 class="text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)] mb-4 flex items-center"><i class="fas fa-plus-circle mr-2 opacity-50"></i>新增任務</h2>
                 <form id="add-task-form" class="space-y-3">
-                    
-                    <!-- 內容輸入 -->
                     <div class="ios-input-group items-start py-1">
                         <i class="fas fa-pen text-[var(--text-secondary)] opacity-40 mr-2 mt-2.5 text-sm"></i>
                         <textarea id="task-content" rows="2" class="ios-input resize-none text-sm" placeholder="輸入功課或測驗內容..." required></textarea>
                     </div>
 
-                    <!-- 科目選擇 -->
                     <div class="relative w-full overflow-hidden">
                         <div id="subject-chips-add" class="flex gap-2 scroll-smooth-x pb-1"></div>
                     </div>
                     <input type="hidden" id="task-subject">
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <!-- 日期選擇 -->
                         <div class="ios-input-group relative cursor-pointer py-1.5">
                             <i class="far fa-calendar text-[var(--text-secondary)] opacity-40 mr-2 text-sm"></i>
                             <span id="date-display-add" class="font-bold text-sm pointer-events-none w-full py-1 text-[var(--text-primary)]">選擇日期</span>
                             <input type="date" id="task-date" class="absolute inset-0 opacity-0 cursor-pointer" onchange="document.getElementById('date-display-add').innerText = this.value" required>
                         </div>
                         
-                        <!-- 原生分段控制器 -->
                         <div class="ios-segmented-control">
                             <button type="button" class="ios-segment-btn active" data-val="homework" onclick="setTaskType('homework', this)">功課</button>
                             <button type="button" class="ios-segment-btn" data-val="test" onclick="setTaskType('test', this)">測驗</button>
@@ -414,7 +349,6 @@
                         <input type="url" id="task-url" class="ios-input text-sm" placeholder="附加網頁連結 (選填)">
                     </div>
                     
-                    <!-- 廣播 (Admin) -->
                     <div id="broadcast-toggle-container" class="hidden pt-2 border-t border-[var(--border-color)] mt-3">
                         <label class="flex items-center justify-between cursor-pointer w-full p-2.5 rounded-[12px] btn-spring bg-[var(--surface-inset)]">
                             <span class="text-xs font-bold text-orange-500"><i class="fas fa-bullhorn mr-1.5"></i>發佈全域廣播</span>
@@ -447,7 +381,6 @@
         <!-- VIEW: TIMETABLE -->
         <section id="view-timetable" class="app-view space-y-5 max-w-5xl mx-auto">
             <div class="flex justify-between items-center px-1">
-                <!-- 原生分段控制器 (Segmented Control) -->
                 <div id="tt-view-toggle-container" class="ios-segmented-control w-[140px]">
                     <button type="button" class="ios-segment-btn active" id="tt-btn-day" onclick="setTTViewMode('day')">單日</button>
                     <button type="button" class="ios-segment-btn" id="tt-btn-week" onclick="setTTViewMode('week')">全週</button>
@@ -471,16 +404,12 @@
             </div>
 
             <div class="ios-card p-4 md:p-6 overflow-hidden">
-                <!-- VIEW MODE -->
                 <div id="timetable-timeline-container" class="flex flex-col">
                     <div id="timetable-day-selector" class="flex gap-2 scroll-smooth-x mb-5"></div>
                     <h2 id="tt-single-day-header" class="text-xl font-black tracking-tight mb-5 transition-colors duration-300" style="color: var(--accent-primary);"></h2>
-                    <div id="timetable-timeline" class="flex flex-col relative">
-                        <!-- Content dynamically injected here -->
-                    </div>
+                    <div id="timetable-timeline" class="flex flex-col relative"></div>
                 </div>
 
-                <!-- EDIT MODE -->
                 <div id="timetable-edit-container" class="hidden">
                     <div class="mb-5 p-4 rounded-[16px] bg-[var(--surface-inset)] space-y-4">
                         <div class="flex flex-wrap gap-2 items-center">
@@ -538,13 +467,11 @@
                 </div>
                 
                 <div class="flex flex-col md:flex-row gap-3 mb-4 relative z-10">
-                    <div class="ios-input-group flex-1 flex items-center px-3 py-1">
+                    <div class="ios-input-group flex-1 flex items-center px-3 py-1.5">
                         <i class="fas fa-book opacity-40 mr-2 text-sm"></i>
                         <input type="text" id="new-subject-name" class="ios-input text-sm" placeholder="輸入科目名稱 (如: 歷史...)">
                     </div>
-                    <button onclick="addSubject()" class="w-full md:w-auto px-6 py-2.5 rounded-[12px] font-bold text-sm btn-primary btn-spring shrink-0">
-                        新增
-                    </button>
+                    <button onclick="addSubject()" class="w-full md:w-auto px-6 py-2.5 rounded-[12px] font-bold text-sm btn-primary btn-spring shrink-0">新增</button>
                 </div>
                 
                 <div class="bg-[var(--surface-inset)] p-3.5 rounded-[16px] relative z-10">
@@ -572,7 +499,6 @@
         <section id="view-settings" class="app-view max-w-2xl mx-auto space-y-5">
             <h2 class="text-xl font-black tracking-tight px-1">設定</h2>
             
-            <!-- 帳戶卡片 -->
             <div class="ios-card p-4 flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <img id="settings-avatar" src="" class="w-12 h-12 rounded-full object-cover shadow-sm border border-[var(--border-color)]">
@@ -583,7 +509,6 @@
                 </div>
             </div>
 
-            <!-- 外觀設定 -->
             <div class="ios-card overflow-hidden">
                 <div class="p-3 bg-[var(--surface-inset)] border-b border-[var(--border-color)]">
                     <h3 class="text-[9px] font-bold uppercase tracking-widest opacity-50">外觀設定</h3>
@@ -591,25 +516,28 @@
                 <div class="p-4 flex justify-between items-center border-b border-[var(--border-color)]">
                     <div class="flex items-center gap-3">
                         <div class="w-7 h-7 rounded-full bg-[#1c1c1e] text-white flex items-center justify-center shadow-sm"><i class="fas fa-moon text-[10px]"></i></div>
-                        <div>
-                            <span class="text-[13px] font-bold block">深色模式</span>
-                        </div>
+                        <span class="text-[13px] font-bold block">深色模式</span>
                     </div>
                     <label class="ios-toggle scale-[0.8] origin-right"><input type="checkbox" id="dark-mode-toggle" onchange="toggleDarkMode(this.checked)"><div class="toggle-track"><div class="toggle-thumb"></div></div></label>
                 </div>
                 <div id="theme-color-section" class="p-4">
-                    <span class="text-[11px] font-bold block mb-3 opacity-80">介面強調色彩</span>
+                    <span class="text-[11px] font-bold block mb-3 opacity-80">介面強調色彩 (共 10 款)</span>
                     <div class="flex gap-3 flex-wrap">
-                        <button onclick="setThemeColor('macaron-blue')" class="w-8 h-8 rounded-full shadow-sm theme-btn btn-spring border-2" data-color="macaron-blue" style="background-color: #7baaf7;"></button>
-                        <button onclick="setThemeColor('macaron-green')" class="w-8 h-8 rounded-full shadow-sm theme-btn btn-spring border-2" data-color="macaron-green" style="background-color: #7bc9a6;"></button>
-                        <button onclick="setThemeColor('macaron-pink')" class="w-8 h-8 rounded-full shadow-sm theme-btn btn-spring border-2" data-color="macaron-pink" style="background-color: #f391a0;"></button>
-                        <button onclick="setThemeColor('macaron-purple')" class="w-8 h-8 rounded-full shadow-sm theme-btn btn-spring border-2" data-color="macaron-purple" style="background-color: #b491c8;"></button>
-                        <button onclick="setThemeColor('macaron-peach')" class="w-8 h-8 rounded-full shadow-sm theme-btn btn-spring border-2" data-color="macaron-peach" style="background-color: #f3a683;"></button>
+                        <button onclick="setThemeColor('macaron-blue')" class="w-8 h-8 rounded-full shadow-sm theme-btn btn-spring border-2" data-color="macaron-blue" style="background-color: #7baaf7;" title="馬卡龍藍"></button>
+                        <button onclick="setThemeColor('macaron-green')" class="w-8 h-8 rounded-full shadow-sm theme-btn btn-spring border-2" data-color="macaron-green" style="background-color: #7bc9a6;" title="馬卡龍綠"></button>
+                        <button onclick="setThemeColor('macaron-pink')" class="w-8 h-8 rounded-full shadow-sm theme-btn btn-spring border-2" data-color="macaron-pink" style="background-color: #f391a0;" title="馬卡龍粉"></button>
+                        <button onclick="setThemeColor('macaron-purple')" class="w-8 h-8 rounded-full shadow-sm theme-btn btn-spring border-2" data-color="macaron-purple" style="background-color: #b491c8;" title="馬卡龍紫"></button>
+                        <button onclick="setThemeColor('macaron-peach')" class="w-8 h-8 rounded-full shadow-sm theme-btn btn-spring border-2" data-color="macaron-peach" style="background-color: #f3a683;" title="馬卡龍橘"></button>
+                        <!-- 新增 5 款現代風格顏色 -->
+                        <button onclick="setThemeColor('macaron-lavender')" class="w-8 h-8 rounded-full shadow-sm theme-btn btn-spring border-2" data-color="macaron-lavender" style="background-color: #a78bfa;" title="薰衣草紫"></button>
+                        <button onclick="setThemeColor('macaron-mint')" class="w-8 h-8 rounded-full shadow-sm theme-btn btn-spring border-2" data-color="macaron-mint" style="background-color: #5eead4;" title="薄荷青"></button>
+                        <button onclick="setThemeColor('macaron-lemon')" class="w-8 h-8 rounded-full shadow-sm theme-btn btn-spring border-2" data-color="macaron-lemon" style="background-color: #fcd34d;" title="奶油黃"></button>
+                        <button onclick="setThemeColor('macaron-rose')" class="w-8 h-8 rounded-full shadow-sm theme-btn btn-spring border-2" data-color="macaron-rose" style="background-color: #fb7185;" title="玫瑰紅"></button>
+                        <button onclick="setThemeColor('macaron-slate')" class="w-8 h-8 rounded-full shadow-sm theme-btn btn-spring border-2" data-color="macaron-slate" style="background-color: #94a3b8;" title="莫蘭迪灰藍"></button>
                     </div>
                 </div>
             </div>
 
-            <!-- 其他系統操作 -->
             <div class="ios-card overflow-hidden">
                 <div class="p-3 bg-[var(--surface-inset)] border-b border-[var(--border-color)]">
                     <h3 class="text-[9px] font-bold uppercase tracking-widest opacity-50">系統操作</h3>
@@ -645,7 +573,7 @@
                         <p class="text-[10px] font-bold mb-1.5 opacity-50">活躍 (24h)</p>
                         <h3 id="admin-stat-active" class="text-3xl font-black transition-colors duration-300" style="color: var(--accent-primary);">0</h3>
                     </div>
-                    <div class="ios-card p-4 col-span-2 md:col-span-1">
+                    <div class="ios-card p-4 col-span-2 md:col-span-1 border-l-4 border-orange-500">
                         <p class="text-[10px] font-bold mb-1.5 opacity-50">廣播任務</p>
                         <h3 id="admin-stat-broadcasts" class="text-3xl font-black text-orange-500">0</h3>
                     </div>
@@ -813,7 +741,7 @@
     <div id="user-details-modal" class="modern-modal-overlay fixed inset-0">
         <div class="modern-modal-content w-full max-w-sm p-0 relative overflow-hidden">
             <div class="absolute top-0 left-0 w-full h-20 transition-colors duration-300 pointer-events-none" style="background-color: var(--accent-10);"></div>
-            <button onclick="closeModal('user-details-modal')" class="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full bg-[var(--surface-color)] shadow-sm text-[var(--text-secondary)] btn-spring z-50"><i class="fas fa-times text-xs"></i></button>
+            <button onclick="closeModal('user-details-modal')" class="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full bg-[var(--surface-color)] shadow-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] btn-spring z-50"><i class="fas fa-times text-xs"></i></button>
             
             <div class="relative z-10 pt-8 pb-5 px-5">
                 <div class="flex items-center gap-3 mb-5 border-b border-[var(--border-color)] pb-5">
@@ -841,7 +769,7 @@
     <div id="profile-modal" class="modern-modal-overlay fixed inset-0">
         <div class="modern-modal-content w-full max-w-[280px] p-0 text-center relative overflow-hidden">
             <div class="absolute top-0 left-0 w-full h-20 transition-colors duration-300 pointer-events-none" style="background-color: var(--accent-10);"></div>
-            <button onclick="closeModal('profile-modal')" class="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full bg-[var(--surface-color)] shadow-sm text-[var(--text-secondary)] btn-spring z-50"><i class="fas fa-times text-xs"></i></button>
+            <button onclick="closeModal('profile-modal')" class="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full bg-[var(--surface-color)] shadow-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] btn-spring z-50"><i class="fas fa-times text-xs"></i></button>
             
             <div class="relative z-10 pt-10 pb-5 px-5">
                 <img id="profile-modal-avatar" src="" class="w-20 h-20 rounded-full mx-auto mb-3 object-cover shadow-md border-[3px] border-[var(--surface-color)] bg-[var(--surface-color)]">
@@ -884,7 +812,7 @@
         let adminConfig = { marquee: '', maintenance: false, autoCleanEnabled: false, whitelistEnabled: false, whitelist: ['chimhinhin@gmail.com'], blacklistEnabled: false, blacklist: [] };
         let adminUsersList = []; let systemAuditLogs = [];
 
-        // 馬卡龍粉彩色系
+        // Colors
         const subjectColors = ['#FFB3BA','#BAE1FF','#BAFFC9','#FFDFBA','#E8DFF5','#DAEAF6','#E2F0CB','#F3B0C3','#CBAACB','#FDFD96','#FFC4C4','#FFD1B3','#FFF2B2','#C4FAC7','#C4E4FF','#E2D4F0','#FAD4D8','#D0E3F0','#D9E8B8','#F0A1B7','#C09DC0','#F5F587','#E5B2C6','#B2D5D0'];
         const defaultSubjects = [
             { id: 'sub_hk_1', name: '中國語文', color: '#FFB3BA', enabled: true },
@@ -913,13 +841,18 @@
             { id: 'sub_hk_24', name: '設計與科技', color: '#14b8a6', enabled: false }
         ];
 
-        // 系統強調色主題引擎
+        // 系統強調色主題引擎 (極微量環境光渲染 Ultra-subtle Tint - 98%中性色 + 2%主題色)
         const themeColors = { 
-            'macaron-blue': { primary: '#7baaf7', hover: '#6495ed' }, 
-            'macaron-green': { primary: '#7bc9a6', hover: '#5eb58f' }, 
-            'macaron-pink': { primary: '#f391a0', hover: '#e27586' }, 
-            'macaron-purple': { primary: '#b491c8', hover: '#9b76b0' }, 
-            'macaron-peach': { primary: '#f3a683', hover: '#df8f6c' } 
+            'macaron-blue': { primary: '#7baaf7', hover: '#6495ed', lBg: '#f4f6fa', lSur: '#ffffff', lIns: '#eff2f8', dBg: '#020408', dSur: '#1c1d1f', dIns: '#2c2e32' }, 
+            'macaron-green': { primary: '#7bc9a6', hover: '#5eb58f', lBg: '#f4f9f6', lSur: '#ffffff', lIns: '#eff6f1', dBg: '#020604', dSur: '#1c1e1d', dIns: '#2c302d' }, 
+            'macaron-pink': { primary: '#f391a0', hover: '#e27586', lBg: '#fbf4f6', lSur: '#ffffff', lIns: '#f8eff1', dBg: '#0a0304', dSur: '#1f1c1c', dIns: '#322c2d' }, 
+            'macaron-purple': { primary: '#b491c8', hover: '#9b76b0', lBg: '#f8f4fb', lSur: '#ffffff', lIns: '#f4eff8', dBg: '#06030a', dSur: '#1d1c1f', dIns: '#2f2c32' }, 
+            'macaron-peach': { primary: '#f3a683', hover: '#df8f6c', lBg: '#fbf5f2', lSur: '#ffffff', lIns: '#f8f0ed', dBg: '#0a0402', dSur: '#1f1d1c', dIns: '#322d2c' },
+            'macaron-lavender': { primary: '#a78bfa', hover: '#8b5cf6', lBg: '#f6f5fb', lSur: '#ffffff', lIns: '#f2f0f8', dBg: '#05040a', dSur: '#1d1c1f', dIns: '#2e2c32' },
+            'macaron-mint': { primary: '#5eead4', hover: '#2dd4bf', lBg: '#f2fafa', lSur: '#ffffff', lIns: '#ebf7f7', dBg: '#020606', dSur: '#1c1e1e', dIns: '#2c3030' },
+            'macaron-lemon': { primary: '#fcd34d', hover: '#fbbf24', lBg: '#fbfaf2', lSur: '#ffffff', lIns: '#f8f6eb', dBg: '#0a0902', dSur: '#1f1e1c', dIns: '#32302c' },
+            'macaron-rose': { primary: '#fb7185', hover: '#f43f5e', lBg: '#fbf3f4', lSur: '#ffffff', lIns: '#f8edef', dBg: '#0a0304', dSur: '#1f1c1c', dIns: '#322c2d' },
+            'macaron-slate': { primary: '#94a3b8', hover: '#64748b', lBg: '#f5f6f8', lSur: '#ffffff', lIns: '#f0f2f5', dBg: '#030406', dSur: '#1c1d1e', dIns: '#2c2d2e' }
         };
 
         let ttViewMode = 'day';
@@ -937,7 +870,6 @@
         document.getElementById('task-date').value = getNextWeekdayStr();
         document.getElementById('date-display-add').innerText = document.getElementById('task-date').value;
 
-        // Custom UI Replacements
         function showToast(msg) { const container = document.getElementById('toast-container'); const toast = document.createElement('div'); toast.className = `toast show`; toast.innerHTML = `<i class="fas fa-info-circle mr-1.5"></i>${msg}`; container.appendChild(toast); setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 400); }, 3000); } window.showToast = showToast;
         function openModal(id) { document.getElementById(id).classList.add('active'); } window.openModal = openModal;
         function closeModal(id) { document.getElementById(id).classList.remove('active'); } window.closeModal = closeModal;
@@ -946,8 +878,8 @@
             const overlay = document.getElementById('custom-dialog'); document.getElementById('dialog-title').innerText = title; document.getElementById('dialog-message').innerText = message;
             const iconEl = document.getElementById('dialog-icon'); const confirmBtn = document.getElementById('dialog-confirm'); const cancelBtn = document.getElementById('dialog-cancel');
             cancelBtn.classList.remove('hidden');
-            if(type === 'danger') { iconEl.className = 'w-12 h-12 rounded-full mx-auto flex items-center justify-center text-xl mb-3 text-[var(--danger-color)]'; iconEl.style.backgroundColor = 'var(--danger-10)'; iconEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i>'; confirmBtn.className = 'flex-1 py-3 rounded-[12px] font-black text-xs text-white btn-spring shadow-md'; confirmBtn.style.background = 'var(--danger-color)'; }
-            else { iconEl.className = 'w-12 h-12 rounded-full mx-auto flex items-center justify-center text-xl mb-3 text-[var(--accent-primary)]'; iconEl.style.backgroundColor = 'var(--accent-10)'; iconEl.innerHTML = '<i class="fas fa-question"></i>'; confirmBtn.className = 'flex-1 py-3 rounded-[12px] font-black text-xs btn-primary btn-spring'; }
+            if(type === 'danger') { iconEl.className = 'w-16 h-16 rounded-full mx-auto flex items-center justify-center text-2xl mb-4 text-[var(--danger-color)]'; iconEl.style.backgroundColor = 'var(--danger-10)'; iconEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i>'; confirmBtn.className = 'flex-1 py-3.5 rounded-[14px] font-black text-sm text-white btn-spring shadow-md'; confirmBtn.style.background = 'var(--danger-color)'; }
+            else { iconEl.className = 'w-16 h-16 rounded-full mx-auto flex items-center justify-center text-2xl mb-4 text-[var(--accent-primary)]'; iconEl.style.backgroundColor = 'var(--accent-10)'; iconEl.innerHTML = '<i class="fas fa-question"></i>'; confirmBtn.className = 'flex-1 py-3.5 rounded-[14px] font-black text-sm btn-primary btn-spring'; confirmBtn.style.background = ''; }
             confirmBtn.onclick = () => { overlay.classList.remove('active'); onConfirm(); }; cancelBtn.onclick = () => { overlay.classList.remove('active'); }; overlay.classList.add('active');
         } window.customConfirm = customConfirm;
 
@@ -978,26 +910,33 @@
             document.documentElement.style.setProperty('--accent-20', hexToRgba(tc.primary, 0.2));
             document.documentElement.style.setProperty('--accent-30', hexToRgba(tc.primary, 0.3));
 
+            if(userSettings.isDark) {
+                document.documentElement.style.setProperty('--bg-color', tc.dBg);
+                document.documentElement.style.setProperty('--surface-color', tc.dSur);
+                document.documentElement.style.setProperty('--surface-inset', tc.dIns);
+                document.documentElement.style.setProperty('--header-bg', hexToRgba(tc.dBg, 0.85));
+                document.documentElement.style.setProperty('--border-color', 'rgba(255,255,255,0.06)');
+            } else {
+                document.documentElement.style.setProperty('--bg-color', tc.lBg);
+                document.documentElement.style.setProperty('--surface-color', tc.lSur);
+                document.documentElement.style.setProperty('--surface-inset', tc.lIns);
+                document.documentElement.style.setProperty('--header-bg', hexToRgba(tc.lBg, 0.85));
+                document.documentElement.style.setProperty('--border-color', 'rgba(0,0,0,0.06)');
+            }
+
             document.getElementById('dark-mode-toggle').checked = userSettings.isDark;
             const ttCycleNode = document.getElementById('setting-tt-cycle'); if (ttCycleNode) ttCycleNode.value = userSettings.ttCycle || 5;
             const ttPeriodNode = document.getElementById('setting-tt-period'); if (ttPeriodNode) ttPeriodNode.value = userSettings.ttPeriodMins || 35;
             const ttBreakNode = document.getElementById('setting-tt-break'); if (ttBreakNode) ttBreakNode.value = userSettings.ttBreakMins || 15;
             const ttLunchNode = document.getElementById('setting-tt-lunch'); if (ttLunchNode) ttLunchNode.value = userSettings.ttLunchMins || 50;
             
-            // 更新設定頁面色彩選擇器的按鈕樣式
             document.querySelectorAll('.theme-btn').forEach(btn => { 
-                if(btn.dataset.color === userSettings.theme) { 
-                    btn.style.borderColor = 'var(--text-primary)'; 
-                    btn.style.transform = 'scale(1.15)'; 
-                } else { 
-                    btn.style.borderColor = 'transparent'; 
-                    btn.style.transform = 'scale(1)'; 
-                } 
+                if(btn.dataset.color === userSettings.theme) { btn.style.borderColor = 'var(--text-primary)'; btn.style.transform = 'scale(1.15)'; } 
+                else { btn.style.borderColor = 'transparent'; btn.style.transform = 'scale(1)'; } 
             });
             
             buildCustomChips(); updateTTModeChips();
             
-            // Re-render task list segment control properly
             const type = document.getElementById('task-type').value;
             document.querySelectorAll('.ios-segment-btn').forEach(b => {
                if(b.dataset.val === type) b.classList.add('active'); else b.classList.remove('active');
@@ -1021,8 +960,7 @@
 
         function setTaskType(type, btnEl) { 
             document.querySelectorAll('.ios-segment-btn[data-val]').forEach(btn => { btn.classList.remove('active'); }); 
-            btnEl.classList.add('active'); 
-            document.getElementById('task-type').value = type; 
+            btnEl.classList.add('active'); document.getElementById('task-type').value = type; 
         } window.setTaskType = setTaskType;
 
         function buildCustomChips() {
@@ -1035,11 +973,11 @@
             if (!userSettings.subjects || userSettings.subjects.length === 0) userSettings.subjects = defaultSubjects;
             
             userSettings.subjects.filter(s => s.enabled !== false).forEach(sub => {
-                const mkBtn = (name, parent, fn) => { let b = document.createElement('button'); b.type='button'; b.className='custom-chip flex-shrink-0 spring-action'; b.dataset.subject=name; b.innerHTML=`<span class="w-2 h-2 rounded-full mr-1.5" style="background-color:${sub.color}"></span>${name}`; b.onclick = fn; parent.appendChild(b); };
+                const mkBtn = (name, parent, fn) => { let b = document.createElement('button'); b.type='button'; b.className='custom-chip flex-shrink-0 spring-action'; b.dataset.subject=name; b.innerHTML=`<span class="w-2.5 h-2.5 rounded-full mr-1.5" style="background-color:${sub.color}"></span>${name}`; b.onclick = fn; parent.appendChild(b); };
                 mkBtn(sub.name, addFrag, () => setSubjectAdd(sub.name)); mkBtn(sub.name, filterFrag, () => setSubjectFilter(sub.name)); mkBtn(sub.name, editFrag, () => setSubjectEdit(sub.name));
-                if(ttCont) { let tBtn = document.createElement('button'); tBtn.type = 'button'; tBtn.className = 'px-3 py-1.5 rounded-[10px] text-xs font-bold spring-action'; tBtn.style.backgroundColor = hexToRgba(sub.color, 0.2); tBtn.style.color = sub.color; tBtn.innerText = sub.name; tBtn.onclick = () => saveTTCellDirect(sub.name); ttFrag.appendChild(tBtn); }
+                if(ttCont) { let tBtn = document.createElement('button'); tBtn.type = 'button'; tBtn.className = 'px-4 py-2 rounded-xl text-xs font-bold spring-action'; tBtn.style.backgroundColor = hexToRgba(sub.color, 0.2); tBtn.style.color = sub.color; tBtn.innerText = sub.name; tBtn.onclick = () => saveTTCellDirect(sub.name); ttFrag.appendChild(tBtn); }
             });
-            if(ttCont) { let clrBtn = document.createElement('button'); clrBtn.type = 'button'; clrBtn.className = 'px-3 py-1.5 rounded-[10px] text-xs font-bold spring-action opacity-60 hover:opacity-100 transition-opacity'; clrBtn.style.backgroundColor = 'var(--surface-inset)'; clrBtn.innerText = '清除'; clrBtn.onclick = () => saveTTCellDirect(''); ttFrag.appendChild(clrBtn); }
+            if(ttCont) { let clrBtn = document.createElement('button'); clrBtn.type = 'button'; clrBtn.className = 'px-4 py-2 rounded-xl text-xs font-bold spring-action opacity-60 hover:opacity-100 transition-opacity'; clrBtn.style.backgroundColor = 'var(--surface-inset)'; clrBtn.innerText = '清除'; clrBtn.onclick = () => saveTTCellDirect(''); ttFrag.appendChild(clrBtn); }
             addCont.appendChild(addFrag); filterCont.appendChild(filterFrag); editCont.appendChild(editFrag); if(ttCont) ttCont.appendChild(ttFrag);
             updateChipStyles();
         } window.buildCustomChips = buildCustomChips;
@@ -1064,7 +1002,7 @@
         function removeAdminList(listName, email) { if (!adminConfig[listName]) return; adminConfig[listName] = adminConfig[listName].filter(e => e !== email); saveAdminConfig(); logAdminAction(`名單更新`, `${listName} - ${email}`); showToast('已移除'); renderAdminSettings(); } window.removeAdminList = removeAdminList;
 
         function renderAdminSettings() {
-            const renderList = (id, arr, name) => { const el = document.getElementById(id); if(!el) return; el.innerHTML = ''; (arr || []).forEach(e => { el.insertAdjacentHTML('beforeend', `<div class="flex justify-between items-center p-2.5 bg-[var(--surface-color)] rounded-[10px] mb-2 border border-[var(--border-color)]"><span class="text-xs font-bold">${e}</span><button onclick="removeAdminList('${name}', '${e}')" class="text-red-500 hover:scale-110 transition-transform"><i class="fas fa-times text-xs"></i></button></div>`); }); };
+            const renderList = (id, arr, name) => { const el = document.getElementById(id); if(!el) return; el.innerHTML = ''; (arr || []).forEach(e => { el.insertAdjacentHTML('beforeend', `<div class="flex justify-between items-center p-3 bg-[var(--surface-color)] rounded-[12px] mb-2 border border-[var(--border-color)]"><span class="text-[13px] font-bold">${e}</span><button onclick="removeAdminList('${name}', '${e}')" class="text-red-500 hover:scale-110 transition-transform"><i class="fas fa-times text-xs"></i></button></div>`); }); };
             renderList('admin-whitelist-list', adminConfig.whitelist, 'whitelist'); renderList('admin-blacklist-list', adminConfig.blacklist, 'blacklist');
             const chk = (id, key) => { const el = document.getElementById(id); if(el) el.checked = adminConfig[key] || false; };
             chk('admin-autoclean-toggle', 'autoCleanEnabled'); chk('admin-whitelist-toggle', 'whitelistEnabled'); chk('admin-blacklist-toggle', 'blacklistEnabled'); chk('admin-maint-toggle', 'maintenance');
@@ -1096,7 +1034,8 @@
         function setTTViewMode(mode) {
             ttViewMode = mode;
             document.querySelectorAll('.ios-segment-btn[id^="tt-btn-"]').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(`tt-btn-${mode}`).classList.add('active');
+            const activeBtn = document.getElementById(`tt-btn-${mode}`);
+            if(activeBtn) activeBtn.classList.add('active');
             renderTimetableUI();
         } window.setTTViewMode = setTTViewMode;
 
@@ -1148,14 +1087,16 @@
 
                         dataToRender.forEach((row, i) => {
                             let cellVal = row[currentTimetableDay] || ''; let sub = userSettings.subjects.find(s => s.name === cellVal);
-                            let subColor = sub ? sub.color : 'var(--text-secondary)'; let isBreak = cellVal.includes('小息'); let isLunch = cellVal.includes('午膳');
-                            if (isBreak) subColor = '#8e8e93'; if (isLunch) subColor = '#ff6b6b'; if (!cellVal) subColor = 'transparent';
+                            let subColor = sub ? sub.color : 'var(--border-color)'; let isBreak = cellVal.includes('小息'); let isLunch = cellVal.includes('午膳');
+                            
+                            let textCol = 'var(--text-primary)';
+                            if (isBreak || isLunch) { subColor = 'var(--border-color)'; textCol = 'var(--text-secondary)'; }
 
                             let sParts = (row.startTime||"00:00").split(':'); let eParts = (row.endTime||"00:00").split(':');
                             let sMins = parseInt(sParts[0])*60 + parseInt(sParts[1]); let eMins = parseInt(eParts[0])*60 + parseInt(eParts[1]);
                             let isActiveClass = isTodayReal && (nowMins >= sMins && nowMins < eMins);
 
-                            let bgStyle = cellVal ? `background-color: ${hexToRgba(subColor, isActiveClass ? 0.2 : 0.08)}; border-color: ${isActiveClass ? subColor : 'transparent'}` : `background-color: transparent; border-color: transparent`;
+                            let bgStyle = cellVal ? `background-color: ${hexToRgba(subColor, isActiveClass ? 0.25 : 0.15)}; border-color: ${isActiveClass ? subColor : 'transparent'}` : `background-color: transparent; border-color: transparent`;
                             
                             let div = document.createElement('div'); div.className = "flex gap-3 min-h-[56px] relative z-10 group";
                             div.innerHTML = `
@@ -1166,7 +1107,7 @@
                                 <div class="flex-1 pb-3">
                                     <div class="rounded-[14px] p-3 shadow-sm border flex items-center gap-2 transition-transform ${isActiveClass ? 'translate-x-1 ring-2 ring-opacity-30' : 'group-hover:translate-x-1'}" style="${bgStyle}; ${isActiveClass ? 'ring-color: var(--accent-primary)' : ''}">
                                         ${isBreak ? '<i class="fas fa-mug-hot text-[10px] opacity-50"></i>' : ''} ${isLunch ? '<i class="fas fa-utensils text-[10px] opacity-50"></i>' : ''}
-                                        <span class="font-bold text-[13px] text-[var(--text-primary)]">${cellVal || '空堂'}</span>
+                                        <span class="font-bold text-[13px]" style="color: ${textCol};">${cellVal || '空堂'}</span>
                                         ${isActiveClass ? '<span class="ml-auto text-[9px] font-black px-2 py-0.5 rounded-full" style="color: var(--accent-primary); background-color: var(--accent-10);"><i class="fas fa-circle text-[6px] animate-pulse mr-1"></i>現在</span>' : ''}
                                     </div>
                                 </div>`;
@@ -1192,10 +1133,10 @@
                                 const cellVal = row[d.key] || '';
                                 let sub = userSettings.subjects.find(s=>s.name===cellVal);
                                 let cellColor = sub ? sub.color : 'var(--border-color)';
-                                if(cellVal.includes('小息')) cellColor = '#8e8e93'; if(cellVal.includes('午膳')) cellColor = '#ff6b6b';
+                                if(cellVal.includes('小息') || cellVal.includes('午膳')) cellColor = 'transparent';
                                 
                                 if(!cellVal) { tableHtml += `<td class="p-1"></td>`; } 
-                                else { tableHtml += `<td class="p-1"><div class="px-1.5 py-1.5 rounded-[8px] text-[9px] font-bold mx-auto w-full max-w-[70px] truncate" style="background-color: ${hexToRgba(cellColor, 0.15)}; color: ${cellColor}">${cellVal}</div></td>`; }
+                                else { tableHtml += `<td class="p-1"><div class="px-1.5 py-1.5 rounded-[8px] text-[9px] font-bold mx-auto w-full max-w-[70px] truncate border" style="background-color: ${hexToRgba(cellColor, 0.15)}; border-color: ${cellColor !== 'transparent' ? cellColor : 'var(--border-color)'}; color: var(--text-primary);">${cellVal}</div></td>`; }
                             });
                             tableHtml += `</tr>`;
                         });
@@ -1217,11 +1158,11 @@
                     let html = `<td class="p-1.5 sticky left-0 z-10 w-[70px] bg-[var(--surface-color)]"><div class="flex flex-col gap-1 items-center"><div class="ios-input-group !p-0.5 w-full !rounded-[6px]"><input type="time" class="ios-input !py-0.5 text-center text-[10px] font-bold" value="${row.startTime||''}" onchange="updateTT(${rIdx}, 'startTime', this.value)"></div><div class="ios-input-group !p-0.5 w-full !rounded-[6px]"><input type="time" class="ios-input !py-0.5 text-center text-[10px] font-bold" value="${row.endTime||''}" onchange="updateTT(${rIdx}, 'endTime', this.value)"></div></div></td>`;
                     daysConfig.forEach(d => {
                         const cellVal = row[d.key] || ''; let cellColor = (userSettings.subjects.find(s => s.name === cellVal) || {}).color || 'var(--border-color)';
-                        if(cellVal.includes('小息')) cellColor = '#8e8e93'; if(cellVal.includes('午膳')) cellColor = '#ff6b6b';
+                        if(cellVal.includes('小息') || cellVal.includes('午膳')) cellColor = 'transparent';
                         let isEmpty = !cellVal;
                         let bgCol = isEmpty ? 'transparent' : hexToRgba(cellColor, 0.12);
-                        let borderStyle = isEmpty ? '1.5px dashed var(--border-color)' : `1.5px solid transparent`;
-                        let textCol = isEmpty ? 'var(--text-secondary)' : cellColor;
+                        let borderStyle = isEmpty ? '1.5px dashed var(--border-color)' : `1.5px solid ${cellColor}`;
+                        let textCol = isEmpty ? 'var(--text-secondary)' : 'var(--text-primary)';
                         let iconHtml = isEmpty ? '<i class="fas fa-plus opacity-40 text-sm"></i>' : cellVal;
                         
                         html += `<td class="p-1"><button onclick="openTTCellModal(${rIdx}, '${d.key}')" class="w-full h-10 rounded-[10px] text-[11px] font-bold truncate btn-spring flex items-center justify-center mx-auto transition-all shadow-sm" style="color: ${textCol}; border: ${borderStyle}; background-color: ${bgCol}">${iconHtml}</button></td>`;
@@ -1286,18 +1227,18 @@
                     }).sort((a,b) => a.startMs - b.startMs);
                 } cachedScheduleSignature = currentSignature;
             }
-            if(!cachedSchedule) { widget.style.display = 'block'; document.getElementById('live-current-class').innerText = "放假中"; document.getElementById('live-timer-container').style.display = 'none'; document.getElementById('live-current-bg').style.backgroundColor = "transparent"; document.getElementById('live-current-bg').innerHTML = `<i class="fas fa-bed text-xl" style="color: var(--accent-primary);"></i>`; document.getElementById('live-progress-bar').style.width = '0%'; return; }
-            const nowMs = now.getTime(); let currentState = "課堂結束"; let countdownTargetMs = null; let currentBgColor = "transparent"; let iconHtml = `<i class="fas fa-check-circle text-xl" style="color: var(--accent-primary);"></i>`; let periodStartMs = null; let periodEndMs = null;
-            if(nowMs < cachedSchedule[0].startMs) { currentState = "即將上課"; countdownTargetMs = cachedSchedule[0].startMs; iconHtml = `<i class="fas fa-clock text-xl" style="color: var(--accent-primary);"></i>`; } 
+            if(!cachedSchedule) { widget.style.display = 'block'; document.getElementById('live-current-class').innerText = "放假中"; document.getElementById('live-timer-container').style.display = 'none'; document.getElementById('live-current-bg').style.backgroundColor = "transparent"; document.getElementById('live-current-bg').innerHTML = `<i class="fas fa-bed text-2xl" style="color: var(--accent-primary);"></i>`; document.getElementById('live-progress-bar').style.width = '0%'; return; }
+            const nowMs = now.getTime(); let currentState = "課堂結束"; let countdownTargetMs = null; let currentBgColor = "transparent"; let iconHtml = `<i class="fas fa-check-circle text-2xl" style="color: var(--accent-primary);"></i>`; let periodStartMs = null; let periodEndMs = null;
+            if(nowMs < cachedSchedule[0].startMs) { currentState = "即將上課"; countdownTargetMs = cachedSchedule[0].startMs; iconHtml = `<i class="fas fa-clock text-2xl" style="color: var(--accent-primary);"></i>`; } 
             else if (nowMs >= cachedSchedule[cachedSchedule.length-1].endMs) { currentState = "放學"; document.getElementById('live-progress-bar').style.width = '100%'; } 
             else {
                 for(let i=0; i<cachedSchedule.length; i++) {
                     let c = cachedSchedule[i];
                     if(nowMs >= c.startMs && nowMs < c.endMs) {
                         currentState = c.name; countdownTargetMs = c.endMs; periodStartMs = c.startMs; periodEndMs = c.endMs; const sub = userSettings.subjects.find(s => s.name === currentState);
-                        if(currentState.includes('小息')) { currentBgColor = '#8e8e93'; iconHtml = `<i class="fas fa-mug-hot text-white text-[10px]"></i>`; } else if(currentState.includes('午膳')) { currentBgColor = '#ff6b6b'; iconHtml = `<i class="fas fa-utensils text-white text-[10px]"></i>`; } else if(sub) { currentBgColor = sub.color; iconHtml = `<span class="text-[13px] font-black text-white">${currentState.charAt(0)}</span>`; } else { currentBgColor = 'var(--accent-primary)'; iconHtml = `<i class="fas fa-book-open text-white text-[10px]"></i>`; } break;
+                        if(currentState.includes('小息')) { currentBgColor = '#8e8e93'; iconHtml = `<i class="fas fa-mug-hot text-white text-lg"></i>`; } else if(currentState.includes('午膳')) { currentBgColor = '#ff6b6b'; iconHtml = `<i class="fas fa-utensils text-white text-lg"></i>`; } else if(sub) { currentBgColor = sub.color; iconHtml = `<span class="text-lg font-black text-white">${currentState.charAt(0)}</span>`; } else { currentBgColor = 'var(--accent-primary)'; iconHtml = `<i class="fas fa-book-open text-white text-lg"></i>`; } break;
                     }
-                    if(i+1 < cachedSchedule.length && nowMs >= c.endMs && nowMs < cachedSchedule[i+1].startMs) { currentState = "小息 / 空堂"; countdownTargetMs = cachedSchedule[i+1].startMs; periodStartMs = c.endMs; periodEndMs = cachedSchedule[i+1].startMs; currentBgColor = 'var(--border-color)'; iconHtml = `<i class="fas fa-mug-hot text-[var(--text-secondary)] text-[10px]"></i>`; break; }
+                    if(i+1 < cachedSchedule.length && nowMs >= c.endMs && nowMs < cachedSchedule[i+1].startMs) { currentState = "小息 / 空堂"; countdownTargetMs = cachedSchedule[i+1].startMs; periodStartMs = c.endMs; periodEndMs = cachedSchedule[i+1].startMs; currentBgColor = 'var(--border-color)'; iconHtml = `<i class="fas fa-mug-hot text-[var(--text-secondary)] text-lg"></i>`; break; }
                 }
             }
             widget.style.display = 'block'; document.getElementById('live-current-class').innerText = currentState;
@@ -1310,7 +1251,6 @@
         }
         function startLiveWidget() { if(liveClassInterval) clearInterval(liveClassInterval); updateLiveClassWidget(); liveClassInterval = setInterval(updateLiveClassWidget, 1000); } window.startLiveWidget = startLiveWidget;
 
-        // 全新共用色彩選擇器生成函數
         function renderColorPicker(containerId, hiddenInputId, activeColor) {
             const container = document.getElementById(containerId);
             if(!container) return;
@@ -1348,7 +1288,6 @@
                 const isEnabled = sub.enabled !== false; 
                 if(isEnabled) enabledCount++;
                 
-                // 動態計算該科目的任務數量
                 const taskCount = allTasks.filter(t => t.subject === sub.name).length;
 
                 const div = document.createElement('div'); 
@@ -1380,22 +1319,8 @@
         } window.renderSubjectsPage = renderSubjectsPage;
 
         function toggleSubjectEnable(id, isEnabled, el) { const sub = userSettings.subjects.find(s => s.id === id); if(!sub || sub.enabled === isEnabled) return; sub.enabled = isEnabled; lastSettingsSaveTime = Date.now(); setTimeout(() => saveSettings(), 50); renderSubjectsPage(); } window.toggleSubjectEnable = toggleSubjectEnable;
-        
-        function addSubject() { 
-            const name = document.getElementById('new-subject-name').value.trim(); 
-            if(!name) return showToast('請輸入科目名稱'); 
-            userSettings.subjects.push({ id: 'sub_' + Date.now(), name, color: document.getElementById('new-subject-color').value, enabled: true }); 
-            document.getElementById('new-subject-name').value = ''; 
-            saveSettings(); renderSubjectsPage(); showToast('科目建立成功'); 
-        } window.addSubject = addSubject;
-        
-        function deleteSubject(id) { 
-            customConfirm('刪除科目', '確定要刪除此科目嗎？相關任務不會被刪除，但會失去顏色標籤。', 'danger', () => { 
-                userSettings.subjects = userSettings.subjects.filter(s => s.id !== id); 
-                saveSettings(); renderSubjectsPage(); 
-            }); 
-        } window.deleteSubject = deleteSubject;
-
+        function addSubject() { const name = document.getElementById('new-subject-name').value.trim(); if(!name) return showToast('請輸入科目名稱'); userSettings.subjects.push({ id: 'sub_' + Date.now(), name, color: document.getElementById('new-subject-color').value, enabled: true }); document.getElementById('new-subject-name').value = ''; saveSettings(); renderSubjectsPage(); showToast('科目建立成功'); } window.addSubject = addSubject;
+        function deleteSubject(id) { customConfirm('刪除科目', '確定要刪除此科目嗎？相關任務不會被刪除，但會失去顏色標籤。', 'danger', () => { userSettings.subjects = userSettings.subjects.filter(s => s.id !== id); saveSettings(); renderSubjectsPage(); }); } window.deleteSubject = deleteSubject;
         function resetDefaultSubjects() { customConfirm('還原', '確定還原預設科目？這不會刪除你已自訂的科目。', 'normal', () => { const existingNames = userSettings.subjects.map(s => s.name); let added = false; defaultSubjects.forEach(ds => { if (!existingNames.includes(ds.name)) { userSettings.subjects.push({ ...ds, id: 'sub_' + Date.now() + Math.floor(Math.random()*1000) }); added = true; } }); if(added) { saveSettings(); renderSubjectsPage(); showToast('已成功還原'); } }); } window.resetDefaultSubjects = resetDefaultSubjects;
 
         function openEditSubjectModal(id) {
@@ -1435,12 +1360,13 @@
                 showToast("設定已更新");
             }
             
-            renderSubjectsPage(); renderHome(); closeModal('edit-subject-modal');
+            renderSubjectsPage();
+            renderHome();
+            closeModal('edit-subject-modal');
         } window.saveEditSubject = saveEditSubject;
 
-        function getSubjectHTML(subName) { const sub = userSettings.subjects.find(s => s.name === subName); const color = sub ? sub.color : 'var(--text-secondary)'; return `<span class="px-2 py-0.5 rounded-[6px] text-[9px] font-bold inline-flex items-center" style="background-color: ${hexToRgba(color, 0.15)}; color: ${color};">${subName}</span>`; }
+        function getSubjectHTML(subName) { const sub = userSettings.subjects.find(s => s.name === subName); const color = sub ? sub.color : 'var(--text-secondary)'; return `<span class="px-2.5 py-1 rounded-[8px] text-[11px] md:text-xs font-bold inline-flex items-center" style="background-color: ${hexToRgba(color, 0.15)}; color: ${color};">${subName}</span>`; }
 
-        // Dashboard Calculation Logic
         function updateDashboardCounts() {
             const today = new Date(); today.setHours(0,0,0,0); const tmr = new Date(today); tmr.setDate(tmr.getDate()+1);
             let cToday = 0, cTmr = 0, cFut = 0, cTest = 0;
@@ -1475,46 +1401,76 @@
             document.getElementById('dash-modal-icon').innerHTML = `<i class="fas ${titles[category].i}"></i>`;
 
             const listEl = document.getElementById('dash-modal-list'); listEl.innerHTML = '';
-            if(filtered.length === 0) { listEl.innerHTML = `<div class="text-center py-8 opacity-30 font-bold text-xs"><i class="fas fa-check-circle text-3xl mb-2 block"></i>此分類沒有任務</div>`; } 
+            if(filtered.length === 0) { listEl.innerHTML = `<div class="text-center py-10 opacity-30 font-bold text-sm"><i class="fas fa-check-circle text-4xl mb-3 block"></i>此分類沒有任務</div>`; } 
             else {
                 const frag = document.createDocumentFragment();
-                filtered.forEach(task => frag.appendChild(createTaskCard(task, true)));
+                filtered.forEach((task, index) => frag.appendChild(createTaskCard(task, index, true)));
                 listEl.appendChild(frag);
             }
             openModal('dashboard-modal');
         } window.openDashboardModal = openDashboardModal;
 
-        function createTaskCard(task, inModal = false) {
-            const canEditDelete = task.createdBy === currentUser.uid || (task.isPublic && isAdmin); const subColor = (userSettings.subjects.find(s=>s.name===task.subject)||{}).color||'var(--text-secondary)';
+        window.triggerComplete = function(btn, id, isPub) {
+            if(btn.disabled) return;
+            btn.disabled = true;
+            const icon = btn.querySelector('i');
+            btn.style.backgroundColor = 'var(--accent-primary)';
+            btn.style.borderColor = 'var(--accent-primary)';
+            icon.style.color = '#ffffff';
+            icon.style.opacity = '1';
+            btn.style.transform = 'scale(1.15)';
+            setTimeout(() => { completeTask(id, isPub, btn); }, 350);
+        };
+
+        function createTaskCard(task, index, inModal = false) {
+            const canEditDelete = task.createdBy === currentUser.uid || (task.isPublic && isAdmin); 
+            const subColor = (userSettings.subjects.find(s=>s.name===task.subject)||{}).color||'var(--border-color)';
             const due = new Date(task.dueDate); due.setHours(0,0,0,0); const todayDate = new Date(); todayDate.setHours(0,0,0,0); const diffDays = Math.round((due - todayDate) / (1000 * 60 * 60 * 24));
+            
             let badgeHtml = '';
-            if (diffDays < 0) badgeHtml = `<span class="text-[var(--danger-color)] bg-[var(--danger-10)] px-2 py-0.5 rounded text-[9px] font-bold">過期 ${Math.abs(diffDays)} 日</span>`;
-            else if (diffDays === 0) badgeHtml = `<span class="text-[#d48806] bg-[#FFDFBA]/50 px-2 py-0.5 rounded text-[9px] font-bold">今天交</span>`;
-            else if (diffDays === 1) badgeHtml = `<span class="text-[#5b9bd5] bg-[#BAE1FF]/50 px-2 py-0.5 rounded text-[9px] font-bold">聽日交</span>`;
-            else badgeHtml = `<span class="text-[var(--text-secondary)] bg-[var(--surface-inset)] px-2 py-0.5 rounded text-[9px] font-bold">餘 ${diffDays} 日</span>`;
+            if (diffDays < 0) badgeHtml = `<span class="text-white bg-[var(--danger-color)] px-3 py-1.5 rounded-[10px] text-xs md:text-[13px] font-black shadow-md tracking-wide flex items-center gap-1.5"><i class="fas fa-exclamation-triangle"></i> 過期 ${Math.abs(diffDays)} 日</span>`;
+            else if (diffDays === 0) badgeHtml = `<span class="text-[#d48806] bg-[#FFDFBA] px-3 py-1.5 rounded-[10px] text-xs md:text-[13px] font-black shadow-md animate-pulse tracking-wide flex items-center gap-1.5"><i class="fas fa-fire"></i> 今天交</span>`;
+            else if (diffDays === 1) badgeHtml = `<span class="text-[#5b9bd5] bg-[#BAE1FF] px-3 py-1.5 rounded-[10px] text-xs md:text-[13px] font-black shadow-sm tracking-wide flex items-center gap-1.5"><i class="fas fa-clock"></i> 聽日交</span>`;
+            else badgeHtml = `<span class="text-[var(--text-secondary)] bg-[var(--surface-inset)] px-3 py-1.5 rounded-[10px] text-xs md:text-[13px] font-black border border-[var(--border-color)] tracking-wide flex items-center gap-1.5"><i class="far fa-hourglass"></i> 餘 ${diffDays} 日</span>`;
 
             let contentHtml = task.content.replace(/\n/g, '<br>');
-            let urlBtnHtml = task.url ? `<a href="${task.url}" target="_blank" class="inline-flex items-center text-[10px] font-bold mt-1.5 px-2.5 py-1 rounded-[6px] transition-colors" style="color: var(--accent-primary); background-color: var(--accent-10);"><i class="fas fa-link mr-1"></i> 附件</a>` : '';
+            let urlBtnHtml = task.url ? `<a href="${task.url}" target="_blank" class="inline-flex items-center text-[11px] md:text-xs font-bold mt-1.5 px-3 py-1.5 rounded-[10px] transition-colors shadow-sm" style="color: var(--accent-primary); background-color: var(--accent-10);"><i class="fas fa-link mr-1.5"></i> 網頁連結</a>` : '';
 
-            let div = document.createElement('div'); div.className = `ios-card p-4 relative border-l-4`; div.style.borderLeftColor = subColor;
+            let div = document.createElement('div'); 
+            div.className = `ios-card relative overflow-hidden group border border-[var(--border-color)]`; 
+            div.style.backgroundColor = 'var(--surface-color)'; div.style.borderLeft = `5px solid ${subColor}`;
+            
             div.innerHTML = `
-                    <div class="flex justify-between items-start mb-2">
-                        <div class="flex items-center gap-1.5">
-                            ${getSubjectHTML(task.subject)}
-                            ${task.type === 'test' ? `<span class="px-1.5 py-0.5 rounded-[6px] text-[8px] font-bold bg-purple-500/10 text-purple-500">測驗</span>` : ''}
-                            ${task.isPublic ? `<span class="px-1.5 py-0.5 rounded-[6px] text-[8px] font-bold transition-colors" style="color: var(--accent-primary); background-color: var(--accent-10);">廣播</span>` : ''}
-                        </div>
-                        <div class="flex gap-2 items-center">
-                            ${badgeHtml}
-                            ${canEditDelete ? `<button onclick="openEditModal('${task.id}', ${task.isPublic})" class="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"><i class="fas fa-ellipsis-h text-xs"></i></button>` : ''}
+                <div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.05] dark:opacity-[0.03] z-0 overflow-hidden">
+                    <span class="text-[6rem] font-black whitespace-nowrap tracking-tighter" style="color: ${subColor}">${task.subject}</span>
+                </div>
+                <div class="relative z-10 flex min-h-[100px]">
+                    <div class="w-14 md:w-16 shrink-0 flex flex-col items-center justify-start pt-4 pb-4 border-r border-[var(--border-color)] bg-[var(--surface-inset)]/30 backdrop-blur-sm">
+                        <span class="text-[9px] md:text-[10px] font-black text-[var(--text-secondary)] opacity-50 mb-3">#${index + 1}</span>
+                        <button onclick="triggerComplete(this, '${task.id}', ${task.isPublic})" class="w-7 h-7 md:w-8 md:h-8 rounded-full border-[2px] border-[var(--text-secondary)] opacity-50 flex items-center justify-center transition-all duration-300 btn-spring group/check shadow-sm bg-[var(--surface-color)] relative z-20 hover:opacity-100 hover:border-[var(--accent-primary)]">
+                            <i class="fas fa-check text-[10px] md:text-xs opacity-0 transition-opacity duration-300"></i>
+                        </button>
+                        <div class="mt-4 flex-1 flex items-center justify-center">
+                            <span class="text-[12px] md:text-[14px] font-bold tracking-widest text-[var(--text-primary)] opacity-80" style="writing-mode: vertical-rl; text-orientation: upright;">${task.subject}</span>
                         </div>
                     </div>
-                    <p class="text-[14px] font-bold leading-relaxed mb-1.5" style="color: var(--text-primary)">${contentHtml}</p>
-                    ${urlBtnHtml}
-                    <div class="flex justify-between items-center mt-3 pt-3 border-t border-[var(--border-color)]">
-                        <p class="text-[9px] font-medium opacity-50"><i class="far fa-calendar-alt mr-1"></i>${task.dueDate} (${getDayOfWeek(task.dueDate)})</p>
-                        <button onclick="completeTask('${task.id}', ${task.isPublic}, this)" class="px-3 py-1.5 rounded-[10px] text-[10px] font-bold bg-[var(--surface-inset)] hover:bg-[var(--bg-color)] btn-spring text-green-600"><i class="fas fa-check mr-1"></i>完成</button>
-                    </div>`;
+                    <div class="flex-1 p-4 md:p-5 flex flex-col justify-center">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                ${badgeHtml}
+                                ${task.type === 'test' ? `<span class="px-2.5 py-1 rounded-[8px] text-[11px] font-bold bg-purple-500/10 text-purple-600">測驗</span>` : ''}
+                                ${task.isPublic ? `<span class="px-2.5 py-1 rounded-[8px] text-[11px] font-bold transition-colors" style="color: var(--accent-primary); background-color: var(--accent-10);">廣播</span>` : ''}
+                            </div>
+                            ${canEditDelete ? `<button onclick="openEditModal('${task.id}', ${task.isPublic})" class="text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-colors p-1 relative z-20"><i class="fas fa-ellipsis-h text-sm"></i></button>` : ''}
+                        </div>
+                        <p class="text-[15px] md:text-[16px] font-bold leading-relaxed mb-3 text-[var(--text-primary)] drop-shadow-sm">${contentHtml}</p>
+                        ${urlBtnHtml}
+                        <div class="flex justify-between items-center mt-auto pt-3 border-t border-[var(--border-color)]">
+                            <p class="text-[10px] md:text-[11px] font-bold opacity-50 text-[var(--text-secondary)]"><i class="far fa-calendar-alt mr-1"></i>${task.dueDate} (${getDayOfWeek(task.dueDate)})</p>
+                        </div>
+                    </div>
+                </div>
+            `;
             return div;
         }
 
@@ -1522,8 +1478,10 @@
             updateDashboardCounts();
             const listEl = document.getElementById('home-tasks-list'); const filterVal = document.getElementById('filter-subject')?.value || 'all'; listEl.innerHTML = '';
             let filtered = allTasks.filter(t => filterVal === 'all' || t.subject === filterVal);
-            if(filtered.length === 0) { listEl.innerHTML = `<div class="text-center py-12 text-xs font-bold opacity-30"><i class="fas fa-check-circle text-3xl mb-3 block" style="color: var(--text-secondary);"></i>目前無任務</div>`; return; }
-            const frag = document.createDocumentFragment(); filtered.forEach((task) => frag.appendChild(createTaskCard(task))); listEl.appendChild(frag);
+            if(filtered.length === 0) { listEl.innerHTML = `<div class="text-center py-12 text-sm font-bold opacity-30"><i class="fas fa-check-circle text-4xl mb-3 block" style="color: var(--text-secondary);"></i>目前無任務</div>`; return; }
+            const frag = document.createDocumentFragment(); 
+            filtered.forEach((task, index) => frag.appendChild(createTaskCard(task, index))); 
+            listEl.appendChild(frag);
         } window.renderHome = renderHome;
 
         function renderHistory() {
@@ -1532,7 +1490,8 @@
             const frag = document.createDocumentFragment();
             historyTasks.forEach((task, index) => { 
                 let div = document.createElement('div'); div.className = "ios-card p-3.5 opacity-60 hover:opacity-100 transition-opacity";
-                div.innerHTML = `<div class="flex justify-between items-start mb-2"><div class="flex items-center gap-1.5">${getSubjectHTML(task.subject)}</div><button onclick="deleteHistoryTask('${task.id}', this)" class="w-5 h-5 spring-action rounded-full flex items-center justify-center" style="color: var(--danger-color); background-color: var(--danger-10);"><i class="fas fa-times text-[9px]"></i></button></div><p class="text-xs font-bold line-through line-clamp-1 mb-1.5">${task.content}</p><p class="text-[9px] font-medium opacity-40">完成於: ${new Date(task.completedAt).toLocaleString()}</p>`;
+                const subColor = (userSettings.subjects.find(s=>s.name===task.subject)||{}).color||'var(--text-secondary)';
+                div.innerHTML = `<div class="flex justify-between items-start mb-2"><div class="flex items-center gap-1.5"><span class="px-2.5 py-1 rounded-[8px] text-[11px] font-bold" style="background-color: ${hexToRgba(subColor, 0.15)}; color: ${subColor};">${task.subject}</span></div><button onclick="deleteHistoryTask('${task.id}', this)" class="w-6 h-6 spring-action rounded-full flex items-center justify-center" style="color: var(--danger-color); background-color: var(--danger-10);"><i class="fas fa-times text-[10px]"></i></button></div><p class="text-xs font-bold line-through line-clamp-1 mb-1.5">${task.content}</p><p class="text-[10px] font-medium opacity-40">完成於: ${new Date(task.completedAt).toLocaleString()}</p>`;
                 frag.appendChild(div);
             }); listEl.appendChild(frag);
         } window.renderHistory = renderHistory;
@@ -1543,8 +1502,9 @@
             else {
                 const frag = document.createDocumentFragment();
                 publicAssignments.forEach((task, index) => {
+                    const subColor = (userSettings.subjects.find(s=>s.name===task.subject)||{}).color||'var(--text-secondary)';
                     let div = document.createElement('div'); div.className = "ios-card p-3.5 flex justify-between items-center";
-                    div.innerHTML = `<div class="flex-1 pr-3"><div class="flex gap-2 mb-1">${getSubjectHTML(task.subject)}<span class="text-[9px] opacity-50 flex items-center">${task.dueDate}</span></div><p class="text-xs font-bold line-clamp-1">${task.content}</p></div><button onclick="deleteTask('${task.id}', true, this)" class="w-8 h-8 rounded-full btn-spring flex items-center justify-center" style="color: var(--danger-color); background-color: var(--danger-10);"><i class="fas fa-trash text-[10px]"></i></button>`;
+                    div.innerHTML = `<div class="flex-1 pr-3"><div class="flex gap-2 mb-1"><span class="px-2.5 py-1 rounded-[8px] text-[11px] font-bold" style="background-color: ${hexToRgba(subColor, 0.15)}; color: ${subColor};">${task.subject}</span><span class="text-[10px] opacity-50 flex items-center">${task.dueDate}</span></div><p class="text-xs font-bold line-clamp-1">${task.content}</p></div><button onclick="deleteTask('${task.id}', true, this)" class="w-8 h-8 rounded-full btn-spring flex items-center justify-center" style="color: var(--danger-color); background-color: var(--danger-10);"><i class="fas fa-trash text-[10px]"></i></button>`;
                     frag.appendChild(div);
                 }); listEl.appendChild(frag);
             } document.getElementById('admin-stat-broadcasts').innerText = publicAssignments.length;
@@ -1557,7 +1517,7 @@
             const frag = document.createDocumentFragment();
             filteredUsers.sort((a,b) => new Date(b.lastLogin || 0) - new Date(a.lastLogin || 0)).forEach((u, index) => {
                 let div = document.createElement('div'); div.className = "ios-card p-3 flex justify-between items-center";
-                div.innerHTML = `<div class="flex items-center gap-2.5"><img src="${u.avatar}" class="w-8 h-8 rounded-full object-cover"><div><p class="text-xs font-bold">${u.name}</p><p class="text-[9px] opacity-50">${u.email}</p></div></div><button onclick="openUserModal('${u.uid}')" class="px-3 py-1.5 bg-[var(--surface-inset)] rounded-[10px] text-[10px] font-bold btn-spring transition-colors" style="color: var(--accent-primary);">查看</button>`;
+                div.innerHTML = `<div class="flex items-center gap-2.5"><img src="${u.avatar}" class="w-8 h-8 rounded-full object-cover"><div><p class="text-xs font-bold">${u.name}</p><p class="text-[10px] opacity-50">${u.email}</p></div></div><button onclick="openUserModal('${u.uid}')" class="px-3 py-1.5 bg-[var(--surface-inset)] rounded-[10px] text-[10px] font-bold btn-spring transition-colors" style="color: var(--accent-primary);">查看</button>`;
                 frag.appendChild(div);
             }); listEl.appendChild(frag);
         } window.renderAdminUsers = renderAdminUsers;
@@ -1568,8 +1528,8 @@
             document.getElementById('modal-user-email').innerText = user.email; document.getElementById('modal-user-email-hidden').value = user.email;
             document.getElementById('modal-user-pending').innerText = user.pendingCount || 0; document.getElementById('modal-user-completed').innerText = user.completedCount || 0;
             const isBlocked = adminConfig.blacklist && adminConfig.blacklist.includes(user.email); const statusEl = document.getElementById('modal-user-status');
-            if (isBlocked) { statusEl.innerText = "已封鎖"; statusEl.className = "px-2 py-0.5 rounded-[4px] text-[9px] font-bold"; statusEl.style.backgroundColor = 'var(--danger-10)'; statusEl.style.color = 'var(--danger-color)'; document.getElementById('modal-btn-block').classList.add('hidden'); document.getElementById('modal-btn-unblock').classList.remove('hidden'); } 
-            else { statusEl.innerText = "正常活躍"; statusEl.className = "px-2 py-0.5 rounded-[4px] text-[9px] font-bold bg-green-500/10 text-green-500"; document.getElementById('modal-btn-block').classList.remove('hidden'); document.getElementById('modal-btn-unblock').classList.add('hidden'); }
+            if (isBlocked) { statusEl.innerText = "已封鎖"; statusEl.className = "px-2.5 py-1 rounded-[6px] text-[10px] font-bold"; statusEl.style.backgroundColor = 'var(--danger-10)'; statusEl.style.color = 'var(--danger-color)'; document.getElementById('modal-btn-block').classList.add('hidden'); document.getElementById('modal-btn-unblock').classList.remove('hidden'); } 
+            else { statusEl.innerText = "正常活躍"; statusEl.className = "px-2.5 py-1 rounded-[6px] text-[10px] font-bold bg-green-500/10 text-green-500"; document.getElementById('modal-btn-block').classList.remove('hidden'); document.getElementById('modal-btn-unblock').classList.add('hidden'); }
             openModal('user-details-modal');
         } window.openUserModal = openUserModal;
 
@@ -1597,7 +1557,7 @@
             if(el) { const card = el.closest('.ios-card'); if(card) { card.style.transition = 'all 0.3s var(--spring)'; card.style.transform = 'scale(0.9)'; card.style.opacity = '0'; setTimeout(() => { if(card.parentNode) card.remove(); updateDashboardCounts(); }, 300); } }
             addDoc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'history'), { ...task, completedAt: new Date().toISOString() })
             .then(() => deleteDoc(doc(db, 'artifacts', appId, isPub ? 'public' : 'users', isPub ? 'data' : currentUser.uid, 'assignments', id)))
-            .then(() => { confetti({ particleCount: 80, spread: 60, origin: { y: 0.6 }, colors:['#7baaf7', '#10b981', '#ffffff']}); showToast("太棒了！已完成"); }).catch(e=>{});
+            .then(() => { confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors:['#7baaf7', '#10b981', '#ffffff']}); showToast("太棒了！已完成"); }).catch(e=>{});
         } window.completeTask = completeTask;
 
         function deleteTask(id, isPub, el) { 
@@ -1699,7 +1659,6 @@
                 document.getElementById('user-profile').classList.remove('hidden'); document.getElementById('user-profile').classList.add('flex');
                 const avatarUrl = user.photoURL || `https://ui-avatars.com/api/?name=${user.email ? user.email.charAt(0) : 'U'}&background=1d1d1f&color=fff`;
                 
-                // 更新所有顯示頭像與名稱的地方
                 document.getElementById('user-avatar').src = avatarUrl; 
                 document.getElementById('profile-modal-avatar').src = avatarUrl;
                 const elSettingsAvatar = document.getElementById('settings-avatar'); if(elSettingsAvatar) elSettingsAvatar.src = avatarUrl;
