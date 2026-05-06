@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>智慧電子手冊 | Smart E-Handbook</title>
+    <title>電子手冊 | E-Handbook (EHB)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -213,14 +213,16 @@
     </div>
 
     <!-- Apple Native Compact Header -->
-    <header class="glass-header w-full px-4 md:px-8 py-3 flex justify-between items-center pt-[max(env(safe-area-inset-top),12px)]">
-        <div class="flex flex-col justify-center">
-            <p id="header-subtitle" class="text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-colors duration-300 mb-0.5 opacity-80" style="color: var(--accent-primary);"></p>
-            <h1 id="header-title" class="text-[24px] md:text-3xl font-black tracking-tight leading-none text-[var(--text-primary)]">主頁</h1>
-        </div>
-        <div id="user-profile" class="hidden items-center gap-2 cursor-pointer btn-spring" onclick="openModal('profile-modal')">
-            <span id="admin-badge" class="hidden text-white px-1.5 py-0.5 rounded-full text-[8px] font-black tracking-widest shadow-sm transition-colors duration-300" style="background-color: var(--accent-primary);">ADMIN</span>
-            <img id="user-avatar" src="" class="w-8 h-8 md:w-9 md:h-9 rounded-full object-cover shadow-sm bg-[var(--surface-color)] border border-[var(--border-color)]">
+    <header class="glass-header w-full px-4 md:px-8 py-3 pt-[max(env(safe-area-inset-top),12px)]">
+        <div class="max-w-5xl mx-auto w-full flex justify-between items-center">
+            <div class="flex flex-col justify-center">
+                <p id="header-subtitle" class="text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-colors duration-300 mb-0.5 opacity-80" style="color: var(--accent-primary);"></p>
+                <h1 id="header-title" class="text-[24px] md:text-3xl font-black tracking-tight leading-none text-[var(--text-primary)]">主頁</h1>
+            </div>
+            <div id="user-profile" class="hidden items-center gap-2 cursor-pointer btn-spring" onclick="openModal('profile-modal')">
+                <span id="admin-badge" class="hidden text-white px-1.5 py-0.5 rounded-full text-[8px] font-black tracking-widest shadow-sm transition-colors duration-300" style="background-color: var(--accent-primary);">ADMIN</span>
+                <img id="user-avatar" src="" class="w-8 h-8 md:w-9 md:h-9 rounded-full object-cover shadow-sm bg-[var(--surface-color)] border border-[var(--border-color)]">
+            </div>
         </div>
     </header>
 
@@ -249,7 +251,7 @@
     <main class="flex-1 w-full max-w-5xl mx-auto px-4 md:px-8 mt-4">
         
         <!-- VIEW: HOME -->
-        <section id="view-home" class="app-view active">
+        <section id="view-home" class="app-view active max-w-2xl mx-auto w-full">
             
             <!-- Live Class Widget -->
             <div id="live-class-widget" class="ios-card mb-5 border-l-4 transition-colors duration-300" style="display: none; border-left-color: var(--accent-primary);">
@@ -363,14 +365,19 @@
             <!-- Tasks List Preview -->
             <div class="flex items-center justify-between mb-3 px-1">
                 <h2 class="text-lg font-black tracking-tight">未來任務</h2>
+                <!-- 新增：排序按鈕 -->
+                <button onclick="toggleTaskSort()" class="px-2.5 py-1.5 rounded-[8px] bg-[var(--surface-inset)] text-[10px] font-bold btn-spring text-[var(--text-secondary)] flex items-center gap-1.5 transition-colors border border-[var(--border-color)] shadow-sm">
+                    <i class="fas fa-sort-amount-down" id="sort-icon"></i> <span id="sort-text">最近優先</span>
+                </button>
             </div>
+            <!-- 修改：智能篩選器容器 -->
             <div id="subject-chips-filter" class="flex gap-2 scroll-smooth-x pb-2 px-1 mb-1"></div>
             <input type="hidden" id="filter-subject" value="all">
             <div id="home-tasks-list" class="space-y-3"></div>
         </section>
 
         <!-- VIEW: HISTORY -->
-        <section id="view-history" class="app-view max-w-3xl mx-auto space-y-5">
+        <section id="view-history" class="app-view max-w-2xl mx-auto w-full space-y-5">
             <div class="flex justify-between items-center px-1">
                 <h2 class="text-xl font-black tracking-tight">歷史紀錄</h2>
                 <button onclick="confirmClearHistory()" class="px-3 py-1.5 rounded-full text-[11px] font-bold btn-spring" style="color: var(--danger-color); background-color: var(--danger-10);">清空全部</button>
@@ -379,7 +386,7 @@
         </section>
 
         <!-- VIEW: TIMETABLE -->
-        <section id="view-timetable" class="app-view space-y-5 max-w-5xl mx-auto">
+        <section id="view-timetable" class="app-view max-w-5xl mx-auto w-full space-y-5">
             <div class="flex justify-between items-center px-1">
                 <div id="tt-view-toggle-container" class="ios-segmented-control w-[140px]">
                     <button type="button" class="ios-segment-btn active" id="tt-btn-day" onclick="setTTViewMode('day')">單日</button>
@@ -411,54 +418,67 @@
                 </div>
 
                 <div id="timetable-edit-container" class="hidden">
-                    <div class="mb-5 p-4 rounded-[16px] bg-[var(--surface-inset)] space-y-4">
-                        <div class="flex flex-wrap gap-2 items-center">
-                            <button type="button" class="custom-chip text-[11px] btn-spring selected" data-val="5day" onclick="setTTMode('5day')">一至五</button>
-                            <button type="button" class="custom-chip text-[11px] btn-spring" data-val="6day" onclick="setTTMode('6day')">一至六</button>
-                            <button type="button" class="custom-chip text-[11px] btn-spring" data-val="7day" onclick="setTTMode('7day')">一至日</button>
-                            <button type="button" class="custom-chip text-[11px] btn-spring" data-val="cycle" onclick="setTTMode('cycle')">循環日</button>
-                        </div>
-                        <input type="hidden" id="setting-tt-mode" value="5day">
-                        <div id="setting-tt-cycle-container" class="hidden flex items-center gap-2">
-                            <span class="text-[11px] font-bold opacity-60">總日數</span>
-                            <div class="ios-input-group w-20 !p-1"><input type="number" id="setting-tt-cycle" min="1" max="14" class="ios-input !py-1 text-center text-xs" onchange="updateTTCycle()"></div>
-                        </div>
-                        <div class="border-t border-[var(--border-color)] pt-3 mt-1">
-                            <div class="flex justify-between items-center p-3 rounded-xl transition-colors duration-300" style="background-color: var(--accent-10);">
-                                <div>
-                                    <span class="text-xs font-bold block mb-0.5 transition-colors duration-300" style="color: var(--accent-primary);">智能時間聯動</span>
-                                    <span class="text-[9px] font-medium transition-colors duration-300" style="color: var(--accent-primary); opacity: 0.7;">自動平移後續課堂</span>
-                                </div>
-                                <label class="ios-toggle scale-[0.6] origin-right">
-                                    <input type="checkbox" id="setting-auto-cascade" checked onchange="toggleAutoCascade(this.checked)">
-                                    <div class="toggle-track"><div class="toggle-thumb"></div></div>
-                                </label>
+                    <!-- iOS 設定風格的控制面板 -->
+                    <div class="mb-5 rounded-[16px] border border-[var(--border-color)] bg-[var(--surface-inset)] overflow-hidden">
+                        <!-- 第 1 列：模式 -->
+                        <div class="p-3 border-b border-[var(--border-color)] bg-[var(--surface-color)] flex flex-col md:flex-row md:items-center justify-between gap-3">
+                            <span class="text-[11px] font-bold opacity-60 px-1"><i class="fas fa-calendar-day mr-1"></i>時間表模式</span>
+                            <div class="ios-segmented-control flex-1 md:max-w-[300px]">
+                                <button type="button" class="ios-segment-btn tt-mode-btn active" data-val="5day" onclick="setTTMode('5day')">五天</button>
+                                <button type="button" class="ios-segment-btn tt-mode-btn" data-val="6day" onclick="setTTMode('6day')">六天</button>
+                                <button type="button" class="ios-segment-btn tt-mode-btn" data-val="7day" onclick="setTTMode('7day')">七天</button>
+                                <button type="button" class="ios-segment-btn tt-mode-btn" data-val="cycle" onclick="setTTMode('cycle')">循環日</button>
                             </div>
+                            <input type="hidden" id="setting-tt-mode" value="5day">
                         </div>
-                        <div class="border-t border-[var(--border-color)] pt-3 grid grid-cols-3 gap-2">
-                            <div class="ios-input-group flex-col !items-stretch !p-1"><label class="text-[9px] font-bold opacity-50 text-center w-full block">課堂(分)</label><input type="number" id="setting-tt-period" class="ios-input !py-0.5 text-center text-xs" value="35" onchange="updateTTSmart()"></div>
-                            <div class="ios-input-group flex-col !items-stretch !p-1"><label class="text-[9px] font-bold opacity-50 text-center w-full block">小息(分)</label><input type="number" id="setting-tt-break" class="ios-input !py-0.5 text-center text-xs" value="15" onchange="updateTTSmart()"></div>
-                            <div class="ios-input-group flex-col !items-stretch !p-1"><label class="text-[9px] font-bold opacity-50 text-center w-full block">午膳(分)</label><input type="number" id="setting-tt-lunch" class="ios-input !py-0.5 text-center text-xs" value="50" onchange="updateTTSmart()"></div>
+                        
+                        <!-- 第 2 列：循環日數 (按需顯示) -->
+                        <div id="setting-tt-cycle-container" class="hidden p-3 border-b border-[var(--border-color)] bg-[var(--surface-color)] justify-between items-center">
+                            <span class="text-[11px] font-bold opacity-60 px-1">總循環日數</span>
+                            <div class="ios-input-group w-24 !p-1 bg-[var(--surface-inset)]"><input type="number" id="setting-tt-cycle" min="1" max="14" class="ios-input !py-1 text-center text-xs font-black" onchange="updateTTCycle()"></div>
+                        </div>
+
+                        <!-- 第 3 列：智能聯動與時長 -->
+                        <div class="p-3 bg-[var(--surface-color)]">
+                            <div class="flex justify-between items-center mb-3 p-3 rounded-[12px] transition-colors duration-300 border border-transparent hover:border-[var(--accent-primary)]" style="background-color: var(--accent-10);">
+                                <div class="flex items-center gap-2.5">
+                                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-white shadow-sm transition-transform hover:scale-110" style="background-color: var(--accent-primary);"><i class="fas fa-magic text-[11px]"></i></div>
+                                    <div>
+                                        <span class="text-[13px] font-bold block mb-0.5" style="color: var(--accent-primary);">智能時間聯動</span>
+                                        <span class="text-[9px] font-medium opacity-70" style="color: var(--accent-primary);">修改課堂時間後，自動平移後續節數</span>
+                                    </div>
+                                </div>
+                                <label class="ios-toggle scale-[0.8] origin-right"><input type="checkbox" id="setting-auto-cascade" checked onchange="toggleAutoCascade(this.checked)"><div class="toggle-track"><div class="toggle-thumb"></div></div></label>
+                            </div>
+                            
+                            <div class="grid grid-cols-3 gap-2 mt-2">
+                                <div class="ios-input-group flex-col !items-stretch !p-1.5 bg-[var(--surface-inset)]"><label class="text-[9px] font-bold opacity-50 text-center w-full block mb-0.5">預設課堂(分)</label><input type="number" id="setting-tt-period" class="ios-input !py-0.5 text-center text-[13px] font-black" value="35" onchange="updateTTSmart()"></div>
+                                <div class="ios-input-group flex-col !items-stretch !p-1.5 bg-[var(--surface-inset)]"><label class="text-[9px] font-bold opacity-50 text-center w-full block mb-0.5">預設小息(分)</label><input type="number" id="setting-tt-break" class="ios-input !py-0.5 text-center text-[13px] font-black" value="15" onchange="updateTTSmart()"></div>
+                                <div class="ios-input-group flex-col !items-stretch !p-1.5 bg-[var(--surface-inset)]"><label class="text-[9px] font-bold opacity-50 text-center w-full block mb-0.5">預設午膳(分)</label><input type="number" id="setting-tt-lunch" class="ios-input !py-0.5 text-center text-[13px] font-black" value="50" onchange="updateTTSmart()"></div>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="overflow-x-auto scrollbar-hide pb-3">
-                        <table class="w-full text-center border-collapse text-xs" id="timetable-table">
-                            <thead><tr id="tt-edit-header-row" class="border-b border-[var(--border-color)]"></tr></thead>
-                            <tbody id="timetable-body"></tbody>
-                        </table>
-                    </div>
-                    <div class="mt-3 pt-3 border-t border-[var(--border-color)] flex gap-2">
-                        <button onclick="addSmartRow('class')" class="flex-1 py-2.5 rounded-[12px] text-xs font-bold text-white btn-spring transition-colors duration-300" style="background-color: var(--accent-primary);"><i class="fas fa-plus mr-1"></i> 課堂</button>
-                        <button onclick="addSmartRow('break')" class="flex-1 py-2.5 rounded-[12px] text-xs font-bold bg-[var(--surface-inset)] btn-spring">小息</button>
-                        <button onclick="addSmartRow('lunch')" class="flex-1 py-2.5 rounded-[12px] text-xs font-bold bg-[var(--surface-inset)] btn-spring">午膳</button>
+                    <!-- 表格與按鈕區塊 -->
+                    <div class="rounded-[16px] border border-[var(--border-color)] overflow-hidden bg-[var(--surface-color)] shadow-sm">
+                        <div class="overflow-x-auto scrollbar-hide">
+                            <table class="w-full text-center border-collapse text-xs" id="timetable-table">
+                                <thead class="bg-[var(--surface-inset)] text-[var(--text-secondary)]"><tr id="tt-edit-header-row" class="border-b border-[var(--border-color)]"></tr></thead>
+                                <tbody id="timetable-body"></tbody>
+                            </table>
+                        </div>
+                        <div class="p-3 bg-[var(--surface-inset)] border-t border-[var(--border-color)] flex gap-2">
+                            <button onclick="addSmartRow('class')" class="flex-1 py-3 rounded-[12px] text-[11px] font-bold text-white btn-spring transition-colors duration-300 shadow-sm flex items-center justify-center gap-1.5" style="background-color: var(--accent-primary);"><i class="fas fa-plus"></i> 新增課堂</button>
+                            <button onclick="addSmartRow('break')" class="flex-[0.5] py-3 rounded-[12px] text-[11px] font-bold bg-[var(--surface-color)] border border-[var(--border-color)] btn-spring shadow-sm text-[var(--text-primary)]">小息</button>
+                            <button onclick="addSmartRow('lunch')" class="flex-[0.5] py-3 rounded-[12px] text-[11px] font-bold bg-[var(--surface-color)] border border-[var(--border-color)] btn-spring shadow-sm text-[var(--text-primary)]">午膳</button>
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
 
         <!-- VIEW: SUBJECTS -->
-        <section id="view-subjects" class="app-view max-w-4xl mx-auto space-y-6">
+        <section id="view-subjects" class="app-view max-w-2xl mx-auto w-full space-y-6">
             <h2 class="text-xl font-black tracking-tight px-1">科目管理</h2>
             <div class="ios-card p-5 md:p-6 relative overflow-hidden">
                 <div class="flex justify-between items-center mb-5 relative z-10">
@@ -496,7 +516,7 @@
         </section>
 
         <!-- VIEW: SETTINGS -->
-        <section id="view-settings" class="app-view max-w-2xl mx-auto space-y-5">
+        <section id="view-settings" class="app-view max-w-xl mx-auto w-full space-y-5">
             <h2 class="text-xl font-black tracking-tight px-1">設定</h2>
             
             <div class="ios-card p-4 flex items-center justify-between">
@@ -528,7 +548,6 @@
                         <button onclick="setThemeColor('macaron-pink')" class="w-8 h-8 rounded-full shadow-sm theme-btn btn-spring border-2" data-color="macaron-pink" style="background-color: #f391a0;" title="馬卡龍粉"></button>
                         <button onclick="setThemeColor('macaron-purple')" class="w-8 h-8 rounded-full shadow-sm theme-btn btn-spring border-2" data-color="macaron-purple" style="background-color: #b491c8;" title="馬卡龍紫"></button>
                         <button onclick="setThemeColor('macaron-peach')" class="w-8 h-8 rounded-full shadow-sm theme-btn btn-spring border-2" data-color="macaron-peach" style="background-color: #f3a683;" title="馬卡龍橘"></button>
-                        <!-- 新增 5 款現代風格顏色 -->
                         <button onclick="setThemeColor('macaron-lavender')" class="w-8 h-8 rounded-full shadow-sm theme-btn btn-spring border-2" data-color="macaron-lavender" style="background-color: #a78bfa;" title="薰衣草紫"></button>
                         <button onclick="setThemeColor('macaron-mint')" class="w-8 h-8 rounded-full shadow-sm theme-btn btn-spring border-2" data-color="macaron-mint" style="background-color: #5eead4;" title="薄荷青"></button>
                         <button onclick="setThemeColor('macaron-lemon')" class="w-8 h-8 rounded-full shadow-sm theme-btn btn-spring border-2" data-color="macaron-lemon" style="background-color: #fcd34d;" title="奶油黃"></button>
@@ -551,10 +570,20 @@
                     <i class="fas fa-chevron-right text-[10px] opacity-30"></i>
                 </button>
             </div>
-        </section>
+        
+        <!-- 商業級別版權頁腳 -->
+        <div class="mt-8 mb-4 text-center pb-8">
+            <div class="w-12 h-1 bg-[var(--border-color)] rounded-full mx-auto mb-4"></div>
+            <p class="text-[10px] font-black uppercase tracking-widest opacity-30 mb-1">E-Handbook (EHB)</p>
+            <p class="text-[9px] font-bold opacity-40 uppercase tracking-widest leading-relaxed">
+                Crafted with <i class="fas fa-heart text-red-500 animate-pulse mx-0.5"></i> by @colasonyt1123<br>
+                &copy; 2026 All Rights Reserved.
+            </p>
+        </div>
+    </section>
 
-        <!-- VIEW: ADMIN -->
-        <section id="view-admin" class="app-view space-y-5 max-w-4xl mx-auto">
+    <!-- VIEW: ADMIN -->
+        <section id="view-admin" class="app-view max-w-3xl mx-auto w-full space-y-5">
             <h2 class="text-xl font-black tracking-tight px-1">控制中心</h2>
             <div class="ios-segmented-control w-full overflow-x-auto">
                 <button class="ios-segment-btn active min-w-[70px]" onclick="switchAdminTab('overview')">概覽</button>
@@ -626,8 +655,8 @@
     <div id="login-screen" class="fixed inset-0 z-[200] flex flex-col items-center justify-center p-4 bg-[var(--bg-color)]">
         <div class="w-full max-w-sm ios-card p-8 flex flex-col items-center border-none shadow-xl">
             <div class="w-14 h-14 rounded-[16px] text-[var(--accent-text)] flex items-center justify-center text-2xl mb-5 shadow-lg transition-colors duration-300" style="background-color: var(--accent-primary);"><i class="fas fa-layer-group"></i></div>
-            <h2 class="text-xl font-black mb-1.5 tracking-tight">智慧電子手冊</h2>
-            <p class="text-[10px] mb-6 font-bold opacity-40 uppercase tracking-widest">Smart E-Handbook</p>
+            <h2 class="text-xl font-black mb-1.5 tracking-tight">電子手冊</h2>
+            <p class="text-[10px] mb-6 font-bold opacity-40 uppercase tracking-widest text-center leading-relaxed">E-Handbook (EHB)<br><span class="opacity-60 normal-case">by @colasonyt1123</span></p>
             
             <div class="w-full space-y-3 mb-6">
                 <div class="ios-input-group flex items-center px-3 py-1"><i class="fas fa-envelope opacity-40 mr-2 text-sm"></i><input type="email" id="auth-email" class="ios-input text-sm" placeholder="電郵地址"></div>
@@ -644,6 +673,20 @@
                 </button>
                 <button onclick="loginAnon()" class="w-full font-bold py-2 text-[11px] opacity-50 hover:opacity-100 transition-opacity">訪客預覽</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Initial Profile Setup Modal (新增首次註冊設定暱稱) -->
+    <div id="setup-profile-modal" class="fixed inset-0 z-[300] hidden items-center justify-center p-4 bg-[var(--bg-color)]/95 backdrop-blur-xl transition-all duration-500">
+        <div class="w-full max-w-sm ios-card p-8 flex flex-col items-center border border-[var(--border-color)] shadow-2xl">
+            <div class="w-16 h-16 rounded-full bg-[var(--accent-10)] text-[var(--accent-primary)] flex items-center justify-center text-3xl mb-5 shadow-inner"><i class="fas fa-user-astronaut"></i></div>
+            <h3 class="text-xl font-black mb-2 tracking-tight">建立專屬檔案</h3>
+            <p class="text-[11px] font-bold opacity-50 mb-6 text-center leading-relaxed">歡迎來到 E-Handbook (EHB)！<br>請設定你的暱稱，讓系統為你提供最佳體驗。</p>
+            <div class="ios-input-group w-full mb-5 py-2">
+                <i class="fas fa-user opacity-40 mr-2 text-sm"></i>
+                <input type="text" id="setup-nickname" class="ios-input text-sm" placeholder="輸入你想顯示的暱稱...">
+            </div>
+            <button onclick="saveInitialProfile()" class="w-full py-3.5 rounded-[12px] font-black text-sm btn-primary btn-spring shadow-lg">進入系統 <i class="fas fa-arrow-right ml-1"></i></button>
         </div>
     </div>
 
@@ -793,8 +836,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, signInAnonymously, onAuthStateChanged, signOut, signInWithCustomToken, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, query, onSnapshot, addDoc, deleteDoc, doc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signInAnonymously, onAuthStateChanged, signOut, signInWithCustomToken, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, query, onSnapshot, addDoc, deleteDoc, doc, setDoc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const fallbackConfig = { apiKey: "AIzaSyBVwnMF2XR1zlrXFSj1yWUCOjbGuIcH3Hw", authDomain: "hwrc2-e8543.firebaseapp.com", projectId: "hwrc2-e8543", storageBucket: "hwrc2-e8543.firebasestorage.app", messagingSenderId: "652104124735", appId: "1:652104124735:web:aeaa80ef2f4e2c4acc2b8a" };
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : fallbackConfig;
@@ -811,6 +854,7 @@
         let currentTimetableDay = 'd1';
         let adminConfig = { marquee: '', maintenance: false, autoCleanEnabled: false, whitelistEnabled: false, whitelist: ['chimhinhin@gmail.com'], blacklistEnabled: false, blacklist: [] };
         let adminUsersList = []; let systemAuditLogs = [];
+        let sortTasksDesc = false; // 排序狀態變量
 
         // Colors
         const subjectColors = ['#FFB3BA','#BAE1FF','#BAFFC9','#FFDFBA','#E8DFF5','#DAEAF6','#E2F0CB','#F3B0C3','#CBAACB','#FDFD96','#FFC4C4','#FFD1B3','#FFF2B2','#C4FAC7','#C4E4FF','#E2D4F0','#FAD4D8','#D0E3F0','#D9E8B8','#F0A1B7','#C09DC0','#F5F587','#E5B2C6','#B2D5D0'];
@@ -915,7 +959,7 @@
                 document.documentElement.style.setProperty('--surface-color', tc.dSur);
                 document.documentElement.style.setProperty('--surface-inset', tc.dIns);
                 document.documentElement.style.setProperty('--header-bg', hexToRgba(tc.dBg, 0.85));
-                document.documentElement.style.setProperty('--border-color', 'rgba(255,255,255,0.06)');
+                document.documentElement.style.setProperty('--border-color', 'rgba(255,255,255,0.08)');
             } else {
                 document.documentElement.style.setProperty('--bg-color', tc.lBg);
                 document.documentElement.style.setProperty('--surface-color', tc.lSur);
@@ -924,7 +968,9 @@
                 document.documentElement.style.setProperty('--border-color', 'rgba(0,0,0,0.06)');
             }
 
-            document.getElementById('dark-mode-toggle').checked = userSettings.isDark;
+            const darkModeToggle = document.getElementById('dark-mode-toggle');
+            if (darkModeToggle) darkModeToggle.checked = userSettings.isDark;
+
             const ttCycleNode = document.getElementById('setting-tt-cycle'); if (ttCycleNode) ttCycleNode.value = userSettings.ttCycle || 5;
             const ttPeriodNode = document.getElementById('setting-tt-period'); if (ttPeriodNode) ttPeriodNode.value = userSettings.ttPeriodMins || 35;
             const ttBreakNode = document.getElementById('setting-tt-break'); if (ttBreakNode) ttBreakNode.value = userSettings.ttBreakMins || 15;
@@ -937,10 +983,18 @@
             
             buildCustomChips(); updateTTModeChips();
             
-            const type = document.getElementById('task-type').value;
-            document.querySelectorAll('.ios-segment-btn').forEach(b => {
-               if(b.dataset.val === type) b.classList.add('active'); else b.classList.remove('active');
-            });
+            const type = document.getElementById('task-type')?.value;
+            if (type) {
+                // 限制只更新主頁「新增任務」內的按鈕
+                document.querySelectorAll('#add-task-form .ios-segment-btn').forEach(b => {
+                   if(b.dataset.val === type) b.classList.add('active'); else b.classList.remove('active');
+                });
+            }
+            
+            // 確保時間表的切換按鈕狀態正確恢復
+            document.querySelectorAll('.ios-segment-btn[id^="tt-btn-"]').forEach(btn => btn.classList.remove('active'));
+            const activeTTBtn = document.getElementById(`tt-btn-${ttViewMode}`);
+            if(activeTTBtn) activeTTBtn.classList.add('active');
         } window.applyTheme = applyTheme;
 
         function setThemeColor(colorId) { userSettings.theme = colorId; applyTheme(); saveSettings(); } window.setThemeColor = setThemeColor;
@@ -948,7 +1002,7 @@
 
         function updateTTModeChips() {
             const currentMode = userSettings.ttMode || '5day'; const modeInput = document.getElementById('setting-tt-mode'); if (modeInput) modeInput.value = currentMode;
-            document.querySelectorAll('.tt-mode-btn').forEach(btn => { if(btn.dataset.val === currentMode) { btn.classList.add('selected'); } else { btn.classList.remove('selected'); } });
+            document.querySelectorAll('.tt-mode-btn').forEach(btn => { if(btn.dataset.val === currentMode) { btn.classList.add('active'); } else { btn.classList.remove('active'); } });
             const cycleCont = document.getElementById('setting-tt-cycle-container'); if (cycleCont) cycleCont.style.display = (currentMode === 'cycle') ? 'flex' : 'none';
         } window.updateTTModeChips = updateTTModeChips;
 
@@ -959,40 +1013,87 @@
         function saveSettings() { if(currentUser) { lastSettingsSaveTime = Date.now(); setDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'settings', 'profile'), userSettings).catch(()=>{}); } } window.saveSettings = saveSettings;
 
         function setTaskType(type, btnEl) { 
-            document.querySelectorAll('.ios-segment-btn[data-val]').forEach(btn => { btn.classList.remove('active'); }); 
+            // 限制作用範圍，防止誤刪時間表按鈕的狀態
+            document.querySelectorAll('#add-task-form .ios-segment-btn').forEach(btn => { btn.classList.remove('active'); }); 
             btnEl.classList.add('active'); document.getElementById('task-type').value = type; 
         } window.setTaskType = setTaskType;
 
+        // 【更新】重新構建按鈕列表，將濾鏡部份剝離，交給智能系統獨立生成
         function buildCustomChips() {
-            const addCont = document.getElementById('subject-chips-add'); const filterCont = document.getElementById('subject-chips-filter'); const editCont = document.getElementById('subject-chips-edit'); const ttCont = document.getElementById('tt-cell-chips');
-            if(!addCont || !filterCont || !editCont) return;
-            const addFrag = document.createDocumentFragment(); const filterFrag = document.createDocumentFragment(); const editFrag = document.createDocumentFragment(); const ttFrag = document.createDocumentFragment();
-            addCont.innerHTML = ''; filterCont.innerHTML = ''; editCont.innerHTML = ''; if(ttCont) ttCont.innerHTML = '';
+            const addCont = document.getElementById('subject-chips-add'); const editCont = document.getElementById('subject-chips-edit'); const ttCont = document.getElementById('tt-cell-chips');
+            if(!addCont || !editCont) return;
+            const addFrag = document.createDocumentFragment(); const editFrag = document.createDocumentFragment(); const ttFrag = document.createDocumentFragment();
+            addCont.innerHTML = ''; editCont.innerHTML = ''; if(ttCont) ttCont.innerHTML = '';
             
-            let allBtn = document.createElement('button'); allBtn.type = 'button'; allBtn.className = 'custom-chip flex-shrink-0 spring-action selected'; allBtn.dataset.subject = 'all'; allBtn.innerText = '全部'; allBtn.onclick = () => setSubjectFilter('all'); filterFrag.appendChild(allBtn);
             if (!userSettings.subjects || userSettings.subjects.length === 0) userSettings.subjects = defaultSubjects;
             
             userSettings.subjects.filter(s => s.enabled !== false).forEach(sub => {
                 const mkBtn = (name, parent, fn) => { let b = document.createElement('button'); b.type='button'; b.className='custom-chip flex-shrink-0 spring-action'; b.dataset.subject=name; b.innerHTML=`<span class="w-2.5 h-2.5 rounded-full mr-1.5" style="background-color:${sub.color}"></span>${name}`; b.onclick = fn; parent.appendChild(b); };
-                mkBtn(sub.name, addFrag, () => setSubjectAdd(sub.name)); mkBtn(sub.name, filterFrag, () => setSubjectFilter(sub.name)); mkBtn(sub.name, editFrag, () => setSubjectEdit(sub.name));
+                mkBtn(sub.name, addFrag, () => setSubjectAdd(sub.name)); mkBtn(sub.name, editFrag, () => setSubjectEdit(sub.name));
                 if(ttCont) { let tBtn = document.createElement('button'); tBtn.type = 'button'; tBtn.className = 'px-4 py-2 rounded-xl text-xs font-bold spring-action'; tBtn.style.backgroundColor = hexToRgba(sub.color, 0.2); tBtn.style.color = sub.color; tBtn.innerText = sub.name; tBtn.onclick = () => saveTTCellDirect(sub.name); ttFrag.appendChild(tBtn); }
             });
             if(ttCont) { let clrBtn = document.createElement('button'); clrBtn.type = 'button'; clrBtn.className = 'px-4 py-2 rounded-xl text-xs font-bold spring-action opacity-60 hover:opacity-100 transition-opacity'; clrBtn.style.backgroundColor = 'var(--surface-inset)'; clrBtn.innerText = '清除'; clrBtn.onclick = () => saveTTCellDirect(''); ttFrag.appendChild(clrBtn); }
-            addCont.appendChild(addFrag); filterCont.appendChild(filterFrag); editCont.appendChild(editFrag); if(ttCont) ttCont.appendChild(ttFrag);
+            addCont.appendChild(addFrag); editCont.appendChild(editFrag); if(ttCont) ttCont.appendChild(ttFrag);
             updateChipStyles();
+            
+            if(document.getElementById('view-home').classList.contains('active')) updateSmartFilters();
         } window.buildCustomChips = buildCustomChips;
 
         function updateChipStyles() {
-            const currentAdd = document.getElementById('task-subject')?.value || ''; const currentFilter = document.getElementById('filter-subject')?.value || 'all'; const currentEdit = document.getElementById('edit-subject')?.value || '';
+            const currentAdd = document.getElementById('task-subject')?.value || ''; const currentEdit = document.getElementById('edit-subject')?.value || '';
             const applyStyle = (chip, isSelected) => { if(isSelected) chip.classList.add('selected'); else chip.classList.remove('selected'); };
-            document.querySelectorAll('#subject-chips-filter .custom-chip').forEach(chip => applyStyle(chip, currentFilter === chip.dataset.subject));
             document.querySelectorAll('#subject-chips-add .custom-chip').forEach(chip => applyStyle(chip, currentAdd === chip.dataset.subject));
             document.querySelectorAll('#subject-chips-edit .custom-chip').forEach(chip => applyStyle(chip, currentEdit === chip.dataset.subject));
         } window.updateChipStyles = updateChipStyles;
 
         function setSubjectAdd(val) { document.getElementById('task-subject').value = val; updateChipStyles(); } window.setSubjectAdd = setSubjectAdd;
-        function setSubjectFilter(val) { document.getElementById('filter-subject').value = val; updateChipStyles(); renderHome(); } window.setSubjectFilter = setSubjectFilter;
+        function setSubjectFilter(val) { document.getElementById('filter-subject').value = val; renderHome(); } window.setSubjectFilter = setSubjectFilter;
         function setSubjectEdit(val) { document.getElementById('edit-subject').value = val; updateChipStyles(); } window.setSubjectEdit = setSubjectEdit;
+
+        // 【新增】智能篩選系統
+        function updateSmartFilters() {
+            const filterCont = document.getElementById('subject-chips-filter');
+            if(!filterCont) return;
+            
+            const currentFilter = document.getElementById('filter-subject')?.value || 'all';
+            
+            // 找出當前有哪些科目擁有功課 (不顯示完全沒功課的空科目)
+            const activeSubjects = [...new Set(allTasks.map(t => t.subject))];
+            
+            // 找出今天時間表上有的科目，方便學生快速定位
+            const todayMap = { 1: 'd1', 2: 'd2', 3: 'd3', 4: 'd4', 5: 'd5', 6: 'd6', 0: 'd7' };
+            const todayKey = todayMap[new Date().getDay()];
+            const ttToUse = userTimetable.length > 0 ? userTimetable : globalTimetable;
+            const todaySubjects = ttToUse.map(r => r[todayKey]).filter(v => v && !v.includes('小息') && !v.includes('午膳'));
+
+            let html = `<button type="button" class="custom-chip flex-shrink-0 spring-action ${currentFilter === 'all' ? 'selected' : ''}" onclick="setSubjectFilter('all')">全部</button>`;
+            
+            userSettings.subjects.filter(s => s.enabled !== false && activeSubjects.includes(s.name)).forEach(sub => {
+                const isToday = todaySubjects.includes(sub.name);
+                // 若為今日科目，加入醒目提示標籤
+                let badge = isToday ? `<span class="ml-1.5 text-[8px] bg-[var(--danger-color)] text-white px-1.5 py-0.5 rounded-[4px] leading-none shadow-sm animate-pulse">今日</span>` : '';
+                html += `<button type="button" class="custom-chip flex-shrink-0 spring-action ${currentFilter === sub.name ? 'selected' : ''}" onclick="setSubjectFilter('${sub.name}')"><span class="w-2.5 h-2.5 rounded-full mr-1.5" style="background-color:${sub.color}"></span>${sub.name}${badge}</button>`;
+            });
+            
+            filterCont.innerHTML = html;
+        } window.updateSmartFilters = updateSmartFilters;
+
+        // 【新增】觸發排序切換
+        function toggleTaskSort() {
+            sortTasksDesc = !sortTasksDesc;
+            const icon = document.getElementById('sort-icon');
+            const text = document.getElementById('sort-text');
+            if(sortTasksDesc) {
+                icon.className = 'fas fa-sort-amount-up-alt text-[var(--accent-primary)]';
+                text.innerText = '最遲優先';
+                text.className = 'text-[var(--accent-primary)]';
+            } else {
+                icon.className = 'fas fa-sort-amount-down';
+                text.innerText = '最近優先';
+                text.className = '';
+            }
+            renderHome();
+        } window.toggleTaskSort = toggleTaskSort;
 
         async function saveAdminConfig() { if(!isAdmin) return; try { await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'system'), adminConfig); } catch(e) {} } window.saveAdminConfig = saveAdminConfig;
         function logAdminAction(action, details) { if (!isAdmin) return; addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'auditLogs'), { action, details, admin: currentUser.email, timestamp: new Date().toISOString() }).catch(e => {}); }
@@ -1150,24 +1251,53 @@
                 headerTitle.innerText = '編輯時間表';
 
                 const thead = document.getElementById('tt-edit-header-row'); const tbody = document.getElementById('timetable-body');
-                let thHtml = `<th class="py-2 px-1 font-bold opacity-50 sticky left-0 z-10 bg-[var(--surface-color)]">時間</th>`; daysConfig.forEach(d => { thHtml += `<th class="py-2 px-1 font-bold min-w-[60px] whitespace-nowrap">${d.label}</th>`; }); thHtml += `<th class="py-2 px-1 font-bold opacity-50">刪除</th>`; thead.innerHTML = thHtml; tbody.innerHTML = '';
+                
+                let thHtml = `<th class="py-2.5 px-2 font-bold sticky left-0 z-10 bg-[var(--surface-inset)] shadow-[1px_0_0_var(--border-color)] text-[10px] uppercase tracking-widest text-[var(--text-secondary)]">時間</th>`; 
+                daysConfig.forEach(d => { thHtml += `<th class="py-2.5 px-2 font-bold min-w-[75px] whitespace-nowrap text-[11px] text-[var(--text-primary)]">${d.label}</th>`; }); 
+                thHtml += `<th class="py-2.5 px-2 font-bold min-w-[40px] text-[10px] uppercase tracking-widest text-[var(--text-secondary)]">刪除</th>`; 
+                thead.innerHTML = thHtml; tbody.innerHTML = '';
+                
                 if(dataToRender.length === 0) userTimetable = [{startTime: '08:00', endTime: '08:35'}];
                 const fragBody = document.createDocumentFragment();
                 dataToRender.forEach((row, rIdx) => {
-                    let tr = document.createElement('tr'); tr.className = "border-b border-[var(--border-color)] hover:bg-[var(--surface-inset)] transition-colors";
-                    let html = `<td class="p-1.5 sticky left-0 z-10 w-[70px] bg-[var(--surface-color)]"><div class="flex flex-col gap-1 items-center"><div class="ios-input-group !p-0.5 w-full !rounded-[6px]"><input type="time" class="ios-input !py-0.5 text-center text-[10px] font-bold" value="${row.startTime||''}" onchange="updateTT(${rIdx}, 'startTime', this.value)"></div><div class="ios-input-group !p-0.5 w-full !rounded-[6px]"><input type="time" class="ios-input !py-0.5 text-center text-[10px] font-bold" value="${row.endTime||''}" onchange="updateTT(${rIdx}, 'endTime', this.value)"></div></div></td>`;
+                    let tr = document.createElement('tr'); 
+                    tr.className = "border-b border-[var(--border-color)] hover:bg-[var(--surface-inset)] transition-colors group";
+                    
+                    let html = `<td class="p-0 sticky left-0 z-10 w-[70px] bg-[var(--surface-color)] group-hover:bg-[var(--surface-inset)] shadow-[1px_0_0_var(--border-color)] transition-colors">
+                        <div class="flex flex-col items-center justify-center h-full py-2.5 gap-0.5">
+                            <div class="w-[56px]"><input type="time" class="w-full bg-transparent text-center text-[11px] md:text-[12px] font-black text-[var(--text-primary)] outline-none" value="${row.startTime||''}" onchange="updateTT(${rIdx}, 'startTime', this.value)"></div>
+                            <span class="block w-4 h-px bg-[var(--border-color)]"></span>
+                            <div class="w-[56px]"><input type="time" class="w-full bg-transparent text-center text-[10px] md:text-[11px] font-bold text-[var(--text-secondary)] outline-none opacity-80" value="${row.endTime||''}" onchange="updateTT(${rIdx}, 'endTime', this.value)"></div>
+                        </div>
+                    </td>`;
+                    
                     daysConfig.forEach(d => {
-                        const cellVal = row[d.key] || ''; let cellColor = (userSettings.subjects.find(s => s.name === cellVal) || {}).color || 'var(--border-color)';
+                        const cellVal = row[d.key] || ''; let sub = userSettings.subjects.find(s => s.name === cellVal) || {};
+                        let cellColor = sub.color || 'var(--border-color)';
                         if(cellVal.includes('小息') || cellVal.includes('午膳')) cellColor = 'transparent';
+                        
                         let isEmpty = !cellVal;
-                        let bgCol = isEmpty ? 'transparent' : hexToRgba(cellColor, 0.12);
+                        let bgCol = isEmpty ? 'var(--surface-inset)' : hexToRgba(cellColor, 0.15);
                         let borderStyle = isEmpty ? '1.5px dashed var(--border-color)' : `1.5px solid ${cellColor}`;
                         let textCol = isEmpty ? 'var(--text-secondary)' : 'var(--text-primary)';
-                        let iconHtml = isEmpty ? '<i class="fas fa-plus opacity-40 text-sm"></i>' : cellVal;
                         
-                        html += `<td class="p-1"><button onclick="openTTCellModal(${rIdx}, '${d.key}')" class="w-full h-10 rounded-[10px] text-[11px] font-bold truncate btn-spring flex items-center justify-center mx-auto transition-all shadow-sm" style="color: ${textCol}; border: ${borderStyle}; background-color: ${bgCol}">${iconHtml}</button></td>`;
+                        let displayContent = isEmpty ? '<i class="fas fa-plus text-[10px] opacity-40"></i>' : cellVal;
+                        if(cellVal.includes('小息')) displayContent = '<i class="fas fa-mug-hot text-[11px] opacity-50 block mb-0.5"></i> 小息';
+                        if(cellVal.includes('午膳')) displayContent = '<i class="fas fa-utensils text-[11px] opacity-50 block mb-0.5"></i> 午膳';
+                        
+                        html += `<td class="p-1.5 align-middle">
+                            <button onclick="openTTCellModal(${rIdx}, '${d.key}')" class="w-full min-h-[48px] rounded-[12px] text-[11px] font-bold leading-tight btn-spring flex flex-col items-center justify-center mx-auto transition-all px-1 shadow-sm" style="color: ${textCol}; border: ${borderStyle}; background-color: ${bgCol}; border-color: ${isEmpty ? 'var(--border-color)' : cellColor}">
+                                ${displayContent}
+                            </button>
+                        </td>`;
                     });
-                    html += `<td class="p-1.5 text-center"><button onclick="removeTTRow(${rIdx})" class="text-[var(--danger-color)] w-7 h-7 rounded-full bg-[var(--danger-10)] btn-spring flex items-center justify-center mx-auto transition-colors hover:bg-[var(--danger-color)] hover:text-white"><i class="fas fa-minus text-xs"></i></button></td>`;
+                    
+                    html += `<td class="p-1.5 align-middle text-center">
+                        <button onclick="removeTTRow(${rIdx})" class="w-8 h-8 rounded-full bg-[var(--danger-10)] text-[var(--danger-color)] btn-spring flex items-center justify-center mx-auto transition-all hover:bg-[var(--danger-color)] hover:text-white hover:scale-110 shadow-sm" title="刪除本列">
+                            <i class="fas fa-trash-alt text-[11px]"></i>
+                        </button>
+                    </td>`;
+                    
                     tr.innerHTML = html; fragBody.appendChild(tr);
                 }); tbody.appendChild(fragBody);
             }
@@ -1422,6 +1552,7 @@
             setTimeout(() => { completeTask(id, isPub, btn); }, 350);
         };
 
+        // 【更新】為主頁的卡片也加入刪除按鈕
         function createTaskCard(task, index, inModal = false) {
             const canEditDelete = task.createdBy === currentUser.uid || (task.isPublic && isAdmin); 
             const subColor = (userSettings.subjects.find(s=>s.name===task.subject)||{}).color||'var(--border-color)';
@@ -1448,24 +1579,20 @@
                 </div>
                 
                 <div class="relative z-10 flex min-h-[100px]">
-                    <!-- 左側欄：全新人體工學排版 (窄身、按鈕置頂、序號置底) -->
+                    <!-- 左側欄：全新人體工學排版 -->
                     <div class="w-12 md:w-14 shrink-0 flex flex-col items-center justify-between py-3 border-r border-[var(--border-color)] bg-[var(--surface-inset)]/40 backdrop-blur-sm">
-                        
-                        <!-- 1. 置頂：圓形完成按鈕 -->
                         <button onclick="triggerComplete(this, '${task.id}', ${task.isPublic})" class="w-6 h-6 md:w-7 md:h-7 rounded-full border-[1.5px] border-[var(--text-secondary)] opacity-50 flex items-center justify-center transition-all duration-300 btn-spring group/check shadow-sm bg-[var(--surface-color)] relative z-20 hover:opacity-100 hover:border-[var(--accent-primary)] mb-1">
                             <i class="fas fa-check text-[9px] md:text-[10px] opacity-0 transition-opacity duration-300"></i>
                         </button>
                         
-                        <!-- 2. 居中：垂直科目名 -->
                         <div class="flex-1 flex items-center justify-center py-2">
                             <span class="text-[12px] md:text-[13px] font-bold tracking-widest text-[var(--text-primary)] opacity-80" style="writing-mode: vertical-rl; text-orientation: upright;">${task.subject}</span>
                         </div>
                         
-                        <!-- 3. 置底：序號點綴 -->
                         <span class="text-[9px] md:text-[10px] font-black text-[var(--text-secondary)] opacity-50 mt-1">#${index + 1}</span>
                     </div>
                     
-                    <!-- 右側欄：主要內容 (加入微弱毛玻璃確保文字清晰) -->
+                    <!-- 右側欄：主要內容 -->
                     <div class="flex-1 p-3.5 md:p-4 flex flex-col justify-center bg-[var(--surface-color)]/60 backdrop-blur-sm">
                         <div class="flex justify-between items-start mb-2.5">
                             <div class="flex items-center gap-1.5 flex-wrap">
@@ -1473,7 +1600,18 @@
                                 ${task.type === 'test' ? `<span class="px-2 py-0.5 rounded-[6px] text-[9px] font-bold bg-purple-500/10 text-purple-600">測驗</span>` : ''}
                                 ${task.isPublic ? `<span class="px-2 py-0.5 rounded-[6px] text-[9px] font-bold transition-colors" style="color: var(--accent-primary); background-color: var(--accent-10);">廣播</span>` : ''}
                             </div>
-                            ${canEditDelete ? `<button onclick="openEditModal('${task.id}', ${task.isPublic})" class="text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-colors p-1 relative z-20"><i class="fas fa-ellipsis-h text-sm"></i></button>` : ''}
+                            
+                            <!-- 新增：修改及刪除按鈕模組 -->
+                            ${canEditDelete ? `
+                            <div class="flex items-center gap-1.5 relative z-20">
+                                <button onclick="openEditModal('${task.id}', ${task.isPublic})" class="w-7 h-7 rounded-full flex items-center justify-center btn-spring text-[var(--text-secondary)] bg-[var(--surface-inset)] hover:text-[var(--accent-primary)] transition-colors shadow-sm" title="編輯">
+                                    <i class="fas fa-pen text-[10px]"></i>
+                                </button>
+                                <button onclick="deleteTask('${task.id}', ${task.isPublic}, this)" class="w-7 h-7 rounded-full flex items-center justify-center btn-spring text-[var(--danger-color)] bg-[var(--danger-10)] hover:bg-[var(--danger-color)] hover:text-white transition-colors shadow-sm" title="刪除">
+                                    <i class="fas fa-trash-alt text-[10px]"></i>
+                                </button>
+                            </div>
+                            ` : ''}
                         </div>
                         
                         <p class="text-[14px] md:text-[15px] font-bold leading-relaxed mb-3 text-[var(--text-primary)] drop-shadow-sm pl-0.5">${contentHtml}</p>
@@ -1488,24 +1626,59 @@
             return div;
         }
 
+        // 【更新】在 renderHome 引入排序與智能篩選器渲染
         function renderHome() {
             updateDashboardCounts();
-            const listEl = document.getElementById('home-tasks-list'); const filterVal = document.getElementById('filter-subject')?.value || 'all'; listEl.innerHTML = '';
+            updateSmartFilters(); // 調用智能篩選系統
+            
+            const listEl = document.getElementById('home-tasks-list'); 
+            const filterVal = document.getElementById('filter-subject')?.value || 'all'; 
+            listEl.innerHTML = '';
+            
+            // 根據科目篩選
             let filtered = allTasks.filter(t => filterVal === 'all' || t.subject === filterVal);
+            
+            // 處理日期排序
+            if (sortTasksDesc) {
+                // 最遲優先 (倒序)
+                filtered.sort((a, b) => new Date(b.dueDate) - new Date(a.dueDate));
+            } else {
+                // 最近優先 (順序)
+                filtered.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+            }
+            
             if(filtered.length === 0) { listEl.innerHTML = `<div class="text-center py-12 text-sm font-bold opacity-30"><i class="fas fa-check-circle text-4xl mb-3 block" style="color: var(--text-secondary);"></i>目前無任務</div>`; return; }
             const frag = document.createDocumentFragment(); 
             filtered.forEach((task, index) => frag.appendChild(createTaskCard(task, index))); 
             listEl.appendChild(frag);
         } window.renderHome = renderHome;
 
+        // 歷史紀錄卡片渲染
         function renderHistory() {
             const listEl = document.getElementById('history-tasks-list'); listEl.innerHTML = '';
-            if(historyTasks.length === 0) { listEl.innerHTML = `<div class="text-center py-12 text-xs font-bold opacity-30">暫無紀錄</div>`; return; }
+            if(historyTasks.length === 0) { listEl.innerHTML = `<div class="text-center py-12 text-sm font-bold opacity-30"><i class="fas fa-inbox text-4xl mb-3 block" style="color: var(--text-secondary);"></i>暫無完成紀錄</div>`; return; }
             const frag = document.createDocumentFragment();
             historyTasks.forEach((task, index) => { 
-                let div = document.createElement('div'); div.className = "ios-card p-3.5 opacity-60 hover:opacity-100 transition-opacity";
+                let div = document.createElement('div'); 
+                div.className = "ios-card p-4 opacity-70 hover:opacity-100 transition-all duration-300 border border-[var(--border-color)] relative group overflow-hidden shadow-sm hover:shadow-md bg-[var(--surface-color)]";
                 const subColor = (userSettings.subjects.find(s=>s.name===task.subject)||{}).color||'var(--text-secondary)';
-                div.innerHTML = `<div class="flex justify-between items-start mb-2"><div class="flex items-center gap-1.5"><span class="px-2.5 py-1 rounded-[8px] text-[11px] font-bold" style="background-color: ${hexToRgba(subColor, 0.15)}; color: ${subColor};">${task.subject}</span></div><button onclick="deleteHistoryTask('${task.id}', this)" class="w-6 h-6 spring-action rounded-full flex items-center justify-center" style="color: var(--danger-color); background-color: var(--danger-10);"><i class="fas fa-times text-[10px]"></i></button></div><p class="text-xs font-bold line-through line-clamp-1 mb-1.5">${task.content}</p><p class="text-[10px] font-medium opacity-40">完成於: ${new Date(task.completedAt).toLocaleString()}</p>`;
+                
+                div.innerHTML = `
+                    <div class="absolute left-0 top-0 bottom-0 w-1.5 opacity-50" style="background-color: ${subColor};"></div>
+                    <div class="flex justify-between items-start mb-3 pl-2">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2.5 py-1 rounded-[8px] text-[11px] font-bold shadow-sm" style="background-color: ${hexToRgba(subColor, 0.15)}; color: ${subColor};">${task.subject}</span>
+                            <span class="text-[9px] font-bold opacity-60 border border-[var(--border-color)] px-2 py-0.5 rounded-[6px] bg-[var(--surface-inset)]">已完成</span>
+                        </div>
+                        <button onclick="deleteHistoryTask('${task.id}', this)" class="w-8 h-8 btn-spring rounded-full flex items-center justify-center transition-colors shadow-sm bg-[var(--danger-10)] text-[var(--danger-color)] hover:bg-[var(--danger-color)] hover:text-white" title="刪除記錄">
+                            <i class="fas fa-trash-alt text-[10px]"></i>
+                        </button>
+                    </div>
+                    <p class="text-[13px] md:text-[14px] font-bold line-through mb-2.5 pl-2 text-[var(--text-primary)] opacity-80">${task.content.replace(/\n/g, '<br>')}</p>
+                    <div class="flex justify-between items-end pl-2 pt-2 border-t border-[var(--border-color)]">
+                        <p class="text-[9px] font-bold opacity-60"><i class="fas fa-check-circle mr-1 text-green-500"></i>完成於: ${new Date(task.completedAt).toLocaleString()}</p>
+                    </div>
+                `;
                 frag.appendChild(div);
             }); listEl.appendChild(frag);
         } window.renderHistory = renderHistory;
@@ -1583,7 +1756,7 @@
         } window.deleteTask = deleteTask;
 
         function deleteHistoryTask(id, el) { 
-            customConfirm('清除', '刪除紀錄？', 'danger', () => { 
+            customConfirm('清除', '確定刪除此紀錄嗎？', 'danger', () => { 
                 suspendRenderUntil = Date.now() + 500; 
                 if(el) { const card = el.closest('.ios-card'); if(card) { card.style.transition = 'all 0.3s var(--spring)'; card.style.transform = 'scale(0.9)'; card.style.opacity = '0'; setTimeout(() => { if(card.parentNode) card.remove(); }, 300); } }
                 deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'history', id)).then(() => showToast("已清除")); 
@@ -1592,7 +1765,7 @@
 
         function confirmClearHistory() { 
             if(historyTasks.length === 0) return showToast("無紀錄"); 
-            customConfirm('清空', '清空所有紀錄？', 'danger', () => { 
+            customConfirm('清空', '確定清空所有紀錄嗎？', 'danger', () => { 
                 suspendRenderUntil = Date.now() + 800; const listEl = document.getElementById('history-tasks-list');
                 if(listEl) { Array.from(listEl.children).forEach(c => { c.style.opacity = '0'; c.style.transform='scale(0.9)'}); setTimeout(() => { listEl.innerHTML = ''; }, 300); }
                 Promise.all(historyTasks.map(t => deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'history', t.id)))).then(() => showToast("已清空"));
@@ -1666,42 +1839,106 @@
         function handleLogout() { clearListeners(); signOut(auth); } window.handleLogout = handleLogout;
         const initAuth = async () => { if(typeof __initial_auth_token !== 'undefined' && __initial_auth_token) { await signInWithCustomToken(auth, __initial_auth_token); } }; initAuth();
 
-        onAuthStateChanged(auth, user => {
+        // 【新增】獨立的儲存用戶檔案函數
+        async function saveProfileToFirestore(user, nickname, avatarUrl) {
+            const isAdminCheck = (user.email === ADMIN_EMAIL);
+            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'directory', user.uid), {
+                uid: user.uid,
+                name: nickname,
+                email: user.email || '訪客',
+                avatar: avatarUrl,
+                role: isAdminCheck ? '管理員' : '普通用戶',
+                createdAt: new Date().toISOString(),
+                lastLogin: new Date().toISOString()
+            });
+        }
+
+        onAuthStateChanged(auth, async user => {
             currentUser = user; const loginScreen = document.getElementById('login-screen');
             if (user) {
                 if (loginScreen) loginScreen.style.display = 'none';
-                document.getElementById('user-profile').classList.remove('hidden'); document.getElementById('user-profile').classList.add('flex');
-                const avatarUrl = user.photoURL || `https://ui-avatars.com/api/?name=${user.email ? user.email.charAt(0) : 'U'}&background=1d1d1f&color=fff`;
                 
-                document.getElementById('user-avatar').src = avatarUrl; 
-                document.getElementById('profile-modal-avatar').src = avatarUrl;
-                const elSettingsAvatar = document.getElementById('settings-avatar'); if(elSettingsAvatar) elSettingsAvatar.src = avatarUrl;
+                // 首次登入暱稱設定檢查
+                const userDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'directory', user.uid);
+                const userDocSnap = await getDoc(userDocRef);
                 
-                document.getElementById('profile-modal-name').innerText = user.displayName || '學生帳戶'; 
-                document.getElementById('profile-modal-email').innerText = user.email || '訪客預覽';
-                const elSettingsName = document.getElementById('settings-name'); if(elSettingsName) elSettingsName.innerText = user.displayName || '學生帳戶';
-                const elSettingsEmail = document.getElementById('settings-email'); if(elSettingsEmail) elSettingsEmail.innerText = user.email || '訪客預覽';
-
-                isAdmin = (user.email === ADMIN_EMAIL);
-                setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'directory', user.uid), { uid: user.uid, name: user.displayName || '學生帳戶', email: user.email || '訪客', avatar: avatarUrl, role: isAdmin ? '管理員' : '普通用戶' }, { merge: true }).catch(()=>{});
-
-                if(isAdmin) { 
-                    document.getElementById('admin-badge').classList.remove('hidden'); document.getElementById('broadcast-toggle-container').classList.remove('hidden'); document.getElementById('admin-timetable-controls').classList.remove('hidden'); 
-                    const navDesktop = document.getElementById('nav-admin-btn-desktop'); if(navDesktop) { navDesktop.classList.remove('hidden'); navDesktop.classList.add('flex'); }
-                    const navDivider = document.getElementById('nav-admin-divider'); if(navDivider) { navDivider.classList.remove('hidden'); navDivider.classList.add('block'); }
-                    const navMobile = document.getElementById('nav-admin-btn-mobile'); if(navMobile) { navMobile.classList.remove('hidden'); navMobile.classList.add('flex'); }
+                if (!userDocSnap.exists()) {
+                    // 若 Firestore 查無紀錄，代表是新帳號
+                    if (user.displayName) {
+                        // 1. 若是 Google 登入 (自帶名稱)，直接自動建立檔案並進入系統，不彈出視窗
+                        const avatar = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName.charAt(0))}&background=1d1d1f&color=fff`;
+                        await saveProfileToFirestore(user, user.displayName, avatar);
+                        initializeAppWithUser(user, user.displayName, avatar);
+                    } else {
+                        // 2. 若是 Email 註冊 (無名稱)，彈出視窗要求輸入暱稱
+                        document.getElementById('setup-profile-modal').style.display = 'flex';
+                    }
                 } else {
-                    const navDesktop = document.getElementById('nav-admin-btn-desktop'); if(navDesktop) { navDesktop.classList.add('hidden'); navDesktop.classList.remove('flex'); }
-                    const navDivider = document.getElementById('nav-admin-divider'); if(navDivider) { navDivider.classList.add('hidden'); navDivider.classList.remove('block'); }
-                    const navMobile = document.getElementById('nav-admin-btn-mobile'); if(navMobile) { navMobile.classList.add('hidden'); navMobile.classList.remove('flex'); }
+                    // 若已有紀錄，正常載入系統
+                    initializeAppWithUser(user, userDocSnap.data().name, userDocSnap.data().avatar);
                 }
-                document.getElementById('profile-modal-role').innerText = isAdmin ? '管理員 (Admin)' : '學生帳戶'; 
-                
-                isFirstLoadSettings = true; initDefaultTimetableDay(); setupDataListeners(); switchView('home');
             } else {
                 clearListeners(); if (loginScreen) loginScreen.style.display = 'flex'; closeModal('profile-modal'); isAdmin = false;
             }
         });
+
+        // 儲存 Email 註冊用戶的初始暱稱
+        window.saveInitialProfile = async function() {
+            const nickname = document.getElementById('setup-nickname').value.trim();
+            if(!nickname) return showToast('請輸入暱稱！');
+            const btn = document.querySelector('#setup-profile-modal button');
+            btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>設定中...';
+            
+            try {
+                if(auth.currentUser) await updateProfile(auth.currentUser, { displayName: nickname });
+                const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(nickname.charAt(0))}&background=1d1d1f&color=fff`;
+                
+                // 寫入 Firebase 資料庫
+                await saveProfileToFirestore(auth.currentUser, nickname, avatarUrl);
+                
+                document.getElementById('setup-profile-modal').style.display = 'none';
+                showToast('設定成功，歡迎！');
+                initializeAppWithUser(auth.currentUser, nickname, avatarUrl);
+            } catch(e) {
+                showToast('發生錯誤，請重試');
+                btn.disabled = false; btn.innerHTML = '進入系統 <i class="fas fa-arrow-right ml-1"></i>';
+            }
+        };
+
+        function initializeAppWithUser(user, displayName, avatarUrl) {
+            document.getElementById('user-profile').classList.remove('hidden'); document.getElementById('user-profile').classList.add('flex');
+            
+            const fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent((displayName||'U').charAt(0))}&background=1d1d1f&color=fff`;
+            const finalAvatar = avatarUrl || user.photoURL || fallbackAvatar;
+            
+            document.getElementById('user-avatar').src = finalAvatar; 
+            document.getElementById('profile-modal-avatar').src = finalAvatar;
+            const elSettingsAvatar = document.getElementById('settings-avatar'); if(elSettingsAvatar) elSettingsAvatar.src = finalAvatar;
+            
+            document.getElementById('profile-modal-name').innerText = displayName || '學生帳戶'; 
+            document.getElementById('profile-modal-email').innerText = user.email || '訪客預覽';
+            const elSettingsName = document.getElementById('settings-name'); if(elSettingsName) elSettingsName.innerText = displayName || '學生帳戶';
+            const elSettingsEmail = document.getElementById('settings-email'); if(elSettingsEmail) elSettingsEmail.innerText = user.email || '訪客預覽';
+
+            isAdmin = (user.email === ADMIN_EMAIL);
+            
+            // 僅更新最後登入時間
+            setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'directory', user.uid), { lastLogin: new Date().toISOString() }, { merge: true }).catch(()=>{});
+
+            if(isAdmin) { 
+                document.getElementById('admin-badge').classList.remove('hidden'); document.getElementById('broadcast-toggle-container').classList.remove('hidden'); document.getElementById('admin-timetable-controls').classList.remove('hidden'); 
+                const navDesktop = document.getElementById('nav-admin-btn-desktop'); if(navDesktop) { navDesktop.classList.remove('hidden'); navDesktop.classList.add('flex'); }
+                const navDivider = document.getElementById('nav-admin-divider'); if(navDivider) { navDivider.classList.remove('hidden'); navDivider.classList.add('block'); }
+                const navMobile = document.getElementById('nav-admin-btn-mobile'); if(navMobile) { navMobile.classList.remove('hidden'); navMobile.classList.add('flex'); }
+            } else {
+                const navDesktop = document.getElementById('nav-admin-btn-desktop'); if(navDesktop) { navDesktop.classList.add('hidden'); navDesktop.classList.remove('flex'); }
+                const navDivider = document.getElementById('nav-admin-divider'); if(navDivider) { navDivider.classList.add('hidden'); navDivider.classList.remove('block'); }
+                const navMobile = document.getElementById('nav-admin-btn-mobile'); if(navMobile) { navMobile.classList.add('hidden'); navMobile.classList.remove('flex'); }
+            }
+            document.getElementById('profile-modal-role').innerText = isAdmin ? '管理員 (Admin)' : '學生帳戶'; 
+            
+            isFirstLoadSettings = true; initDefaultTimetableDay(); setupDataListeners(); switchView('home');
+        }
     </script>
 </body>
 </html>
