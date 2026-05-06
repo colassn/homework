@@ -1983,7 +1983,7 @@
 
         // 【新增】獨立的儲存用戶檔案函數
         async function saveProfileToFirestore(user, nickname, avatarUrl) {
-            const isAdminCheck = (user.email === ADMIN_EMAIL);
+            const isAdminCheck = user.email ? (user.email === ADMIN_EMAIL) : false;
             await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'directory', user.uid), {
                 uid: user.uid,
                 name: nickname,
@@ -2012,7 +2012,7 @@
                         await saveProfileToFirestore(user, user.displayName, avatar);
                         initializeAppWithUser(user, user.displayName, avatar);
                     } else {
-                        // 2. 若是 Email 註冊 (無名稱)，彈出視窗要求輸入暱稱
+                        // 2. 若是 Email 註冊或訪客 (無名稱)，彈出視窗要求輸入暱稱
                         document.getElementById('setup-profile-modal').style.display = 'flex';
                     }
                 } else {
@@ -2024,7 +2024,7 @@
             }
         });
 
-        // 儲存 Email 註冊用戶的初始暱稱
+        // 儲存初始暱稱（加入訪客防護機制）
         window.saveInitialProfile = async function() {
             const nickname = document.getElementById('setup-nickname').value.trim();
             if(!nickname) return showToast('請輸入暱稱！');
@@ -2032,16 +2032,27 @@
             btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>設定中...';
             
             try {
-                if(auth.currentUser) await updateProfile(auth.currentUser, { displayName: nickname });
+                const activeUser = auth.currentUser || currentUser;
+                
+                // 【修復】將 updateProfile 放進獨立 try-catch，防止因匿名權限導致卡死
+                if (activeUser) {
+                    try {
+                        await updateProfile(activeUser, { displayName: nickname });
+                    } catch (profileErr) {
+                        console.warn("無法更新原生 Profile，已切換至備用儲存方案");
+                    }
+                }
+                
                 const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(nickname.charAt(0))}&background=1d1d1f&color=fff`;
                 
-                // 寫入 Firebase 資料庫
-                await saveProfileToFirestore(auth.currentUser, nickname, avatarUrl);
+                // 寫入 Firebase 資料庫（系統主要依賴）
+                await saveProfileToFirestore(activeUser, nickname, avatarUrl);
                 
                 document.getElementById('setup-profile-modal').style.display = 'none';
                 showToast('設定成功，歡迎！');
-                initializeAppWithUser(auth.currentUser, nickname, avatarUrl);
+                initializeAppWithUser(activeUser, nickname, avatarUrl);
             } catch(e) {
+                console.error("Save error:", e);
                 showToast('發生錯誤，請重試');
                 btn.disabled = false; btn.innerHTML = '進入系統 <i class="fas fa-arrow-right ml-1"></i>';
             }
@@ -2062,7 +2073,7 @@
             const elSettingsName = document.getElementById('settings-name'); if(elSettingsName) elSettingsName.innerText = displayName || '學生帳戶';
             const elSettingsEmail = document.getElementById('settings-email'); if(elSettingsEmail) elSettingsEmail.innerText = user.email || '訪客預覽';
 
-            isAdmin = (user.email === ADMIN_EMAIL);
+            isAdmin = user.email ? (user.email === ADMIN_EMAIL) : false;
             
             // 僅更新最後登入時間
             setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'directory', user.uid), { lastLogin: new Date().toISOString() }, { merge: true }).catch(()=>{});
