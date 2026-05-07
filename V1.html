@@ -2000,27 +2000,41 @@
             if (user) {
                 if (loginScreen) loginScreen.style.display = 'none';
                 
-                // 首次登入暱稱設定檢查
-                const userDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'directory', user.uid);
-                const userDocSnap = await getDoc(userDocRef);
-                
-                if (!userDocSnap.exists()) {
-                    // 若 Firestore 查無紀錄，代表是新帳號
+                try {
+                    // 首次登入暱稱設定檢查
+                    const userDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'directory', user.uid);
+                    const userDocSnap = await getDoc(userDocRef);
+                    
+                    if (!userDocSnap.exists()) {
+                        // 若 Firestore 查無紀錄，代表是新帳號
+                        if (user.displayName) {
+                            // 1. 若是 Google 登入 (自帶名稱)，直接自動建立檔案並進入系統
+                            const avatar = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName.charAt(0))}&background=1d1d1f&color=fff`;
+                            try { await saveProfileToFirestore(user, user.displayName, avatar); } catch(e) { console.warn("背景儲存檔案失敗，但不影響登入"); }
+                            initializeAppWithUser(user, user.displayName, avatar);
+                        } else {
+                            // 2. 若是 Email 註冊或訪客 (無名稱)，彈出視窗要求輸入暱稱
+                            document.getElementById('setup-profile-modal').style.display = 'flex';
+                        }
+                    } else {
+                        // 若已有紀錄，正常載入系統
+                        const data = userDocSnap.data();
+                        initializeAppWithUser(user, data.name || user.displayName, data.avatar || user.photoURL);
+                    }
+                } catch (error) {
+                    console.warn("讀取雲端檔案出錯，啟用容錯機制載入 UI:", error);
+                    // 【強效容錯】即使資料庫讀取失敗，依然強制載入個人資料 UI，避免畫面卡死
                     if (user.displayName) {
-                        // 1. 若是 Google 登入 (自帶名稱)，直接自動建立檔案並進入系統，不彈出視窗
                         const avatar = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName.charAt(0))}&background=1d1d1f&color=fff`;
-                        await saveProfileToFirestore(user, user.displayName, avatar);
                         initializeAppWithUser(user, user.displayName, avatar);
                     } else {
-                        // 2. 若是 Email 註冊或訪客 (無名稱)，彈出視窗要求輸入暱稱
                         document.getElementById('setup-profile-modal').style.display = 'flex';
                     }
-                } else {
-                    // 若已有紀錄，正常載入系統
-                    initializeAppWithUser(user, userDocSnap.data().name, userDocSnap.data().avatar);
                 }
             } else {
                 clearListeners(); if (loginScreen) loginScreen.style.display = 'flex'; closeModal('profile-modal'); isAdmin = false;
+                document.getElementById('user-profile').classList.add('hidden');
+                document.getElementById('user-profile').classList.remove('flex');
             }
         });
 
@@ -2034,7 +2048,6 @@
             try {
                 const activeUser = auth.currentUser || currentUser;
                 
-                // 【修復】將 updateProfile 放進獨立 try-catch，防止因匿名權限導致卡死
                 if (activeUser) {
                     try {
                         await updateProfile(activeUser, { displayName: nickname });
@@ -2045,8 +2058,12 @@
                 
                 const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(nickname.charAt(0))}&background=1d1d1f&color=fff`;
                 
-                // 寫入 Firebase 資料庫（系統主要依賴）
-                await saveProfileToFirestore(activeUser, nickname, avatarUrl);
+                // 寫入 Firebase 資料庫（加上 try-catch 防止寫入權限錯誤阻擋後續流程）
+                try {
+                    await saveProfileToFirestore(activeUser, nickname, avatarUrl);
+                } catch(dbErr) {
+                    console.warn("Firestore 儲存名稱出錯，但不影響進入系統:", dbErr);
+                }
                 
                 document.getElementById('setup-profile-modal').style.display = 'none';
                 showToast('設定成功，歡迎！');
@@ -2059,7 +2076,9 @@
         };
 
         function initializeAppWithUser(user, displayName, avatarUrl) {
-            document.getElementById('user-profile').classList.remove('hidden'); document.getElementById('user-profile').classList.add('flex');
+            // 【修復】確保移除 hidden 並加入 flex，讓右上角頭像容器顯示出來
+            document.getElementById('user-profile').classList.remove('hidden'); 
+            document.getElementById('user-profile').classList.add('flex');
             
             const fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent((displayName||'U').charAt(0))}&background=1d1d1f&color=fff`;
             const finalAvatar = avatarUrl || user.photoURL || fallbackAvatar;
@@ -2078,12 +2097,18 @@
             // 僅更新最後登入時間
             setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'directory', user.uid), { lastLogin: new Date().toISOString() }, { merge: true }).catch(()=>{});
 
+            // 【修復】切換帳號時，確實隱藏或顯示管理員專屬標籤與功能
             if(isAdmin) { 
-                document.getElementById('admin-badge').classList.remove('hidden'); document.getElementById('broadcast-toggle-container').classList.remove('hidden'); document.getElementById('admin-timetable-controls').classList.remove('hidden'); 
+                document.getElementById('admin-badge').classList.remove('hidden'); 
+                document.getElementById('broadcast-toggle-container').classList.remove('hidden'); 
+                document.getElementById('admin-timetable-controls').classList.remove('hidden'); 
                 const navDesktop = document.getElementById('nav-admin-btn-desktop'); if(navDesktop) { navDesktop.classList.remove('hidden'); navDesktop.classList.add('flex'); }
                 const navDivider = document.getElementById('nav-admin-divider'); if(navDivider) { navDivider.classList.remove('hidden'); navDivider.classList.add('block'); }
                 const navMobile = document.getElementById('nav-admin-btn-mobile'); if(navMobile) { navMobile.classList.remove('hidden'); navMobile.classList.add('flex'); }
             } else {
+                document.getElementById('admin-badge').classList.add('hidden'); 
+                document.getElementById('broadcast-toggle-container').classList.add('hidden'); 
+                document.getElementById('admin-timetable-controls').classList.add('hidden'); 
                 const navDesktop = document.getElementById('nav-admin-btn-desktop'); if(navDesktop) { navDesktop.classList.add('hidden'); navDesktop.classList.remove('flex'); }
                 const navDivider = document.getElementById('nav-admin-divider'); if(navDivider) { navDivider.classList.add('hidden'); navDivider.classList.remove('block'); }
                 const navMobile = document.getElementById('nav-admin-btn-mobile'); if(navMobile) { navMobile.classList.add('hidden'); navMobile.classList.remove('flex'); }
