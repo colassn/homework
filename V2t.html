@@ -143,8 +143,17 @@
         .btn-spring:active { transform: scale(0.95); filter: brightness(0.9); }
         .btn-spring:hover { filter: brightness(1.05); }
 
+        /* [修復] 強制正圓形，並確保內部元素完美置中 */
         .btn-icon-round {
-            width: 36px; height: 36px; border-radius: 18px; min-height: 36px;
+            border-radius: 50% !important;
+            padding: 0 !important;
+            flex-shrink: 0 !important;
+            min-height: 0 !important;
+            min-width: 0 !important;
+            aspect-ratio: 1 / 1 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
         }
 
         .modern-modal-overlay { 
@@ -1477,9 +1486,10 @@
                     <span class="text-[4.5rem] font-black whitespace-nowrap tracking-tighter" style="color: ${subColor}">${task.subject}</span>
                 </div>
                 <div class="relative z-10 flex min-h-[70px]">
-                    <div class="w-12 shrink-0 flex flex-col items-center justify-between py-2 border-r border-[var(--border-color)] bg-[var(--surface-inset)]/40 backdrop-blur-sm">
-                        <button onclick="window.triggerComplete(this, '${task.id}', ${task.isPublic})" class="w-7 h-7 rounded-full border-[1.5px] border-[var(--text-secondary)] opacity-50 flex items-center justify-center transition-all duration-300 btn-spring btn-icon-round group/check shadow-sm bg-[var(--surface-color)] relative z-20 hover:opacity-100 hover:border-[var(--accent-primary)] mb-1">
-                            <i class="fas fa-check text-[10px] opacity-0 transition-opacity duration-300"></i>
+                    <div class="w-12 shrink-0 flex flex-col items-center justify-between py-2.5 border-r border-[var(--border-color)] bg-[var(--surface-inset)]/40 backdrop-blur-sm">
+                        <!-- [修復] 比例完美嘅原生打勾掣：26px 大小，邊框 2px，圖示 12px -->
+                        <button onclick="window.triggerComplete(this, '${task.id}', ${task.isPublic})" class="w-[26px] h-[26px] rounded-full border-2 border-[var(--text-secondary)] opacity-50 flex items-center justify-center transition-all duration-300 btn-spring btn-icon-round group/check shadow-sm bg-[var(--surface-color)] relative z-20 hover:opacity-100 hover:border-[var(--accent-primary)] mb-1 shrink-0">
+                            <i class="fas fa-check text-xs opacity-0 transition-opacity duration-300"></i>
                         </button>
                         <div class="flex-1 flex items-center justify-center py-1">
                             <span class="text-[11px] font-bold tracking-widest text-[var(--text-primary)] opacity-80" style="writing-mode: vertical-rl; text-orientation: upright;">${task.subject}</span>
@@ -1494,12 +1504,13 @@
                                 ${task.isPublic ? `<span class="px-2 py-1 rounded-[6px] text-[9px] font-bold transition-colors" style="color: var(--accent-primary); background-color: var(--accent-10);">廣播</span>` : ''}
                             </div>
                             ${canEditDelete ? `
-                            <div class="flex items-center gap-1 relative z-20 shrink-0">
-                                <button onclick="window.openEditModal('${task.id}', ${task.isPublic})" class="w-6 h-6 rounded-full flex items-center justify-center btn-spring btn-icon-round text-[var(--text-secondary)] bg-[var(--surface-inset)] hover:text-[var(--accent-primary)] transition-colors shadow-sm" title="編輯">
-                                    <i class="fas fa-pen text-[9px]"></i>
+                            <div class="flex items-center gap-1.5 relative z-20 shrink-0">
+                                <!-- [修復] 完美比例嘅編輯與刪除掣：28px 大小，圖示 11px -->
+                                <button onclick="window.openEditModal('${task.id}', ${task.isPublic})" class="w-7 h-7 rounded-full flex items-center justify-center btn-spring btn-icon-round text-[var(--text-secondary)] bg-[var(--surface-inset)] hover:text-[var(--accent-primary)] transition-colors shadow-sm" title="編輯">
+                                    <i class="fas fa-pen text-[11px]"></i>
                                 </button>
-                                <button onclick="window.deleteTask('${task.id}', ${task.isPublic}, this)" class="w-6 h-6 rounded-full flex items-center justify-center btn-spring btn-icon-round text-[var(--danger-color)] bg-[var(--danger-10)] hover:bg-[var(--danger-color)] hover:text-white transition-colors shadow-sm" title="刪除">
-                                    <i class="fas fa-trash-alt text-[9px]"></i>
+                                <button onclick="window.deleteTask('${task.id}', ${task.isPublic}, this)" class="w-7 h-7 rounded-full flex items-center justify-center btn-spring btn-icon-round text-[var(--danger-color)] bg-[var(--danger-10)] hover:bg-[var(--danger-color)] hover:text-white transition-colors shadow-sm" title="刪除">
+                                    <i class="fas fa-trash-alt text-[11px]"></i>
                                 </button>
                             </div>
                             ` : ''}
@@ -1565,8 +1576,9 @@
                             <span class="px-2 py-0.5 rounded-[6px] text-[10px] font-bold shadow-sm" style="background-color: ${hexToRgba(subColor, 0.15)}; color: ${subColor};">${task.subject}</span>
                             <span class="text-[10px] font-bold opacity-60 border border-[var(--border-color)] px-2 py-0.5 rounded-[6px] bg-[var(--surface-inset)]">已完成</span>
                         </div>
-                        <button onclick="window.deleteHistoryTask('${task.id}', this)" class="w-6 h-6 btn-spring btn-icon-round rounded-full flex items-center justify-center transition-colors shadow-sm bg-[var(--danger-10)] text-[var(--danger-color)] hover:bg-[var(--danger-color)] hover:text-white" title="刪除記錄">
-                            <i class="fas fa-trash-alt text-[9px]"></i>
+                        <!-- [修復] 歷史紀錄刪除掣 -->
+                        <button onclick="window.deleteHistoryTask('${task.id}', this)" class="w-7 h-7 btn-spring btn-icon-round rounded-full flex items-center justify-center transition-colors shadow-sm bg-[var(--danger-10)] text-[var(--danger-color)] hover:bg-[var(--danger-color)] hover:text-white shrink-0" title="刪除記錄">
+                            <i class="fas fa-trash-alt text-[11px]"></i>
                         </button>
                     </div>
                     <p class="text-[13px] font-bold line-through mb-2 pl-2 text-[var(--text-primary)] opacity-80 break-words">${task.content.replace(/\n/g, '<br>')}</p>
@@ -1607,9 +1619,10 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-1.5 shrink-0">
-                        <button onclick="window.openEditSubjectModal('${sub.id}')" class="w-8 h-8 rounded-full flex items-center justify-center btn-spring transition-colors btn-icon-round" style="color: var(--accent-primary); background-color: var(--accent-10);" title="編輯科目"><i class="fas fa-pen text-xs"></i></button>
+                        <!-- [修復] 科目設定內的編輯與刪除掣 -->
+                        <button onclick="window.openEditSubjectModal('${sub.id}')" class="w-7 h-7 rounded-full flex items-center justify-center btn-spring transition-colors btn-icon-round" style="color: var(--accent-primary); background-color: var(--accent-10);" title="編輯科目"><i class="fas fa-pen text-[11px]"></i></button>
                         <label class="ios-toggle scale-[0.7] origin-center mx-1"><input type="checkbox" ${isEnabled ? 'checked' : ''} onchange="window.toggleSubjectEnable('${sub.id}', this.checked, this)"><div class="toggle-track"><div class="toggle-thumb"></div></div></label>
-                        <button onclick="window.deleteSubject('${sub.id}')" class="w-8 h-8 flex items-center justify-center rounded-full btn-spring transition-colors btn-icon-round" style="color: var(--danger-color); background-color: var(--danger-10);" title="刪除"><i class="fas fa-trash text-xs"></i></button>
+                        <button onclick="window.deleteSubject('${sub.id}')" class="w-7 h-7 flex items-center justify-center rounded-full btn-spring transition-colors btn-icon-round" style="color: var(--danger-color); background-color: var(--danger-10);" title="刪除"><i class="fas fa-trash text-[11px]"></i></button>
                     </div>`;
                 if(isEnabled) fragEnabled.appendChild(div); else fragDisabled.appendChild(div);
             }); 
@@ -1991,7 +2004,8 @@
                 publicAssignments.forEach((task, index) => {
                     const subColor = (userSettings.subjects.find(s=>s.name===task.subject)||{}).color||'var(--text-secondary)';
                     let div = document.createElement('div'); div.className = "flex items-start justify-between p-3 border-b border-[var(--border-color)] last:border-0 hover:bg-[var(--surface-inset)] transition-colors group";
-                    div.innerHTML = `<div class="flex-1 pr-3 min-w-0"><div class="flex gap-2 mb-1"><span class="px-2 py-0.5 rounded-[6px] text-[10px] font-bold shadow-sm" style="background-color: ${hexToRgba(subColor, 0.15)}; color: ${subColor};">${task.subject}</span><span class="text-[10px] opacity-50 flex items-center font-bold"><i class="far fa-calendar-alt mr-1"></i>${task.dueDate}</span></div><p class="text-[13px] font-bold truncate text-[var(--text-primary)]">${task.content}</p></div><button onclick="window.deleteTask('${task.id}', true, this)" class="w-8 h-8 rounded-full btn-spring flex items-center justify-center shrink-0 opacity-100 md:opacity-50 group-hover:opacity-100" style="color: var(--danger-color); background-color: var(--danger-10);"><i class="fas fa-trash text-[10px]"></i></button>`;
+                    /* [修復] 管理員廣播列表的刪除掣 */
+                    div.innerHTML = `<div class="flex-1 pr-3 min-w-0"><div class="flex gap-2 mb-1"><span class="px-2 py-0.5 rounded-[6px] text-[10px] font-bold shadow-sm" style="background-color: ${hexToRgba(subColor, 0.15)}; color: ${subColor};">${task.subject}</span><span class="text-[10px] opacity-50 flex items-center font-bold"><i class="far fa-calendar-alt mr-1"></i>${task.dueDate}</span></div><p class="text-[13px] font-bold truncate text-[var(--text-primary)]">${task.content}</p></div><button onclick="window.deleteTask('${task.id}', true, this)" class="w-7 h-7 rounded-full btn-spring btn-icon-round flex items-center justify-center shrink-0 opacity-100 md:opacity-50 group-hover:opacity-100" style="color: var(--danger-color); background-color: var(--danger-10);"><i class="fas fa-trash text-[11px]"></i></button>`;
                     frag.appendChild(div);
                 }); listEl.appendChild(frag);
             } document.getElementById('admin-stat-broadcasts').innerText = publicAssignments.length;
