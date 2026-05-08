@@ -90,14 +90,14 @@
         .stat-card {
             background-color: var(--surface-color);
             border-radius: 16px;
-            padding: 14px 12px;
-            display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 12px;
+            padding: 12px;
+            display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 10px;
             transition: all 0.3s var(--spring-bouncy);
             cursor: pointer;
             box-shadow: 0 2px 12px rgba(0,0,0,0.02);
             border: 1px solid var(--border-color);
             text-align: left;
-            min-height: 68px;
+            min-height: 60px;
         }
         .stat-card:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 8px 24px var(--accent-10); border-color: var(--accent-primary); }
         .stat-card:active { transform: translateY(0) scale(0.98); }
@@ -105,11 +105,11 @@
         .ios-input-group {
             display: flex; align-items: center;
             background-color: var(--surface-inset);
-            border-radius: 16px; 
-            padding: 4px 16px;
+            border-radius: 14px; 
+            padding: 4px 14px;
             transition: all 0.3s var(--spring);
             border: 1.5px solid transparent;
-            min-height: 48px;
+            min-height: 44px;
         }
         .ios-input-group:focus-within {
             background-color: var(--surface-color); border-color: var(--accent-primary);
@@ -117,7 +117,7 @@
         }
         .ios-input {
             width: 100%; background: transparent; border: none;
-            color: var(--text-primary); padding: 10px 0; font-size: 16px; font-weight: 600; outline: none;
+            color: var(--text-primary); padding: 8px 0; font-size: 14px; font-weight: 600; outline: none;
         }
         .ios-input::placeholder { color: var(--text-secondary); opacity: 0.6; font-weight: 500; }
         
@@ -127,11 +127,11 @@
         }
 
         .ios-segmented-control {
-            display: flex; background-color: var(--surface-inset); border-radius: 14px; padding: 4px; position: relative;
-            min-height: 48px;
+            display: flex; background-color: var(--surface-inset); border-radius: 12px; padding: 3px; position: relative;
+            min-height: 40px;
         }
         .ios-segment-btn {
-            flex: 1; padding: 8px 0; font-size: 14px; font-weight: 700; border-radius: 10px;
+            flex: 1; padding: 6px 0; font-size: 13px; font-weight: 700; border-radius: 8px;
             color: var(--text-secondary); transition: all 0.3s var(--spring); z-index: 2; position: relative;
             display: flex; align-items: center; justify-content: center;
         }
@@ -143,20 +143,20 @@
         .btn-primary {
             background: linear-gradient(135deg, var(--accent-primary), var(--accent-primary-hover));
             color: var(--accent-text); box-shadow: 0 8px 24px var(--accent-20);
-            min-height: 48px;
+            min-height: 44px;
         }
         
         .btn-spring { 
             transition: transform 0.2s var(--spring-bouncy), filter 0.2s ease, background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease; 
             will-change: transform; cursor: pointer; touch-action: manipulation; 
-            min-height: 48px; 
+            min-height: 40px; 
             display: inline-flex; align-items: center; justify-content: center;
         }
         .btn-spring:active { transform: scale(0.95); filter: brightness(0.9); }
         .btn-spring:hover { filter: brightness(1.05); }
 
         .btn-icon-round {
-            width: 48px; height: 48px; border-radius: 24px;
+            width: 40px; height: 40px; border-radius: 20px;
         }
 
         .modern-modal-overlay { 
@@ -188,16 +188,16 @@
             .modern-modal-overlay.active .modern-modal-content { transform: translateY(0); }
         }
 
-        /* [更新] 頂部膠囊型導航列樣式 */
+        /* [更新] 頂部膠囊型導航列縮小版 */
         .nav-item { 
             color: var(--text-secondary); 
             transition: all 0.3s var(--spring); 
             border-radius: 999px; 
-            display: inline-flex; flex-direction: row; align-items: center; justify-content: center; gap: 8px;
-            padding: 8px 20px; flex-shrink: 0;
+            display: inline-flex; flex-direction: row; align-items: center; justify-content: center; gap: 6px;
+            padding: 6px 16px; flex-shrink: 0;
             background-color: transparent;
             border: 1px solid transparent;
-            min-height: 44px;
+            min-height: 38px;
         }
         .nav-item:hover:not(.active) {
             background-color: var(--surface-inset);
@@ -208,14 +208,14 @@
             background-color: var(--accent-10); 
             border-color: var(--accent-20);
         }
-        .nav-item i { font-size: 16px; }
-        .nav-text { font-size: 14px; font-weight: 800; white-space: nowrap; }
+        .nav-item i { font-size: 15px; }
+        .nav-text { font-size: 13px; font-weight: 800; white-space: nowrap; }
 
         .custom-chip { 
-            cursor: pointer; user-select: none; border-radius: 12px; position: relative; 
+            cursor: pointer; user-select: none; border-radius: 10px; position: relative; 
             font-weight: 700; transition: all 0.2s var(--spring); display: inline-flex; align-items: center; justify-content: center;
-            padding: 8px 16px; font-size: 14px; background-color: var(--surface-inset); color: var(--text-primary);
-            min-height: 44px; 
+            padding: 6px 14px; font-size: 13px; background-color: var(--surface-inset); color: var(--text-primary);
+            min-height: 38px; 
         }
         .custom-chip.selected { background-color: var(--accent-primary) !important; color: var(--accent-text) !important; transform: scale(1.05); box-shadow: 0 4px 16px var(--accent-20); }
         .custom-chip:hover:not(.selected) { filter: brightness(0.95); }
@@ -308,7 +308,7 @@
         
         <!-- 下半部：置頂橫向捲動導航列 (取代底部 Floating Dock) -->
         <div class="w-full px-4 md:px-8 bg-transparent">
-            <nav class="max-w-5xl mx-auto flex items-center justify-start md:justify-center gap-2 overflow-x-auto scrollbar-hide pb-2 pt-1">
+            <nav class="max-w-5xl mx-auto flex items-center justify-start md:justify-center gap-1.5 overflow-x-auto scrollbar-hide pb-2 pt-1">
                 <button onclick="window.switchView('home')" class="nav-item active btn-spring" data-target="home">
                     <i class="fas fa-home"></i><span class="nav-text">主頁</span>
                 </button>
@@ -324,7 +324,7 @@
                 <button onclick="window.switchView('settings')" class="nav-item btn-spring" data-target="settings">
                     <i class="fas fa-sliders-h"></i><span class="nav-text">設定</span>
                 </button>
-                <div id="nav-admin-divider" class="w-px h-6 bg-[var(--border-color)] mx-1 hidden shrink-0"></div>
+                <div id="nav-admin-divider" class="w-px h-5 bg-[var(--border-color)] mx-1 hidden shrink-0"></div>
                 <button id="nav-admin-btn" onclick="window.switchView('admin')" class="nav-item btn-spring hidden" data-target="admin" style="color: var(--danger-color);">
                     <i class="fas fa-shield-alt"></i><span class="nav-text">管理</span>
                 </button>
@@ -333,27 +333,27 @@
     </header>
 
     <!-- MAIN CONTENT AREA -->
-    <main class="flex-1 w-full max-w-5xl mx-auto px-4 md:px-8 mt-4 md:mt-6">
+    <main class="flex-1 w-full max-w-5xl mx-auto px-4 md:px-8 mt-4 md:mt-5">
         
         <!-- VIEW: HOME -->
         <section id="view-home" class="app-view active max-w-2xl mx-auto w-full">
             
             <!-- Live Class Widget -->
-            <div id="live-class-widget" class="ios-card mb-6 md:mb-8 border-l-[6px] transition-colors duration-300" style="display: none; border-left-color: var(--accent-primary);">
-                <div class="p-5 md:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 md:gap-6">
-                    <div class="flex items-center gap-4">
+            <div id="live-class-widget" class="ios-card mb-6 border-l-[6px] transition-colors duration-300" style="display: none; border-left-color: var(--accent-primary);">
+                <div class="p-4 md:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 md:gap-5">
+                    <div class="flex items-center gap-3">
                         <div id="live-current-bg" class="w-12 h-12 md:w-14 md:h-14 rounded-[14px] md:rounded-[16px] flex items-center justify-center shadow-inner transition-colors duration-500 relative shrink-0">
                             <div id="live-current-icon" class="flex items-center justify-center w-full h-full"></div>
                             <span class="absolute top-0 right-0 w-3 h-3 bg-red-500 border-2 border-[var(--surface-color)] rounded-full animate-pulse transform translate-x-1 -translate-y-1"></span>
                         </div>
                         <div class="min-w-0">
-                            <p class="text-[10px] md:text-xs font-bold uppercase tracking-widest mb-1 opacity-60 text-[var(--text-secondary)]">正在進行</p>
+                            <p class="text-[10px] md:text-[11px] font-bold uppercase tracking-widest mb-0.5 opacity-60 text-[var(--text-secondary)]">正在進行</p>
                             <h3 id="live-current-class" class="text-xl md:text-2xl font-black tracking-tight leading-none transition-colors duration-300 truncate" style="color: var(--accent-primary);">載入中...</h3>
                         </div>
                     </div>
-                    <div id="live-timer-container" class="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-center bg-[var(--surface-inset)] sm:bg-transparent p-3 sm:p-0 rounded-[12px] sm:rounded-none shrink-0 border border-[var(--border-color)] sm:border-none">
-                        <p class="text-[10px] md:text-xs font-bold uppercase tracking-widest mb-0 sm:mb-1 opacity-60 text-[var(--text-secondary)]">倒數計時</p>
-                        <span id="live-timer-value" class="font-mono text-lg md:text-xl font-black tracking-wider text-[var(--text-primary)] sm:bg-[var(--surface-inset)] sm:px-3 sm:py-1 sm:rounded-[8px] sm:border sm:border-[var(--border-color)]">00:00</span>
+                    <div id="live-timer-container" class="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-center bg-[var(--surface-inset)] sm:bg-transparent p-2.5 sm:p-0 rounded-[10px] sm:rounded-none shrink-0 border border-[var(--border-color)] sm:border-none">
+                        <p class="text-[10px] md:text-[11px] font-bold uppercase tracking-widest mb-0 sm:mb-1 opacity-60 text-[var(--text-secondary)]">倒數計時</p>
+                        <span id="live-timer-value" class="font-mono text-base md:text-xl font-black tracking-wider text-[var(--text-primary)] sm:bg-[var(--surface-inset)] sm:px-2.5 sm:py-1 sm:rounded-[8px] sm:border sm:border-[var(--border-color)]">00:00</span>
                     </div>
                 </div>
                 <div class="w-full h-[4px] bg-[var(--surface-inset)]">
@@ -361,61 +361,61 @@
                 </div>
             </div>
 
-            <!-- [更新] 橫向緊湊型 Dashboard Stats -->
-            <h2 class="text-lg md:text-xl font-black tracking-tight mb-3">作業分佈</h2>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
+            <!-- 橫向緊湊型 Dashboard Stats -->
+            <h2 class="text-lg font-black tracking-tight mb-3">作業分佈</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 md:mb-8">
                 <!-- Today -->
                 <div class="stat-card btn-spring group" onclick="window.openDashboardModal('today')">
-                    <div class="w-10 h-10 md:w-12 md:h-12 rounded-[12px] md:rounded-[14px] bg-[#FFDFBA] text-[#d48806] dark:bg-[#d48806]/30 flex items-center justify-center shadow-inner shrink-0"><i class="fas fa-sun text-sm md:text-base"></i></div>
-                    <div class="flex flex-col justify-center flex-1 min-w-0 pr-1">
+                    <div class="w-10 h-10 rounded-[12px] bg-[#FFDFBA] text-[#d48806] dark:bg-[#d48806]/30 flex items-center justify-center shadow-inner shrink-0"><i class="fas fa-sun text-sm md:text-base"></i></div>
+                    <div class="flex flex-col justify-center flex-1 min-w-0">
                         <p class="text-[10px] md:text-[11px] font-bold opacity-60 text-[var(--text-secondary)] tracking-widest mb-0.5 truncate">今日要交</p>
                         <h3 class="text-2xl md:text-3xl font-black tracking-tight leading-none text-[var(--text-primary)] truncate" id="count-today">0</h3>
                     </div>
                 </div>
                 <!-- Tomorrow -->
                 <div class="stat-card btn-spring group" onclick="window.openDashboardModal('tomorrow')">
-                    <div class="w-10 h-10 md:w-12 md:h-12 rounded-[12px] md:rounded-[14px] bg-[#BAE1FF] text-[#5b9bd5] dark:bg-[#5b9bd5]/30 flex items-center justify-center shadow-inner shrink-0"><i class="fas fa-cloud text-sm md:text-base"></i></div>
-                    <div class="flex flex-col justify-center flex-1 min-w-0 pr-1">
+                    <div class="w-10 h-10 rounded-[12px] bg-[#BAE1FF] text-[#5b9bd5] dark:bg-[#5b9bd5]/30 flex items-center justify-center shadow-inner shrink-0"><i class="fas fa-cloud text-sm md:text-base"></i></div>
+                    <div class="flex flex-col justify-center flex-1 min-w-0">
                         <p class="text-[10px] md:text-[11px] font-bold opacity-60 text-[var(--text-secondary)] tracking-widest mb-0.5 truncate">明日要交</p>
                         <h3 class="text-2xl md:text-3xl font-black tracking-tight leading-none text-[var(--text-primary)] truncate" id="count-tomorrow">0</h3>
                     </div>
                 </div>
                 <!-- Future -->
                 <div class="stat-card btn-spring group" onclick="window.openDashboardModal('future')">
-                    <div class="w-10 h-10 md:w-12 md:h-12 rounded-[12px] md:rounded-[14px] bg-[#E8DFF5] text-[#9b76b0] dark:bg-[#9b76b0]/30 flex items-center justify-center shadow-inner shrink-0"><i class="far fa-calendar-alt text-sm md:text-base"></i></div>
-                    <div class="flex flex-col justify-center flex-1 min-w-0 pr-1">
+                    <div class="w-10 h-10 rounded-[12px] bg-[#E8DFF5] text-[#9b76b0] dark:bg-[#9b76b0]/30 flex items-center justify-center shadow-inner shrink-0"><i class="far fa-calendar-alt text-sm md:text-base"></i></div>
+                    <div class="flex flex-col justify-center flex-1 min-w-0">
                         <p class="text-[10px] md:text-[11px] font-bold opacity-60 text-[var(--text-secondary)] tracking-widest mb-0.5 truncate">將來功課</p>
                         <h3 class="text-2xl md:text-3xl font-black tracking-tight leading-none text-[var(--text-primary)] truncate" id="count-future">0</h3>
                     </div>
                 </div>
                 <!-- Test -->
                 <div class="stat-card btn-spring group" onclick="window.openDashboardModal('test')">
-                    <div class="w-10 h-10 md:w-12 md:h-12 rounded-[12px] md:rounded-[14px] bg-[#BAFFC9] text-[#4ea771] dark:bg-[#4ea771]/30 flex items-center justify-center shadow-inner shrink-0"><i class="fas fa-pen-nib text-sm md:text-base"></i></div>
-                    <div class="flex flex-col justify-center flex-1 min-w-0 pr-1">
+                    <div class="w-10 h-10 rounded-[12px] bg-[#BAFFC9] text-[#4ea771] dark:bg-[#4ea771]/30 flex items-center justify-center shadow-inner shrink-0"><i class="fas fa-pen-nib text-sm md:text-base"></i></div>
+                    <div class="flex flex-col justify-center flex-1 min-w-0">
                         <p class="text-[10px] md:text-[11px] font-bold opacity-60 text-[var(--text-secondary)] tracking-widest mb-0.5 truncate">考試測驗</p>
                         <h3 class="text-2xl md:text-3xl font-black tracking-tight leading-none text-[var(--text-primary)] truncate" id="count-test">0</h3>
                     </div>
                 </div>
             </div>
 
-            <!-- Beautiful Add Task Form -->
-            <div class="ios-card p-5 md:p-8 mb-8">
-                <h2 class="text-xs md:text-sm font-bold uppercase tracking-widest text-[var(--text-secondary)] mb-5 flex items-center"><i class="fas fa-plus-circle mr-2 md:mr-3 opacity-50"></i>新增任務</h2>
-                <form id="add-task-form" class="space-y-4">
-                    <div class="ios-input-group items-start py-2">
-                        <i class="fas fa-pen text-[var(--text-secondary)] opacity-40 mr-3 mt-3 text-base"></i>
-                        <textarea id="task-content" rows="3" class="ios-input resize-none text-base" placeholder="輸入功課或測驗內容..." required></textarea>
+            <!-- [縮小版] Beautiful Add Task Form -->
+            <div class="ios-card p-4 md:p-6 mb-6">
+                <h2 class="text-xs md:text-sm font-bold uppercase tracking-widest text-[var(--text-secondary)] mb-4 flex items-center"><i class="fas fa-plus-circle mr-2 md:mr-3 opacity-50"></i>新增任務</h2>
+                <form id="add-task-form" class="space-y-3">
+                    <div class="ios-input-group items-start py-1.5">
+                        <i class="fas fa-pen text-[var(--text-secondary)] opacity-40 mr-2 md:mr-3 mt-2 md:mt-2.5 text-sm md:text-base"></i>
+                        <textarea id="task-content" rows="2" class="ios-input resize-none text-sm md:text-base py-1.5" placeholder="輸入功課或測驗內容..." required></textarea>
                     </div>
 
-                    <div class="relative w-full overflow-hidden mb-2">
-                        <div id="subject-chips-add" class="flex gap-3 scroll-smooth-x pb-2"></div>
+                    <div class="relative w-full overflow-hidden mb-1">
+                        <div id="subject-chips-add" class="flex gap-2.5 scroll-smooth-x pb-2"></div>
                     </div>
                     <input type="hidden" id="task-subject">
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="ios-input-group relative cursor-pointer py-2">
-                            <i class="far fa-calendar text-[var(--text-secondary)] opacity-40 mr-3 text-base"></i>
-                            <span id="date-display-add" class="font-bold text-base pointer-events-none w-full py-1 text-[var(--text-primary)] block truncate pr-2">選擇日期</span>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div class="ios-input-group relative cursor-pointer py-1.5">
+                            <i class="far fa-calendar text-[var(--text-secondary)] opacity-40 mr-2 md:mr-3 text-sm md:text-base"></i>
+                            <span id="date-display-add" class="font-bold text-sm md:text-base pointer-events-none w-full py-1 text-[var(--text-primary)] block truncate pr-2">選擇日期</span>
                             <input type="date" id="task-date" class="absolute inset-0 opacity-0 cursor-pointer" onchange="document.getElementById('date-display-add').innerText = this.value" required>
                         </div>
                         
@@ -426,19 +426,19 @@
                         </div>
                     </div>
 
-                    <div class="ios-input-group py-2">
-                        <i class="fas fa-link text-[var(--text-secondary)] opacity-40 mr-3 text-base"></i>
-                        <input type="url" id="task-url" class="ios-input text-base" placeholder="附加網頁連結 (選填)">
+                    <div class="ios-input-group py-1.5">
+                        <i class="fas fa-link text-[var(--text-secondary)] opacity-40 mr-2 md:mr-3 text-sm md:text-base"></i>
+                        <input type="url" id="task-url" class="ios-input text-sm md:text-base py-1.5" placeholder="附加網頁連結 (選填)">
                     </div>
                     
-                    <div id="broadcast-toggle-container" class="hidden pt-4 border-t border-[var(--border-color)] mt-4">
-                        <label class="flex items-center justify-between cursor-pointer w-full p-4 rounded-[16px] btn-spring bg-[var(--surface-inset)]">
+                    <div id="broadcast-toggle-container" class="hidden pt-3 border-t border-[var(--border-color)] mt-3">
+                        <label class="flex items-center justify-between cursor-pointer w-full p-3 rounded-[12px] btn-spring bg-[var(--surface-inset)]">
                             <span class="text-sm font-bold text-orange-500"><i class="fas fa-bullhorn mr-2"></i>發佈全域廣播</span>
-                            <div class="ios-toggle scale-[0.9]"><input type="checkbox" id="task-broadcast"><div class="toggle-track"><div class="toggle-thumb"></div></div></div>
+                            <div class="ios-toggle scale-[0.8]"><input type="checkbox" id="task-broadcast"><div class="toggle-track"><div class="toggle-thumb"></div></div></div>
                         </label>
                     </div>
 
-                    <button type="submit" class="w-full py-4 rounded-[16px] font-black text-base btn-primary btn-spring mt-4">新增項目</button>
+                    <button type="submit" class="w-full py-3 md:py-3.5 rounded-[14px] font-black text-sm md:text-base btn-primary btn-spring mt-3">新增項目</button>
                 </form>
             </div>
             
@@ -1478,54 +1478,54 @@
             const due = new Date(task.dueDate); due.setHours(0,0,0,0); const todayDate = new Date(); todayDate.setHours(0,0,0,0); const diffDays = Math.round((due - todayDate) / (1000 * 60 * 60 * 24));
             
             let badgeHtml = '';
-            if (diffDays < 0) badgeHtml = `<span class="text-white bg-[var(--danger-color)] px-3 py-1.5 rounded-[10px] text-[11px] md:text-xs font-black shadow-sm tracking-wide flex items-center gap-2"><i class="fas fa-exclamation-triangle"></i> 過期 ${Math.abs(diffDays)} 日</span>`;
-            else if (diffDays === 0) badgeHtml = `<span class="text-[#d48806] bg-[#FFDFBA] px-3 py-1.5 rounded-[10px] text-[11px] md:text-xs font-black shadow-sm animate-pulse tracking-wide flex items-center gap-2"><i class="fas fa-fire"></i> 今天交</span>`;
-            else if (diffDays === 1) badgeHtml = `<span class="text-[#5b9bd5] bg-[#BAE1FF] px-3 py-1.5 rounded-[10px] text-[11px] md:text-xs font-black shadow-sm tracking-wide flex items-center gap-2"><i class="fas fa-clock"></i> 聽日交</span>`;
-            else badgeHtml = `<span class="text-[var(--text-secondary)] bg-[var(--surface-inset)] px-3 py-1.5 rounded-[10px] text-[11px] md:text-xs font-black border border-[var(--border-color)] tracking-wide flex items-center gap-2"><i class="far fa-hourglass"></i> 餘 ${diffDays} 日</span>`;
+            if (diffDays < 0) badgeHtml = `<span class="text-white bg-[var(--danger-color)] px-2.5 py-1 rounded-[8px] text-[10px] md:text-xs font-black shadow-sm tracking-wide flex items-center gap-1.5"><i class="fas fa-exclamation-triangle"></i> 過期 ${Math.abs(diffDays)} 日</span>`;
+            else if (diffDays === 0) badgeHtml = `<span class="text-[#d48806] bg-[#FFDFBA] px-2.5 py-1 rounded-[8px] text-[10px] md:text-xs font-black shadow-sm animate-pulse tracking-wide flex items-center gap-1.5"><i class="fas fa-fire"></i> 今天交</span>`;
+            else if (diffDays === 1) badgeHtml = `<span class="text-[#5b9bd5] bg-[#BAE1FF] px-2.5 py-1 rounded-[8px] text-[10px] md:text-xs font-black shadow-sm tracking-wide flex items-center gap-1.5"><i class="fas fa-clock"></i> 聽日交</span>`;
+            else badgeHtml = `<span class="text-[var(--text-secondary)] bg-[var(--surface-inset)] px-2.5 py-1 rounded-[8px] text-[10px] md:text-xs font-black border border-[var(--border-color)] tracking-wide flex items-center gap-1.5"><i class="far fa-hourglass"></i> 餘 ${diffDays} 日</span>`;
 
             let contentHtml = task.content.replace(/\n/g, '<br>');
-            let urlBtnHtml = task.url ? `<a href="${task.url}" target="_blank" class="max-w-url inline-flex items-center text-xs font-bold px-4 py-2 rounded-[12px] transition-colors shadow-sm min-h-[44px] truncate" style="color: var(--accent-primary); background-color: var(--accent-10);"><i class="fas fa-link mr-2 shrink-0"></i> <span class="truncate">${task.url.replace(/^https?:\/\//,'')}</span></a>` : '';
+            let urlBtnHtml = task.url ? `<a href="${task.url}" target="_blank" class="max-w-url inline-flex items-center text-[11px] md:text-xs font-bold px-3 py-1.5 rounded-[10px] transition-colors shadow-sm min-h-[36px] truncate" style="color: var(--accent-primary); background-color: var(--accent-10);"><i class="fas fa-link mr-1.5 shrink-0"></i> <span class="truncate">${task.url.replace(/^https?:\/\//,'')}</span></a>` : '';
 
             let div = document.createElement('div'); 
             div.className = `ios-card relative overflow-hidden group border border-[var(--border-color)]`; 
             div.style.backgroundColor = 'var(--surface-color)'; 
-            div.style.borderLeft = `6px solid ${subColor}`;
+            div.style.borderLeft = `5px solid ${subColor}`;
             
             div.innerHTML = `
                 <div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20 dark:opacity-20 z-0 overflow-hidden">
-                    <span class="text-[7rem] md:text-[8rem] font-black whitespace-nowrap tracking-tighter" style="color: ${subColor}">${task.subject}</span>
+                    <span class="text-[6rem] md:text-[7rem] font-black whitespace-nowrap tracking-tighter" style="color: ${subColor}">${task.subject}</span>
                 </div>
-                <div class="relative z-10 flex min-h-[120px]">
-                    <div class="w-16 md:w-20 shrink-0 flex flex-col items-center justify-between py-4 border-r border-[var(--border-color)] bg-[var(--surface-inset)]/40 backdrop-blur-sm">
-                        <button onclick="window.triggerComplete(this, '${task.id}', ${task.isPublic})" class="w-10 h-10 rounded-full border-[2px] border-[var(--text-secondary)] opacity-50 flex items-center justify-center transition-all duration-300 btn-spring btn-icon-round group/check shadow-sm bg-[var(--surface-color)] relative z-20 hover:opacity-100 hover:border-[var(--accent-primary)] mb-2">
-                            <i class="fas fa-check text-sm opacity-0 transition-opacity duration-300"></i>
+                <div class="relative z-10 flex min-h-[90px]">
+                    <div class="w-14 md:w-16 shrink-0 flex flex-col items-center justify-between py-3 border-r border-[var(--border-color)] bg-[var(--surface-inset)]/40 backdrop-blur-sm">
+                        <button onclick="window.triggerComplete(this, '${task.id}', ${task.isPublic})" class="w-8 h-8 md:w-9 md:h-9 rounded-full border-[1.5px] border-[var(--text-secondary)] opacity-50 flex items-center justify-center transition-all duration-300 btn-spring btn-icon-round group/check shadow-sm bg-[var(--surface-color)] relative z-20 hover:opacity-100 hover:border-[var(--accent-primary)] mb-1.5">
+                            <i class="fas fa-check text-xs opacity-0 transition-opacity duration-300"></i>
                         </button>
-                        <div class="flex-1 flex items-center justify-center py-2">
-                            <span class="text-sm md:text-base font-bold tracking-widest text-[var(--text-primary)] opacity-80" style="writing-mode: vertical-rl; text-orientation: upright;">${task.subject}</span>
+                        <div class="flex-1 flex items-center justify-center py-1">
+                            <span class="text-xs md:text-sm font-bold tracking-widest text-[var(--text-primary)] opacity-80" style="writing-mode: vertical-rl; text-orientation: upright;">${task.subject}</span>
                         </div>
-                        <span class="text-xs font-black text-[var(--text-secondary)] opacity-50 mt-2">#${index + 1}</span>
+                        <span class="text-[10px] font-black text-[var(--text-secondary)] opacity-50 mt-1">#${index + 1}</span>
                     </div>
-                    <div class="flex-1 p-4 md:p-6 flex flex-col justify-center bg-[var(--surface-color)]/60 backdrop-blur-sm w-0">
-                        <div class="flex justify-between items-start mb-3">
-                            <div class="flex items-center gap-2 flex-wrap">
+                    <div class="flex-1 p-3 md:p-4 flex flex-col justify-center bg-[var(--surface-color)]/60 backdrop-blur-sm w-0">
+                        <div class="flex justify-between items-start mb-2.5">
+                            <div class="flex items-center gap-1.5 flex-wrap">
                                 ${badgeHtml}
-                                ${task.type === 'test' ? `<span class="px-3 py-1.5 rounded-[10px] text-[11px] md:text-xs font-bold bg-purple-500/10 text-purple-600">測驗</span>` : ''}
-                                ${task.isPublic ? `<span class="px-3 py-1.5 rounded-[10px] text-[11px] md:text-xs font-bold transition-colors" style="color: var(--accent-primary); background-color: var(--accent-10);">廣播</span>` : ''}
+                                ${task.type === 'test' ? `<span class="px-2.5 py-1 rounded-[8px] text-[10px] md:text-xs font-bold bg-purple-500/10 text-purple-600">測驗</span>` : ''}
+                                ${task.isPublic ? `<span class="px-2.5 py-1 rounded-[8px] text-[10px] md:text-xs font-bold transition-colors" style="color: var(--accent-primary); background-color: var(--accent-10);">廣播</span>` : ''}
                             </div>
                             ${canEditDelete ? `
-                            <div class="flex items-center gap-2 relative z-20 shrink-0">
-                                <button onclick="window.openEditModal('${task.id}', ${task.isPublic})" class="w-10 h-10 rounded-full flex items-center justify-center btn-spring btn-icon-round text-[var(--text-secondary)] bg-[var(--surface-inset)] hover:text-[var(--accent-primary)] transition-colors shadow-sm" title="編輯">
-                                    <i class="fas fa-pen text-sm"></i>
+                            <div class="flex items-center gap-1.5 relative z-20 shrink-0">
+                                <button onclick="window.openEditModal('${task.id}', ${task.isPublic})" class="w-8 h-8 rounded-full flex items-center justify-center btn-spring btn-icon-round text-[var(--text-secondary)] bg-[var(--surface-inset)] hover:text-[var(--accent-primary)] transition-colors shadow-sm" title="編輯">
+                                    <i class="fas fa-pen text-xs"></i>
                                 </button>
-                                <button onclick="window.deleteTask('${task.id}', ${task.isPublic}, this)" class="w-10 h-10 rounded-full flex items-center justify-center btn-spring btn-icon-round text-[var(--danger-color)] bg-[var(--danger-10)] hover:bg-[var(--danger-color)] hover:text-white transition-colors shadow-sm" title="刪除">
-                                    <i class="fas fa-trash-alt text-sm"></i>
+                                <button onclick="window.deleteTask('${task.id}', ${task.isPublic}, this)" class="w-8 h-8 rounded-full flex items-center justify-center btn-spring btn-icon-round text-[var(--danger-color)] bg-[var(--danger-10)] hover:bg-[var(--danger-color)] hover:text-white transition-colors shadow-sm" title="刪除">
+                                    <i class="fas fa-trash-alt text-xs"></i>
                                 </button>
                             </div>
                             ` : ''}
                         </div>
-                        <p class="text-base md:text-lg font-bold leading-relaxed mb-4 text-[var(--text-primary)] drop-shadow-sm pl-1 break-words">${contentHtml}</p>
-                        <div class="flex justify-between items-center mt-auto pt-4 border-t border-[var(--border-color)] flex-wrap gap-2">
-                            <p class="text-xs font-bold opacity-60 text-[var(--text-secondary)]"><i class="far fa-calendar-alt mr-2"></i>${task.dueDate} (${getDayOfWeek(task.dueDate)})</p>
+                        <p class="text-sm md:text-base font-bold leading-relaxed mb-3 text-[var(--text-primary)] drop-shadow-sm pl-1 break-words">${contentHtml}</p>
+                        <div class="flex justify-between items-center mt-auto pt-3 border-t border-[var(--border-color)] flex-wrap gap-2">
+                            <p class="text-[10px] md:text-xs font-bold opacity-60 text-[var(--text-secondary)]"><i class="far fa-calendar-alt mr-1.5"></i>${task.dueDate} (${getDayOfWeek(task.dueDate)})</p>
                             ${urlBtnHtml}
                         </div>
                     </div>
@@ -1570,27 +1570,27 @@
         window.renderHistory = function() {
             const listEl = document.getElementById('history-tasks-list'); listEl.innerHTML = '';
             const displayHistory = historyTasks.filter(t => !t.isIgnored);
-            if(displayHistory.length === 0) { listEl.innerHTML = `<div class="text-center py-16 text-base font-bold opacity-30"><i class="fas fa-inbox text-5xl mb-4 block" style="color: var(--text-secondary);"></i>暫無完成紀錄</div>`; return; }
+            if(displayHistory.length === 0) { listEl.innerHTML = `<div class="text-center py-16 text-sm md:text-base font-bold opacity-30"><i class="fas fa-inbox text-4xl mb-4 block" style="color: var(--text-secondary);"></i>暫無完成紀錄</div>`; return; }
             const frag = document.createDocumentFragment();
             displayHistory.forEach((task, index) => { 
                 let div = document.createElement('div'); 
-                div.className = "ios-card p-5 md:p-6 opacity-70 hover:opacity-100 transition-all duration-300 border border-[var(--border-color)] relative group overflow-hidden shadow-sm hover:shadow-md bg-[var(--surface-color)]";
+                div.className = "ios-card p-4 opacity-70 hover:opacity-100 transition-all duration-300 border border-[var(--border-color)] relative group overflow-hidden shadow-sm hover:shadow-md bg-[var(--surface-color)]";
                 const subColor = (userSettings.subjects.find(s=>s.name===task.subject)||{}).color||'var(--text-secondary)';
                 
                 div.innerHTML = `
-                    <div class="absolute left-0 top-0 bottom-0 w-2 opacity-50" style="background-color: ${subColor};"></div>
-                    <div class="flex justify-between items-start mb-4 pl-3">
-                        <div class="flex items-center gap-3">
-                            <span class="px-3 py-1.5 rounded-[10px] text-xs font-bold shadow-sm" style="background-color: ${hexToRgba(subColor, 0.15)}; color: ${subColor};">${task.subject}</span>
-                            <span class="text-xs font-bold opacity-60 border border-[var(--border-color)] px-3 py-1 rounded-[8px] bg-[var(--surface-inset)]">已完成</span>
+                    <div class="absolute left-0 top-0 bottom-0 w-1.5 opacity-50" style="background-color: ${subColor};"></div>
+                    <div class="flex justify-between items-start mb-3 pl-2.5">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2.5 py-1 rounded-[8px] text-[11px] font-bold shadow-sm" style="background-color: ${hexToRgba(subColor, 0.15)}; color: ${subColor};">${task.subject}</span>
+                            <span class="text-[11px] font-bold opacity-60 border border-[var(--border-color)] px-2.5 py-1 rounded-[8px] bg-[var(--surface-inset)]">已完成</span>
                         </div>
-                        <button onclick="window.deleteHistoryTask('${task.id}', this)" class="w-10 h-10 btn-spring btn-icon-round rounded-full flex items-center justify-center transition-colors shadow-sm bg-[var(--danger-10)] text-[var(--danger-color)] hover:bg-[var(--danger-color)] hover:text-white" title="刪除記錄">
-                            <i class="fas fa-trash-alt text-sm"></i>
+                        <button onclick="window.deleteHistoryTask('${task.id}', this)" class="w-8 h-8 btn-spring btn-icon-round rounded-full flex items-center justify-center transition-colors shadow-sm bg-[var(--danger-10)] text-[var(--danger-color)] hover:bg-[var(--danger-color)] hover:text-white" title="刪除記錄">
+                            <i class="fas fa-trash-alt text-[11px]"></i>
                         </button>
                     </div>
-                    <p class="text-base md:text-lg font-bold line-through mb-4 pl-3 text-[var(--text-primary)] opacity-80 break-words">${task.content.replace(/\n/g, '<br>')}</p>
-                    <div class="flex justify-between items-end pl-3 pt-3 border-t border-[var(--border-color)]">
-                        <p class="text-xs font-bold opacity-60"><i class="fas fa-check-circle mr-2 text-green-500"></i>完成於: ${new Date(task.completedAt).toLocaleString()}</p>
+                    <p class="text-sm md:text-base font-bold line-through mb-3 pl-2.5 text-[var(--text-primary)] opacity-80 break-words">${task.content.replace(/\n/g, '<br>')}</p>
+                    <div class="flex justify-between items-end pl-2.5 pt-2.5 border-t border-[var(--border-color)]">
+                        <p class="text-[10px] md:text-xs font-bold opacity-60"><i class="fas fa-check-circle mr-1.5 text-green-500"></i>完成於: ${new Date(task.completedAt).toLocaleString()}</p>
                     </div>
                 `;
                 frag.appendChild(div);
@@ -2373,16 +2373,14 @@
                 document.getElementById('admin-badge').classList.remove('hidden'); 
                 document.getElementById('broadcast-toggle-container').classList.remove('hidden'); 
                 document.getElementById('admin-timetable-controls').classList.remove('hidden'); 
-                const navDesktop = document.getElementById('nav-admin-btn-desktop'); if(navDesktop) { navDesktop.classList.remove('hidden'); navDesktop.classList.add('flex'); }
-                const navDivider = document.getElementById('nav-admin-divider'); if(navDivider) { navDivider.classList.remove('hidden'); navDivider.classList.add('block'); }
-                const navMobile = document.getElementById('nav-admin-btn-mobile'); if(navMobile) { navMobile.classList.remove('hidden'); navMobile.classList.add('flex'); }
+                const navBtn = document.getElementById('nav-admin-btn'); if(navBtn) { navBtn.classList.remove('hidden'); navBtn.style.display = 'inline-flex'; }
+                const navDivider = document.getElementById('nav-admin-divider'); if(navDivider) { navDivider.classList.remove('hidden'); navDivider.style.display = 'block'; }
             } else {
                 document.getElementById('admin-badge').classList.add('hidden'); 
                 document.getElementById('broadcast-toggle-container').classList.add('hidden'); 
                 document.getElementById('admin-timetable-controls').classList.add('hidden'); 
-                const navDesktop = document.getElementById('nav-admin-btn-desktop'); if(navDesktop) { navDesktop.classList.add('hidden'); navDesktop.classList.remove('flex'); }
-                const navDivider = document.getElementById('nav-admin-divider'); if(navDivider) { navDivider.classList.add('hidden'); navDivider.classList.remove('block'); }
-                const navMobile = document.getElementById('nav-admin-btn-mobile'); if(navMobile) { navMobile.classList.add('hidden'); navMobile.classList.remove('flex'); }
+                const navBtn = document.getElementById('nav-admin-btn'); if(navBtn) { navBtn.classList.add('hidden'); navBtn.style.display = 'none'; }
+                const navDivider = document.getElementById('nav-admin-divider'); if(navDivider) { navDivider.classList.add('hidden'); navDivider.style.display = 'none'; }
             }
             document.getElementById('profile-modal-role').innerText = isAdmin ? '管理員 (Admin)' : '學生帳戶'; 
             
