@@ -325,7 +325,7 @@
                 </div>
                 
                 <div class="flex items-center gap-4">
-                    <!-- PWA 離線狀態徽章 (自動隱藏/顯示) -->
+                    <!-- PWA 離線狀態徽章 -->
                     <div id="offline-badge" class="hidden items-center px-3 py-1.5 bg-orange-100 text-orange-600 rounded-full text-[10px] font-black tracking-widest shadow-sm">
                         <i class="fas fa-wifi text-[10px] mr-1.5 opacity-60 line-through"></i>離線模式
                     </div>
@@ -423,7 +423,6 @@
                         <input type="url" id="task-url" class="ios-input py-2" placeholder="附加網頁連結 (選填)">
                     </div>
                     
-                    <!-- 多媒體圖片上傳 -->
                     <div class="pt-2">
                         <label class="ios-input-group relative cursor-pointer py-2 flex items-center justify-center text-[var(--text-secondary)] border-dashed border-[1.5px] border-[var(--border-color)] transition-all hover:bg-[var(--accent-10)] hover:text-[var(--accent-primary)] hover:border-[var(--accent-primary)]">
                             <i class="fas fa-camera mr-2 text-base"></i>
@@ -827,8 +826,8 @@
                 <div class="ios-input-group flex items-center bg-[var(--surface-inset)]/60 focus-within:bg-[var(--surface-color)] !min-h-[48px]"><i class="fas fa-envelope opacity-40 mx-2 text-[15px] text-[var(--text-primary)]"></i><input type="email" id="auth-email" class="ios-input !text-[14px] md:!text-[15px]" placeholder="電郵地址"></div>
                 <div class="ios-input-group flex items-center bg-[var(--surface-inset)]/60 focus-within:bg-[var(--surface-color)] !min-h-[48px]"><i class="fas fa-lock opacity-40 mx-2 text-[15px] text-[var(--text-primary)]"></i><input type="password" id="auth-pwd" class="ios-input !text-[14px] md:!text-[15px]" placeholder="密碼 (最少 6 位)"></div>
                 <div class="flex gap-3 pt-2 md:pt-3">
-                    <button onclick="window.loginEmail(this)" class="flex-1 py-3 md:py-3.5 rounded-[14px] font-black text-[14px] md:text-[15px] btn-primary btn-spring !min-h-[48px] shadow-lg hover:shadow-xl transition-shadow flex items-center justify-center">登入</button>
-                    <button onclick="window.registerEmail(this)" class="flex-1 py-3 md:py-3.5 rounded-[14px] font-bold text-[14px] md:text-[15px] bg-[var(--surface-inset)] btn-spring transition-colors duration-300 !min-h-[48px] border border-[var(--border-color)] text-[var(--text-primary)] flex items-center justify-center">註冊</button>
+                    <button onclick="window.loginEmail(this)" class="flex-1 flex justify-center items-center py-3 md:py-3.5 rounded-[14px] font-black text-[14px] md:text-[15px] btn-primary btn-spring !min-h-[48px] shadow-lg hover:shadow-xl transition-shadow">登入</button>
+                    <button onclick="window.registerEmail(this)" class="flex-1 flex justify-center items-center py-3 md:py-3.5 rounded-[14px] font-bold text-[14px] md:text-[15px] bg-[var(--surface-inset)] btn-spring transition-colors duration-300 !min-h-[48px] border border-[var(--border-color)] text-[var(--text-primary)]">註冊</button>
                 </div>
             </div>
 
@@ -836,7 +835,7 @@
                 <button onclick="window.loginGoogle(this)" class="w-full flex items-center justify-center gap-2.5 bg-[var(--surface-color)] border border-[var(--border-color)] font-bold py-3 md:py-3.5 rounded-[14px] text-[14px] md:text-[15px] btn-spring shadow-sm !min-h-[48px] hover:bg-[var(--surface-inset)] transition-colors text-[var(--text-primary)]">
                     <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-4 h-4 md:w-5 md:h-5" alt="Google"> 繼續使用 Google
                 </button>
-                <button onclick="window.loginAnon(this)" class="w-full font-bold py-2 md:py-3 text-[12px] md:text-[13px] opacity-50 hover:opacity-100 transition-opacity btn-spring !min-h-[44px] text-[var(--text-primary)] flex items-center justify-center">以訪客身份預覽</button>
+                <button onclick="window.loginAnon(this)" class="w-full flex justify-center items-center font-bold py-2 md:py-3 text-[12px] md:text-[13px] opacity-50 hover:opacity-100 transition-opacity btn-spring !min-h-[44px] text-[var(--text-primary)]">以訪客身份預覽</button>
             </div>
         </div>
     </div>
@@ -851,7 +850,7 @@
                 <i class="fas fa-user opacity-40 mx-2 text-[15px]"></i>
                 <input type="text" id="setup-nickname" class="ios-input !text-[14px] md:!text-[15px]" placeholder="輸入你想顯示的暱稱...">
             </div>
-            <button onclick="window.saveInitialProfile()" class="w-full py-3.5 rounded-[14px] font-black text-[14px] md:text-[15px] btn-primary btn-spring shadow-lg !min-h-[48px] flex items-center justify-center">進入系統 <i class="fas fa-arrow-right ml-2"></i></button>
+            <button onclick="window.saveInitialProfile()" class="w-full flex justify-center items-center py-3.5 rounded-[14px] font-black text-[14px] md:text-[15px] btn-primary btn-spring shadow-lg !min-h-[48px]">進入系統 <i class="fas fa-arrow-right ml-2"></i></button>
         </div>
     </div>
 
@@ -1706,24 +1705,27 @@
             let contentHtml = task.content.replace(/\n/g, '<br>');
             let urlBtnHtml = task.url ? `<a href="${task.url}" target="_blank" class="max-w-url inline-flex items-center justify-center text-[11px] font-bold px-4 py-2 rounded-[10px] transition-colors shadow-sm min-h-[36px] truncate" style="color: var(--accent-primary); background-color: var(--accent-10);"><i class="fas fa-link mr-2 shrink-0"></i> <span class="truncate">${task.url.replace(/^https?:\/\//,'')}</span></a>` : '';
 
-            let imgHtml = task.imageUrl ? `<div class="mt-4 mb-2 overflow-hidden rounded-[14px] border border-[var(--border-color)] shadow-sm"><img src="${task.imageUrl}" onclick="window.openLightbox('${task.imageUrl}')" class="w-full h-36 object-cover cursor-pointer hover:scale-105 transition-transform duration-300 origin-center" alt="作業附圖"></div>` : '';
+            let imgHtml = task.imageUrl ? `<div class="mt-4 mb-2 overflow-hidden rounded-[14px] border border-[var(--border-color)] shadow-sm relative z-10"><img src="${task.imageUrl}" onclick="window.openLightbox('${task.imageUrl}')" class="w-full h-36 object-cover cursor-pointer hover:scale-105 transition-transform duration-300 origin-center" alt="作業附圖"></div>` : '';
 
             let div = document.createElement('div'); 
             div.className = `ios-card relative overflow-hidden group border border-[var(--border-color)] transition-all duration-300 hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] hover:-translate-y-1 bg-[var(--surface-color)]`; 
             
             div.innerHTML = `
-                <div class="absolute left-0 top-0 bottom-0 w-[6px]" style="background-color: ${subColor};"></div>
-                <div class="p-5 pl-6 md:p-6 md:pl-8">
+                <div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.06] dark:opacity-[0.08] z-0 overflow-hidden">
+                    <span class="text-[6rem] md:text-[8rem] font-black whitespace-nowrap tracking-tighter select-none" style="color: ${subColor}">${task.subject}</span>
+                </div>
+                <div class="absolute left-0 top-0 bottom-0 w-[6px] z-10" style="background-color: ${subColor};"></div>
+                <div class="p-5 pl-6 md:p-6 md:pl-8 relative z-10">
                     <div class="flex items-start gap-4 md:gap-5">
-                        <div class="pt-0.5">
-                            <button onclick="window.triggerComplete(this, '${task.id}', ${task.isPublic})" class="w-10 h-10 min-w-[40px] rounded-full border-[2.5px] border-[var(--text-secondary)] opacity-40 flex items-center justify-center transition-all duration-300 hover:opacity-100 hover:border-[var(--accent-primary)] hover:bg-[var(--accent-10)] shadow-sm shrink-0 p-0 m-0 outline-none relative z-20">
+                        <div class="pt-0.5 relative z-20">
+                            <button onclick="window.triggerComplete(this, '${task.id}', ${task.isPublic})" class="w-10 h-10 min-w-[40px] rounded-full border-[2.5px] border-[var(--text-secondary)] opacity-40 flex items-center justify-center transition-all duration-300 hover:opacity-100 hover:border-[var(--accent-primary)] hover:bg-[var(--accent-10)] shadow-sm shrink-0 p-0 m-0 outline-none">
                                 <i class="fas fa-check text-[16px] opacity-0 transition-opacity duration-300 text-[var(--accent-primary)] check-icon"></i>
                             </button>
                         </div>
                         
                         <div class="flex-1 min-w-0 relative">
                             <div class="flex items-center justify-between gap-3 mb-3">
-                                <div class="flex items-center gap-2 flex-wrap pr-16">
+                                <div class="flex items-center gap-2 flex-wrap pr-16 md:pr-24">
                                     <span class="px-3 py-1.5 rounded-[10px] text-[11px] font-black tracking-widest shadow-sm" style="color: ${subColor}; background-color: ${hexToRgba(subColor, 0.15)};">${task.subject}</span>
                                     ${badgeHtml}
                                     ${task.type === 'test' ? `<span class="px-3 py-1.5 rounded-[10px] text-[11px] font-black bg-purple-500/10 text-purple-600 shadow-sm">測驗</span>` : ''}
@@ -1732,7 +1734,7 @@
                             </div>
                             
                             ${canEditDelete ? `
-                            <div class="absolute top-0 right-0 flex items-center gap-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div class="absolute top-[-4px] right-0 flex items-center gap-2 opacity-100 transition-opacity z-20">
                                 <button onclick="window.openEditModal('${task.id}', ${task.isPublic})" class="w-9 h-9 rounded-full flex items-center justify-center text-[var(--text-secondary)] bg-[var(--surface-inset)] hover:text-[var(--accent-primary)] hover:bg-[var(--accent-10)] transition-colors shadow-sm p-0 m-0" title="編輯">
                                     <i class="fas fa-pen text-[13px]"></i>
                                 </button>
@@ -1742,10 +1744,10 @@
                             </div>
                             ` : ''}
                             
-                            <p class="text-[15px] md:text-base font-bold leading-relaxed text-[var(--text-primary)] mb-4 break-words mt-1 pr-2">${contentHtml}</p>
+                            <p class="text-[15px] md:text-base font-bold leading-relaxed text-[var(--text-primary)] mb-4 break-words mt-1 pr-2 relative z-10">${contentHtml}</p>
                             ${imgHtml}
                             
-                            <div class="flex justify-between items-center mt-5 pt-4 border-t border-[var(--border-color)] flex-wrap gap-3">
+                            <div class="flex justify-between items-center mt-5 pt-4 border-t border-[var(--border-color)] flex-wrap gap-3 relative z-10">
                                 <p class="text-xs font-bold opacity-60 text-[var(--text-secondary)] flex items-center"><i class="far fa-calendar-alt mr-2 text-sm"></i>${task.dueDate} (${getDayOfWeek(task.dueDate)})</p>
                                 ${urlBtnHtml}
                             </div>
@@ -1784,7 +1786,6 @@
             }
             
             if(filtered.length === 0) { 
-                // [升級] 更精美的 Empty State
                 listEl.innerHTML = `
                     <div class="text-center py-16 px-4 flex flex-col items-center">
                         <div class="w-24 h-24 mb-6 rounded-full bg-[var(--surface-color)] shadow-sm flex items-center justify-center border border-[var(--border-color)] text-[var(--accent-primary)]">
@@ -1820,30 +1821,33 @@
                 div.className = "ios-card relative overflow-hidden group border border-[var(--border-color)] transition-all duration-300 hover:shadow-md bg-[var(--surface-color)] opacity-70 hover:opacity-100";
                 const subColor = (userSettings.subjects.find(s=>s.name===task.subject)||{}).color||'var(--text-secondary)';
                 
-                let imgHtml = task.imageUrl ? `<div class="mt-4 mb-2 overflow-hidden rounded-[14px] border border-[var(--border-color)] shadow-sm opacity-80 group-hover:opacity-100 transition-opacity"><img src="${task.imageUrl}" onclick="window.openLightbox('${task.imageUrl}')" class="w-full h-32 object-cover cursor-pointer hover:scale-105 transition-transform duration-300 origin-center" alt="作業附圖"></div>` : '';
+                let imgHtml = task.imageUrl ? `<div class="mt-4 mb-2 overflow-hidden rounded-[14px] border border-[var(--border-color)] shadow-sm opacity-80 group-hover:opacity-100 transition-opacity relative z-10"><img src="${task.imageUrl}" onclick="window.openLightbox('${task.imageUrl}')" class="w-full h-32 object-cover cursor-pointer hover:scale-105 transition-transform duration-300 origin-center" alt="作業附圖"></div>` : '';
 
                 div.innerHTML = `
-                    <div class="absolute left-0 top-0 bottom-0 w-[6px]" style="background-color: ${subColor};"></div>
-                    <div class="p-5 pl-6 md:p-6 md:pl-8">
+                    <div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.04] dark:opacity-[0.06] z-0 overflow-hidden">
+                        <span class="text-[6rem] md:text-[8rem] font-black whitespace-nowrap tracking-tighter select-none" style="color: ${subColor}">${task.subject}</span>
+                    </div>
+                    <div class="absolute left-0 top-0 bottom-0 w-[6px] z-10" style="background-color: ${subColor};"></div>
+                    <div class="p-5 pl-6 md:p-6 md:pl-8 relative z-10">
                         <div class="flex items-start gap-4 md:gap-5">
-                            <div class="pt-0.5">
+                            <div class="pt-0.5 relative z-20">
                                 <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-sm" style="background-color: ${hexToRgba(subColor, 0.15)}; color: ${subColor};">
                                     <i class="fas fa-check text-lg"></i>
                                 </div>
                             </div>
-                            <div class="flex-1 min-w-0">
+                            <div class="flex-1 min-w-0 relative">
                                 <div class="flex justify-between items-start mb-3">
-                                    <div class="flex items-center gap-2 flex-wrap pr-10">
+                                    <div class="flex items-center gap-2 flex-wrap pr-12 md:pr-16">
                                         <span class="px-3 py-1.5 rounded-[10px] text-[11px] font-black tracking-widest shadow-sm" style="color: ${subColor}; background-color: ${hexToRgba(subColor, 0.15)};">${task.subject}</span>
                                         <span class="text-[11px] font-black opacity-60 border border-[var(--border-color)] px-3 py-1.5 rounded-[10px] bg-[var(--surface-inset)] flex items-center gap-1.5 shadow-sm"><i class="fas fa-history"></i>已完成</span>
                                     </div>
-                                    <button onclick="window.deleteHistoryTask('${task.id}', this)" class="absolute top-5 right-5 w-9 h-9 btn-spring btn-icon-round rounded-full flex items-center justify-center transition-colors shadow-sm bg-[var(--surface-inset)] text-[var(--text-secondary)] hover:bg-[var(--danger-color)] hover:text-white shrink-0 opacity-100 md:opacity-0 group-hover:opacity-100 p-0 m-0" title="刪除記錄">
+                                    <button onclick="window.deleteHistoryTask('${task.id}', this)" class="absolute top-[-4px] right-0 w-9 h-9 btn-spring btn-icon-round rounded-full flex items-center justify-center transition-colors shadow-sm bg-[var(--surface-inset)] text-[var(--text-secondary)] hover:bg-[var(--danger-color)] hover:text-white shrink-0 opacity-100 p-0 m-0 z-20" title="刪除記錄">
                                         <i class="fas fa-trash-alt text-[13px]"></i>
                                     </button>
                                 </div>
-                                <p class="text-[15px] font-bold line-through mb-4 text-[var(--text-primary)] opacity-70 break-words mt-1 pr-2">${task.content.replace(/\n/g, '<br>')}</p>
+                                <p class="text-[15px] font-bold line-through mb-4 text-[var(--text-primary)] opacity-70 break-words mt-1 pr-2 relative z-10">${task.content.replace(/\n/g, '<br>')}</p>
                                 ${imgHtml}
-                                <div class="flex justify-between items-center mt-5 pt-4 border-t border-[var(--border-color)]">
+                                <div class="flex justify-between items-center mt-5 pt-4 border-t border-[var(--border-color)] relative z-10">
                                     <p class="text-[11px] md:text-xs font-bold opacity-60 text-[var(--text-secondary)] flex items-center"><i class="fas fa-check-circle mr-2 text-green-500 text-sm"></i>完成於: ${new Date(task.completedAt).toLocaleString()}</p>
                                 </div>
                             </div>
@@ -2299,7 +2303,7 @@
                 publicAssignments.forEach((task, index) => {
                     const subColor = (userSettings.subjects.find(s=>s.name===task.subject)||{}).color||'var(--text-secondary)';
                     let div = document.createElement('div'); div.className = "flex items-start justify-between p-5 border-b border-[var(--border-color)] last:border-0 hover:bg-[var(--surface-inset)] transition-colors group";
-                    div.innerHTML = `<div class="flex-1 pr-5 min-w-0"><div class="flex gap-3 mb-2"><span class="px-3 py-1 rounded-[8px] text-xs font-bold shadow-sm" style="background-color: ${hexToRgba(subColor, 0.15)}; color: ${subColor};">${task.subject}</span><span class="text-xs opacity-50 flex items-center font-bold"><i class="far fa-calendar-alt mr-2"></i>${task.dueDate}</span></div><p class="text-base font-bold truncate text-[var(--text-primary)]">${task.content}</p></div><button onclick="window.deleteTask('${task.id}', true, this)" class="w-10 h-10 rounded-full btn-spring btn-icon-round flex items-center justify-center shrink-0 opacity-100 md:opacity-50 group-hover:opacity-100 shadow-sm" style="color: var(--danger-color); background-color: var(--danger-10);"><i class="fas fa-trash text-sm"></i></button>`;
+                    div.innerHTML = `<div class="flex-1 pr-5 min-w-0"><div class="flex gap-3 mb-2"><span class="px-3 py-1 rounded-[8px] text-xs font-bold shadow-sm" style="background-color: ${hexToRgba(subColor, 0.15)}; color: ${subColor};">${task.subject}</span><span class="text-xs opacity-50 flex items-center font-bold"><i class="far fa-calendar-alt mr-2"></i>${task.dueDate}</span></div><p class="text-base font-bold truncate text-[var(--text-primary)]">${task.content}</p></div><button onclick="window.deleteTask('${task.id}', true, this)" class="w-10 h-10 rounded-full btn-spring btn-icon-round flex items-center justify-center shrink-0 opacity-100 shadow-sm transition-all m-0 p-0 hover:scale-105" style="color: var(--danger-color); background-color: var(--danger-10);"><i class="fas fa-trash text-sm"></i></button>`;
                     frag.appendChild(div);
                 }); listEl.appendChild(frag);
             } document.getElementById('admin-stat-broadcasts').innerText = publicAssignments.length;
