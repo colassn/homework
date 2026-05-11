@@ -1265,7 +1265,7 @@
             if(viewId === 'history') window.renderHistory(); 
             if(viewId === 'timetable') { window.renderTimetableUI(); window.updateTTModeChips(); }
             if(viewId === 'subjects') window.renderSubjectsPage(); 
-            if(viewId === 'admin') window.renderAdmin();
+            if(viewId === 'admin') { window.renderAdmin(); window.renderAdminUsers(); window.renderAdminSettings(); }
         };
 
         window.switchAdminTab = function(tabId) {
@@ -1274,6 +1274,7 @@
             document.getElementById(`admin-tab-${tabId}`).style.display = 'block';
             event.target.classList.add('active');
             if(tabId === 'settings') window.renderAdminSettings();
+            if(tabId === 'users') window.renderAdminUsers();
         };
 
         // ==========================================
@@ -2404,8 +2405,11 @@
 
         window.renderAdminUsers = function() {
             const listEl = document.getElementById('admin-users-list'); if(!listEl) return; listEl.innerHTML = '';
-            const searchTerm = (document.getElementById('admin-user-search')?.value || '').toLowerCase(); let filteredUsers = adminUsersList.filter(u => u.name.toLowerCase().includes(searchTerm) || u.email.toLowerCase().includes(searchTerm));
-            document.getElementById('admin-stat-users').innerText = adminUsersList.length; document.getElementById('admin-stat-active').innerText = adminUsersList.filter(u => u.lastLogin && ((new Date() - new Date(u.lastLogin)) < 86400000)).length;
+            const searchTerm = (document.getElementById('admin-user-search')?.value || '').toLowerCase(); 
+            // 加入 Null Safety 保護，防止空名字導致系統崩潰
+            let filteredUsers = adminUsersList.filter(u => (u.name || '').toLowerCase().includes(searchTerm) || (u.email || '').toLowerCase().includes(searchTerm));
+            document.getElementById('admin-stat-users').innerText = adminUsersList.length; 
+            document.getElementById('admin-stat-active').innerText = adminUsersList.filter(u => u.lastLogin && ((new Date() - new Date(u.lastLogin)) < 86400000)).length;
             
             const isWhitelistOn = adminConfig.whitelistEnabled;
             const isBlacklistOn = adminConfig.blacklistEnabled;
@@ -2422,10 +2426,10 @@
                 let div = document.createElement('div'); div.className = "flex items-center px-6 py-4 admin-list-row gap-4";
                 div.innerHTML = `
                     <div class="flex items-center gap-4 flex-[2] min-w-0">
-                        <img src="${u.avatar}" class="w-10 h-10 rounded-full object-cover shadow-sm shrink-0 border border-[var(--border-color)]">
+                        <img src="${u.avatar || 'https://ui-avatars.com/api/?name=U&background=1d1d1f&color=fff'}" class="w-10 h-10 rounded-full object-cover shadow-sm shrink-0 border border-[var(--border-color)]">
                         <div class="min-w-0">
-                            <p class="text-sm font-bold text-[var(--text-primary)] truncate">${u.name}</p>
-                            <p class="text-xs font-bold opacity-50 truncate text-[var(--text-secondary)]">${u.email}</p>
+                            <p class="text-sm font-bold text-[var(--text-primary)] truncate">${u.name || '無名氏'}</p>
+                            <p class="text-xs font-bold opacity-50 truncate text-[var(--text-secondary)]">${u.email || '訪客'}</p>
                         </div>
                     </div>
                     <div class="flex-1 text-center hidden md:flex flex-col items-center justify-center">
@@ -2734,7 +2738,8 @@
             unsubAdmin = onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'system'), d => { if(d.exists()) { if (d.metadata && d.metadata.hasPendingWrites) { adminConfig = { ...adminConfig, ...d.data() }; return; } window.applySystemConfig(d.data()); } }, handleSnapshotError);
 
             if(isAdmin) {
-                unsubAdminUsers = onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'directory'), snap => { adminUsersList = []; snap.forEach(d => adminUsersList.push({uid: d.id, ...d.data()})); if(document.getElementById('view-admin').classList.contains('active')) window.renderAdminUsers(); }, handleSnapshotError);
+                // 修復：接收到名單資料時強制渲染
+                unsubAdminUsers = onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'directory'), snap => { adminUsersList = []; snap.forEach(d => adminUsersList.push({uid: d.id, ...d.data()})); window.renderAdminUsers(); }, handleSnapshotError);
             }
         };
 
