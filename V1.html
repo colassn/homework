@@ -159,6 +159,7 @@
         .btn-spring { 
             transition: transform 0.2s var(--spring-bouncy), filter 0.2s ease, background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease; 
             will-change: transform; cursor: pointer; touch-action: manipulation; 
+            display: inline-flex; align-items: center; justify-content: center; text-align: center;
         }
         .btn-spring:active { transform: scale(0.95); filter: brightness(0.9); }
         .btn-spring:hover { filter: brightness(1.05); }
@@ -325,7 +326,7 @@
                 </div>
                 
                 <div class="flex items-center gap-4">
-                    <!-- PWA 離線狀態徽章 -->
+                    <!-- PWA 離線狀態徽章 (自動隱藏/顯示) -->
                     <div id="offline-badge" class="hidden items-center px-3 py-1.5 bg-orange-100 text-orange-600 rounded-full text-[10px] font-black tracking-widest shadow-sm">
                         <i class="fas fa-wifi text-[10px] mr-1.5 opacity-60 line-through"></i>離線模式
                     </div>
@@ -423,6 +424,7 @@
                         <input type="url" id="task-url" class="ios-input py-2" placeholder="附加網頁連結 (選填)">
                     </div>
                     
+                    <!-- 多媒體圖片上傳 -->
                     <div class="pt-2">
                         <label class="ios-input-group relative cursor-pointer py-2 flex items-center justify-center text-[var(--text-secondary)] border-dashed border-[1.5px] border-[var(--border-color)] transition-all hover:bg-[var(--accent-10)] hover:text-[var(--accent-primary)] hover:border-[var(--accent-primary)]">
                             <i class="fas fa-camera mr-2 text-base"></i>
@@ -442,7 +444,7 @@
                         </label>
                     </div>
 
-                    <button type="submit" class="w-full py-4 rounded-[16px] font-black text-base btn-primary btn-spring mt-2 shadow-lg min-h-[48px]">新增項目</button>
+                    <button type="submit" class="w-full flex justify-center items-center py-4 rounded-[16px] font-black text-base btn-primary btn-spring mt-2 shadow-lg min-h-[48px]">新增項目</button>
                 </form>
             </div>
             
@@ -481,18 +483,18 @@
 
                 <div id="tt-view-actions" class="flex gap-2 shrink-0 ml-auto w-full md:w-auto justify-end">
                     <button onclick="window.syncGlobalTimetable()" class="px-4 py-2 rounded-[16px] text-sm font-bold btn-spring hidden transition-colors duration-300 btn-icon-round" id="btn-sync-timetable" style="background-color: var(--accent-10); color: var(--accent-primary);"><i class="fas fa-sync-alt"></i></button>
-                    <button onclick="window.toggleTimetableMode(true)" class="px-6 py-3 rounded-[16px] text-sm font-black text-white btn-spring transition-colors duration-300 w-full md:w-auto shadow-sm" style="background-color: var(--accent-primary);">編輯模式</button>
+                    <button onclick="window.toggleTimetableMode(true)" class="flex-1 md:flex-none flex items-center justify-center px-6 py-3 rounded-[16px] text-sm font-black text-white btn-spring transition-colors duration-300 shadow-sm" style="background-color: var(--accent-primary);">編輯模式</button>
                 </div>
                 <div id="tt-edit-actions" class="flex items-center gap-2 shrink-0 ml-auto hidden w-full md:w-auto justify-end">
-                    <button onclick="window.toggleTimetableMode(false)" class="px-6 py-3 rounded-[16px] text-sm font-bold bg-[var(--surface-inset)] btn-spring text-[var(--text-primary)] w-full md:w-auto shadow-sm">取消</button>
-                    <button onclick="window.saveTimetable()" class="px-6 py-3 rounded-[16px] text-sm font-black text-white btn-spring transition-colors duration-300 w-full md:w-auto shadow-sm" style="background-color: var(--accent-primary);">完成儲存</button>
+                    <button onclick="window.toggleTimetableMode(false)" class="flex-1 md:flex-none flex items-center justify-center px-6 py-3 rounded-[16px] text-sm font-bold bg-[var(--surface-inset)] btn-spring text-[var(--text-primary)] shadow-sm">取消</button>
+                    <button onclick="window.saveTimetable()" class="flex-1 md:flex-none flex items-center justify-center px-6 py-3 rounded-[16px] text-sm font-black text-white btn-spring transition-colors duration-300 shadow-sm" style="background-color: var(--accent-primary);">完成儲存</button>
                 </div>
             </div>
             
             <div id="admin-timetable-controls" class="hidden ios-card p-4 border-l-4 shadow-sm" style="border-left-color: var(--accent-primary);">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <span class="text-sm font-bold transition-colors duration-300 flex items-center" style="color: var(--accent-primary);"><i class="fas fa-user-shield mr-2 text-lg"></i>全校時間表管理</span>
-                    <button onclick="window.saveGlobalTimetable()" class="text-white w-full md:w-auto px-6 py-3 rounded-[16px] text-sm font-black btn-spring transition-colors duration-300 shadow-sm" style="background-color: var(--accent-primary);">發佈至全校</button>
+                    <button onclick="window.saveGlobalTimetable()" class="text-white flex items-center justify-center w-full md:w-auto px-6 py-3 rounded-[16px] text-sm font-black btn-spring transition-colors duration-300 shadow-sm" style="background-color: var(--accent-primary);">發佈至全校</button>
                 </div>
             </div>
 
@@ -549,9 +551,9 @@
                             </table>
                         </div>
                         <div class="p-4 bg-[var(--surface-inset)] border-t border-[var(--border-color)] flex gap-4">
-                            <button onclick="window.addSmartRow('class')" class="flex-1 py-3.5 rounded-[16px] text-sm font-black text-white btn-spring transition-colors duration-300 shadow-sm flex items-center justify-center gap-2" style="background-color: var(--accent-primary);"><i class="fas fa-plus"></i> 新增課堂</button>
-                            <button onclick="window.addSmartRow('break')" class="flex-[0.5] py-3.5 rounded-[16px] text-sm font-bold bg-[var(--surface-color)] border border-[var(--border-color)] btn-spring shadow-sm text-[var(--text-primary)]">新增小息</button>
-                            <button onclick="window.addSmartRow('lunch')" class="flex-[0.5] py-3.5 rounded-[16px] text-sm font-bold bg-[var(--surface-color)] border border-[var(--border-color)] btn-spring shadow-sm text-[var(--text-primary)]">新增午膳</button>
+                            <button onclick="window.addSmartRow('class')" class="flex-1 flex items-center justify-center py-3.5 rounded-[16px] text-sm font-black text-white btn-spring transition-colors duration-300 shadow-sm gap-2" style="background-color: var(--accent-primary);"><i class="fas fa-plus"></i> 新增課堂</button>
+                            <button onclick="window.addSmartRow('break')" class="flex-[0.5] flex items-center justify-center py-3.5 rounded-[16px] text-sm font-bold bg-[var(--surface-color)] border border-[var(--border-color)] btn-spring shadow-sm text-[var(--text-primary)]">新增小息</button>
+                            <button onclick="window.addSmartRow('lunch')" class="flex-[0.5] flex items-center justify-center py-3.5 rounded-[16px] text-sm font-bold bg-[var(--surface-color)] border border-[var(--border-color)] btn-spring shadow-sm text-[var(--text-primary)]">新增午膳</button>
                         </div>
                     </div>
                 </div>
@@ -572,7 +574,7 @@
                         <i class="fas fa-book opacity-40 mr-3 text-base"></i>
                         <input type="text" id="new-subject-name" class="ios-input text-sm" placeholder="輸入科目名稱 (如: 歷史...)">
                     </div>
-                    <button onclick="window.addSubject()" class="w-full md:w-auto px-8 py-3 rounded-[16px] font-black text-sm btn-primary btn-spring shrink-0 min-h-[44px]">新增科目</button>
+                    <button onclick="window.addSubject()" class="w-full md:w-auto flex items-center justify-center px-8 py-3 rounded-[16px] font-black text-sm btn-primary btn-spring shrink-0 min-h-[44px]">新增科目</button>
                 </div>
                 
                 <div class="bg-[var(--surface-inset)] p-5 rounded-[16px] relative z-10 border border-[var(--border-color)]">
@@ -730,14 +732,14 @@
                                 <option value="broadcast">重要廣播 (橙色)</option>
                                 <option value="security">緊急警告 (紅色)</option>
                             </select>
-                            <button onclick="window.sendCustomNotification()" class="flex-1 rounded-[16px] btn-primary font-black text-sm btn-spring shadow-sm min-h-[48px] flex items-center justify-center">發送至通知中心</button>
+                            <button onclick="window.sendCustomNotification()" class="flex-1 flex justify-center items-center rounded-[16px] btn-primary font-black text-sm btn-spring shadow-sm min-h-[48px]">發送至通知中心</button>
                         </div>
                     </div>
                 </div>
 
                 <div class="flex flex-col md:flex-row gap-4">
-                    <button class="flex-1 py-4 rounded-[16px] bg-[var(--surface-color)] border border-[var(--border-color)] font-bold text-sm btn-spring transition-colors duration-300 shadow-sm min-h-[48px] flex items-center justify-center" style="color: var(--accent-primary);" onclick="window.switchView('timetable'); window.toggleTimetableMode(true);"><i class="fas fa-calendar-alt mr-2 opacity-50"></i>編排全校時間表</button>
-                    <button class="flex-1 py-4 rounded-[16px] btn-primary font-black text-sm btn-spring min-h-[48px] flex items-center justify-center" onclick="window.switchView('home'); document.getElementById('task-content').focus();"><i class="fas fa-plus mr-2"></i>發佈新廣播作業</button>
+                    <button class="flex-1 flex justify-center items-center py-4 rounded-[16px] bg-[var(--surface-color)] border border-[var(--border-color)] font-bold text-sm btn-spring transition-colors duration-300 shadow-sm min-h-[48px]" style="color: var(--accent-primary);" onclick="window.switchView('timetable'); window.toggleTimetableMode(true);"><i class="fas fa-calendar-alt mr-2 opacity-50"></i>編排全校時間表</button>
+                    <button class="flex-1 flex justify-center items-center py-4 rounded-[16px] btn-primary font-black text-sm btn-spring min-h-[48px]" onclick="window.switchView('home'); document.getElementById('task-content').focus();"><i class="fas fa-plus mr-2"></i>發佈新廣播作業</button>
                 </div>
                 <div class="ios-card overflow-hidden border border-[var(--border-color)]">
                     <div class="bg-[var(--surface-inset)] px-5 py-4 text-xs font-bold text-[var(--text-secondary)] uppercase tracking-widest border-b border-[var(--border-color)]">已發佈廣播清單</div>
@@ -757,8 +759,8 @@
                         <div class="flex flex-col sm:flex-row gap-4">
                             <input type="text" id="admin-marquee-input" class="flex-1 bg-[var(--surface-inset)] border border-[var(--border-color)] rounded-[12px] px-4 py-3 text-sm font-bold outline-none focus:border-orange-500 min-h-[48px]" placeholder="輸入重要通知，將強制顯示於所有人頂部...">
                             <div class="flex gap-3 shrink-0">
-                                <button onclick="window.publishMarquee()" class="px-6 py-3 rounded-[12px] text-white font-black text-sm btn-spring bg-orange-500 hover:bg-orange-600 min-h-[48px] shadow-sm">發佈</button>
-                                <button onclick="window.clearMarquee()" class="px-6 py-3 rounded-[12px] font-bold text-sm btn-spring bg-[var(--surface-inset)] border border-[var(--border-color)] hover:bg-[var(--border-color)] min-h-[48px]">清空</button>
+                                <button onclick="window.publishMarquee()" class="px-6 flex justify-center items-center py-3 rounded-[12px] text-white font-black text-sm btn-spring bg-orange-500 hover:bg-orange-600 min-h-[48px] shadow-sm">發佈</button>
+                                <button onclick="window.clearMarquee()" class="px-6 flex justify-center items-center py-3 rounded-[12px] font-bold text-sm btn-spring bg-[var(--surface-inset)] border border-[var(--border-color)] hover:bg-[var(--border-color)] min-h-[48px]">清空</button>
                             </div>
                         </div>
                     </div>
@@ -789,7 +791,7 @@
                             <input type="text" id="admin-maint-eta" class="bg-[var(--surface-inset)] border border-[var(--border-color)] rounded-[12px] px-4 py-3 text-sm font-bold outline-none focus:border-indigo-500 min-h-[48px]" placeholder="預計恢復時間 (例如: 12:00)">
                         </div>
                         <textarea id="admin-maint-desc" rows="3" class="bg-[var(--surface-inset)] border border-[var(--border-color)] rounded-[12px] px-4 py-3 text-sm font-bold outline-none focus:border-indigo-500 resize-none w-full" placeholder="維護詳細說明..."></textarea>
-                        <button onclick="window.saveMaintenanceSettings()" class="w-full py-4 rounded-[16px] text-white font-black text-sm btn-spring bg-indigo-600 hover:bg-indigo-700 shadow-sm min-h-[48px]">套用維護設定</button>
+                        <button onclick="window.saveMaintenanceSettings()" class="w-full flex justify-center items-center py-4 rounded-[16px] text-white font-black text-sm btn-spring bg-indigo-600 hover:bg-indigo-700 shadow-sm min-h-[48px]">套用維護設定</button>
                     </div>
                 </div>
 
@@ -802,7 +804,7 @@
                         </div>
                         <div class="flex gap-3 mb-5">
                             <input type="email" id="admin-whitelist-input" class="ios-input bg-[var(--surface-inset)] px-4 rounded-[12px] text-sm min-h-[44px]" placeholder="新增 Email...">
-                            <button onclick="window.addAdminList('whitelist')" class="px-5 rounded-[12px] bg-blue-500 text-white text-xs font-bold btn-spring shrink-0 min-h-[44px]">加入</button>
+                            <button onclick="window.addAdminList('whitelist')" class="px-5 flex justify-center items-center rounded-[12px] bg-blue-500 text-white text-xs font-bold btn-spring shrink-0 min-h-[44px]">加入</button>
                         </div>
                         <div id="admin-whitelist-list" class="max-h-40 overflow-y-auto space-y-2 pr-2"></div>
                     </div>
@@ -814,7 +816,7 @@
                         </div>
                         <div class="flex gap-3 mb-5">
                             <input type="email" id="admin-blacklist-input" class="ios-input bg-[var(--surface-color)] border border-red-500/30 px-4 rounded-[12px] text-sm min-h-[44px]" placeholder="封鎖 Email...">
-                            <button onclick="window.addAdminList('blacklist')" class="px-5 rounded-[12px] bg-red-500 text-white text-xs font-bold btn-spring shrink-0 min-h-[44px]">封鎖</button>
+                            <button onclick="window.addAdminList('blacklist')" class="px-5 flex justify-center items-center rounded-[12px] bg-red-500 text-white text-xs font-bold btn-spring shrink-0 min-h-[44px]">封鎖</button>
                         </div>
                         <div id="admin-blacklist-list" class="max-h-40 overflow-y-auto space-y-2 pr-2"></div>
                     </div>
@@ -873,15 +875,17 @@
 
     <!-- Dashboard Detail Modal -->
     <div id="dashboard-modal" class="modern-modal-overlay fixed inset-0">
-        <div class="modern-modal-content w-full max-w-lg p-6 md:p-8">
-            <div class="flex justify-between items-center mb-6 border-b border-[var(--border-color)] pb-5">
-                <div class="flex items-center gap-4">
-                    <div id="dash-modal-icon" class="w-14 h-14 rounded-full flex items-center justify-center text-2xl shadow-sm"></div>
-                    <h3 id="dash-modal-title" class="text-3xl font-black"></h3>
+        <div class="modern-modal-content w-full max-w-lg p-0 overflow-hidden flex flex-col">
+            <div class="p-6 md:p-8 overflow-y-auto scrollbar-hide flex-1 w-full">
+                <div class="flex justify-between items-center mb-6 border-b border-[var(--border-color)] pb-5">
+                    <div class="flex items-center gap-4">
+                        <div id="dash-modal-icon" class="w-14 h-14 rounded-full flex items-center justify-center text-2xl shadow-sm"></div>
+                        <h3 id="dash-modal-title" class="text-3xl font-black text-[var(--text-primary)] tracking-tight"></h3>
+                    </div>
+                    <button onclick="window.closeModal('dashboard-modal')" class="w-12 h-12 rounded-full bg-[var(--surface-inset)] btn-spring btn-icon-round flex items-center justify-center text-[var(--text-secondary)]"><i class="fas fa-times text-lg"></i></button>
                 </div>
-                <button onclick="window.closeModal('dashboard-modal')" class="w-12 h-12 rounded-full bg-[var(--surface-inset)] btn-spring btn-icon-round flex items-center justify-center text-[var(--text-secondary)]"><i class="fas fa-times text-lg"></i></button>
+                <div id="dash-modal-list" class="task-list-container space-y-5 flex-1 overflow-y-auto pr-2 pb-6"></div>
             </div>
-            <div id="dash-modal-list" class="task-list-container space-y-5 flex-1 overflow-y-auto pr-2"></div>
         </div>
     </div>
     
@@ -895,7 +899,7 @@
                 </div>
                 <button onclick="window.closeModal('notification-modal')" class="w-12 h-12 rounded-full bg-[var(--surface-inset)] btn-spring btn-icon-round flex items-center justify-center text-[var(--text-secondary)]"><i class="fas fa-times text-lg"></i></button>
             </div>
-            <div id="notification-list" class="p-6 space-y-5 overflow-y-auto flex-1 bg-[var(--bg-color)]/50">
+            <div id="notification-list" class="p-6 space-y-5 overflow-y-auto flex-1 bg-[var(--bg-color)]/50 pb-10">
                 <!-- Notifications go here -->
             </div>
         </div>
@@ -904,7 +908,7 @@
     <!-- Edit Task Modal (支援圖片編輯) -->
     <div id="edit-modal" class="modern-modal-overlay fixed inset-0">
         <div class="modern-modal-content w-full max-w-md p-0 overflow-hidden flex flex-col">
-            <div class="p-6 md:p-8 overflow-y-auto scrollbar-hide flex-1 w-full">
+            <div class="p-6 md:p-8 overflow-y-auto scrollbar-hide flex-1 w-full pb-10">
                 <h3 class="text-2xl font-black mb-5 text-[var(--text-primary)] tracking-tight">修改任務</h3>
                 <div class="space-y-4 md:space-y-5">
                     <div>
@@ -949,23 +953,23 @@
     <!-- Edit Subject Modal -->
     <div id="edit-subject-modal" class="modern-modal-overlay fixed inset-0">
         <div class="modern-modal-content w-full max-w-sm p-0 overflow-hidden flex flex-col">
-            <div class="p-8 overflow-y-auto scrollbar-hide flex-1 w-full">
-                <h3 class="text-2xl font-black mb-6">編輯科目</h3>
-                <div class="space-y-6">
+            <div class="p-6 md:p-8 overflow-y-auto scrollbar-hide flex-1 w-full pb-10">
+                <h3 class="text-2xl font-black mb-5 tracking-tight text-[var(--text-primary)]">編輯科目</h3>
+                <div class="space-y-5">
                     <div class="ios-input-group">
-                        <i class="fas fa-pen opacity-40 mr-3 text-lg"></i>
+                        <i class="fas fa-pen opacity-40 mr-3 text-lg text-[var(--text-primary)]"></i>
                         <input type="text" id="edit-sub-name" class="ios-input text-base" placeholder="科目名稱">
                     </div>
-                    <div class="bg-[var(--surface-inset)] p-6 rounded-[16px] border border-[var(--border-color)]">
-                        <p class="text-xs font-bold uppercase tracking-wider mb-4 opacity-60">更換專屬顏色</p>
+                    <div class="bg-[var(--surface-inset)] p-5 rounded-[16px] border border-[var(--border-color)]">
+                        <p class="text-xs font-bold uppercase tracking-wider mb-4 opacity-60 text-[var(--text-secondary)]">更換專屬顏色</p>
                         <div class="flex flex-wrap gap-4" id="edit-subject-color-picker"></div>
                         <input type="hidden" id="edit-sub-color">
                         <input type="hidden" id="edit-sub-id">
                     </div>
                 </div>
                 <div class="flex gap-4 mt-8">
-                    <button onclick="window.closeModal('edit-subject-modal')" class="flex-1 flex justify-center items-center py-4 rounded-[16px] font-bold text-base bg-[var(--surface-inset)] btn-spring text-[var(--text-secondary)] min-h-[52px]">取消</button>
-                    <button onclick="window.saveEditSubject()" class="flex-1 flex justify-center items-center py-4 rounded-[16px] font-black text-base btn-primary btn-spring min-h-[52px]">儲存</button>
+                    <button onclick="window.closeModal('edit-subject-modal')" class="flex-1 flex justify-center items-center py-3.5 rounded-[14px] font-bold text-sm md:text-base bg-[var(--surface-inset)] btn-spring text-[var(--text-secondary)] min-h-[48px]">取消</button>
+                    <button onclick="window.saveEditSubject()" class="flex-1 flex justify-center items-center py-3.5 rounded-[14px] font-black text-sm md:text-base btn-primary btn-spring min-h-[48px]">儲存</button>
                 </div>
             </div>
         </div>
@@ -974,13 +978,13 @@
     <!-- Custom Confirm Dialog -->
     <div id="custom-dialog" class="modern-modal-overlay fixed inset-0">
         <div class="modern-modal-content w-full max-w-sm p-0 overflow-hidden flex flex-col text-center">
-            <div class="p-8 overflow-y-auto scrollbar-hide flex-1 w-full">
-                <div id="dialog-icon" class="w-20 h-20 rounded-full mx-auto flex items-center justify-center text-4xl mb-6"></div>
-                <h3 id="dialog-title" class="text-2xl font-black mb-3 text-[var(--text-primary)]"></h3>
+            <div class="p-6 md:p-8 overflow-y-auto scrollbar-hide flex-1 w-full">
+                <div id="dialog-icon" class="w-16 h-16 rounded-full mx-auto flex items-center justify-center text-3xl mb-5"></div>
+                <h3 id="dialog-title" class="text-xl font-black mb-3 text-[var(--text-primary)]"></h3>
                 <p id="dialog-message" class="text-sm mb-8 opacity-70 leading-relaxed text-[var(--text-secondary)]"></p>
                 <div class="flex gap-4">
-                    <button id="dialog-cancel" class="flex-1 flex justify-center items-center py-4 rounded-[16px] font-bold text-base bg-[var(--surface-inset)] btn-spring hidden min-h-[52px] text-[var(--text-primary)]">取消</button>
-                    <button id="dialog-confirm" class="flex-1 flex justify-center items-center py-4 rounded-[16px] font-black text-base btn-primary btn-spring min-h-[52px]">確認</button>
+                    <button id="dialog-cancel" class="flex-1 flex justify-center items-center py-3.5 rounded-[14px] font-bold text-sm md:text-base bg-[var(--surface-inset)] btn-spring hidden min-h-[48px] text-[var(--text-primary)]">取消</button>
+                    <button id="dialog-confirm" class="flex-1 flex justify-center items-center py-3.5 rounded-[14px] font-black text-sm md:text-base btn-primary btn-spring min-h-[48px]">確認</button>
                 </div>
             </div>
         </div>
@@ -989,20 +993,20 @@
     <!-- Timetable Cell Modal -->
     <div id="tt-cell-modal" class="modern-modal-overlay fixed inset-0">
         <div class="modern-modal-content w-full max-w-sm p-0 overflow-hidden flex flex-col text-center">
-            <div class="p-8 overflow-y-auto scrollbar-hide flex-1 w-full">
-                <h3 class="text-2xl font-black mb-5">填入科目</h3>
+            <div class="p-6 md:p-8 overflow-y-auto scrollbar-hide flex-1 w-full pb-10">
+                <h3 class="text-2xl font-black mb-5 text-[var(--text-primary)] tracking-tight">填入科目</h3>
                 <div class="flex items-center justify-center gap-3 mb-5 bg-[var(--surface-inset)] p-4 rounded-[16px]">
-                    <label class="flex items-center gap-3 cursor-pointer w-full justify-center min-h-[44px]">
-                        <input type="checkbox" id="tt-cell-apply-row" class="w-6 h-6 rounded border-gray-300">
-                        <span class="text-base font-bold text-[var(--text-secondary)]">套用至本列所有日子</span>
+                    <label class="flex items-center gap-3 cursor-pointer w-full justify-center min-h-[36px]">
+                        <input type="checkbox" id="tt-cell-apply-row" class="w-5 h-5 rounded border-gray-300">
+                        <span class="text-sm font-bold text-[var(--text-secondary)]">套用至本列所有日子</span>
                     </label>
                 </div>
-                <div id="tt-cell-chips" class="flex flex-wrap justify-center gap-3 mb-6 max-h-[40vh] overflow-y-auto p-2"></div>
-                <div class="ios-input-group mb-6 min-h-[52px]">
-                    <input type="text" id="tt-cell-custom" class="ios-input text-base" placeholder="自訂內容...">
-                    <button onclick="window.saveTTCellCustom()" class="px-6 py-3 rounded-[12px] font-black text-sm text-white btn-spring transition-colors duration-300 ml-3 min-h-[44px] flex items-center justify-center" style="background-color: var(--accent-primary);">確定</button>
+                <div id="tt-cell-chips" class="flex flex-wrap justify-center gap-3 mb-6 max-h-[35vh] overflow-y-auto p-1"></div>
+                <div class="ios-input-group mb-6 min-h-[48px]">
+                    <input type="text" id="tt-cell-custom" class="ios-input text-sm" placeholder="自訂內容...">
+                    <button onclick="window.saveTTCellCustom()" class="px-5 py-2.5 rounded-[12px] font-black text-xs text-white btn-spring transition-colors duration-300 ml-2 min-h-[36px] flex items-center justify-center" style="background-color: var(--accent-primary);">確定</button>
                 </div>
-                <button onclick="window.closeModal('tt-cell-modal')" class="w-full flex justify-center items-center py-4 rounded-[16px] font-bold text-base bg-[var(--surface-inset)] btn-spring min-h-[52px] text-[var(--text-primary)]">取消</button>
+                <button onclick="window.closeModal('tt-cell-modal')" class="w-full flex justify-center items-center py-3.5 rounded-[14px] font-bold text-sm bg-[var(--surface-inset)] btn-spring min-h-[48px] text-[var(--text-primary)]">取消</button>
             </div>
         </div>
     </div>
@@ -1011,81 +1015,79 @@
     <div id="user-details-modal" class="modern-modal-overlay fixed inset-0">
         <div class="modern-modal-content w-full max-w-md p-0 relative overflow-hidden">
             <div class="absolute top-0 left-0 w-full h-32 transition-colors duration-300 pointer-events-none" style="background-color: var(--accent-10);"></div>
-            <button onclick="window.closeModal('user-details-modal')" class="absolute top-5 right-5 w-12 h-12 flex items-center justify-center rounded-full bg-[var(--surface-color)] shadow-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] btn-spring btn-icon-round z-50"><i class="fas fa-times text-lg"></i></button>
+            <button onclick="window.closeModal('user-details-modal')" class="absolute top-5 right-5 w-10 h-10 flex items-center justify-center rounded-full bg-[var(--surface-color)] shadow-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] btn-spring btn-icon-round z-50"><i class="fas fa-times text-sm"></i></button>
             
-            <div class="relative z-10 pt-16 pb-8 px-8">
-                <div class="flex items-center gap-5 mb-8 border-b border-[var(--border-color)] pb-8">
-                    <img id="modal-user-avatar" src="" class="w-24 h-24 rounded-full object-cover shadow-sm border-[4px] border-[var(--surface-color)] bg-[var(--surface-color)]">
-                    <div>
-                        <h3 id="modal-user-name" class="text-2xl font-black mb-2"></h3>
-                        <p id="modal-user-email" class="text-sm font-bold opacity-50 mb-3"></p>
-                        <span id="modal-user-status" class="px-4 py-1.5 rounded-[10px] text-xs font-black tracking-wider"></span>
+            <div class="relative z-10 pt-16 pb-8 px-6 md:px-8 overflow-y-auto max-h-[85vh]">
+                <div class="flex items-center gap-4 mb-6 border-b border-[var(--border-color)] pb-6">
+                    <img id="modal-user-avatar" src="" class="w-20 h-20 rounded-full object-cover shadow-sm border-[4px] border-[var(--surface-color)] bg-[var(--surface-color)]">
+                    <div class="min-w-0">
+                        <h3 id="modal-user-name" class="text-xl font-black mb-1 truncate text-[var(--text-primary)]"></h3>
+                        <p id="modal-user-email" class="text-xs font-bold opacity-50 mb-2 truncate text-[var(--text-secondary)]"></p>
+                        <span id="modal-user-status" class="px-3 py-1 rounded-[8px] text-[10px] font-black tracking-wider inline-block"></span>
                     </div>
                 </div>
-                <div class="flex gap-5 mb-8 text-center">
-                    <div class="flex-1 p-5 rounded-[20px] bg-[var(--surface-inset)]"><h4 id="modal-user-pending" class="text-4xl font-black mb-2 text-orange-500">0</h4><p class="text-xs font-bold opacity-50 tracking-widest text-[var(--text-secondary)]">待處理</p></div>
-                    <div class="flex-1 p-5 rounded-[20px] bg-[var(--surface-inset)]"><h4 id="modal-user-completed" class="text-4xl font-black mb-2 text-green-500">0</h4><p class="text-xs font-bold opacity-50 tracking-widest text-[var(--text-secondary)]">已完成</p></div>
+                <div class="flex gap-4 mb-6 text-center">
+                    <div class="flex-1 p-4 rounded-[16px] bg-[var(--surface-inset)]"><h4 id="modal-user-pending" class="text-3xl font-black mb-1 text-orange-500">0</h4><p class="text-[10px] font-bold opacity-50 tracking-widest text-[var(--text-secondary)]">待處理</p></div>
+                    <div class="flex-1 p-4 rounded-[16px] bg-[var(--surface-inset)]"><h4 id="modal-user-completed" class="text-3xl font-black mb-1 text-green-500">0</h4><p class="text-[10px] font-bold opacity-50 tracking-widest text-[var(--text-secondary)]">已完成</p></div>
                 </div>
-                <div class="flex flex-col gap-4">
-                    <button id="modal-btn-block" class="w-full flex justify-center items-center py-5 rounded-[16px] font-black text-base text-[var(--danger-color)] bg-[var(--danger-10)] btn-spring hidden hover:bg-[var(--danger-color)] hover:text-white transition-colors min-h-[56px]"><i class="fas fa-ban mr-3"></i>封鎖帳戶</button>
-                    <button id="modal-btn-unblock" class="w-full flex justify-center items-center py-5 rounded-[16px] font-black text-base text-green-600 bg-green-500/10 btn-spring hidden hover:bg-green-500 hover:text-white transition-colors min-h-[56px]"><i class="fas fa-unlock mr-3"></i>解除封鎖</button>
-                    <!-- 補回遺失的清空按鈕 -->
-                    <button id="modal-btn-wipe" class="w-full flex justify-center items-center py-5 rounded-[16px] font-black text-base text-orange-600 bg-orange-500/10 btn-spring hidden hover:bg-orange-500 hover:text-white transition-colors min-h-[56px]"><i class="fas fa-eraser mr-3"></i>清空該生所有資料</button>
+                <div class="flex flex-col gap-3">
+                    <button id="modal-btn-block" class="w-full flex justify-center items-center py-4 rounded-[16px] font-black text-sm text-[var(--danger-color)] bg-[var(--danger-10)] btn-spring hidden hover:bg-[var(--danger-color)] hover:text-white transition-colors min-h-[48px]"><i class="fas fa-ban mr-2"></i>封鎖帳戶</button>
+                    <button id="modal-btn-unblock" class="w-full flex justify-center items-center py-4 rounded-[16px] font-black text-sm text-green-600 bg-green-500/10 btn-spring hidden hover:bg-green-500 hover:text-white transition-colors min-h-[48px]"><i class="fas fa-unlock mr-2"></i>解除封鎖</button>
+                    <button id="modal-btn-wipe" class="w-full flex justify-center items-center py-4 rounded-[16px] font-black text-sm text-orange-600 bg-orange-500/10 btn-spring hidden hover:bg-orange-500 hover:text-white transition-colors min-h-[48px]"><i class="fas fa-eraser mr-2"></i>清空該生所有資料</button>
                 </div>
             </div>
             <input type="hidden" id="modal-user-email-hidden">
-            <!-- 補回遺失的 UID 隱藏欄位 -->
             <input type="hidden" id="modal-user-uid-hidden">
         </div>
     </div>
 
     <!-- Profile Modal -->
     <div id="profile-modal" class="modern-modal-overlay fixed inset-0">
-        <div class="modern-modal-content w-full max-w-[360px] p-0 text-center relative overflow-hidden">
-            <div class="absolute top-0 left-0 w-full h-32 transition-colors duration-300 pointer-events-none" style="background-color: var(--accent-10);"></div>
-            <button onclick="window.closeModal('profile-modal')" class="absolute top-5 right-5 w-12 h-12 flex items-center justify-center rounded-full bg-[var(--surface-color)] shadow-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] btn-spring btn-icon-round z-50"><i class="fas fa-times text-lg"></i></button>
+        <div class="modern-modal-content w-full max-w-[320px] p-0 text-center relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-24 transition-colors duration-300 pointer-events-none" style="background-color: var(--accent-10);"></div>
+            <button onclick="window.closeModal('profile-modal')" class="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full bg-[var(--surface-color)] shadow-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] btn-spring btn-icon-round z-50"><i class="fas fa-times text-sm"></i></button>
             
-            <div class="relative z-10 pt-16 pb-8 px-8">
-                <img id="profile-modal-avatar" src="" class="w-32 h-32 rounded-full mx-auto mb-5 object-cover shadow-lg border-[6px] border-[var(--surface-color)] bg-[var(--surface-color)]">
-                <h3 id="profile-modal-name" class="text-3xl font-black mb-2 transition-colors duration-300" style="color: var(--accent-primary);"></h3>
-                <p id="profile-modal-email" class="text-sm font-bold opacity-50 mb-5"></p>
-                <div id="profile-modal-role" class="mb-8 inline-block px-5 py-2 rounded-full text-xs font-black tracking-widest uppercase transition-colors duration-300" style="color: var(--accent-primary); background-color: var(--accent-10);"></div>
+            <div class="relative z-10 pt-12 pb-6 px-6">
+                <img id="profile-modal-avatar" src="" class="w-24 h-24 rounded-full mx-auto mb-4 object-cover shadow-lg border-[4px] border-[var(--surface-color)] bg-[var(--surface-color)]">
+                <h3 id="profile-modal-name" class="text-2xl font-black mb-1 transition-colors duration-300 truncate px-2" style="color: var(--accent-primary);"></h3>
+                <p id="profile-modal-email" class="text-xs font-bold opacity-50 mb-4 truncate text-[var(--text-secondary)]"></p>
+                <div id="profile-modal-role" class="mb-6 inline-block px-4 py-1.5 rounded-full text-[10px] font-black tracking-widest uppercase transition-colors duration-300" style="color: var(--accent-primary); background-color: var(--accent-10);"></div>
                 
-                <button onclick="window.handleLogout()" class="w-full flex justify-center items-center py-5 rounded-[16px] font-black text-base text-[var(--danger-color)] btn-spring transition-colors min-h-[56px]" style="background-color: var(--danger-10);">安全登出</button>
+                <button onclick="window.handleLogout()" class="w-full flex justify-center items-center py-4 rounded-[14px] font-black text-sm text-[var(--danger-color)] btn-spring transition-colors min-h-[48px]" style="background-color: var(--danger-10);">安全登出</button>
             </div>
         </div>
     </div>
 
     <!-- 維護模式畫面 -->
-    <div id="maintenance-screen" class="fixed inset-0 z-[1000] hidden flex-col items-center justify-center p-8 text-center backdrop-blur-2xl bg-[var(--bg-color)]/95">
-        <div class="w-28 h-28 rounded-full bg-[var(--surface-color)] flex items-center justify-center mb-8 shadow-xl border border-[var(--border-color)]">
-            <i id="maint-screen-icon" class="fas fa-tools text-6xl text-indigo-500 animate-bounce"></i>
+    <div id="maintenance-screen" class="fixed inset-0 z-[1000] hidden flex-col items-center justify-center p-6 text-center backdrop-blur-2xl bg-[var(--bg-color)]/95">
+        <div class="w-24 h-24 rounded-full bg-[var(--surface-color)] flex items-center justify-center mb-6 shadow-xl border border-[var(--border-color)]">
+            <i id="maint-screen-icon" class="fas fa-tools text-5xl text-indigo-500 animate-bounce"></i>
         </div>
-        <h2 id="maint-screen-title" class="text-4xl font-black mb-4 tracking-tight">系統維護中</h2>
-        <div class="bg-[var(--surface-color)] px-6 py-3 rounded-full shadow-sm mb-6 border border-[var(--border-color)]">
-            <span class="text-base font-black text-indigo-500"><i class="fas fa-clock mr-2"></i>預計恢復: <span id="maint-screen-eta">稍後</span></span>
+        <h2 id="maint-screen-title" class="text-3xl font-black mb-3 tracking-tight text-[var(--text-primary)]">系統維護中</h2>
+        <div class="bg-[var(--surface-color)] px-5 py-2 rounded-full shadow-sm mb-5 border border-[var(--border-color)]">
+            <span class="text-sm font-black text-indigo-500"><i class="fas fa-clock mr-2"></i>預計恢復: <span id="maint-screen-eta">稍後</span></span>
         </div>
-        <p id="maint-screen-desc" class="text-base font-bold opacity-70 max-w-lg mb-12 leading-relaxed whitespace-pre-line text-[var(--text-primary)]">管理員正在進行系統升級或資料整理，為確保資料安全，目前暫停存取。請稍後再試。</p>
+        <p id="maint-screen-desc" class="text-sm font-bold opacity-70 max-w-md mb-10 leading-relaxed whitespace-pre-line text-[var(--text-secondary)]">管理員正在進行系統升級或資料整理，為確保資料安全，目前暫停存取。請稍後再試。</p>
         
-        <button onclick="window.loginGoogle(this)" class="px-10 flex justify-center items-center py-5 rounded-[16px] font-black text-base text-white shadow-lg btn-spring transition-colors duration-300 flex items-center bg-indigo-600 hover:bg-indigo-700 min-h-[56px]">
-            <i class="fas fa-shield-alt mr-3 opacity-80 text-xl"></i> 管理員登入
+        <button onclick="window.loginGoogle(this)" class="px-8 flex justify-center items-center py-4 rounded-[16px] font-black text-sm text-white shadow-lg btn-spring transition-colors duration-300 flex items-center bg-indigo-600 hover:bg-indigo-700 min-h-[48px]">
+            <i class="fas fa-shield-alt mr-2 opacity-80 text-lg"></i> 管理員登入
         </button>
-        <button onclick="window.handleLogout()" class="mt-8 text-base flex justify-center items-center font-bold opacity-40 hover:opacity-100 transition-opacity btn-spring min-h-[44px]">切換帳號</button>
+        <button onclick="window.handleLogout()" class="mt-6 text-sm flex justify-center items-center font-bold opacity-40 hover:opacity-100 transition-opacity btn-spring min-h-[44px] text-[var(--text-primary)]">切換帳號</button>
     </div>
 
     <!-- 帳號停權畫面 -->
-    <div id="suspended-screen" class="fixed inset-0 z-[1000] hidden flex-col items-center justify-center p-8 text-center backdrop-blur-2xl bg-[var(--bg-color)]/95">
-        <div class="w-28 h-28 rounded-full bg-red-500/10 flex items-center justify-center mb-8 shadow-inner"><i class="fas fa-ban text-6xl text-red-500"></i></div>
-        <h2 class="text-4xl font-black mb-4 tracking-tight text-red-500">帳號已被停權</h2>
-        <p class="text-base font-bold opacity-60 max-w-md mb-12 leading-relaxed text-[var(--text-primary)]">你的帳戶已被管理員列入黑名單，無法存取 E-Handbook (EHB) 系統資源。如有疑問，請聯繫校方或系統管理員。</p>
-        <button onclick="window.handleLogout()" class="px-10 flex justify-center items-center py-5 rounded-[16px] font-black text-base text-red-500 bg-red-500/10 shadow-sm btn-spring transition-colors hover:bg-red-500 hover:text-white flex items-center min-h-[56px]"><i class="fas fa-sign-out-alt mr-3 opacity-70"></i> 登出系統</button>
+    <div id="suspended-screen" class="fixed inset-0 z-[1000] hidden flex-col items-center justify-center p-6 text-center backdrop-blur-2xl bg-[var(--bg-color)]/95">
+        <div class="w-24 h-24 rounded-full bg-red-500/10 flex items-center justify-center mb-6 shadow-inner"><i class="fas fa-ban text-5xl text-red-500"></i></div>
+        <h2 class="text-3xl font-black mb-3 tracking-tight text-red-500">帳號已被停權</h2>
+        <p class="text-sm font-bold opacity-60 max-w-sm mb-10 leading-relaxed text-[var(--text-primary)]">你的帳戶已被管理員列入黑名單，無法存取 E-Handbook (EHB) 系統資源。如有疑問，請聯繫校方或系統管理員。</p>
+        <button onclick="window.handleLogout()" class="px-8 flex justify-center items-center py-4 rounded-[16px] font-black text-sm text-red-500 bg-red-500/10 shadow-sm btn-spring transition-colors hover:bg-red-500 hover:text-white flex items-center min-h-[48px]"><i class="fas fa-sign-out-alt mr-2 opacity-70"></i> 登出系統</button>
     </div>
 
     <!-- Lightbox Modal (圖片放大檢視) -->
     <div id="lightbox-modal" class="modern-modal-overlay fixed inset-0 z-[2000]" onclick="window.closeModal('lightbox-modal')">
         <div class="modern-modal-content flex items-center justify-center w-full h-full p-4" onclick="event.stopPropagation()">
             <img id="lightbox-img" src="" alt="Full View" class="w-auto h-auto">
-            <button onclick="window.closeModal('lightbox-modal')" class="absolute top-6 right-6 w-12 h-12 bg-black/60 text-white rounded-full flex items-center justify-center backdrop-blur-md btn-spring btn-icon-round hover:bg-red-500 transition-colors z-50 shadow-xl"><i class="fas fa-times text-xl"></i></button>
+            <button onclick="window.closeModal('lightbox-modal')" class="absolute top-6 right-6 w-10 h-10 bg-black/60 text-white rounded-full flex items-center justify-center backdrop-blur-md btn-spring btn-icon-round hover:bg-red-500 transition-colors z-50 shadow-xl"><i class="fas fa-times text-lg"></i></button>
         </div>
     </div>
 
@@ -1094,7 +1096,6 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, signInAnonymously, onAuthStateChanged, signOut, signInWithCustomToken, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        // 補上 getDocs 的引入以支援批次刪除
         import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, query, onSnapshot, addDoc, deleteDoc, doc, setDoc, updateDoc, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 
@@ -1235,13 +1236,13 @@
                 iconEl.className = 'w-16 h-16 rounded-full mx-auto flex items-center justify-center text-3xl mb-5 text-[var(--danger-color)]'; 
                 iconEl.style.backgroundColor = 'var(--danger-10)'; 
                 iconEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i>'; 
-                confirmBtn.className = 'flex-1 flex justify-center items-center py-4 rounded-[16px] font-black text-base text-white btn-spring shadow-md min-h-[52px]'; 
+                confirmBtn.className = 'flex-1 flex justify-center items-center py-3.5 rounded-[14px] font-black text-sm md:text-base text-white btn-spring shadow-md min-h-[48px]'; 
                 confirmBtn.style.background = 'var(--danger-color)'; 
             } else { 
                 iconEl.className = 'w-16 h-16 rounded-full mx-auto flex items-center justify-center text-3xl mb-5 text-[var(--accent-primary)]'; 
                 iconEl.style.backgroundColor = 'var(--accent-10)'; 
                 iconEl.innerHTML = '<i class="fas fa-question"></i>'; 
-                confirmBtn.className = 'flex-1 flex justify-center items-center py-4 rounded-[16px] font-black text-base btn-primary btn-spring min-h-[52px]'; 
+                confirmBtn.className = 'flex-1 flex justify-center items-center py-3.5 rounded-[14px] font-black text-sm md:text-base btn-primary btn-spring min-h-[48px]'; 
                 confirmBtn.style.background = ''; 
             }
             confirmBtn.onclick = () => { overlay.classList.remove('active'); onConfirm(); }; cancelBtn.onclick = () => { overlay.classList.remove('active'); }; overlay.classList.add('active');
@@ -1519,7 +1520,7 @@
                         window.showToast("任務儲存失敗");
                     } finally {
                         btn.disabled = false; 
-                        btn.innerText = '新增項目'; 
+                        btn.innerHTML = '新增項目'; 
                     }
                 };
             }
@@ -1542,7 +1543,7 @@
 
         window.completeTask = function(id, isPub, el) { 
             const task = allTasks.find(t => t.id === id); if(!task) return; suspendRenderUntil = Date.now() + 500; 
-            if(el) { const card = el.closest('.ios-card'); if(card) { card.style.transition = 'all 0.3s var(--spring)'; card.style.transform = 'scale(0.9)'; card.style.opacity = '0'; setTimeout(() => { if(card.parentNode) card.remove(); window.updateDashboardCounts(); }, 300); } }
+            if(el) { const card = el.closest('.ios-card') || el.closest('.group'); if(card) { card.style.transition = 'all 0.3s var(--spring)'; card.style.transform = 'scale(0.9)'; card.style.opacity = '0'; setTimeout(() => { if(card.parentNode) card.remove(); window.updateDashboardCounts(); }, 300); } }
             
             addDoc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'history'), { ...task, originalTaskId: task.id, completedAt: new Date().toISOString() })
             .then(() => {
@@ -1571,11 +1572,10 @@
         window.deleteTask = function(id, isPub, el) { 
             window.customConfirm('刪除', '確定刪除嗎？這將無法復原。', 'danger', () => { 
                 suspendRenderUntil = Date.now() + 500; 
-                if(el) { const card = el.closest('.ios-card'); if(card) { card.style.transition = 'all 0.3s var(--spring)'; card.style.transform = 'scale(0.9)'; card.style.opacity = '0'; setTimeout(() => { if(card.parentNode) card.remove(); window.updateDashboardCounts(); }, 300); } }
+                if(el) { const card = el.closest('.ios-card') || el.closest('.group'); if(card) { card.style.transition = 'all 0.3s var(--spring)'; card.style.transform = 'scale(0.9)'; card.style.opacity = '0'; setTimeout(() => { if(card.parentNode) card.remove(); window.updateDashboardCounts(); }, 300); } }
                 
                 const task = allTasks.find(t => t.id === id);
                 if (task && task.imageUrl && !task.imageUrl.startsWith('data:image')) {
-                    // 非同步刪除雲端圖片，不阻擋 UI 流程
                     try { const imgRef = ref(storage, task.imageUrl); deleteObject(imgRef).catch(()=>{}); } catch(e){}
                 }
 
@@ -1594,7 +1594,7 @@
         window.deleteHistoryTask = function(id, el) { 
             window.customConfirm('清除', '確定刪除此紀錄嗎？', 'danger', () => { 
                 suspendRenderUntil = Date.now() + 500; 
-                if(el) { const card = el.closest('.ios-card'); if(card) { card.style.transition = 'all 0.3s var(--spring)'; card.style.transform = 'scale(0.9)'; card.style.opacity = '0'; setTimeout(() => { if(card.parentNode) card.remove(); }, 300); } }
+                if(el) { const card = el.closest('.ios-card') || el.closest('.group'); if(card) { card.style.transition = 'all 0.3s var(--spring)'; card.style.transform = 'scale(0.9)'; card.style.opacity = '0'; setTimeout(() => { if(card.parentNode) card.remove(); }, 300); } }
                 
                 const task = historyTasks.find(t => t.id === id);
                 if (task && task.imageUrl && !task.isPublic && !task.imageUrl.startsWith('data:image')) {
@@ -1750,7 +1750,6 @@
             const subColor = (userSettings.subjects.find(s=>s.name===task.subject)||{}).color||'var(--accent-primary)';
             const due = new Date(task.dueDate); due.setHours(0,0,0,0); const todayDate = new Date(); todayDate.setHours(0,0,0,0); const diffDays = Math.round((due - todayDate) / (1000 * 60 * 60 * 24));
             
-            // 極簡標籤設計
             let badgeHtml = '';
             if (diffDays < 0) badgeHtml = `<span class="text-[var(--danger-color)] bg-[var(--danger-10)] px-2 py-0.5 rounded-[6px] text-[10px] font-black tracking-wider flex items-center gap-1">過期 ${Math.abs(diffDays)} 日</span>`;
             else if (diffDays === 0) badgeHtml = `<span class="text-[#d48806] bg-[#FFDFBA] px-2 py-0.5 rounded-[6px] text-[10px] font-black animate-pulse tracking-wider flex items-center gap-1">今天交</span>`;
@@ -1759,14 +1758,11 @@
 
             let contentHtml = task.content.replace(/\n/g, '<br>');
             
-            // 優雅的文字連結
             let urlBtnHtml = task.url ? `<a href="${task.url}" target="_blank" class="flex items-center gap-1.5 transition-colors hover:text-[var(--accent-primary)] truncate max-w-[150px] md:max-w-[200px]" style="color: var(--accent-primary);"><i class="fas fa-link text-[12px]"></i> <span class="truncate underline underline-offset-2">${task.url.replace(/^https?:\/\//,'')}</span></a>` : '';
 
-            // 乾淨的圖片預覽框
             let imgHtml = task.imageUrl ? `<div class="mt-3 mb-1 overflow-hidden rounded-[12px] border border-[var(--border-color)] shadow-[0_2px_8px_rgba(0,0,0,0.04)] relative z-10"><img src="${task.imageUrl}" onclick="window.openLightbox('${task.imageUrl}')" class="w-full h-36 object-cover cursor-pointer hover:scale-105 transition-transform duration-300 origin-center" alt="作業附圖"></div>` : '';
 
             let div = document.createElement('div'); 
-            // 高級質感的卡片主體
             div.className = `group bg-[var(--surface-color)] border border-[var(--border-color)] rounded-[20px] p-4 md:p-5 shadow-[0_2px_10px_rgba(0,0,0,0.02)] transition-all duration-300 hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:-translate-y-1 relative overflow-hidden flex gap-3 md:gap-4`; 
             
             div.innerHTML = `
@@ -1787,7 +1783,7 @@
                 <div class="flex-1 min-w-0 relative z-10">
                     <div class="flex items-start justify-between gap-3 mb-1.5">
                         <!-- 標籤區：預留右側空間 pr-16 避免與按鈕重疊 -->
-                        <div class="flex items-center gap-2 flex-wrap pr-16">
+                        <div class="flex items-center gap-2 flex-wrap pr-16 md:pr-20">
                             <span class="flex items-center gap-1.5 text-[11px] md:text-xs font-black tracking-widest uppercase" style="color: ${subColor};">
                                 <span class="w-1.5 h-1.5 rounded-full" style="background-color: ${subColor};"></span>
                                 ${task.subject}
@@ -2392,7 +2388,6 @@
                             </div>
                             <p class="text-[15px] md:text-base font-bold text-[var(--text-primary)] leading-relaxed break-words pr-20">${task.content}</p>
                         </div>
-                        <!-- 新增：廣播專屬的編輯與刪除按鈕區塊 -->
                         <div class="flex flex-col md:flex-row items-center gap-2 shrink-0">
                             <button onclick="window.openEditModal('${task.id}', true)" class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors opacity-100 md:opacity-0 group-hover:opacity-100 text-[var(--text-secondary)] hover:text-[var(--accent-primary)] hover:bg-[var(--accent-10)]" title="編輯廣播">
                                 <i class="fas fa-pen text-[13px]"></i>
@@ -2447,7 +2442,8 @@
         window.openUserModal = function(uid) {
             const user = adminUsersList.find(u => u.uid === uid); if(!user) return;
             document.getElementById('modal-user-avatar').src = user.avatar; document.getElementById('modal-user-name').innerText = user.name;
-            document.getElementById('modal-user-email').innerText = user.email; document.getElementById('modal-user-email-hidden').value = user.email;
+            document.getElementById('modal-user-email').innerText = user.email; 
+            document.getElementById('modal-user-email-hidden').value = user.email;
             
             const uidInput = document.getElementById('modal-user-uid-hidden'); if(uidInput) uidInput.value = uid;
             
@@ -2463,7 +2459,6 @@
         document.getElementById('modal-btn-block').onclick = () => { const email = document.getElementById('modal-user-email-hidden').value; if(!adminConfig.blacklist) adminConfig.blacklist = []; if(!adminConfig.blacklist.includes(email)) { adminConfig.blacklist.push(email); window.saveAdminConfig(); window.logAdminAction('封鎖用戶', email); window.showToast('已封鎖帳戶'); window.closeModal('user-details-modal'); } };
         document.getElementById('modal-btn-unblock').onclick = () => { const email = document.getElementById('modal-user-email-hidden').value; if(!adminConfig.blacklist) return; adminConfig.blacklist = adminConfig.blacklist.filter(e => e !== email); window.saveAdminConfig(); window.logAdminAction('解封用戶', email); window.showToast('已解除封鎖'); window.closeModal('user-details-modal'); };
 
-        // 使用安全保護的監聽器綁定
         const btnWipe = document.getElementById('modal-btn-wipe');
         if(btnWipe) {
             btnWipe.onclick = async () => {
@@ -2500,7 +2495,6 @@
             };
         }
 
-        // 補回遺失的推播通知發送功能
         window.sendCustomNotification = function() {
             if(!isAdmin) return;
             const titleInput = document.getElementById('admin-notif-title');
@@ -2572,14 +2566,10 @@
             window.selectMaintMode(adminConfig.maintMode || 'normal');
         };
 
-        // ==========================================
-        // 新增/升級: 跑馬燈與維護模式 (Optimistic UI)
-        // ==========================================
         window.publishMarquee = function() { 
             const txt = document.getElementById('admin-marquee-input').value.trim(); 
             if(!txt) return window.showToast('請輸入公告');
             
-            // Optimistic UI Update
             adminConfig.marquee = txt; 
             sessionStorage.removeItem(`dismissedMarquee_${appId}`);
             window.applySystemConfig(adminConfig);
@@ -2593,7 +2583,6 @@
         window.clearMarquee = function() { 
             const input = document.getElementById('admin-marquee-input'); if(input) input.value = ''; 
             
-            // Optimistic UI Update
             adminConfig.marquee = ''; 
             window.applySystemConfig(adminConfig);
             
@@ -2623,7 +2612,6 @@
             
             const isMaintenance = (mode !== 'normal');
 
-            // Optimistic UI Update
             adminConfig.maintenance = isMaintenance;
             adminConfig.maintMode = mode;
             adminConfig.maintTitle = title;
@@ -2641,7 +2629,6 @@
         window.applySystemConfig = function(configData) {
             adminConfig = { ...adminConfig, ...configData };
             
-            // Apply Marquee (Check dismissal state)
             const mqCont = document.getElementById('global-marquee-container'); const mqTxt = document.getElementById('global-marquee-text');
             const dismissedText = sessionStorage.getItem(`dismissedMarquee_${appId}`);
             if (adminConfig.marquee && adminConfig.marquee.trim() !== '' && adminConfig.marquee !== dismissedText) { 
@@ -2651,7 +2638,6 @@
                 if(mqCont) mqCont.classList.add('hidden'); 
             }
             
-            // Apply Maintenance UI
             const maintScreen = document.getElementById('maintenance-screen');
             const suspendedScreen = document.getElementById('suspended-screen');
             
@@ -2666,7 +2652,6 @@
                 else { iconEl.className = 'fas fa-tools text-5xl text-indigo-500 animate-bounce'; }
             }
             
-            // Access Control Logic
             if (currentUser && !isAdmin) {
                 const userEmail = currentUser.email || '';
                 
