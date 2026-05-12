@@ -1550,6 +1550,10 @@
 
         window.completeTask = function(id, isPub, el) { 
             const task = allTasks.find(t => t.id === id); if(!task) return; suspendRenderUntil = Date.now() + 300; 
+            
+            // 立即從本地端 allTasks 中移除，讓篩選器與儀表板即時反應
+            allTasks = allTasks.filter(t => t.id !== id);
+            
             if(el) { const card = el.closest('.ios-card'); if(card) { card.style.transition = 'all 0.3s var(--spring)'; card.style.transform = 'scale(0.9)'; card.style.opacity = '0'; setTimeout(() => { if(card.parentNode) card.remove(); window.updateDashboardCounts(); window.updateSmartFilters(); }, 300); } }
             
             addDoc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'history'), { ...task, originalTaskId: task.id, completedAt: new Date().toISOString() })
@@ -1579,9 +1583,13 @@
         window.deleteTask = function(id, isPub, el) { 
             window.customConfirm('刪除', '確定刪除嗎？這將無法復原。', 'danger', () => { 
                 suspendRenderUntil = Date.now() + 300; 
+                
+                // 立即從本地端 allTasks 中移除
+                allTasks = allTasks.filter(t => t.id !== id);
+                
                 if(el) { const card = el.closest('.ios-card'); if(card) { card.style.transition = 'all 0.3s var(--spring)'; card.style.transform = 'scale(0.9)'; card.style.opacity = '0'; setTimeout(() => { if(card.parentNode) card.remove(); window.updateDashboardCounts(); window.updateSmartFilters(); }, 300); } }
                 
-                const task = allTasks.find(t => t.id === id);
+                const task = allTasks.find(t => t.id === id) || historyTasks.find(t => t.id === id); // 防止有時找不到導致報錯
                 if (task && task.imageUrl && !task.imageUrl.startsWith('data:image')) {
                     if (!isPub || (isPub && isAdmin)) {
                         try { const imgRef = ref(storage, task.imageUrl); deleteObject(imgRef).catch(()=>{}); } catch(e){}
@@ -1592,7 +1600,9 @@
                     if (isAdmin) {
                         deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'assignments', id)).then(() => { window.showToast("廣播已刪除"); }).catch(e => {}); 
                     } else {
-                        if(task) { addDoc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'history'), { ...task, originalTaskId: task.id, completedAt: new Date().toISOString(), isIgnored: true }).then(() => { window.showToast("已從清單移除"); }); }
+                        // 若為一般用戶，需要虛擬構造 task 資訊記錄忽略
+                        const taskToIgnore = allTasks.find(t => t.id === id) || { id: id };
+                        if(taskToIgnore) { addDoc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'history'), { ...taskToIgnore, originalTaskId: id, completedAt: new Date().toISOString(), isIgnored: true }).then(() => { window.showToast("已從清單移除"); }); }
                     }
                 } else {
                     deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'assignments', id)).then(() => { window.showToast("已刪除"); }).catch(e => {}); 
