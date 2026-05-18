@@ -1171,13 +1171,26 @@
             };
 
             const handleAdminDeleteItem = async (itemId) => {
-                if (!selectedUser) return;
-                triggerConfirm("確定要刪除此條紀錄嗎？", async () => {
-                    try {
-                        await deleteDoc(doc(db, "users", selectedUser.uid, "items", itemId));
-                    } catch(e) { triggerAlert("刪除失敗"); }
-                });
-            };
+    if (!selectedUser) return;
+    
+    // 1. 先喺該學生嘅清單中搵返呢個項目出嚟
+    const targetItem = userHomeworks.find(i => i.id === itemId);
+    if (!targetItem) return;
+
+    triggerConfirm("確定要刪除此條紀錄嗎？", async () => {
+        try {
+            if (targetItem.publicRefId) {
+                // 2A. 如果係廣播功課，幫學生做 Soft Delete (隱藏)
+                await updateDoc(doc(db, "users", selectedUser.uid, "items", itemId), { isHidden: true });
+            } else {
+                // 2B. 如果係學生私人功課，直接徹底刪除
+                await deleteDoc(doc(db, "users", selectedUser.uid, "items", itemId));
+            }
+        } catch(e) { 
+            triggerAlert("刪除失敗"); 
+        }
+    });
+};
 
             const handleDeletePublicTask = (taskId) => {
                 triggerConfirm("確定要撤回這份廣播功課嗎？這會同時從所有同學的清單中移除。", async () => {
@@ -1885,7 +1898,7 @@ useEffect(() => {
                             try {
                                 const publicData = change.doc.data(); const publicId = change.doc.id; 
                                 const target = publicData.targetClass || '全校';
-                                const isForMe = isAdmin || target === '全校' || currentClasses.includes(target); 
+                                const isForMe = target === '全校' || currentClasses.includes(target); 
 
                                 if (change.type === "added" && isForMe) { 
                                     // 只有當本機的現有項目中「沒有」這個廣播 ID 時，才觸發寫入，省去大量 getDocs 消耗
