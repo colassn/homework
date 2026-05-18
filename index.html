@@ -2010,9 +2010,17 @@ useEffect(() => {
                 triggerConfirm(`確定要一鍵清理 ${expiredItems.length} 個過期項目嗎？`, async () => {
                     try {
                         const batch = writeBatch(db);
-                        expiredItems.forEach(item => batch.delete(doc(db, "users", user.uid, "items", item.id)));
+                        expiredItems.forEach(item => {
+                            if (item.publicRefId) {
+                                // 廣播功課：軟刪除 (收入櫃桶底，隱藏)
+                                batch.update(doc(db, "users", user.uid, "items", item.id), { isHidden: true });
+                            } else {
+                                // 學生自己新增嘅功課：徹底丟入碎紙機刪除
+                                batch.delete(doc(db, "users", user.uid, "items", item.id));
+                            }
+                        });
                         await batch.commit();
-                        triggerAlert(`成功刪除了 ${expiredItems.length} 個過期項目！`);
+                        triggerAlert(`成功清理了 ${expiredItems.length} 個過期項目！`);
                     } catch(e) {
                         triggerAlert("清理過程發生錯誤");
                     }
@@ -2032,9 +2040,17 @@ useEffect(() => {
                 triggerConfirm(`確定要一鍵清理全部 ${completedItems.length} 個歷史紀錄嗎？（此操作無法復原）`, async () => {
                     try {
                         const batch = writeBatch(db);
-                        completedItems.forEach(item => batch.delete(doc(db, "users", user.uid, "items", item.id)));
+                        completedItems.forEach(item => {
+                            if (item.publicRefId) {
+                                // 廣播功課：軟刪除 (收入櫃桶底，隱藏)
+                                batch.update(doc(db, "users", user.uid, "items", item.id), { isHidden: true });
+                            } else {
+                                // 學生自己新增嘅功課：徹底丟入碎紙機刪除
+                                batch.delete(doc(db, "users", user.uid, "items", item.id));
+                            }
+                        });
                         await batch.commit();
-                        triggerAlert(`成功刪除了 ${completedItems.length} 個歷史紀錄！`);
+                        triggerAlert(`成功清理了 ${completedItems.length} 個歷史紀錄！`);
                     } catch(e) {
                         triggerAlert("清理過程發生錯誤");
                     }
