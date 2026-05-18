@@ -1817,34 +1817,43 @@
             }, [user, db]);
 
             // 背景自動清理：超過兩日的舊任務 (升級為無聲靜默清理，不打擾用戶)
-            useEffect(() => {
-                if (!user || !db || items.length === 0) return;
-                
-                // 確保每次重整網頁只執行一次清理檢查
-                if (autoDeleteRan.current) return;
+            // 背景自動清理：超過兩日的舊任務 (升級為無聲靜默清理，不打擾用戶)
+            // 背景自動清理：超過兩日的舊任務 (升級為無聲靜默清理，不打擾用戶)
+useEffect(() => {
+    if (!user || !db || items.length === 0) return;
+    
+    // 確保每次重整網頁只執行一次清理檢查
+    if (autoDeleteRan.current) return;
 
-                const today = new Date();
-                today.setHours(0,0,0,0);
-                
-                const toDelete = items.filter(item => {
-                    const due = new Date(item.dueDate);
-                    due.setHours(0,0,0,0);
-                    const diffDays = Math.floor((today - due) / 86400000);
-                    return diffDays >= 2; // 過期兩天或歷史記錄已放置超過兩天
-                });
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    
+    const toDelete = items.filter(item => {
+        if (item.isHidden) return false; // 👈 新增：已經隱藏嘅唔使再處理，防止重複執行
+        const due = new Date(item.dueDate);
+        due.setHours(0,0,0,0);
+        const diffDays = Math.floor((today - due) / 86400000);
+        return diffDays >= 2; // 過期兩天或歷史記錄已放置超過兩天
+    });
 
-                if (toDelete.length > 0) {
-                    autoDeleteRan.current = true;
-                    const batch = writeBatch(db);
-                    toDelete.forEach(item => {
-                        batch.delete(doc(db, "users", user.uid, "items", item.id));
-                    });
-                    // 默默在背景刪除，不再彈出 triggerAlert 煩人視窗
-                    batch.commit().catch(e => console.warn("Auto delete failed", e));
-                } else {
-                    autoDeleteRan.current = true;
-                }
-            }, [user, items, db]);
+    if (toDelete.length > 0) {
+        autoDeleteRan.current = true;
+        const batch = writeBatch(db);
+        toDelete.forEach(item => {
+            if (item.publicRefId) {
+                // 廣播功課：靜默隱藏 (Soft Delete)
+                batch.update(doc(db, "users", user.uid, "items", item.id), { isHidden: true });
+            } else {
+                // 私人功課：徹底靜默刪除 (Hard Delete)
+                batch.delete(doc(db, "users", user.uid, "items", item.id));
+            }
+        });
+        // 默默在背景執行，不再彈出 triggerAlert 煩人視窗
+        batch.commit().catch(e => console.warn("Auto delete failed", e));
+    } else {
+        autoDeleteRan.current = true;
+    }
+}, [user, items, db]);
 
             useEffect(() => {
                 const currentClasses = joinedClassesStr ? joinedClassesStr.split(',') : [];
@@ -1962,7 +1971,23 @@
             };
 
             const handleUpdateItem = async (id, updatedData) => { if (isGuest) return; try { await updateDoc(doc(db, "users", user.uid, "items", id), updatedData); triggerAlert("更新成功！"); } catch (e) { triggerAlert("更新失敗"); throw e; } };
-            const deleteItem = (id) => { if (isGuest) return; triggerConfirm('確定要刪除這項紀錄？', async () => { try { await deleteDoc(doc(db, "users", user.uid, "items", id)); } catch (e) { triggerAlert("刪除失敗"); } }); };
+            const deleteItem = (id) => { 
+    if (isGuest) return; 
+    const targetItem = items.find(i => i.id === id);
+    if (!targetItem) return;
+
+    triggerConfirm('確定要刪除這項紀錄？', async () => { 
+        try { 
+            if (targetItem.publicRefId) {
+                await updateDoc(doc(db, "users", user.uid, "items", id), { isHidden: true });
+            } else {
+                await deleteDoc(doc(db, "users", user.uid, "items", id)); 
+            }
+        } catch (e) { 
+            triggerAlert("刪除失敗"); 
+        } 
+    }); 
+};
             const deletePublicItem = (publicId, privateId) => { if (isGuest) return; triggerConfirm('⚠️ 確定要刪除全班的這份功課？', async () => { try { await deleteDoc(doc(db, "public_assignments", publicId)); if (privateId) await deleteDoc(doc(db, "users", user.uid, "items", privateId)); triggerAlert("已刪除"); } catch (e) { triggerAlert("刪除失敗"); } }); };
             
             const handleClearExpired = () => {
@@ -2021,10 +2046,11 @@
 
             const handleLogout = () => { triggerConfirm("確定要登出系統嗎？", () => window.firebaseServices.signOut(auth)); };
 
-            const activeItems = items.filter(i => !i.completed && !i.forceExpired);
+            const activeItems = items.filter(i => !i.completed && !i.forceExpired && !i.isHidden);
             const getDaysRemaining = (dString) => { const today = new Date(); today.setHours(0,0,0,0); const due = new Date(dString); due.setHours(0,0,0,0); return Math.ceil((due - today) / 86400000); };
 
             const displayedItems = items.filter(item => {
+                if (item.isHidden) return false;
                 if (viewMode === 'history' && !item.completed) return false;
                 if (viewMode === 'current' && item.completed) return false;
                 
