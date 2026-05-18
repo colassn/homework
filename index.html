@@ -2092,6 +2092,7 @@ useEffect(() => {
             });
 
             // v2.4 Quick View Logic
+            // v2.4 Quick View Logic
             const openQuickView = (type) => {
                 const today = new Date();
                 const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
@@ -2103,15 +2104,17 @@ useEffect(() => {
 
                 if (type === 'today') {
                     title = '今天到期的功課';
-                    filteredItems = activeItems.filter(i => i.dueDate === todayStr);
+                    // 加入 && i.type === 'homework' 條件，過濾走測驗
+                    filteredItems = activeItems.filter(i => i.dueDate === todayStr && i.type === 'homework');
                 } else if (type === 'tomorrow') {
                     title = '明天到期的功課';
-                    filteredItems = activeItems.filter(i => i.dueDate === tomorrowStr);
+                    filteredItems = activeItems.filter(i => i.dueDate === tomorrowStr && i.type === 'homework');
                 } else if (type === 'future') {
                     title = '日後要交的功課';
-                    filteredItems = activeItems.filter(i => i.dueDate > tomorrowStr);
+                    filteredItems = activeItems.filter(i => i.dueDate > tomorrowStr && i.type === 'homework');
                 } else if (type === 'test') {
                     title = '默書測驗考試';
+                    // 測驗專屬，維持不變
                     filteredItems = activeItems.filter(i => i.type !== 'homework');
                 }
                 setQuickView({ isOpen: true, title, items: filteredItems });
@@ -2125,9 +2128,10 @@ useEffect(() => {
                 const tomorrowStr = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
                 
                 return {
-                    today: activeItems.filter(i => i.dueDate === todayStr).length,
-                    tomorrow: activeItems.filter(i => i.dueDate === tomorrowStr).length,
-                    future: activeItems.filter(i => i.dueDate > tomorrowStr).length,
+                    // 同樣喺長度計算度加入 && i.type === 'homework'
+                    today: activeItems.filter(i => i.dueDate === todayStr && i.type === 'homework').length,
+                    tomorrow: activeItems.filter(i => i.dueDate === tomorrowStr && i.type === 'homework').length,
+                    future: activeItems.filter(i => i.dueDate > tomorrowStr && i.type === 'homework').length,
                     test: activeItems.filter(i => i.type !== 'homework').length
                 };
             };
