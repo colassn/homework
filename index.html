@@ -2309,7 +2309,6 @@ useEffect(() => {
                             {viewMode === 'current' && isVisible('timetable') && <CurrentLessonWidget config={timetableConfig} t={t} onClick={() => setViewMode('timetable')} globalNow={globalNow} />}
 
                             {(viewMode === 'current' || viewMode === 'history') && appMode === 'personal' && (
-                                <>
                                     {isVisible('input') && (
                                         <div className={`relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl shadow-lg p-5 sm:p-8 mb-10 border border-slate-100 dark:border-slate-700 z-20`}>
                                             <div className="flex bg-slate-100 dark:bg-slate-900/50 p-1.5 rounded-xl mb-6">
