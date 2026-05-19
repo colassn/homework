@@ -1731,7 +1731,9 @@
             const [isListVisible, setIsListVisible] = useState(true);
             const [editingItem, setEditingItem] = useState(null);
             const [isAdmin, setIsAdmin] = useState(false);
-            const [notification, setNotification] = useState({ isOpen: false, type: 'alert', message: '', onConfirm: null });
+            const [notification, setNotification] = useState({ isOpen: false, type: 'confirm', message: '', onConfirm: null });
+            const [toast, setToast] = useState({ isVisible: false, message: '', type: 'success' });
+            const toastTimerRef = useRef(null);
 
             const [showNameSetup, setShowNameSetup] = useState(false);
             const [nameSetupLoading, setNameSetupLoading] = useState(false);
@@ -1937,8 +1939,14 @@ useEffect(() => {
                 return () => unsubscribe(); 
             }, [user, db, joinedClassesStr, pageLoadTime, isAdmin]);
 
-            const triggerAlert = (message) => setNotification({ isOpen: false, type: 'alert', message, onConfirm: null });
-            const triggerConfirm = (message, onConfirmAction) => setNotification({ isOpen: true, type: 'confirm', message, onConfirm: onConfirmAction });
+            const triggerAlert = (message, type = 'success') => {
+    setToast({ isVisible: true, message, type });
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => {
+        setToast(prev => ({ ...prev, isVisible: false }));
+    }, 3000);
+};
+   我       const triggerConfirm = (message, onConfirmAction) => setNotification({ isOpen: true, type: 'confirm', message, onConfirm: onConfirmAction });
             const closeNotification = () => setNotification(prev => ({ ...prev, isOpen: false }));
             const handleNotificationConfirm = () => { if (notification.onConfirm) notification.onConfirm(); closeNotification(); };
             const handleFilterChange = (f) => { setIsListVisible(false); setTimeout(() => { setFilterSubject(f); setIsListVisible(true); }, 200); };
