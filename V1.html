@@ -23,6 +23,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js" crossorigin></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <script>
@@ -35,7 +36,6 @@
                         'pop-in': 'popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
                         'gradient-x': 'gradient-x 5s ease infinite',
                         'float': 'float 3s ease-in-out infinite',
-                        'expand': 'expand 0.3s ease-out forwards',
                     },
                     keyframes: {
                         'gradient-x': {
@@ -45,10 +45,6 @@
                         'float': {
                             '0%, 100%': { transform: 'translateY(0)' },
                             '50%': { transform: 'translateY(-5px)' },
-                        },
-                        'expand': {
-                            '0%': { width: '0', opacity: '0' },
-                            '100%': { width: 'auto', opacity: '1' }
                         }
                     }
                 }
@@ -71,8 +67,6 @@
         .animation-delay-4000 { animation-delay: 4s; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        
-        /* 動畫修改為預設透明度為 0，避免歷史紀錄閃爍或卡住 */
         @keyframes slideUpFade { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .animate-item { animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
 
@@ -238,25 +232,50 @@
         }
 
         const formatCountdown = (ms) => { const totalSeconds = Math.floor(ms / 1000); const hours = Math.floor(totalSeconds / 3600); const minutes = Math.floor((totalSeconds % 3600) / 60); const seconds = totalSeconds % 60; return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`; };
-        const formatTimeStr = (date) => { try { if (!(date instanceof Date) || isNaN(date.getTime())) return '--:--'; return date.toLocaleTimeString('zh-HK', { hour: '2-digit', minute: '2-digit' }); } catch(e) { return '--:--'; } };
+
+        const formatTimeStr = (date) => { 
+            try {
+                if (!(date instanceof Date) || isNaN(date.getTime())) return '--:--';
+                return date.toLocaleTimeString('zh-HK', { hour: '2-digit', minute: '2-digit' }); 
+            } catch(e) { return '--:--'; }
+        };
+
         const formatRelativeTime = (lastSeen) => {
             if (!lastSeen || typeof lastSeen.toDate !== 'function') return '無紀錄';
-            const date = lastSeen.toDate(); const now = new Date(); const diffMs = now - date; const diffSec = Math.floor(diffMs / 1000); const diffMin = Math.floor(diffSec / 60); const diffHour = Math.floor(diffMin / 60); const diffDay = Math.floor(diffHour / 24);
-            if (diffSec < 60) return '剛剛'; if (diffMin < 60) return `${diffMin} 分鐘前`; if (diffHour < 24) return `${diffHour} 小時前`; if (diffDay < 30) return `${diffDay} 天前`; return date.toLocaleDateString('zh-HK');
+            const date = lastSeen.toDate();
+            const now = new Date();
+            const diffMs = now - date;
+            const diffSec = Math.floor(diffMs / 1000);
+            const diffMin = Math.floor(diffSec / 60);
+            const diffHour = Math.floor(diffMin / 60);
+            const diffDay = Math.floor(diffHour / 24);
+
+            if (diffSec < 60) return '剛剛';
+            if (diffMin < 60) return `${diffMin} 分鐘前`;
+            if (diffHour < 24) return `${diffHour} 小時前`;
+            if (diffDay < 30) return `${diffDay} 天前`;
+            return date.toLocaleDateString('zh-HK');
         };
 
         const formatDueDate = (dateStr) => {
             if (!dateStr) return '';
             if (typeof dateStr !== 'string') {
                 if (dateStr.toDate && typeof dateStr.toDate === 'function') {
-                    const d = dateStr.toDate(); const weekDays = ['日', '一', '二', '三', '四', '五', '六']; const dateString = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                    const d = dateStr.toDate();
+                    const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
+                    const dateString = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
                     return `${dateString} (星期${weekDays[d.getDay()]})`;
                 }
                 return String(dateStr); 
             }
             try {
-                const d = new Date(dateStr); if (isNaN(d.getTime())) return String(dateStr); const weekDays = ['日', '一', '二', '三', '四', '五', '六']; return `${dateStr} (星期${weekDays[d.getDay()]})`;
-            } catch (e) { return String(dateStr); }
+                const d = new Date(dateStr);
+                if (isNaN(d.getTime())) return String(dateStr); 
+                const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
+                return `${dateStr} (星期${weekDays[d.getDay()]})`;
+            } catch (e) {
+                return String(dateStr);
+            }
         };
 
         const generateFullSchedule = (config, now, dayOverride = null) => {
@@ -264,20 +283,36 @@
             const day = dayOverride !== null ? dayOverride : now.getDay();
             if (day === 0 || day === 6) return []; 
             const daySubjects = config.schedule?.[day] || [];
-            let lessonIndex = 0; const baseDate = new Date(now); baseDate.setHours(0,0,0,0);
+            let lessonIndex = 0;
+            const baseDate = new Date(now); baseDate.setHours(0,0,0,0);
+
             return config.timeSlots.map(slot => {
-                const timeStr = slot.startTime || "00:00"; const parts = timeStr.split(':'); const h = parseInt(parts[0]) || 0; const m = parseInt(parts[1]) || 0;
-                const start = new Date(baseDate); start.setHours(h, m, 0, 0); const end = new Date(start.getTime() + (parseInt(slot.duration) || 35) * 60000);
-                let subject = slot.label || ''; if (slot.type === 'lesson') { subject = daySubjects[lessonIndex] || '---'; lessonIndex++; }
+                const timeStr = slot.startTime || "00:00";
+                const parts = timeStr.split(':');
+                const h = parseInt(parts[0]) || 0;
+                const m = parseInt(parts[1]) || 0;
+
+                const start = new Date(baseDate); start.setHours(h, m, 0, 0);
+                const end = new Date(start.getTime() + (parseInt(slot.duration) || 35) * 60000);
+
+                let subject = slot.label || '';
+                if (slot.type === 'lesson') { subject = daySubjects[lessonIndex] || '---'; lessonIndex++; }
                 return { ...slot, start, end, subjectName: subject };
             });
         };
 
         function AuthPage({ triggerAlert }) { 
-            const [isLogin, setIsLogin] = useState(true); const [email, setEmail] = useState(''); const [password, setPassword] = useState(''); const [loading, setLoading] = useState(false); 
+            const [isLogin, setIsLogin] = useState(true); 
+            const [email, setEmail] = useState(''); 
+            const [password, setPassword] = useState(''); 
+            const [loading, setLoading] = useState(false); 
             const { auth, googleProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword } = window.firebaseServices || {};
 
-            const handleGoogleLogin = async () => { try { setLoading(true); await signInWithPopup(auth, googleProvider); } catch (error) { triggerAlert("Google 登入失敗: " + error.message, "error"); setLoading(false); } };
+            const handleGoogleLogin = async () => { 
+                try { setLoading(true); await signInWithPopup(auth, googleProvider); } 
+                catch (error) { triggerAlert("Google 登入失敗: " + error.message, "error"); setLoading(false); } 
+            };
+
             const handleEmailAuth = async (e) => { 
                 e.preventDefault(); if(!email || !password) return;
                 try { setLoading(true); if (isLogin) { await signInWithEmailAndPassword(auth, email, password); } else { await createUserWithEmailAndPassword(auth, email, password); } } 
@@ -347,6 +382,7 @@
             ); 
         }
 
+        // ====== 輔助模態框與子組件 ======
         function CurrentLessonWidget({ config, t, onClick, globalNow }) {
             const now = globalNow || new Date();
             const day = now.getDay();
@@ -506,9 +542,10 @@
                                         {[{ key: 'cards', label: '狀態卡片' }, { key: 'timetable', label: '流動時間表' }, { key: 'input', label: '新增欄位' }, { key: 'list', label: '任務列表' }].map(item => (
                                             <label key={item.key} className="flex items-center justify-between cursor-pointer group">
                                                 <span className="text-sm font-bold text-slate-600 dark:text-slate-400">{item.label}</span>
-                                                <div className="relative">
+                                                <div className="relative w-12 h-7 shrink-0">
                                                     <input type="checkbox" className="sr-only peer" checked={customLayout[item.key]} onChange={() => handleCustomToggle(item.key)} />
-                                                    <div className="w-11 h-6 bg-slate-200 dark:bg-slate-700 rounded-full peer peer-checked:after:translate-x-full after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-500 shadow-inner"></div>
+                                                    <div className="absolute inset-0 bg-slate-200 dark:bg-slate-700 rounded-full peer-checked:bg-indigo-500 transition-colors shadow-inner"></div>
+                                                    <div className="absolute top-[2px] left-[2px] bg-white w-6 h-6 rounded-full transition-transform peer-checked:translate-x-[20px] shadow-sm border border-slate-300 dark:border-slate-600"></div>
                                                 </div>
                                             </label>
                                         ))}
@@ -911,7 +948,13 @@
             const [isScanning, setIsScanning] = useState(false);
             const [expiredReport, setExpiredReport] = useState(null);
 
-            const { collection, getDocs, query, orderBy, onSnapshot, doc, updateDoc, arrayUnion, arrayRemove, deleteDoc, setDoc, getDoc, writeBatch, limit } = window.firebaseServices || {};
+            // New state for Admin feature enhancements
+            const [announcementInput, setAnnouncementInput] = useState(systemConfig?.announcementText || '');
+            const [viewingClass, setViewingClass] = useState(null); // Which class members to view
+            const [taskStats, setTaskStats] = useState({}); // Stores completion stats for tasks
+            const [isFetchingStats, setIsFetchingStats] = useState(false);
+
+            const { collection, getDocs, query, orderBy, onSnapshot, doc, updateDoc, arrayUnion, arrayRemove, deleteDoc, setDoc, getDoc, writeBatch, limit, where } = window.firebaseServices || {};
             const allowedEmails = systemConfig?.allowedEmails || [];
             const blacklistedEmails = systemConfig?.blacklistedEmails || [];
 
@@ -936,6 +979,10 @@
                 setNewName(selectedUser.displayName || '');
                 return () => unsubscribe();
             }, [selectedUser, db, collection]);
+
+            useEffect(() => {
+                setAnnouncementInput(systemConfig?.announcementText || '');
+            }, [systemConfig?.announcementText]);
 
             const updateConfig = async (key, value) => { 
                 triggerConfirm("確定要更改此系統設定嗎？", async () => {
@@ -1000,11 +1047,47 @@
                         
                         await batch.commit();
                         triggerAlert("班級已徹底刪除及清理");
+                        if (viewingClass === classObj.code) setViewingClass(null);
                     } catch (e) { 
                         console.error(e);
                         triggerAlert("刪除過程發生錯誤：" + e.message, "error"); 
                     }
                 });
+            };
+
+            const handleKickUserFromClass = async (userObj, classCode) => {
+                triggerConfirm(`確定要將 ${userObj.displayName || userObj.email} 踢出此班級嗎？`, async () => {
+                    try {
+                        await updateDoc(doc(db, "users_public", userObj.uid), { joinedClasses: arrayRemove(classCode) });
+                        triggerAlert("已踢出班級");
+                    } catch (e) { triggerAlert("移除失敗: " + e.message, "error"); }
+                });
+            };
+
+            const fetchTaskProgress = async (task) => {
+                setIsFetchingStats(true);
+                try {
+                    const targetUsers = task.targetClass === '全校' ? users : users.filter(u => (u.joinedClasses || []).includes(task.targetClass));
+                    let completed = 0;
+                    let pendingList = [];
+
+                    for (const u of targetUsers) {
+                        const q = query(collection(db, "users", u.uid, "items"), where("publicRefId", "==", task.id));
+                        const snap = await getDocs(q);
+                        if (!snap.empty) {
+                            const itemData = snap.docs[0].data();
+                            if (itemData.completed) completed++;
+                            else pendingList.push(u.displayName || u.email);
+                        } else {
+                            pendingList.push(u.displayName || u.email);
+                        }
+                    }
+
+                    setTaskStats(prev => ({ ...prev, [task.id]: { total: targetUsers.length, completed, pendingList } }));
+                } catch (e) {
+                    triggerAlert("讀取進度失敗: " + e.message, "error");
+                }
+                setIsFetchingStats(false);
             };
 
             const handleDeleteUser = async (targetUser) => {
@@ -1121,8 +1204,8 @@
                             <h2 className="text-xl font-black tracking-wide">超級管理中心</h2>
                         </div>
                         <div className="flex flex-row md:flex-col gap-2 overflow-x-auto scrollbar-hide pb-2 md:pb-0">
-                            {[ { id: 'overview', icon: 'check-circle-2', label: '系統概覽' }, { id: 'users', icon: 'school', label: '用戶數據管理' }, { id: 'classes', icon: 'school', label: '班級代碼管理' }, { id: 'tasks', icon: 'bell', label: '廣播任務中心' }, { id: 'settings', icon: 'settings', label: '核心系統設定' } ].map(tab => (
-                                <button key={tab.id} onClick={() => { setActiveTab(tab.id); setSelectedUser(null); }} className={`flex items-center gap-3 px-4 py-3 rounded-2xl font-bold text-sm transition-all whitespace-nowrap md:whitespace-normal ${activeTab === tab.id ? 'bg-indigo-600 text-white shadow-lg' : 'hover:bg-slate-800 hover:text-white'}`}>
+                            {[ { id: 'overview', icon: 'check-circle-2', label: '系統概覽' }, { id: 'users', icon: 'users', label: '用戶數據管理' }, { id: 'classes', icon: 'school', label: '班級代碼管理' }, { id: 'tasks', icon: 'bell', label: '廣播任務中心' }, { id: 'settings', icon: 'settings', label: '核心系統設定' } ].map(tab => (
+                                <button key={tab.id} onClick={() => { setActiveTab(tab.id); setSelectedUser(null); setViewingClass(null); }} className={`flex items-center gap-3 px-4 py-3 rounded-2xl font-bold text-sm transition-all whitespace-nowrap md:whitespace-normal ${activeTab === tab.id ? 'bg-indigo-600 text-white shadow-lg' : 'hover:bg-slate-800 hover:text-white'}`}>
                                     <Icon name={tab.icon} className={`w-5 h-5 ${activeTab === tab.id ? 'text-indigo-200' : 'text-slate-500'}`} /> {tab.label}
                                 </button>
                             ))}
@@ -1154,10 +1237,10 @@
                             </div>
                         )}
 
-                        {activeTab === 'classes' && (
+                        {activeTab === 'classes' && !viewingClass && (
                             <div className="space-y-6 animate-fadeIn h-full flex flex-col">
                                 <h3 className="text-2xl font-bold dark:text-white">班級代碼管理</h3>
-                                <p className="text-sm text-slate-500 -mt-2">建立班級群組，系統會自動生成隨機代碼。學生憑代碼加入後，即可接收該班級專屬的廣播功課。</p>
+                                <p className="text-sm text-slate-500 -mt-2">建立班級群組，學生憑代碼加入後，即可接收該班專屬的廣播功課。</p>
 
                                 <form onSubmit={handleCreateClass} className="flex gap-3 mt-4">
                                     <input type="text" placeholder="輸入班級名稱 (例如: 3A 班)..." value={newClassName} onChange={e => setNewClassName(e.target.value)} className="flex-1 px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-sm dark:text-white" required />
@@ -1171,16 +1254,57 @@
                                                 <tr><th className="px-6 py-4">班級名稱</th><th className="px-6 py-4">加入代碼 (6碼)</th><th className="px-6 py-4 text-right">操作</th></tr>
                                             </thead>
                                             <tbody className="divide-y divide-slate-50 dark:divide-slate-700/50">
-                                                {systemClasses.map(c => (
-                                                    <tr key={c.code} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                                                        <td className="px-6 py-4 font-bold text-slate-800 dark:text-white flex items-center gap-2"><Icon name="school" className="w-4 h-4 text-indigo-500"/> {c.name}</td>
-                                                        <td className="px-6 py-4"><span className="px-3 py-1 bg-slate-100 dark:bg-slate-900 rounded-lg font-mono font-bold text-indigo-600 dark:text-indigo-400 tracking-widest">{c.code}</span></td>
-                                                        <td className="px-6 py-4 text-right"><button onClick={() => handleDeepDeleteClass(c)} className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"><Icon name="trash-2" className="w-4 h-4" /></button></td>
-                                                    </tr>
-                                                ))}
+                                                {systemClasses.map(c => {
+                                                    const classMemberCount = users.filter(u => (u.joinedClasses || []).includes(c.code)).length;
+                                                    return (
+                                                        <tr key={c.code} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                                                            <td className="px-6 py-4 font-bold text-slate-800 dark:text-white flex items-center gap-2"><Icon name="school" className="w-4 h-4 text-indigo-500"/> {c.name}</td>
+                                                            <td className="px-6 py-4"><span className="px-3 py-1 bg-slate-100 dark:bg-slate-900 rounded-lg font-mono font-bold text-indigo-600 dark:text-indigo-400 tracking-widest">{c.code}</span></td>
+                                                            <td className="px-6 py-4 text-right">
+                                                                <div className="flex justify-end gap-2">
+                                                                    <button onClick={() => setViewingClass(c)} className="px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg font-bold text-xs hover:bg-indigo-100 dark:hover:bg-indigo-800/50 transition-colors">查看名單 ({classMemberCount})</button>
+                                                                    <button onClick={() => handleDeepDeleteClass(c)} className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"><Icon name="trash-2" className="w-4 h-4" /></button>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    )
+                                                })}
                                                 {systemClasses.length === 0 && <tr><td colSpan="3" className="px-6 py-12 text-center text-slate-400">目前尚無任何班級</td></tr>}
                                             </tbody>
                                         </table>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'classes' && viewingClass && (
+                            <div className="space-y-6 animate-fadeIn h-full flex flex-col">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <button onClick={() => setViewingClass(null)} className="p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"><Icon name="arrow-left" className="w-4 h-4 text-slate-600 dark:text-slate-300" /></button>
+                                    <div>
+                                        <h3 className="text-xl font-bold dark:text-white flex items-center gap-2">{viewingClass.name} - 成員名單</h3>
+                                        <p className="text-xs text-slate-500 font-mono tracking-widest">代碼: {viewingClass.code}</p>
+                                    </div>
+                                </div>
+                                <div className="flex-1 bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col">
+                                    <div className="overflow-y-auto flex-1 p-2">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                                            {users.filter(u => (u.joinedClasses || []).includes(viewingClass.code)).map(u => (
+                                                <div key={u.uid} className="flex items-center justify-between p-3 rounded-2xl border border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 hover:border-indigo-200 transition-colors">
+                                                    <div className="flex items-center gap-3 overflow-hidden">
+                                                        <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center font-bold text-xs shrink-0 text-slate-500 dark:text-slate-300">{u.displayName?.[0]?.toUpperCase() || 'U'}</div>
+                                                        <div className="truncate">
+                                                            <div className="font-bold text-sm dark:text-white truncate">{u.displayName || '未命名'}</div>
+                                                            <div className="text-[10px] text-slate-400 truncate">{u.email}</div>
+                                                        </div>
+                                                    </div>
+                                                    <button onClick={() => handleKickUserFromClass(u, viewingClass.code)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-xl transition-colors shrink-0" title="踢出班級"><Icon name="user-minus" className="w-4 h-4" /></button>
+                                                </div>
+                                            ))}
+                                            {users.filter(u => (u.joinedClasses || []).includes(viewingClass.code)).length === 0 && (
+                                                <div className="col-span-full py-12 text-center text-slate-400 text-sm">該班級目前沒有任何學生</div>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1324,35 +1448,59 @@
                         {activeTab === 'tasks' && (
                             <div className="space-y-6 animate-fadeIn">
                                 <h3 className="text-2xl font-bold dark:text-white">廣播任務中心</h3>
+                                <p className="text-sm text-slate-500 -mt-2">管理發佈到全校或指定班級的廣播任務，並可追蹤完成進度。</p>
                                 <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700 overflow-hidden flex flex-col shadow-sm">
-                                    <div className="overflow-y-auto max-h-[500px]">
+                                    <div className="overflow-y-auto max-h-[600px]">
                                         <table className="w-full text-left text-sm whitespace-nowrap">
                                             <thead className="bg-slate-50/80 dark:bg-slate-800/80 text-slate-500 font-bold sticky top-0 backdrop-blur-md z-10 border-b border-slate-100 dark:border-slate-700">
-                                                <tr><th className="px-6 py-4">任務內容</th><th className="px-6 py-4">科目/目標班級</th><th className="px-6 py-4 text-right">操作</th></tr>
+                                                <tr><th className="px-6 py-4">任務內容</th><th className="px-6 py-4">目標/幾時交</th><th className="px-6 py-4">學生進度</th><th className="px-6 py-4 text-right">操作</th></tr>
                                             </thead>
                                             <tbody className="divide-y divide-slate-50 dark:divide-slate-700/50">
                                                 {publicTasks.map(task => {
                                                     const cls = systemClasses.find(c => c.code === task.targetClass);
                                                     const targetName = cls ? cls.name : (task.targetClass || '全校');
+                                                    const stats = taskStats[task.id];
+
                                                     return (
                                                         <tr key={task.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                                                            <td className="px-6 py-4">
-                                                                <div className="font-bold max-w-[200px] truncate dark:text-white" title={task.description}>{task.description}</div>
-                                                                <div className="text-[10px] text-slate-400 mt-1">Due: {formatDueDate(task.dueDate)}</div>
+                                                            <td className="px-6 py-4 whitespace-normal min-w-[200px] max-w-[300px]">
+                                                                <div className="flex gap-2 items-center mb-1.5"><span className={`px-2.5 py-0.5 rounded-lg text-[10px] font-bold border ${subjects.find(s => s.name === task.subject)?.color || 'bg-slate-100 text-slate-600 border-slate-200'}`}>{task.subject}</span></div>
+                                                                <div className="font-bold dark:text-white leading-relaxed">{task.description}</div>
                                                             </td>
                                                             <td className="px-6 py-4">
                                                                 <div className="flex flex-col gap-1.5 items-start">
-                                                                    <span className={`px-2.5 py-0.5 rounded-lg text-[10px] font-bold border ${subjects.find(s => s.name === task.subject)?.color || 'bg-slate-100 text-slate-600 border-slate-200'}`}>{task.subject}</span>
-                                                                    <span className="text-[10px] bg-indigo-100 text-indigo-700 px-2.5 py-0.5 rounded-lg font-bold max-w-[120px] truncate" title={targetName}>{targetName}</span>
+                                                                    <span className="text-[10px] bg-indigo-100 text-indigo-700 px-2.5 py-0.5 rounded-lg font-bold max-w-[120px] truncate">{targetName}</span>
+                                                                    <span className="text-xs text-slate-400 font-mono mt-1">Due: {formatDueDate(task.dueDate)}</span>
                                                                 </div>
                                                             </td>
+                                                            <td className="px-6 py-4 min-w-[200px]">
+                                                                {stats ? (
+                                                                    <div className="flex flex-col gap-2">
+                                                                        <div className="flex items-center justify-between text-xs font-bold text-slate-500">
+                                                                            <span className="text-emerald-500">{stats.completed} 已完成</span>
+                                                                            <span>共 {stats.total} 人</span>
+                                                                        </div>
+                                                                        <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
+                                                                            <div className="bg-emerald-500 h-1.5 rounded-full" style={{ width: stats.total ? `${(stats.completed / stats.total) * 100}%` : '0%' }}></div>
+                                                                        </div>
+                                                                        {stats.pendingList.length > 0 && (
+                                                                            <div className="mt-1 text-[10px] text-slate-400 max-w-[150px] truncate" title={stats.pendingList.join(', ')}>
+                                                                                未交: {stats.pendingList.join(', ')}
+                                                                            </div>
+                                                                        )}
+                                                                        {stats.pendingList.length === 0 && stats.total > 0 && <span className="text-[10px] text-emerald-500 font-bold">全班已交齊 🎉</span>}
+                                                                    </div>
+                                                                ) : (
+                                                                    <button onClick={() => fetchTaskProgress(task)} disabled={isFetchingStats} className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-xs font-bold transition-colors disabled:opacity-50">查看進度</button>
+                                                                )}
+                                                            </td>
                                                             <td className="px-6 py-4 text-right">
-                                                                <button onClick={() => handleDeletePublicTask(task.id)} className="px-4 py-2 bg-red-50 text-red-600 hover:bg-red-500 hover:text-white rounded-xl font-bold text-xs transition-colors">撤回</button>
+                                                                <button onClick={() => handleDeletePublicTask(task.id)} className="px-4 py-2 bg-red-50 text-red-600 hover:bg-red-500 hover:text-white rounded-xl font-bold text-xs transition-colors shadow-sm">撤回全班</button>
                                                             </td>
                                                         </tr>
                                                     )
                                                 })}
-                                                {publicTasks.length === 0 && <tr><td colSpan="3" className="px-6 py-12 text-center text-slate-400">暫無廣播任務</td></tr>}
+                                                {publicTasks.length === 0 && <tr><td colSpan="4" className="px-6 py-12 text-center text-slate-400">暫無廣播任務</td></tr>}
                                             </tbody>
                                         </table>
                                     </div>
@@ -1365,11 +1513,25 @@
                                 <div><h3 className="text-2xl font-bold mb-2 dark:text-white">核心系統設定</h3></div>
 
                                 <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
+                                    <div className="p-5 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 flex flex-col gap-2">
+                                        <h4 className="font-bold flex items-center gap-2 dark:text-white"><Icon name="radio" className="w-5 h-5 text-orange-500"/> 全域跑馬燈公告</h4>
+                                        <p className="text-xs text-slate-500">輸入公告內容，全校所有學生畫面上方將會即時顯示跑馬燈提示。清空則隱藏跑馬燈。</p>
+                                    </div>
+                                    <div className="p-6">
+                                        <div className="flex gap-3">
+                                            <input type="text" placeholder="例如：明天因颱風襲港，全校停課一天..." value={announcementInput} onChange={e => setAnnouncementInput(e.target.value)} className="flex-1 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-sm focus:ring-2 focus:ring-orange-500 outline-none dark:text-white transition-all" />
+                                            <button onClick={() => updateConfig('announcementText', announcementInput)} className="bg-orange-500 text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-orange-600 transition-colors flex items-center gap-2 active:scale-95 shadow-sm"><Icon name="save" className="w-4 h-4"/> 發佈公告</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
                                     <div className="p-5 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 flex justify-between items-center">
                                             <h4 className="font-bold flex items-center gap-2 dark:text-white"><Icon name="check-circle-2" className="w-5 h-5 text-emerald-500"/> 白名單系統</h4>
-                                            <label className="relative inline-flex items-center cursor-pointer">
+                                            <label className="relative cursor-pointer w-12 h-7 shrink-0">
                                                 <input type="checkbox" className="sr-only peer" checked={systemConfig?.whitelistEnabled || false} onChange={(e) => updateConfig('whitelistEnabled', e.target.checked)} />
-                                                <div className="w-11 h-6 bg-slate-200 dark:bg-slate-700 rounded-full peer peer-checked:after:translate-x-full after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500 shadow-inner"></div>
+                                                <div className="absolute inset-0 bg-slate-200 dark:bg-slate-700 rounded-full peer-checked:bg-emerald-500 transition-colors shadow-inner"></div>
+                                                <div className="absolute top-[2px] left-[2px] bg-white w-6 h-6 rounded-full transition-transform peer-checked:translate-x-[20px] shadow-sm"></div>
                                             </label>
                                     </div>
                                     <div className="p-6">
@@ -1393,9 +1555,10 @@
                                 <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
                                     <div className="p-5 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 flex justify-between items-center">
                                             <h4 className="font-bold flex items-center gap-2 dark:text-white"><Icon name="alert-circle" className="w-5 h-5 text-red-500"/> 黑名單系統</h4>
-                                            <label className="relative inline-flex items-center cursor-pointer">
+                                            <label className="relative cursor-pointer w-12 h-7 shrink-0">
                                                 <input type="checkbox" className="sr-only peer" checked={systemConfig?.blacklistEnabled || false} onChange={(e) => updateConfig('blacklistEnabled', e.target.checked)} />
-                                                <div className="w-11 h-6 bg-slate-200 dark:bg-slate-700 rounded-full peer peer-checked:after:translate-x-full after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500 shadow-inner"></div>
+                                                <div className="absolute inset-0 bg-slate-200 dark:bg-slate-700 rounded-full peer-checked:bg-red-500 transition-colors shadow-inner"></div>
+                                                <div className="absolute top-[2px] left-[2px] bg-white w-6 h-6 rounded-full transition-transform peer-checked:translate-x-[20px] shadow-sm"></div>
                                             </label>
                                     </div>
                                     <div className="p-6">
@@ -1422,11 +1585,16 @@
             );
         }
 
+        // ==========================================
+        // 核心切換導航按鈕 (已修復平滑過渡動畫)
+        // ==========================================
         function NavItem({ id, icon, label, active, onClick, t }) {
             return (
-                <button onClick={onClick} className={`relative flex items-center justify-center gap-2 h-12 rounded-full transition-all duration-300 ease-out overflow-hidden ${active ? `${t.lightBg} ${t.text} px-5 shadow-sm` : 'w-12 text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}>
-                    <Icon name={icon} className={`w-5 h-5 shrink-0 ${active ? 'animate-bounce' : ''}`} style={active ? { animationIterationCount: 1 } : {}} />
-                    {active && <span className="font-bold text-sm whitespace-nowrap animate-expand">{label}</span>}
+                <button onClick={onClick} className={`relative flex items-center justify-center h-12 rounded-full transition-all duration-300 ease-out overflow-hidden ${active ? `${t.lightBg} ${t.text} px-4 shadow-sm` : 'w-12 px-0 text-slate-400 hover:text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800'}`}>
+                    <Icon name={icon} className={`w-5 h-5 shrink-0 transition-transform duration-300 ${active ? 'scale-110' : ''}`} />
+                    <span className={`font-bold text-sm whitespace-nowrap transition-all duration-300 ease-out overflow-hidden ${active ? 'max-w-[100px] opacity-100 ml-2' : 'max-w-0 opacity-0 ml-0'}`}>
+                        {label}
+                    </span>
                 </button>
             );
         }
@@ -1448,7 +1616,6 @@
             const [subject, setSubject] = useState('中文');
             const [description, setDescription] = useState('');
             const [dueDate, setDueDate] = useState(''); 
-            const [selectedImage, setSelectedImage] = useState(null);
 
             const [isBroadcast, setIsBroadcast] = useState(false);
             const [targetClassInput, setTargetClassInput] = useState('全校');
@@ -1659,9 +1826,9 @@
 
             const handleSubmit = async (e) => { 
                 e.preventDefault(); 
-                if ((!description.trim() && !selectedImage) || !dueDate) { triggerAlert("請輸入功課內容！", "error"); return; }
+                if (!description.trim() || !dueDate) { triggerAlert("請輸入功課內容！", "error"); return; }
                 const performSubmit = async () => {
-                    const newItem = { type: inputType, subject, description: description.trim(), image: selectedImage, dueDate, completed: false, createdAt: new Date().toISOString() }; 
+                    const newItem = { type: inputType, subject, description: description.trim(), dueDate, completed: false, createdAt: new Date().toISOString() }; 
                     try { 
                         if (isBroadcast && isAdmin) { 
                             newItem.senderName = user.displayName || '老師'; newItem.targetClass = targetClassInput;
@@ -1669,15 +1836,16 @@
                             const className = targetClassInput === '全校' ? '全校' : (systemClasses.find(c => c.code === targetClassInput)?.name || targetClassInput);
                             triggerAlert(`已發送廣播功課給 ${className}！`); 
                         } else { await addDoc(collection(db, "users", user.uid, "items"), newItem); triggerAlert("已新增紀錄"); } 
-                        setDescription(''); setSelectedImage(null); setAppMode('personal'); setIsBroadcast(false); setTargetClassInput('全校');
+                        setDescription(''); setAppMode('personal'); setIsBroadcast(false); setTargetClassInput('全校');
                     } catch (error) { triggerAlert("新增失敗", "error"); } 
                 };
                 
                 if (isBroadcast && isAdmin) { 
                     const targetName = targetClassInput === '全校' ? '全校' : (systemClasses.find(c => c.code === targetClassInput)?.name || targetClassInput);
                     triggerConfirm(`確定要發送廣播功課給【${targetName}】嗎？`, performSubmit); 
-                } 
-                else { triggerConfirm('確定要新增這項紀錄嗎？', performSubmit); }
+                } else { 
+                    triggerConfirm('確定要新增這項紀錄嗎？', performSubmit); 
+                }
             };
 
             const handleToggle = (id, currentCompletedStatus) => { 
@@ -1703,7 +1871,7 @@
             
             const deleteItem = (id) => { 
                 if (!user) return; const targetItem = items.find(i => i.id === id); if (!targetItem) return;
-                triggerConfirm('確定要刪除這項紀錄？', async () => { 
+                triggerConfirm('確定要刪除這項紀錄嗎？', async () => { 
                     try { 
                         if (targetItem.publicRefId) await updateDoc(doc(db, "users", user.uid, "items", id), { isHidden: true }); 
                         else await deleteDoc(doc(db, "users", user.uid, "items", id)); 
@@ -1808,8 +1976,6 @@
                 return (
                     <>
                         <AuthPage triggerAlert={triggerAlert} />
-                        
-                        {/* 現代化靈動島 (Dynamic Island) 通知 - 登入畫面 */}
                         <div className={`fixed top-5 sm:top-8 left-1/2 transform -translate-x-1/2 z-[9999] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${toast.isVisible ? 'translate-y-0 opacity-100 scale-100' : '-translate-y-12 opacity-0 scale-90 pointer-events-none'}`}>
                             <div className={`px-6 py-3.5 rounded-[2rem] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.3)] backdrop-blur-2xl flex items-center gap-3 font-bold text-sm tracking-wide border ${toast.type === 'error' ? 'bg-red-500/90 text-white border-red-400/50' : 'bg-[#1c1c1e]/90 dark:bg-white/95 text-white dark:text-slate-900 border-white/10 dark:border-white/50'}`}>
                                 <Icon name={toast.type === 'error' ? 'alert-octagon' : 'check-circle-2'} className={`w-5 h-5 ${toast.type === 'error' ? 'text-white' : 'text-emerald-400 dark:text-emerald-500'}`} />
@@ -1825,11 +1991,9 @@
             if (systemConfig?.whitelistEnabled && !isAdmin && (!systemConfig?.allowedEmails?.includes(user.email))) return <BlockScreen type="whitelist_blocked" user={user} />;
             if (systemConfig?.blacklistEnabled && !isAdmin && systemConfig?.blacklistedEmails?.includes(user.email)) return <BlockScreen type="access_denied" customTitle="帳號停權" customMessage="您的帳號已被管理員列入黑名單，無法存取本系統。" user={user} />;
 
-            // 進入主系統
             return (
                 <div className={`min-h-screen transition-colors duration-500 bg-slate-50 dark:bg-[#0f1115] font-sans relative overflow-hidden p-4 sm:p-6 md:p-8 pb-32 ${systemConfig?.announcementText ? 'pt-14 sm:pt-16 md:pt-20' : ''}`}>
                     
-                    {/* 現代化靈動島 (Dynamic Island) 通知 - 主畫面 */}
                     <div className={`fixed top-5 sm:top-8 left-1/2 transform -translate-x-1/2 z-[9999] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${toast.isVisible ? 'translate-y-0 opacity-100 scale-100' : '-translate-y-12 opacity-0 scale-90 pointer-events-none'}`}>
                         <div className={`px-6 py-3.5 rounded-[2rem] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.3)] backdrop-blur-2xl flex items-center gap-3 font-bold text-sm tracking-wide border ${toast.type === 'error' ? 'bg-red-500/90 text-white border-red-400/50' : 'bg-[#1c1c1e]/90 dark:bg-white/95 text-white dark:text-slate-900 border-white/10 dark:border-white/50'}`}>
                             <Icon name={toast.type === 'error' ? 'alert-octagon' : 'check-circle-2'} className={`w-5 h-5 ${toast.type === 'error' ? 'text-white' : 'text-emerald-400 dark:text-emerald-500'}`} />
@@ -1850,7 +2014,6 @@
                     )}
 
                     <div className="max-w-[1200px] mx-auto relative z-10 transition-all duration-500">
-                        {/* 現代化頂部 Header (懸浮導航列) */}
                         {viewMode !== 'admin' && (
                         <header className="flex items-center justify-between mb-8 max-w-3xl mx-auto bg-white/70 dark:bg-slate-800/60 backdrop-blur-3xl px-6 py-4 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] border border-white/80 dark:border-slate-700/50 sticky top-4 z-40">
                             <div className="flex items-center gap-4">
@@ -1879,176 +2042,178 @@
                         </header>
                         )}
 
-                        {viewMode === 'admin' ? ( <AdminConsole db={db} systemConfig={systemConfig} systemClasses={systemClasses} onBack={() => setViewMode('current')} subjects={subjects} triggerAlert={triggerAlert} triggerConfirm={triggerConfirm} /> ) : 
-                         viewMode === 'timetable' ? ( <div className="max-w-3xl mx-auto"><Timetable currentDay={currentTimetableDay} config={timetableConfig} onDayChange={setCurrentTimetableDay} subjects={subjects} globalNow={globalNow} /></div> ) : 
-                         viewMode === 'timetable_edit' ? ( <TimetableEditor initialConfig={timetableConfig} onSave={saveTimetableConfig} onCancel={() => setViewMode('timetable')} subjects={subjects} triggerConfirm={triggerConfirm} /> ) : (
-                        
-                        <div className="max-w-3xl mx-auto pt-2">
-                            {/* Cards */}
-                            {viewMode === 'current' && isVisible('cards') && (
-                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6 animate-fadeIn">
-                                    <button onClick={() => openQuickView('today')} className="col-span-2 sm:col-span-1 relative overflow-hidden bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/40 p-4 sm:p-5 rounded-3xl flex justify-between items-center shadow-sm hover:shadow-md transition-all group hover:-translate-y-0.5">
-                                        <div className="flex flex-col items-start gap-1 z-10">
-                                            <div className="text-slate-500 text-xs font-bold flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-red-500 animate-pulse shadow-sm"></div>今日到期</div>
-                                            <div className="text-transparent bg-clip-text bg-gradient-to-br from-red-500 to-rose-600 font-black text-3xl sm:text-4xl tracking-tight">{counts.today}</div>
-                                        </div>
-                                        <Icon name="calendar-clock" className="w-12 h-12 text-red-500/15 group-hover:rotate-12 group-hover:scale-110 transition-transform z-10" />
-                                    </button>
-                                    <button onClick={() => openQuickView('tomorrow')} className="col-span-1 relative overflow-hidden bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/40 p-4 sm:p-5 rounded-3xl flex flex-col justify-center items-start shadow-sm hover:shadow-md transition-all group hover:-translate-y-0.5">
-                                        <div className="text-slate-500 text-xs font-bold flex items-center gap-1.5 mb-1 z-10"><div className="w-1.5 h-1.5 rounded-full bg-orange-500"></div>明日</div>
-                                        <div className="text-orange-500 font-black text-2xl sm:text-3xl z-10">{counts.tomorrow}</div>
-                                    </button>
-                                    <button onClick={() => openQuickView('test')} className="col-span-1 relative overflow-hidden bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/40 p-4 sm:p-5 rounded-3xl flex flex-col justify-center items-start shadow-sm hover:shadow-md transition-all group hover:-translate-y-0.5">
-                                        <div className="text-slate-500 text-xs font-bold flex items-center gap-1.5 mb-1 z-10"><div className="w-1.5 h-1.5 rounded-full bg-violet-500"></div>測驗</div>
-                                        <div className="text-violet-500 font-black text-2xl sm:text-3xl z-10">{counts.test}</div>
-                                    </button>
-                                </div>
-                            )}
-
-                            {viewMode === 'current' && isVisible('timetable') && <CurrentLessonWidget config={timetableConfig} t={t} onClick={() => setViewMode('timetable')} globalNow={globalNow} />}
-
-                            {(viewMode === 'current' || viewMode === 'history') && appMode === 'personal' && (
-                                <>
-                                    {isVisible('input') && (
-                                        <form onSubmit={handleSubmit} className="relative z-20 mb-8 flex flex-col gap-4 p-5 sm:p-6 bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl rounded-[2.5rem] shadow-sm border border-white/60 hover:shadow-md transition-all">
-                                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                                                <div className="flex bg-slate-100/80 dark:bg-slate-800/80 p-1.5 rounded-2xl w-full sm:w-auto shadow-inner">
-                                                    <button type="button" onClick={()=>setInputType('homework')} className={`flex-1 sm:flex-none px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${inputType === 'homework' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>功課</button>
-                                                    <button type="button" onClick={()=>setInputType('assessment')} className={`flex-1 sm:flex-none px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${inputType === 'assessment' ? 'bg-white text-purple-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>測驗</button>
-                                                </div>
-                                                {isAdmin && (
-                                                    <label className={`w-full sm:w-auto flex items-center justify-between sm:justify-start cursor-pointer gap-4 px-4 py-2.5 rounded-2xl border-2 transition-all ${isBroadcast ? 'bg-orange-50 border-orange-300' : 'bg-slate-50 border-slate-100 hover:border-slate-300'}`}>
-                                                        <div className="flex items-center gap-2.5"><Icon name="bell" className={`w-5 h-5 ${isBroadcast ? 'text-orange-500 animate-pulse' : 'text-slate-400'}`} /><span className={`text-sm font-bold ${isBroadcast ? 'text-orange-700' : 'text-slate-500'}`}>全校廣播發佈</span></div>
-                                                        <div className="relative">
-                                                            <input type="checkbox" className="sr-only peer" checked={isBroadcast} onChange={e => setIsBroadcast(e.target.checked)} />
-                                                            <div className="w-11 h-6 bg-slate-200 dark:bg-slate-700 rounded-full peer peer-checked:after:translate-x-full after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500 shadow-inner"></div>
-                                                        </div>
-                                                    </label>
-                                                )}
+                        <div key={`${viewMode}-${appMode}`} className="animate-item">
+                            {viewMode === 'admin' ? ( <AdminConsole db={db} systemConfig={systemConfig} systemClasses={systemClasses} onBack={() => {setViewMode('current'); setAppMode('personal');}} subjects={subjects} triggerAlert={triggerAlert} triggerConfirm={triggerConfirm} /> ) : 
+                             viewMode === 'timetable' ? ( <div className="max-w-3xl mx-auto"><Timetable currentDay={currentTimetableDay} config={timetableConfig} onDayChange={setCurrentTimetableDay} subjects={subjects} globalNow={globalNow} /></div> ) : 
+                             viewMode === 'timetable_edit' ? ( <TimetableEditor initialConfig={timetableConfig} onSave={saveTimetableConfig} onCancel={() => setViewMode('timetable')} subjects={subjects} triggerConfirm={triggerConfirm} /> ) : (
+                            
+                            <div className="max-w-3xl mx-auto pt-2">
+                                {/* Cards */}
+                                {viewMode === 'current' && isVisible('cards') && (
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6 animate-fadeIn">
+                                        <button onClick={() => openQuickView('today')} className="col-span-2 sm:col-span-1 relative overflow-hidden bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/40 p-4 sm:p-5 rounded-3xl flex justify-between items-center shadow-sm hover:shadow-md transition-all group hover:-translate-y-0.5">
+                                            <div className="flex flex-col items-start gap-1 z-10">
+                                                <div className="text-slate-500 text-xs font-bold flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-red-500 animate-pulse shadow-sm"></div>今日到期</div>
+                                                <div className="text-transparent bg-clip-text bg-gradient-to-br from-red-500 to-rose-600 font-black text-3xl sm:text-4xl tracking-tight">{counts.today}</div>
                                             </div>
+                                            <Icon name="calendar-clock" className="w-12 h-12 text-red-500/15 group-hover:rotate-12 group-hover:scale-110 transition-transform z-10" />
+                                        </button>
+                                        <button onClick={() => openQuickView('tomorrow')} className="col-span-1 relative overflow-hidden bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/40 p-4 sm:p-5 rounded-3xl flex flex-col justify-center items-start shadow-sm hover:shadow-md transition-all group hover:-translate-y-0.5">
+                                            <div className="text-slate-500 text-xs font-bold flex items-center gap-1.5 mb-1 z-10"><div className="w-1.5 h-1.5 rounded-full bg-orange-500"></div>明日</div>
+                                            <div className="text-orange-500 font-black text-2xl sm:text-3xl z-10">{counts.tomorrow}</div>
+                                        </button>
+                                        <button onClick={() => openQuickView('test')} className="col-span-1 relative overflow-hidden bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/40 p-4 sm:p-5 rounded-3xl flex flex-col justify-center items-start shadow-sm hover:shadow-md transition-all group hover:-translate-y-0.5">
+                                            <div className="text-slate-500 text-xs font-bold flex items-center gap-1.5 mb-1 z-10"><div className="w-1.5 h-1.5 rounded-full bg-violet-500"></div>測驗</div>
+                                            <div className="text-violet-500 font-black text-2xl sm:text-3xl z-10">{counts.test}</div>
+                                        </button>
+                                    </div>
+                                )}
 
-                                            <div className="relative -mx-2 px-2 mt-2">
-                                                <div className="flex gap-2.5 overflow-x-auto scrollbar-hide pb-4 pt-2 snap-x snap-mandatory">
-                                                    {subjects.map(sub => {
-                                                        const isSelected = subject === sub.name;
-                                                        return ( <button key={sub.name} type="button" onClick={() => setSubject(sub.name)} className={`snap-start shrink-0 px-5 py-2.5 rounded-2xl text-sm font-black transition-all flex items-center justify-center min-w-[80px] border-2 ${isSelected ? `${sub.color} shadow-sm -translate-y-1 border-transparent` : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100 hover:-translate-y-0.5'}`}>{sub.name}</button> );
-                                                    })}
-                                                </div>
-                                            </div>
+                                {viewMode === 'current' && isVisible('timetable') && <CurrentLessonWidget config={timetableConfig} t={t} onClick={() => setViewMode('timetable')} globalNow={globalNow} />}
 
-                                            <div className="bg-slate-50/60 rounded-[1.5rem] border border-slate-200/60 p-2 sm:p-3 transition-all focus-within:bg-white focus-within:border-indigo-300">
-                                                <input type="text" placeholder={inputType === 'homework' ? "輸入功課細節 (例如: 中文作句 P.4-5)..." : "輸入測驗/大考範圍..."} value={description} onChange={(e) => setDescription(e.target.value)} className="w-full bg-transparent px-4 py-3 sm:py-4 text-lg sm:text-xl font-bold text-slate-800 outline-none placeholder:text-slate-400 placeholder:font-medium" autoComplete="off" />
-                                                <div className="flex flex-wrap sm:flex-nowrap justify-between items-center gap-3 mt-2 pt-3 border-t border-slate-200/60 px-2 pb-1">
-                                                    <div className="flex items-center gap-2.5 overflow-x-auto scrollbar-hide py-1 flex-1">
-                                                        <div className="relative group cursor-pointer shrink-0">
-                                                            <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" required />
-                                                            <div className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all border ${dueDate ? t.bg + ' text-white shadow-sm border-transparent' : 'bg-white text-slate-500 border-slate-200 group-hover:border-indigo-400'}`}>
-                                                                <Icon name="calendar-clock" className="w-4 h-4" /><span>{dueDate ? formatDueDate(dueDate) : '選擇交期'}</span>
-                                                            </div>
-                                                        </div>
-                                                        <button type="button" onClick={() => { const d = new Date(); d.setDate(d.getDate() + 1); setDueDate(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`); }} className="shrink-0 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-600 text-sm font-bold hover:bg-slate-50 transition-all shadow-sm active:scale-95 flex items-center gap-1.5"><Icon name="check-circle-2" className="w-4 h-4 text-orange-500" />聽日</button>
+                                {(viewMode === 'current' || viewMode === 'history') && appMode === 'personal' && (
+                                    <>
+                                        {isVisible('input') && (
+                                            <form onSubmit={handleSubmit} className="relative z-20 mb-8 flex flex-col gap-4 p-5 sm:p-6 bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl rounded-[2.5rem] shadow-sm border border-white/60 hover:shadow-md transition-all">
+                                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                                                    <div className="flex bg-slate-100/80 dark:bg-slate-800/80 p-1.5 rounded-2xl w-full sm:w-auto shadow-inner">
+                                                        <button type="button" onClick={()=>setInputType('homework')} className={`flex-1 sm:flex-none px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${inputType === 'homework' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>功課</button>
+                                                        <button type="button" onClick={()=>setInputType('assessment')} className={`flex-1 sm:flex-none px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${inputType === 'assessment' ? 'bg-white text-purple-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>測驗</button>
                                                     </div>
-                                                    <button type="submit" disabled={!description.trim() || !dueDate} className={`shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-full text-white flex items-center justify-center transition-all ${(!description.trim() || !dueDate) ? 'bg-slate-300 opacity-60 cursor-not-allowed scale-95' : `${t.bg} hover:scale-110 active:scale-90 shadow-lg`}`}>
-                                                        <Icon name="check-circle" className="w-5 h-5 sm:w-6 sm:h-6" />
-                                                    </button>
+                                                    {isAdmin && (
+                                                        <label className={`w-full sm:w-auto flex items-center justify-between sm:justify-start cursor-pointer gap-4 px-4 py-2.5 rounded-2xl border-2 transition-all ${isBroadcast ? 'bg-orange-50 border-orange-300' : 'bg-slate-50 border-slate-100 hover:border-slate-300'}`}>
+                                                            <div className="flex items-center gap-2.5"><Icon name="bell" className={`w-5 h-5 ${isBroadcast ? 'text-orange-500 animate-pulse' : 'text-slate-400'}`} /><span className={`text-sm font-bold ${isBroadcast ? 'text-orange-700' : 'text-slate-500'}`}>全校廣播發佈</span></div>
+                                                            <div className="relative w-12 h-7 shrink-0">
+                                                                <input type="checkbox" className="sr-only peer" checked={isBroadcast} onChange={e => setIsBroadcast(e.target.checked)} />
+                                                                <div className="absolute inset-0 bg-slate-200 dark:bg-slate-700 rounded-full peer-checked:bg-orange-500 transition-colors shadow-inner"></div>
+                                                                <div className="absolute top-[2px] left-[2px] bg-white w-6 h-6 rounded-full transition-transform peer-checked:translate-x-[20px] shadow-sm border border-slate-300 dark:border-slate-600"></div>
+                                                            </div>
+                                                        </label>
+                                                    )}
                                                 </div>
-                                            </div>
-                                        </form>
-                                    )}
 
-                                    {isVisible('list') && (
-                                        <>
-                                            <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mb-6 relative">
-                                                <div className={`flex items-center gap-2 w-full sm:w-auto overflow-x-auto scrollbar-hide pb-1 transition-opacity ${!isListVisible ? 'opacity-50' : 'opacity-100'}`}>
-                                                    <span className="text-slate-400 text-xs font-bold whitespace-nowrap">篩選:</span>
-                                                    <button onClick={() => handleFilterChange('全部')} className={`flex-shrink-0 px-2.5 py-1 rounded text-[10px] font-bold border transition-all ${filterSubject === '全部' ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}>全部</button>
-                                                    {subjects.map(sub => ( <button key={sub.name} onClick={() => handleFilterChange(sub.name)} className={`flex-shrink-0 px-2.5 py-1 rounded text-[10px] font-bold border transition-all ${filterSubject === sub.name ? `${t.border} ${t.lightBg} ${t.text}` : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}>{sub.name}</button> ))}
+                                                <div className="relative -mx-2 px-2 mt-2">
+                                                    <div className="flex gap-2.5 overflow-x-auto scrollbar-hide pb-4 pt-2 snap-x snap-mandatory">
+                                                        {subjects.map(sub => {
+                                                            const isSelected = subject === sub.name;
+                                                            return ( <button key={sub.name} type="button" onClick={() => setSubject(sub.name)} className={`snap-start shrink-0 px-5 py-2.5 rounded-2xl text-sm font-black transition-all flex items-center justify-center min-w-[80px] border-2 ${isSelected ? `${sub.color} shadow-sm -translate-y-1 border-transparent` : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100 hover:-translate-y-0.5'}`}>{sub.name}</button> );
+                                                        })}
+                                                    </div>
                                                 </div>
-                                                <div className="flex items-center gap-2 w-full sm:w-auto z-30">
-                                                    {viewMode !== 'history' ? ( <button onClick={handleClearExpired} className="flex-shrink-0 text-xs font-bold bg-red-50 text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-100 flex items-center gap-1"><Icon name="trash-2" className="w-3 h-3" /> 清理過期</button> ) : ( <button onClick={handleClearHistory} className="flex-shrink-0 text-xs font-bold bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg hover:bg-slate-200 flex items-center gap-1"><Icon name="trash-2" className="w-3 h-3" /> 清理歷史</button> )}
-                                                    <span className="text-slate-400 text-xs font-bold whitespace-nowrap ml-1">排序:</span>
-                                                    <CustomDropdown value={sortOption} onChange={handleSortChange} options={[{ value: 'date_asc', label: '日期 (趕急先)' }, { value: 'date_desc', label: '日期 (長遠先)' }]} />
-                                                </div>
-                                            </div>
 
-                                            {/* Key 綁定 viewMode 確保切換時必定重新渲染避免卡空白 */}
-                                            <div key={`list-${viewMode}`} className={`space-y-4 pb-10 transition-opacity duration-300 ${!isListVisible ? 'opacity-0' : 'opacity-100'}`}>
-                                                {displayedItems.length === 0 ? (
-                                                    <div className="text-center py-20"><div className={`inline-flex p-6 rounded-full ${t.lightBg} mb-4`}><Icon name="check-circle-2" className={`w-12 h-12 ${t.text}`} /></div><h3 className="text-xl font-bold text-slate-700 dark:text-slate-300">{viewMode === 'history' ? '沒有已完成的紀錄' : '太好了！任務清單空空如也'}</h3></div>
-                                                ) : displayedItems.map((item, index) => {
-                                                    const isExiting = exitingIds.includes(item.id); const isCompleted = item.completed || isExiting; const dl = getDaysRemaining(item.dueDate);
-                                                    let statusColor = "text-emerald-500"; let statusText = `${dl} 天後`;
-                                                    if(dl < 0) { statusColor = "text-red-500"; statusText = `已過期`; } if(dl === 0) { statusColor = "text-orange-500 animate-pulse"; statusText = "今日到期"; } if(isCompleted) { statusColor = "text-slate-400"; statusText = "已完成"; }
-                                                    const subjectStyle = subjects.find(s => s.name === item.subject)?.color || 'bg-slate-100 text-slate-600 border-slate-200';
-                                                    return (
-                                                        <div key={item.id} style={{ animationDelay: `${index * 0.05}s` }} className={`animate-item bg-white dark:bg-slate-800 rounded-3xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 transition-all hover:shadow-md hover:-translate-y-0.5 group ${isExiting ? 'scale-95 opacity-0' : ''}`}>
-                                                            <div className="flex items-start gap-4">
-                                                                <button onClick={() => handleToggle(item.id, item.completed)} className={`mt-0.5 w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${isCompleted ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-200 dark:border-slate-600 bg-slate-50/50 dark:bg-slate-900/50 hover:border-emerald-400 dark:hover:border-emerald-500'}`}><Icon name="check-circle" className={`w-4 h-4 ${isCompleted ? 'opacity-100' : 'opacity-0'}`} /></button>
-                                                                <div className="flex-1 min-w-0">
-                                                                    <div className="flex justify-between items-start mb-1.5"><div className="flex gap-2 items-center flex-wrap"><span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg border ${subjectStyle}`}>{item.subject || '其他'}</span>{item.publicRefId && <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg ${t.lightBg} ${t.text}`}>廣播</span>}</div><div className={`text-[11px] font-bold flex items-center gap-1 ${statusColor}`}>{statusText}</div></div>
-                                                                    <div className={`text-base sm:text-lg font-bold mb-2 break-words ${isCompleted ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-white'}`}>{item.description}</div>
-                                                                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-50 dark:border-slate-700/50">
-                                                                        <div className="text-xs text-slate-400 flex items-center gap-1 font-medium">{formatDueDate(item.dueDate)}</div>
-                                                                        <div className="flex gap-2 opacity-40 group-hover:opacity-100 transition-opacity duration-300">
-                                                                            {!item.forceExpired && <button onClick={() => setEditingItem(item)} className="p-1 text-slate-500 hover:text-blue-500 transition"><Icon name="book-open" className="w-4 h-4" /></button>}
-                                                                            {isAdmin && item.publicRefId ? ( <><button onClick={() => deleteItem(item.id)} className="p-1 text-slate-500 hover:text-red-500 transition"><Icon name="trash-2" className="w-4 h-4" /></button><button onClick={() => deletePublicItem(item.publicRefId, item.id)} className="p-1 text-slate-500 hover:text-indigo-600 transition"><Icon name="bell" className="w-4 h-4" /></button></> ) : ( <button onClick={() => deleteItem(item.id)} className="p-1 text-slate-500 hover:text-red-500 transition"><Icon name="trash-2" className="w-4 h-4" /></button> )}
+                                                <div className="bg-slate-50/60 rounded-[1.5rem] border border-slate-200/60 p-2 sm:p-3 transition-all focus-within:bg-white focus-within:border-indigo-300">
+                                                    <input type="text" placeholder={inputType === 'homework' ? "輸入功課細節 (例如: 中文作句 P.4-5)..." : "輸入測驗/大考範圍..."} value={description} onChange={(e) => setDescription(e.target.value)} className="w-full bg-transparent px-4 py-3 sm:py-4 text-lg sm:text-xl font-bold text-slate-800 outline-none placeholder:text-slate-400 placeholder:font-medium" autoComplete="off" />
+                                                    <div className="flex flex-wrap sm:flex-nowrap justify-between items-center gap-3 mt-2 pt-3 border-t border-slate-200/60 px-2 pb-1">
+                                                        <div className="flex items-center gap-2.5 overflow-x-auto scrollbar-hide py-1 flex-1">
+                                                            <div className="relative group cursor-pointer shrink-0">
+                                                                <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" required />
+                                                                <div className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all border ${dueDate ? t.bg + ' text-white shadow-sm border-transparent' : 'bg-white text-slate-500 border-slate-200 group-hover:border-indigo-400'}`}>
+                                                                    <Icon name="calendar-clock" className="w-4 h-4" /><span>{dueDate ? formatDueDate(dueDate) : '選擇交期'}</span>
+                                                                </div>
+                                                            </div>
+                                                            <button type="button" onClick={() => { const d = new Date(); d.setDate(d.getDate() + 1); setDueDate(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`); }} className="shrink-0 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-600 text-sm font-bold hover:bg-slate-50 transition-all shadow-sm active:scale-95 flex items-center gap-1.5"><Icon name="check-circle-2" className="w-4 h-4 text-orange-500" />聽日</button>
+                                                        </div>
+                                                        <button type="submit" disabled={!description.trim() || !dueDate} className={`shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-full text-white flex items-center justify-center transition-all ${(!description.trim() || !dueDate) ? 'bg-slate-300 opacity-60 cursor-not-allowed scale-95' : `${t.bg} hover:scale-110 active:scale-90 shadow-lg`}`}>
+                                                            <Icon name="check-circle" className="w-5 h-5 sm:w-6 sm:h-6" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        )}
+
+                                        {isVisible('list') && (
+                                            <>
+                                                <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mb-6 relative">
+                                                    <div className={`flex items-center gap-2 w-full sm:w-auto overflow-x-auto scrollbar-hide pb-1 transition-opacity ${!isListVisible ? 'opacity-50' : 'opacity-100'}`}>
+                                                        <span className="text-slate-400 text-xs font-bold whitespace-nowrap">篩選:</span>
+                                                        <button onClick={() => handleFilterChange('全部')} className={`flex-shrink-0 px-2.5 py-1 rounded text-[10px] font-bold border transition-all ${filterSubject === '全部' ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}>全部</button>
+                                                        {subjects.map(sub => ( <button key={sub.name} onClick={() => handleFilterChange(sub.name)} className={`flex-shrink-0 px-2.5 py-1 rounded text-[10px] font-bold border transition-all ${filterSubject === sub.name ? `${t.border} ${t.lightBg} ${t.text}` : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}>{sub.name}</button> ))}
+                                                    </div>
+                                                    <div className="flex items-center gap-2 w-full sm:w-auto z-30">
+                                                        {viewMode !== 'history' ? ( <button onClick={handleClearExpired} className="flex-shrink-0 text-xs font-bold bg-red-50 text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-100 flex items-center gap-1"><Icon name="trash-2" className="w-3 h-3" /> 清理過期</button> ) : ( <button onClick={handleClearHistory} className="flex-shrink-0 text-xs font-bold bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg hover:bg-slate-200 flex items-center gap-1"><Icon name="trash-2" className="w-3 h-3" /> 清理歷史</button> )}
+                                                        <span className="text-slate-400 text-xs font-bold whitespace-nowrap ml-1">排序:</span>
+                                                        <CustomDropdown value={sortOption} onChange={handleSortChange} options={[{ value: 'date_asc', label: '日期 (趕急先)' }, { value: 'date_desc', label: '日期 (長遠先)' }]} />
+                                                    </div>
+                                                </div>
+
+                                                <div className={`space-y-4 pb-10 transition-opacity duration-300 ${!isListVisible ? 'opacity-0' : 'opacity-100'}`}>
+                                                    {displayedItems.length === 0 ? (
+                                                        <div className="text-center py-20"><div className={`inline-flex p-6 rounded-full ${t.lightBg} mb-4`}><Icon name="check-circle-2" className={`w-12 h-12 ${t.text}`} /></div><h3 className="text-xl font-bold text-slate-700 dark:text-slate-300">{viewMode === 'history' ? '沒有已完成的紀錄' : '太好了！任務清單空空如也'}</h3></div>
+                                                    ) : displayedItems.map((item, index) => {
+                                                        const isExiting = exitingIds.includes(item.id); const isCompleted = item.completed || isExiting; const dl = getDaysRemaining(item.dueDate);
+                                                        let statusColor = "text-emerald-500"; let statusText = `${dl} 天後`;
+                                                        if(dl < 0) { statusColor = "text-red-500"; statusText = `已過期`; } if(dl === 0) { statusColor = "text-orange-500 animate-pulse"; statusText = "今日到期"; } if(isCompleted) { statusColor = "text-slate-400"; statusText = "已完成"; }
+                                                        const subjectStyle = subjects.find(s => s.name === item.subject)?.color || 'bg-slate-100 text-slate-600 border-slate-200';
+                                                        return (
+                                                            <div key={item.id} style={{ animationDelay: `${index * 0.05}s` }} className={`animate-item bg-white dark:bg-slate-800 rounded-3xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 transition-all hover:shadow-md hover:-translate-y-0.5 group ${isExiting ? 'scale-95 opacity-0' : ''}`}>
+                                                                <div className="flex items-start gap-4">
+                                                                    <button onClick={() => handleToggle(item.id, item.completed)} className={`mt-0.5 w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${isCompleted ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-200 dark:border-slate-600 bg-slate-50/50 dark:bg-slate-900/50 hover:border-emerald-400 dark:hover:border-emerald-500'}`}><Icon name="check-circle" className={`w-4 h-4 ${isCompleted ? 'opacity-100' : 'opacity-0'}`} /></button>
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <div className="flex justify-between items-start mb-1.5"><div className="flex gap-2 items-center flex-wrap"><span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg border ${subjectStyle}`}>{item.subject || '其他'}</span>{item.publicRefId && <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg ${t.lightBg} ${t.text}`}>廣播</span>}</div><div className={`text-[11px] font-bold flex items-center gap-1 ${statusColor}`}>{statusText}</div></div>
+                                                                        <div className={`text-base sm:text-lg font-bold mb-2 break-words ${isCompleted ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-white'}`}>{item.description}</div>
+                                                                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-50 dark:border-slate-700/50">
+                                                                            <div className="text-xs text-slate-400 flex items-center gap-1 font-medium">{formatDueDate(item.dueDate)}</div>
+                                                                            <div className="flex gap-2 opacity-40 group-hover:opacity-100 transition-opacity duration-300">
+                                                                                {!item.forceExpired && <button onClick={() => setEditingItem(item)} className="p-1 text-slate-500 hover:text-blue-500 transition"><Icon name="book-open" className="w-4 h-4" /></button>}
+                                                                                {isAdmin && item.publicRefId ? ( <><button onClick={() => deleteItem(item.id)} className="p-1 text-slate-500 hover:text-red-500 transition"><Icon name="trash-2" className="w-4 h-4" /></button><button onClick={() => deletePublicItem(item.publicRefId, item.id)} className="p-1 text-slate-500 hover:text-indigo-600 transition"><Icon name="bell" className="w-4 h-4" /></button></> ) : ( <button onClick={() => deleteItem(item.id)} className="p-1 text-slate-500 hover:text-red-500 transition"><Icon name="trash-2" className="w-4 h-4" /></button> )}
+                                                                            </div>
                                                                         </div>
                                                                     </div>
                                                                 </div>
                                                             </div>
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-                                        </>
-                                    )}
-                                </>
-                            )}
+                                                        );
+                                                    })}
+                                                </div>
+                                            </>
+                                        )}
+                                    </>
+                                )}
 
-                            {viewMode === 'current' && appMode === 'class' && (
-                                <div className="space-y-6 animate-fadeIn pb-10">
-                                    <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 flex justify-between items-center">
-                                        <div><h3 className="text-xl font-bold flex items-center gap-2 dark:text-white"><Icon name="school" className={t.text} /> 我的班級</h3><p className="text-sm text-slate-500 mt-1">查看專屬的廣播任務</p></div>
-                                        <button onClick={() => setIsJoinClassOpen(true)} className={`px-4 py-2.5 rounded-xl font-bold text-sm text-white shadow-md active:scale-95 transition-all flex items-center gap-2 ${t.bg}`}><Icon name="plus" className="w-4 h-4" /> 加入班級</button>
-                                    </div>
-
-                                    {joinedClasses.length === 0 ? (
-                                        <div className="text-center py-20 bg-white dark:bg-slate-800 rounded-3xl border border-dashed border-slate-200 dark:border-slate-700">
-                                            <Icon name="school" className="w-16 h-16 mx-auto text-slate-300 dark:text-slate-600 mb-4" />
-                                            <h4 className="text-lg font-bold text-slate-600 dark:text-slate-300 mb-2">尚未加入任何班級</h4>
-                                            <p className="text-sm text-slate-400 mb-6">請向老師索取 6 位數班級代碼</p>
-                                            <button onClick={() => setIsJoinClassOpen(true)} className={`px-8 py-3 rounded-xl font-bold text-sm text-white shadow-md transition-all active:scale-95 ${t.bg}`}>立即加入</button>
+                                {viewMode === 'current' && appMode === 'class' && (
+                                    <div className="space-y-6 animate-fadeIn pb-10">
+                                        <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 flex justify-between items-center">
+                                            <div><h3 className="text-xl font-bold flex items-center gap-2 dark:text-white"><Icon name="school" className={t.text} /> 我的班級</h3><p className="text-sm text-slate-500 mt-1">查看專屬的廣播任務</p></div>
+                                            <button onClick={() => setIsJoinClassOpen(true)} className={`px-4 py-2.5 rounded-xl font-bold text-sm text-white shadow-md active:scale-95 transition-all flex items-center gap-2 ${t.bg}`}><Icon name="plus" className="w-4 h-4" /> 加入班級</button>
                                         </div>
-                                    ) : (
-                                        <>
-                                            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                                                {joinedClasses.map(code => {
-                                                    const cls = systemClasses.find(c => c.code === code); const name = cls ? cls.name : code;
-                                                    return ( <button key={code} onClick={() => setSelectedClassBoard(code)} className={`shrink-0 px-5 py-2.5 rounded-xl text-sm font-bold border-2 transition-all ${selectedClassBoard === code ? `${t.border} ${t.lightBg} ${t.text}` : 'bg-white dark:bg-slate-800 text-slate-500 border-slate-100 dark:border-slate-700'}`}>{name}</button> )
-                                                })}
+
+                                        {joinedClasses.length === 0 ? (
+                                            <div className="text-center py-20 bg-white dark:bg-slate-800 rounded-3xl border border-dashed border-slate-200 dark:border-slate-700">
+                                                <Icon name="school" className="w-16 h-16 mx-auto text-slate-300 dark:text-slate-600 mb-4" />
+                                                <h4 className="text-lg font-bold text-slate-600 dark:text-slate-300 mb-2">尚未加入任何班級</h4>
+                                                <p className="text-sm text-slate-400 mb-6">請向老師索取 6 位數班級代碼</p>
+                                                <button onClick={() => setIsJoinClassOpen(true)} className={`px-8 py-3 rounded-xl font-bold text-sm text-white shadow-md transition-all active:scale-95 ${t.bg}`}>立即加入</button>
                                             </div>
-                                            <div className="space-y-4">
-                                                {publicTasks.filter(task => task.targetClass === selectedClassBoard).length === 0 ? (
-                                                    <div className="text-center py-10"><p className="text-slate-500 font-medium">此班級目前沒有廣播任務 🎉</p></div>
-                                                ) : publicTasks.filter(task => task.targetClass === selectedClassBoard).map((task, idx) => {
-                                                    const subjectStyle = subjects.find(s => s.name === task.subject)?.color || 'bg-slate-100 text-slate-600 border-slate-200';
-                                                    return (
-                                                    <div key={task.id} style={{ animationDelay: `${idx * 0.05}s` }} className="animate-item bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl p-5 rounded-2xl shadow-sm border border-white/50 dark:border-slate-700 relative overflow-hidden transition-all hover:-translate-y-1 hover:shadow-lg group">
-                                                        {task.forceExpired && <div className="absolute inset-0 bg-white/50 dark:bg-slate-900/50 backdrop-blur-[1px] z-20 flex items-center justify-center pointer-events-none"><span className="bg-red-500 text-white font-bold px-4 py-2 rounded-xl shadow-lg rotate-[-10deg]">已強制過期</span></div>}
-                                                        <div className="relative z-10">
-                                                            <div className="flex justify-between items-start mb-3"><div className="flex gap-2 items-center"><span className={`text-[10px] font-bold px-2.5 py-1 rounded border ${subjectStyle}`}>{task.subject}</span><span className="text-[10px] bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 px-2 py-1 rounded font-bold">{task.type === 'homework' ? '功課' : '測驗'}</span></div><span className="text-xs text-slate-400 font-mono font-bold bg-slate-50 dark:bg-slate-900 px-2 py-1 rounded border border-slate-100 dark:border-slate-700">Due: {formatDueDate(task.dueDate)}</span></div>
-                                                            <p className="font-bold text-lg text-slate-800 dark:text-white mb-3 break-words">{task.description}</p>
-                                                            <div className="text-xs text-slate-400 flex justify-between items-center border-t border-slate-50 dark:border-slate-700 pt-3"><span className="flex items-center gap-1">發佈人: {task.senderName || '老師'}</span><span>{new Date(task.createdAt).toLocaleString('zh-HK')}</span></div>
+                                        ) : (
+                                            <>
+                                                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                                                    {joinedClasses.map(code => {
+                                                        const cls = systemClasses.find(c => c.code === code); const name = cls ? cls.name : code;
+                                                        return ( <button key={code} onClick={() => setSelectedClassBoard(code)} className={`shrink-0 px-5 py-2.5 rounded-xl text-sm font-bold border-2 transition-all ${selectedClassBoard === code ? `${t.border} ${t.lightBg} ${t.text}` : 'bg-white dark:bg-slate-800 text-slate-500 border-slate-100 dark:border-slate-700'}`}>{name}</button> )
+                                                    })}
+                                                </div>
+                                                <div className="space-y-4">
+                                                    {publicTasks.filter(task => task.targetClass === selectedClassBoard).length === 0 ? (
+                                                        <div className="text-center py-10"><p className="text-slate-500 font-medium">此班級目前沒有廣播任務 🎉</p></div>
+                                                    ) : publicTasks.filter(task => task.targetClass === selectedClassBoard).map((task, idx) => {
+                                                        const subjectStyle = subjects.find(s => s.name === task.subject)?.color || 'bg-slate-100 text-slate-600 border-slate-200';
+                                                        return (
+                                                        <div key={task.id} style={{ animationDelay: `${idx * 0.05}s` }} className="animate-item bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl p-5 rounded-2xl shadow-sm border border-white/50 dark:border-slate-700 relative overflow-hidden transition-all hover:-translate-y-1 hover:shadow-lg group">
+                                                            {task.forceExpired && <div className="absolute inset-0 bg-white/50 dark:bg-slate-900/50 backdrop-blur-[1px] z-20 flex items-center justify-center pointer-events-none"><span className="bg-red-500 text-white font-bold px-4 py-2 rounded-xl shadow-lg rotate-[-10deg]">已強制過期</span></div>}
+                                                            <div className="relative z-10">
+                                                                <div className="flex justify-between items-start mb-3"><div className="flex gap-2 items-center"><span className={`text-[10px] font-bold px-2.5 py-1 rounded border ${subjectStyle}`}>{task.subject}</span><span className="text-[10px] bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 px-2 py-1 rounded font-bold">{task.type === 'homework' ? '功課' : '測驗'}</span></div><span className="text-xs text-slate-400 font-mono font-bold bg-slate-50 dark:bg-slate-900 px-2 py-1 rounded border border-slate-100 dark:border-slate-700">Due: {formatDueDate(task.dueDate)}</span></div>
+                                                                <p className="font-bold text-lg text-slate-800 dark:text-white mb-3 break-words">{task.description}</p>
+                                                                <div className="text-xs text-slate-400 flex justify-between items-center border-t border-slate-50 dark:border-slate-700 pt-3"><span className="flex items-center gap-1">發佈人: {task.senderName || '老師'}</span><span>{new Date(task.createdAt).toLocaleString('zh-HK')}</span></div>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                )})}
-                                            </div>
-                                        </>
-                                    )}
-                                </div>
+                                                    )})}
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
                             )}
                         </div>
-                        )}
                     </div>
 
                     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-white/90 dark:bg-slate-800/90 backdrop-blur-2xl rounded-full p-2 shadow-lg border border-white/50 dark:border-slate-700/50 z-[100] flex items-center justify-between gap-1 sm:gap-2 max-w-[95%] overflow-x-auto dynamic-island-scroll">
