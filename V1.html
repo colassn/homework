@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-HK">
 <head>
-    <!-- 電子手冊 Pro v1.8.6 Verified Floating Settings：正式新版，已移除主頁同步大卡，保留浮動島個人設定中心 -->
+    <!-- 電子手冊 Pro v1.8.8 Confirmed Full Settings Page：重新確認新版，移除浮空設定，改為獨立應用式設定頁 -->
 
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-8VCPLTE2QT"></script>
     <script>
@@ -20,7 +20,8 @@
     <meta name="apple-mobile-web-app-title" content="電子手冊">
     
     <title>電子手冊 Pro</title>
-    <meta name="ehandbook-version" content="v1.8.6-verified-floating-settings">
+    <meta name="ehandbook-version" content="v1.8.8-confirmed-full-settings-page">
+    <script>window.__EHANDBOOK_VERSION__ = "v1.8.8-confirmed-full-settings-page"; console.log("電子手冊 Pro v1.8.8-confirmed-full-settings-page loaded");</script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js" crossorigin></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js" crossorigin></script>
@@ -120,7 +121,7 @@
             try {
                 var box = document.getElementById('loading-screen');
                 if (box && !window.__EHANDBOOK_RENDERED__) {
-                    box.innerHTML = "<div style='max-width:420px;padding:22px;text-align:center'><div style='font-size:42px;margin-bottom:10px'>⚠️</div><h2 style='font-size:1.2rem;font-weight:800;margin-bottom:8px;color:#ef4444'>網站載入時發生錯誤</h2><p style='font-size:13px;color:#64748b;line-height:1.6'>請重新整理一次；如果仍然出現，請截圖 Console 錯誤。系統已加入 v1.8.6 Verified Merge 啟動保護。</p></div>";
+                    box.innerHTML = "<div style='max-width:420px;padding:22px;text-align:center'><div style='font-size:42px;margin-bottom:10px'>⚠️</div><h2 style='font-size:1.2rem;font-weight:800;margin-bottom:8px;color:#ef4444'>網站載入時發生錯誤</h2><p style='font-size:13px;color:#64748b;line-height:1.6'>請重新整理一次；如果仍然出現，請截圖 Console 錯誤。系統已加入 v1.8.8 Confirmed Full Settings Page 啟動保護。</p></div>";
                 }
             } catch(e) {}
         });
@@ -2183,9 +2184,7 @@
             );
         }
 
-        function UserSettingsIslandModal({
-            isOpen,
-            onClose,
+        function UserSettingsPage({
             user,
             userProfile,
             t,
@@ -2200,134 +2199,181 @@
             setThemeColor,
             layoutMode,
             setLayoutMode,
+            customLayout,
+            setCustomLayout,
             onOpenNotifications,
             onOpenAppearance,
             onOpenSubjects,
             onGoClass,
             onLogout
         }) {
-            if (!isOpen) return null;
             const displayName = userProfile?.displayName || user?.displayName || '學生';
             const email = user?.email || userProfile?.email || '';
             const initial = String(displayName || email || 'E').trim().charAt(0).toUpperCase();
             const syncTitle = autoSyncPublicEnabled ? '自動同步已開啟' : '手動同步模式';
-            const syncDesc = autoSyncPublicEnabled ? '管理員發放新功課時，會自動加入你的個人手冊。' : '收到新廣播功課時，主頁提示你，再由你自行同步。';
-            const syncIcon = autoSyncPublicEnabled ? 'refresh-cw' : 'hand';
-            const syncTone = autoSyncPublicEnabled ? 'from-emerald-500 to-teal-500' : 'from-orange-500 to-amber-500';
+            const syncDesc = autoSyncPublicEnabled ? '新廣播功課會自動加入個人手冊，適合想省時間同避免漏功課。' : '新廣播功課會先提示你，再由你到班級分頁自行同步。';
             const layoutOptions = [
-                { value: 'normal', label: '完整', icon: 'layout-dashboard' },
-                { value: 'minimal', label: '極簡', icon: 'minimize-2' },
-                { value: 'custom', label: '自定義', icon: 'sliders-horizontal' }
+                { value: 'normal', label: '完整模式', desc: '顯示主頁卡片、時間表、輸入欄同任務列表', icon: 'layout-dashboard' },
+                { value: 'minimal', label: '極簡模式', desc: '只保留重要卡片同任務列表，主頁更乾淨', icon: 'minimize-2' },
+                { value: 'custom', label: '自定義', desc: '自己決定主頁每個區塊是否顯示', icon: 'sliders-horizontal' }
             ];
+            const customBlocks = [
+                { key: 'cards', label: '狀態卡片', desc: '今日急件、明日預告、測驗考試統計', icon: 'columns-3' },
+                { key: 'timetable', label: '即時課堂', desc: '顯示目前課節、倒數及下一節', icon: 'calendar-clock' },
+                { key: 'input', label: '新增功課欄', desc: '主頁直接新增功課或測驗', icon: 'square-pen' },
+                { key: 'list', label: '任務列表', desc: '顯示個人手冊功課列表', icon: 'list-checks' }
+            ];
+            const handleCustomToggle = (key) => setCustomLayout({ ...customLayout, [key]: !customLayout[key] });
+            const themeEntries = Object.entries(THEME_CONFIG);
+
+            const SettingSection = ({ title, desc, icon, children, right }) => (
+                <section className="rounded-[2rem] bg-white/85 dark:bg-slate-900/85 border border-white/70 dark:border-slate-700 shadow-sm overflow-hidden">
+                    <div className="p-5 sm:p-6 border-b border-slate-100 dark:border-slate-800 flex items-start justify-between gap-4">
+                        <div className="flex items-start gap-3 min-w-0">
+                            <div className={`w-11 h-11 rounded-2xl ${t.lightBg} ${t.text} flex items-center justify-center shrink-0`}><Icon name={icon} className="w-5 h-5" /></div>
+                            <div className="min-w-0">
+                                <h3 className="text-base sm:text-lg font-black text-slate-800 dark:text-white">{title}</h3>
+                                <p className="text-xs sm:text-sm font-bold text-slate-400 dark:text-slate-500 mt-1 leading-relaxed">{desc}</p>
+                            </div>
+                        </div>
+                        {right}
+                    </div>
+                    <div className="p-5 sm:p-6">{children}</div>
+                </section>
+            );
 
             return (
-                <div className="fixed inset-0 z-[255] flex items-end justify-center p-3 sm:p-6 pb-[6.25rem] sm:pb-8">
-                    <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
-                    <div className="relative w-full max-w-[760px] max-h-[82vh] overflow-hidden rounded-[2.25rem] glass-card bg-white/95 dark:bg-slate-900/95 border border-white/70 dark:border-slate-700 shadow-[0_30px_90px_-28px_rgba(15,23,42,0.65)] flex flex-col animate-pop-in">
-                        <div className="relative overflow-hidden p-5 sm:p-6 bg-gradient-to-br from-slate-900 via-indigo-900 to-sky-700 text-white shrink-0">
-                            <div className="absolute -top-16 -right-12 w-44 h-44 rounded-full bg-white/20 blur-3xl"></div>
-                            <div className="absolute bottom-0 left-10 w-40 h-24 rounded-full bg-cyan-300/20 blur-2xl"></div>
-                            <div className="relative flex items-center justify-between gap-4">
-                                <div className="flex items-center gap-4 min-w-0">
-                                    <div className="w-14 h-14 rounded-3xl bg-white/15 border border-white/20 backdrop-blur-md flex items-center justify-center text-2xl font-black shadow-lg shrink-0">{initial}</div>
-                                    <div className="min-w-0">
-                                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-[11px] font-black mb-2">
-                                            <Icon name="sparkles" className="w-3.5 h-3.5" /> 用戶專屬設定 · v1.8.6
-                                        </div>
-                                        <h3 className="text-2xl sm:text-3xl font-black tracking-tight truncate">{displayName}</h3>
-                                        <p className="text-xs sm:text-sm text-indigo-100 font-bold truncate mt-0.5">{email || '個人化你的電子手冊'}</p>
+                <div className="max-w-5xl mx-auto pb-10 space-y-6 animate-item">
+                    <div className="relative overflow-hidden rounded-[2.5rem] p-6 sm:p-8 bg-gradient-to-br from-slate-950 via-indigo-950 to-sky-800 text-white shadow-[0_30px_90px_-35px_rgba(15,23,42,0.8)]">
+                        <div className="absolute -top-20 -right-16 w-56 h-56 rounded-full bg-cyan-300/20 blur-3xl"></div>
+                        <div className="absolute bottom-0 left-16 w-60 h-32 rounded-full bg-violet-300/20 blur-3xl"></div>
+                        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-[1.618fr_1fr] gap-6 items-end">
+                            <div className="flex items-start gap-4 min-w-0">
+                                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-[1.7rem] bg-white/15 border border-white/20 backdrop-blur-xl flex items-center justify-center text-3xl font-black shadow-lg shrink-0">{initial}</div>
+                                <div className="min-w-0 pt-1">
+                                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-[11px] font-black mb-3">
+                                        <Icon name="settings-2" className="w-3.5 h-3.5" /> 應用程式設定 · v1.8.8
                                     </div>
+                                    <h2 className="text-3xl sm:text-4xl font-black tracking-tight truncate">{displayName}</h2>
+                                    <p className="text-sm text-indigo-100 font-bold mt-1 truncate">{email || '個人化你的電子手冊'}</p>
                                 </div>
-                                <button type="button" onClick={onClose} className="w-11 h-11 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 flex items-center justify-center transition-all active:scale-90 shrink-0"><Icon name="x" className="w-5 h-5" /></button>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="rounded-[1.6rem] bg-white/10 border border-white/15 p-4 backdrop-blur-xl">
+                                    <div className="text-[10px] font-black text-indigo-100 uppercase">同步模式</div>
+                                    <div className="text-sm font-black mt-1">{syncTitle}</div>
+                                </div>
+                                <div className="rounded-[1.6rem] bg-white/10 border border-white/15 p-4 backdrop-blur-xl">
+                                    <div className="text-[10px] font-black text-indigo-100 uppercase">通知</div>
+                                    <div className="text-sm font-black mt-1">{unreadNotificationCount > 0 ? `${unreadNotificationCount} 則未讀` : '全部已讀'}</div>
+                                </div>
                             </div>
                         </div>
+                    </div>
 
-                        <div className="overflow-y-auto scrollbar-hide p-4 sm:p-6 space-y-5">
-                            <div className={`relative overflow-hidden rounded-[2rem] p-[1px] bg-gradient-to-r ${syncTone} shadow-lg`}>
-                                <div className="rounded-[2rem] bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl p-4 sm:p-5">
-                                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                                        <div className="flex items-start gap-3 min-w-0">
-                                            <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${syncTone} text-white flex items-center justify-center shadow-lg shrink-0`}><Icon name={syncIcon} className="w-5 h-5" /></div>
-                                            <div className="min-w-0">
-                                                <div className="flex items-center gap-2 flex-wrap">
-                                                    <h4 className="font-black text-slate-800 dark:text-white text-base sm:text-lg">廣播功課同步</h4>
-                                                    <span className={`text-[10px] px-2.5 py-1 rounded-full font-black ${autoSyncPublicEnabled ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300'}`}>{syncTitle}</span>
-                                                </div>
-                                                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-bold mt-1 leading-relaxed">{syncDesc}</p>
+                    <SettingSection title="廣播功課同步" desc="控制管理員發放功課後，要自動加入個人手冊，定係由你手動確認。" icon="refresh-cw" right={
+                        unsyncedCount > 0 ? <span className="px-3 py-1.5 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 text-[11px] font-black shrink-0">{unsyncedCount} 份待同步</span> : null
+                    }>
+                        <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-5 items-stretch">
+                            <div className={`rounded-[1.75rem] p-5 border ${autoSyncPublicEnabled ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-800' : 'bg-orange-50 dark:bg-orange-900/20 border-orange-100 dark:border-orange-800'}`}>
+                                <div className="flex items-start gap-3">
+                                    <div className={`w-12 h-12 rounded-2xl text-white flex items-center justify-center shadow-lg ${autoSyncPublicEnabled ? 'bg-gradient-to-br from-emerald-500 to-teal-500' : 'bg-gradient-to-br from-orange-500 to-amber-500'}`}><Icon name={autoSyncPublicEnabled ? 'refresh-cw' : 'hand'} className="w-5 h-5" /></div>
+                                    <div>
+                                        <h4 className={`font-black text-lg ${autoSyncPublicEnabled ? 'text-emerald-800 dark:text-emerald-200' : 'text-orange-800 dark:text-orange-200'}`}>{syncTitle}</h4>
+                                        <p className={`text-sm font-bold leading-relaxed mt-1 ${autoSyncPublicEnabled ? 'text-emerald-700/80 dark:text-emerald-100/80' : 'text-orange-700/80 dark:text-orange-100/80'}`}>{syncDesc}</p>
+                                    </div>
+                                </div>
+                                {!autoSyncPublicEnabled && unsyncedCount > 0 && (
+                                    <button type="button" onClick={onGoClass} className="mt-4 w-full rounded-2xl bg-white/85 dark:bg-slate-900/50 border border-orange-200 dark:border-orange-800 px-4 py-3 flex items-center justify-between text-left hover:scale-[1.01] transition-all active:scale-[0.99]">
+                                        <span className="text-sm font-black text-orange-700 dark:text-orange-300 flex items-center gap-2"><Icon name="bell-ring" className="w-4 h-4" /> 前往班級分頁同步</span>
+                                        <Icon name="arrow-right" className="w-4 h-4 text-orange-500" />
+                                    </button>
+                                )}
+                            </div>
+                            <div className="grid grid-cols-2 lg:grid-cols-1 gap-3">
+                                <button type="button" disabled={!syncPreferenceLoaded} onClick={() => onToggleAutoSyncPublic(true)} className={`rounded-[1.5rem] border p-4 text-left transition-all active:scale-95 disabled:opacity-50 ${autoSyncPublicEnabled ? 'bg-emerald-500 text-white border-emerald-400 shadow-lg' : 'bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-emerald-300'}`}>
+                                    <Icon name="toggle-right" className="w-5 h-5 mb-2" /><div className="font-black text-sm">開啟自動同步</div><div className="text-[11px] font-bold opacity-75 mt-1">省時間，避免漏功課</div>
+                                </button>
+                                <button type="button" disabled={!syncPreferenceLoaded} onClick={() => onToggleAutoSyncPublic(false)} className={`rounded-[1.5rem] border p-4 text-left transition-all active:scale-95 disabled:opacity-50 ${!autoSyncPublicEnabled ? 'bg-orange-500 text-white border-orange-400 shadow-lg' : 'bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-orange-300'}`}>
+                                    <Icon name="toggle-left" className="w-5 h-5 mb-2" /><div className="font-black text-sm">保持手動同步</div><div className="text-[11px] font-bold opacity-75 mt-1">每份功課自己確認</div>
+                                </button>
+                            </div>
+                        </div>
+                    </SettingSection>
+
+                    <SettingSection title="外觀個人化" desc="調整主題色、深色模式同整體介面密度，令電子手冊更貼合你嘅使用習慣。" icon="palette" right={<button type="button" onClick={onOpenAppearance} className="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-300 text-xs font-black hover:bg-slate-200 dark:hover:bg-slate-700">進階外觀</button>}>
+                        <div className="space-y-5">
+                            <div>
+                                <div className="text-xs font-black text-slate-400 uppercase mb-3">主題顏色</div>
+                                <div className="grid grid-cols-4 sm:grid-cols-7 gap-3">
+                                    {themeEntries.map(([key, config]) => (
+                                        <button key={key} type="button" onClick={() => setThemeColor(key)} className={`rounded-[1.25rem] p-2 border transition-all active:scale-95 ${themeColor === key ? `${config.lightBg} ${config.border} shadow-md scale-[1.02]` : 'bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-700 hover:scale-[1.02]'}`}>
+                                            <div className={`w-full h-10 rounded-xl bg-gradient-to-br ${config.gradient} mb-2`}></div>
+                                            <div className={`text-[11px] font-black ${themeColor === key ? config.text : 'text-slate-400'}`}>{config.name}</div>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <button type="button" onClick={() => setIsDarkMode(false)} className={`p-4 rounded-[1.5rem] border flex items-center gap-3 text-left transition-all ${!isDarkMode ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 text-orange-600 dark:text-orange-300' : 'bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-500 dark:text-slate-300'}`}><Icon name="sun" className="w-5 h-5" /><div><div className="font-black text-sm">淺色模式</div><div className="text-[11px] font-bold opacity-75">乾淨清爽</div></div></button>
+                                <button type="button" onClick={() => setIsDarkMode(true)} className={`p-4 rounded-[1.5rem] border flex items-center gap-3 text-left transition-all ${isDarkMode ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-300' : 'bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-500 dark:text-slate-300'}`}><Icon name="moon" className="w-5 h-5" /><div><div className="font-black text-sm">深色模式</div><div className="text-[11px] font-bold opacity-75">夜晚護眼</div></div></button>
+                            </div>
+                        </div>
+                    </SettingSection>
+
+                    <SettingSection title="主頁排版設計" desc="像真正 App 設定一樣，自行決定主頁要完整、極簡，還是逐項開關。" icon="layout-template">
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                {layoutOptions.map(opt => (
+                                    <button key={opt.value} type="button" onClick={() => setLayoutMode(opt.value)} className={`p-4 rounded-[1.5rem] border text-left transition-all active:scale-95 ${layoutMode === opt.value ? `${t.lightBg} ${t.border} ${t.text} shadow-md` : 'bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-500 dark:text-slate-300 hover:border-slate-300'}`}>
+                                        <Icon name={opt.icon} className="w-5 h-5 mb-3" />
+                                        <div className="font-black text-sm">{opt.label}</div>
+                                        <div className="text-[11px] font-bold opacity-70 mt-1 leading-relaxed">{opt.desc}</div>
+                                    </button>
+                                ))}
+                            </div>
+                            <div className={`rounded-[1.75rem] border p-4 transition-all ${layoutMode === 'custom' ? 'bg-white dark:bg-slate-900 border-indigo-100 dark:border-indigo-800' : 'bg-slate-50/60 dark:bg-slate-800/50 border-slate-100 dark:border-slate-700 opacity-75'}`}>
+                                <div className="flex items-center justify-between gap-3 mb-3">
+                                    <div>
+                                        <div className="font-black text-sm text-slate-800 dark:text-white">自定義主頁區塊</div>
+                                        <div className="text-[11px] font-bold text-slate-400">選擇「自定義」後，以下開關會套用到主頁。</div>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    {customBlocks.map(block => (
+                                        <button key={block.key} type="button" onClick={() => { setLayoutMode('custom'); handleCustomToggle(block.key); }} className={`rounded-2xl border p-4 text-left flex items-start justify-between gap-3 transition-all active:scale-[0.98] ${customLayout[block.key] ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-100 dark:border-indigo-800' : 'bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-700'}`}>
+                                            <div className="flex items-start gap-3 min-w-0">
+                                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${customLayout[block.key] ? 'bg-indigo-600 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-500'}`}><Icon name={block.icon} className="w-4 h-4" /></div>
+                                                <div><div className="font-black text-sm text-slate-800 dark:text-white">{block.label}</div><div className="text-[11px] font-bold text-slate-400 mt-0.5 leading-relaxed">{block.desc}</div></div>
                                             </div>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-2 shrink-0 lg:w-[260px]">
-                                            <button type="button" disabled={!syncPreferenceLoaded} onClick={() => onToggleAutoSyncPublic(true)} className={`p-3 rounded-2xl border font-black text-xs flex flex-col items-center justify-center gap-1 transition-all active:scale-95 disabled:opacity-50 ${autoSyncPublicEnabled ? 'bg-emerald-500 text-white border-emerald-400 shadow-emerald-200/70 dark:shadow-emerald-900/30' : 'bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-emerald-300'}`}><Icon name="refresh-cw" className="w-4 h-4" /> 自動</button>
-                                            <button type="button" disabled={!syncPreferenceLoaded} onClick={() => onToggleAutoSyncPublic(false)} className={`p-3 rounded-2xl border font-black text-xs flex flex-col items-center justify-center gap-1 transition-all active:scale-95 disabled:opacity-50 ${!autoSyncPublicEnabled ? 'bg-orange-500 text-white border-orange-400 shadow-orange-200/70 dark:shadow-orange-900/30' : 'bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-orange-300'}`}><Icon name="hand" className="w-4 h-4" /> 手動</button>
-                                        </div>
-                                    </div>
-                                    {!autoSyncPublicEnabled && unsyncedCount > 0 && (
-                                        <button type="button" onClick={onGoClass} className="mt-4 w-full rounded-2xl bg-orange-50 dark:bg-orange-900/20 border border-orange-100 dark:border-orange-800 p-3 flex items-center justify-between gap-3 text-left hover:bg-orange-100/80 dark:hover:bg-orange-900/30 transition-all active:scale-[0.99]">
-                                            <span className="flex items-center gap-2 text-sm font-black text-orange-700 dark:text-orange-300"><Icon name="bell-ring" className="w-4 h-4" /> 尚有 {unsyncedCount} 份廣播功課未同步</span>
-                                            <span className="text-[11px] font-black text-orange-600 dark:text-orange-300 flex items-center gap-1">前往同步 <Icon name="arrow-right" className="w-3.5 h-3.5" /></span>
+                                            <div className={`w-12 h-7 rounded-full relative shrink-0 transition-all ${customLayout[block.key] ? 'bg-indigo-600' : 'bg-slate-300 dark:bg-slate-700'}`}><span className={`absolute top-[3px] w-5 h-5 rounded-full bg-white shadow transition-all ${customLayout[block.key] ? 'left-[24px]' : 'left-[4px]'}`}></span></div>
                                         </button>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 lg:grid-cols-[1.08fr_0.92fr] gap-4">
-                                <div className="rounded-[2rem] bg-slate-50/80 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700 p-4 sm:p-5">
-                                    <div className="flex items-center justify-between gap-3 mb-4">
-                                        <div>
-                                            <h4 className="font-black text-slate-800 dark:text-white flex items-center gap-2"><Icon name="palette" className={`w-5 h-5 ${t.text}`} /> 個人化外觀</h4>
-                                            <p className="text-[11px] font-bold text-slate-400 mt-1">主題、深色模式、版面密度</p>
-                                        </div>
-                                        <button type="button" onClick={onOpenAppearance} className="px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-black text-slate-500 dark:text-slate-300 hover:border-indigo-300 transition-all">進階</button>
-                                    </div>
-                                    <div className="grid grid-cols-7 gap-2 mb-4">
-                                        {Object.entries(THEME_CONFIG).map(([key, config]) => (
-                                            <button key={key} type="button" onClick={() => setThemeColor(key)} title={config.name} className={`h-9 rounded-2xl bg-gradient-to-br ${config.gradient} transition-all active:scale-90 ${themeColor === key ? 'ring-4 ring-white dark:ring-slate-700 shadow-lg scale-105' : 'opacity-75 hover:opacity-100'}`}></button>
-                                        ))}
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-2 mb-3">
-                                        <button type="button" onClick={() => setIsDarkMode(false)} className={`py-3 rounded-2xl text-xs font-black flex items-center justify-center gap-2 transition-all ${!isDarkMode ? 'bg-white dark:bg-slate-900 text-orange-500 shadow-sm border border-orange-100 dark:border-slate-700' : 'bg-slate-100 dark:bg-slate-900/50 text-slate-400 border border-transparent'}`}><Icon name="sun" className="w-4 h-4" /> 淺色</button>
-                                        <button type="button" onClick={() => setIsDarkMode(true)} className={`py-3 rounded-2xl text-xs font-black flex items-center justify-center gap-2 transition-all ${isDarkMode ? 'bg-white dark:bg-slate-900 text-indigo-400 shadow-sm border border-indigo-100 dark:border-slate-700' : 'bg-slate-100 dark:bg-slate-900/50 text-slate-400 border border-transparent'}`}><Icon name="moon" className="w-4 h-4" /> 深色</button>
-                                    </div>
-                                    <div className="grid grid-cols-3 gap-2">
-                                        {layoutOptions.map(opt => (
-                                            <button key={opt.value} type="button" onClick={() => setLayoutMode(opt.value)} className={`py-3 rounded-2xl text-xs font-black flex items-center justify-center gap-1.5 transition-all ${layoutMode === opt.value ? `${t.lightBg} ${t.text} border ${t.border} shadow-sm` : 'bg-white/70 dark:bg-slate-900/50 text-slate-400 border border-slate-100 dark:border-slate-700'}`}><Icon name={opt.icon} className="w-3.5 h-3.5" /> {opt.label}</button>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div className="rounded-[2rem] bg-slate-50/80 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700 p-4 sm:p-5">
-                                    <h4 className="font-black text-slate-800 dark:text-white flex items-center gap-2 mb-4"><Icon name="grid-2x2" className="w-5 h-5 text-sky-500" /> 快捷設定</h4>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <button type="button" onClick={onOpenNotifications} className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-700 p-3 text-left hover:border-orange-300 transition-all active:scale-95">
-                                            <div className="w-9 h-9 rounded-xl bg-orange-100 dark:bg-orange-900/30 text-orange-500 flex items-center justify-center mb-2"><Icon name="bell" className="w-4 h-4" /></div>
-                                            <div className="text-xs font-black text-slate-800 dark:text-white">通知中心</div>
-                                            <div className="text-[10px] font-bold text-slate-400 mt-0.5">{unreadNotificationCount > 0 ? `${unreadNotificationCount} 則未讀` : '全部已讀'}</div>
-                                        </button>
-                                        <button type="button" onClick={onOpenSubjects} className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-700 p-3 text-left hover:border-indigo-300 transition-all active:scale-95">
-                                            <div className="w-9 h-9 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 text-indigo-500 flex items-center justify-center mb-2"><Icon name="school" className="w-4 h-4" /></div>
-                                            <div className="text-xs font-black text-slate-800 dark:text-white">科目管理</div>
-                                            <div className="text-[10px] font-bold text-slate-400 mt-0.5">顏色與科目</div>
-                                        </button>
-                                        <button type="button" onClick={onGoClass} className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-700 p-3 text-left hover:border-emerald-300 transition-all active:scale-95">
-                                            <div className="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 text-emerald-500 flex items-center justify-center mb-2"><Icon name="school-2" className="w-4 h-4" /></div>
-                                            <div className="text-xs font-black text-slate-800 dark:text-white">班級分頁</div>
-                                            <div className="text-[10px] font-bold text-slate-400 mt-0.5">同步廣播</div>
-                                        </button>
-                                        <button type="button" onClick={onLogout} className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-700 p-3 text-left hover:border-red-300 transition-all active:scale-95">
-                                            <div className="w-9 h-9 rounded-xl bg-red-100 dark:bg-red-900/30 text-red-500 flex items-center justify-center mb-2"><Icon name="log-out" className="w-4 h-4" /></div>
-                                            <div className="text-xs font-black text-slate-800 dark:text-white">登出</div>
-                                            <div className="text-[10px] font-bold text-slate-400 mt-0.5">切換帳號</div>
-                                        </button>
-                                    </div>
+                                    ))}
                                 </div>
                             </div>
                         </div>
+                    </SettingSection>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                        <SettingSection title="通知與提醒" desc="管理通知中心、未讀提醒同版本更新資訊。" icon="bell-ring" right={unreadNotificationCount > 0 ? <span className="px-2.5 py-1 rounded-full bg-red-500 text-white text-[10px] font-black">{unreadNotificationCount}</span> : null}>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <button type="button" onClick={onOpenNotifications} className="p-4 rounded-2xl bg-orange-50 dark:bg-orange-900/20 border border-orange-100 dark:border-orange-800 text-left hover:scale-[1.01] active:scale-[0.98] transition-all"><Icon name="bell" className="w-5 h-5 text-orange-500 mb-2" /><div className="font-black text-sm text-orange-700 dark:text-orange-300">打開通知中心</div><div className="text-[11px] font-bold text-orange-600/70 dark:text-orange-200/70 mt-1">查看廣播、更新、過期功課</div></button>
+                                <button type="button" onClick={onGoClass} className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 text-left hover:scale-[1.01] active:scale-[0.98] transition-all"><Icon name="school-2" className="w-5 h-5 text-emerald-500 mb-2" /><div className="font-black text-sm text-emerald-700 dark:text-emerald-300">前往班級同步</div><div className="text-[11px] font-bold text-emerald-600/70 dark:text-emerald-200/70 mt-1">處理老師發放的功課</div></button>
+                            </div>
+                        </SettingSection>
+                        <SettingSection title="科目與帳號" desc="管理科目顏色、帳戶操作及登出。" icon="user-cog">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <button type="button" onClick={onOpenSubjects} className="p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 text-left hover:scale-[1.01] active:scale-[0.98] transition-all"><Icon name="school" className="w-5 h-5 text-indigo-500 mb-2" /><div className="font-black text-sm text-indigo-700 dark:text-indigo-300">科目管理</div><div className="text-[11px] font-bold text-indigo-600/70 dark:text-indigo-200/70 mt-1">自訂科目、排序、顏色</div></button>
+                                <button type="button" onClick={onLogout} className="p-4 rounded-2xl bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 text-left hover:scale-[1.01] active:scale-[0.98] transition-all"><Icon name="log-out" className="w-5 h-5 text-red-500 mb-2" /><div className="font-black text-sm text-red-700 dark:text-red-300">登出帳號</div><div className="text-[11px] font-bold text-red-600/70 dark:text-red-200/70 mt-1">切換或重新登入</div></button>
+                            </div>
+                        </SettingSection>
                     </div>
                 </div>
             );
         }
 
-        function App() {
+        
+function App() {
             const [user, setUser] = useState(null);
             const [authLoading, setAuthLoading] = useState(true);
             const [items, setItems] = useState([]);
@@ -2350,7 +2396,6 @@
             const [isDarkMode, setIsDarkMode] = useState(() => safeStorageGet('isDarkMode') === 'true');
             const [themeColor, setThemeColor] = useState(() => safeStorageGet('themeColor', 'indigo') || 'indigo');
             const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
-            const [isUserSettingsOpen, setIsUserSettingsOpen] = useState(false);
             const [layoutMode, setLayoutMode] = useState(() => safeStorageGet('layoutMode', 'normal') || 'normal');
             const [customLayout, setCustomLayout] = useState(() => safeStorageJSON('customLayout', { cards: true, timetable: true, input: true, list: true }));
             
@@ -2404,7 +2449,7 @@
                 const loadingScreen = document.getElementById('loading-screen');
                 window.__EHANDBOOK_RENDERED__ = true;
                 if (loadingScreen) { loadingScreen.classList.add('hidden-loader'); setTimeout(() => loadingScreen.remove(), 500); }
-                // v1.8.6: 不再於載入時自動要求瀏覽器通知權限，避免部分裝置卡住或彈出原生提示。 
+                // v1.8.8: 不再於載入時自動要求瀏覽器通知權限，並改用獨立設定頁。 
                 const timer = setInterval(() => setGlobalNow(new Date()), 1000);
                 return () => clearInterval(timer);
             }, []);
@@ -3165,11 +3210,11 @@
                         <header className="flex items-center justify-between mb-8 max-w-3xl mx-auto glass-card bg-white/80 dark:bg-slate-900/80 px-5 py-4 rounded-[2rem]">
                             <div className="flex items-center gap-3">
                                 <div className={`w-11 h-11 rounded-2xl flex items-center justify-center bg-gradient-to-br ${t.gradient} text-white shadow-lg`}>
-                                    <Icon name={viewMode === 'timetable' || viewMode === 'timetable_edit' ? "calendar-clock" : viewMode === 'history' ? "timer" : "book-open"} className="w-6 h-6" />
+                                    <Icon name={viewMode === 'settings' ? "sliders-horizontal" : viewMode === 'timetable' || viewMode === 'timetable_edit' ? "calendar-clock" : viewMode === 'history' ? "timer" : "book-open"} className="w-6 h-6" />
                                 </div>
                                 <div>
                                     <h1 className="text-lg sm:text-xl font-black text-slate-800 dark:text-white leading-tight tracking-tight">
-                                        {viewMode === 'timetable' ? '上課時間表' : viewMode === 'timetable_edit' ? '編輯時間表' : viewMode === 'history' ? '歷史紀錄' : '學生小幫手'}
+                                        {viewMode === 'settings' ? '應用程式設定' : viewMode === 'timetable' ? '上課時間表' : viewMode === 'timetable_edit' ? '編輯時間表' : viewMode === 'history' ? '歷史紀錄' : '學生小幫手'}
                                     </h1>
                                     <p className="text-xs font-bold text-slate-500 mt-0.5">{globalNow.toLocaleDateString('zh-HK', { year: 'numeric', month: 'numeric', day: 'numeric', weekday: 'short' })}</p>
                                 </div>
@@ -3203,7 +3248,30 @@
                         {viewMode !== 'admin' && (
                             <div key={`${viewMode}-${appMode}`} className="animate-item">
                                 {viewMode === 'timetable' ? ( <div className="max-w-3xl mx-auto"><Timetable currentDay={currentTimetableDay} config={timetableConfig} onDayChange={setCurrentTimetableDay} subjects={subjects} globalNow={globalNow} /></div> ) : 
-                                 viewMode === 'timetable_edit' ? ( <TimetableEditor initialConfig={timetableConfig} onSave={saveTimetableConfig} onCancel={() => setViewMode('timetable')} subjects={subjects} triggerConfirm={triggerConfirm} /> ) : (
+                                 viewMode === 'timetable_edit' ? ( <TimetableEditor initialConfig={timetableConfig} onSave={saveTimetableConfig} onCancel={() => setViewMode('timetable')} subjects={subjects} triggerConfirm={triggerConfirm} /> ) :
+                                 viewMode === 'settings' ? ( <UserSettingsPage
+                                    user={user}
+                                    userProfile={userProfile}
+                                    t={t}
+                                    autoSyncPublicEnabled={autoSyncPublicEnabled}
+                                    syncPreferenceLoaded={syncPreferenceLoaded}
+                                    onToggleAutoSyncPublic={handleToggleAutoSyncPublic}
+                                    unsyncedCount={unsyncedPublicTasks.length}
+                                    unreadNotificationCount={unreadNotificationCount}
+                                    isDarkMode={isDarkMode}
+                                    setIsDarkMode={setIsDarkMode}
+                                    themeColor={themeColor}
+                                    setThemeColor={setThemeColor}
+                                    layoutMode={layoutMode}
+                                    setLayoutMode={setLayoutMode}
+                                    customLayout={customLayout}
+                                    setCustomLayout={setCustomLayout}
+                                    onOpenNotifications={() => setIsNotificationCenterOpen(true)}
+                                    onOpenAppearance={() => setIsPreferencesOpen(true)}
+                                    onOpenSubjects={() => setIsSubjectManagerOpen(true)}
+                                    onGoClass={() => { setViewMode('current'); setAppMode('class'); }}
+                                    onLogout={handleLogout}
+                                 /> ) : (
                                 
                                 <div className="max-w-3xl mx-auto pt-2">
                                     {viewMode === 'current' && appMode === 'personal' && !autoSyncPublicEnabled && unsyncedPublicTasks.length > 0 && (
@@ -3453,73 +3521,18 @@
                         )}
                     </div>
 
-                    {viewMode !== 'admin' && (
-                        <button
-                            type="button"
-                            onClick={() => setIsUserSettingsOpen(true)}
-                            className={`fixed bottom-[5.85rem] right-4 sm:right-6 z-[115] group rounded-[1.6rem] p-[1px] bg-gradient-to-r ${autoSyncPublicEnabled ? 'from-emerald-400 via-teal-400 to-sky-500' : 'from-orange-400 via-amber-400 to-rose-500'} shadow-[0_18px_45px_-18px_rgba(15,23,42,0.55)] active:scale-95 transition-all duration-300 hover:-translate-y-1`}
-                        >
-                            <div className="relative overflow-hidden rounded-[1.55rem] glass-card bg-white/92 dark:bg-slate-900/92 px-3.5 py-3 flex items-center gap-3 border border-white/60 dark:border-slate-700 min-w-[178px] sm:min-w-[218px]">
-                                <div className={`w-11 h-11 rounded-2xl bg-gradient-to-br ${autoSyncPublicEnabled ? 'from-emerald-500 to-teal-500' : 'from-orange-500 to-amber-500'} text-white flex items-center justify-center shadow-lg group-hover:rotate-6 transition-transform`}>
-                                    <Icon name="sliders-horizontal" className="w-5 h-5" />
-                                </div>
-                                <div className="min-w-0 text-left leading-tight">
-                                    <div className="text-[11px] font-black text-slate-400 dark:text-slate-500 flex items-center gap-1">
-                                        個人設定中心
-                                        {unsyncedPublicTasks.length > 0 && <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>}
-                                    </div>
-                                    <div className="text-sm font-black text-slate-800 dark:text-white truncate">{autoSyncPublicEnabled ? '自動同步已開啟' : '手動同步模式'}</div>
-                                    <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 truncate">外觀・通知・同步・科目</div>
-                                </div>
-                                {unsyncedPublicTasks.length > 0 && (
-                                    <div className="absolute -top-1 -right-1 min-w-[22px] h-[22px] rounded-full bg-red-500 text-white text-[10px] font-black flex items-center justify-center shadow-lg border-2 border-white dark:border-slate-900">
-                                        {unsyncedPublicTasks.length > 9 ? '9+' : unsyncedPublicTasks.length}
-                                    </div>
-                                )}
-                            </div>
-                        </button>
-                    )}
-
-                    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 glass-card bg-white/90 dark:bg-slate-800/90 rounded-full p-2 shadow-lg border border-white/50 dark:border-slate-700/50 z-[100] flex items-center justify-between gap-1 sm:gap-2 max-w-[95%] overflow-x-auto dynamic-island-scroll">
+                                        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 glass-card bg-white/90 dark:bg-slate-800/90 rounded-full p-2 shadow-lg border border-white/50 dark:border-slate-700/50 z-[100] flex items-center justify-between gap-1 sm:gap-2 max-w-[95%] overflow-x-auto dynamic-island-scroll">
                         <NavItem icon="book-open" label="主頁" active={viewMode === 'current' && appMode === 'personal'} onClick={() => { setViewMode('current'); setAppMode('personal'); setIsListVisible(true); }} t={t} />
                         <NavItem icon="school" label="班級" active={viewMode === 'current' && appMode === 'class'} onClick={() => { setViewMode('current'); setAppMode('class'); setIsListVisible(true); }} t={t} />
                         <NavItem icon="calendar-clock" label="時間表" active={viewMode === 'timetable' || viewMode === 'timetable_edit'} onClick={() => { setViewMode('timetable'); setIsListVisible(true); }} t={t} />
                         <NavItem icon="timer" label="歷史" active={viewMode === 'history'} onClick={() => { setViewMode('history'); setAppMode('personal'); setIsListVisible(true); }} t={t} />
-                        <NavItem icon="sliders-horizontal" label="設定" active={isUserSettingsOpen} onClick={() => setIsUserSettingsOpen(true)} t={t} />
+                        <NavItem icon="sliders-horizontal" label="設定" active={viewMode === 'settings'} onClick={() => { setViewMode('settings'); setAppMode('personal'); setIsListVisible(true); }} t={t} />
                         {isAdmin && ( <><div className="w-px h-6 bg-slate-200 dark:bg-slate-700 mx-1"></div><NavItem icon="shield" label="後台" active={viewMode === 'admin'} onClick={() => setViewMode('admin')} t={t} /></> )}
                     </div>
 
                     {editingItem && <EditModal item={editingItem} onClose={() => setEditingItem(null)} onSave={handleUpdateItem} triggerAlert={triggerAlert} triggerConfirm={triggerConfirm} subjects={subjects} />}
                     <DatePickerModal isOpen={isDueDatePickerOpen} value={dueDate} onSelect={setDueDate} onClose={() => setIsDueDatePickerOpen(false)} title="選擇功課交期" />
                     {quickView.isOpen && <QuickViewModal isOpen={quickView.isOpen} onClose={() => setQuickView({ isOpen: false, title: '', items: [] })} title={quickView.title} items={quickView.items} subjects={subjects} onEdit={setEditingItem} onDelete={deleteItem} isAdmin={isAdmin} userUid={user?.uid} />}
-                    <UserSettingsIslandModal
-                        isOpen={isUserSettingsOpen}
-                        onClose={() => setIsUserSettingsOpen(false)}
-                        user={user}
-                        userProfile={userProfile}
-                        t={t}
-                        autoSyncPublicEnabled={autoSyncPublicEnabled}
-                        syncPreferenceLoaded={syncPreferenceLoaded}
-                        onToggleAutoSyncPublic={handleToggleAutoSyncPublic}
-                        unsyncedCount={unsyncedPublicTasks.length}
-                        unreadNotificationCount={unreadNotificationCount}
-                        isDarkMode={isDarkMode}
-                        setIsDarkMode={setIsDarkMode}
-                        themeColor={themeColor}
-                        setThemeColor={setThemeColor}
-                        layoutMode={layoutMode}
-                        setLayoutMode={setLayoutMode}
-                        onOpenNotifications={() => { setIsUserSettingsOpen(false); setIsNotificationCenterOpen(true); }}
-                        onOpenAppearance={() => { setIsUserSettingsOpen(false); setIsPreferencesOpen(true); }}
-                        onOpenSubjects={() => { setIsUserSettingsOpen(false); setIsSubjectManagerOpen(true); }}
-                        onGoClass={() => { setIsUserSettingsOpen(false); setViewMode('current'); setAppMode('class'); setIsListVisible(true); }}
-                        onLogout={() => { setIsUserSettingsOpen(false); handleLogout(); }}
-                    />
-                    {isPreferencesOpen && <AppearanceModal isOpen={isPreferencesOpen} onClose={() => setIsPreferencesOpen(false)} t={t} themeColor={themeColor} setThemeColor={setThemeColor} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} layoutMode={layoutMode} setLayoutMode={setLayoutMode} customLayout={customLayout} setCustomLayout={setCustomLayout} />}
-                    {showNameSetup && <NameSetupModal user={user} onSave={handleNameSetupSave} loading={nameSetupLoading} triggerAlert={triggerAlert} triggerConfirm={triggerConfirm} t={t} />}
-                    <JoinClassModal isOpen={isJoinClassOpen} onClose={() => setIsJoinClassOpen(false)} systemClasses={systemClasses} joinedClasses={joinedClasses} onJoin={handleJoinClassSubmit} triggerConfirm={triggerConfirm} t={t} />
-                    {isSubjectManagerOpen && <SubjectManagerModal isOpen={isSubjectManagerOpen} onClose={() => setIsSubjectManagerOpen(false)} currentSubjects={subjects} onSave={saveSubjects} triggerConfirm={triggerConfirm} triggerAlert={triggerAlert} />}
-
                     {showUpdateIntro && systemConfig?.updateVersion && (
                         <div className="fixed inset-0 z-[270] flex items-center justify-center p-4 sm:p-6">
                             <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-md"></div>
