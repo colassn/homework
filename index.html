@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-HK">
 <head>
-    <!-- 電子手冊 Pro v1.7 完整修復版：找回所有近期更新 + 專業後台同步監控 + 通知中心 + 版本更新彈窗 + 手動選科修正 -->
+    <!-- 電子手冊 Pro v1.8.1 載入修復版：保留 v1.8 功能 + 修正主畫面載入卡住風險 -->
 
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-8VCPLTE2QT"></script>
     <script>
@@ -114,6 +114,20 @@
 </head>
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 selection:bg-indigo-200 dark:selection:bg-indigo-900">
     
+    <script>
+        window.addEventListener('error', function(event) {
+            try {
+                var box = document.getElementById('loading-screen');
+                if (box && !window.__EHANDBOOK_RENDERED__) {
+                    box.innerHTML = "<div style='max-width:420px;padding:22px;text-align:center'><div style='font-size:42px;margin-bottom:10px'>⚠️</div><h2 style='font-size:1.2rem;font-weight:800;margin-bottom:8px;color:#ef4444'>網站載入時發生錯誤</h2><p style='font-size:13px;color:#64748b;line-height:1.6'>請重新整理一次；如果仍然出現，請截圖 Console 錯誤。系統已加入 v1.8.1 載入保護。</p></div>";
+                }
+            } catch(e) {}
+        });
+        window.addEventListener('unhandledrejection', function(event) {
+            console.warn('Unhandled promise rejection:', event.reason);
+        });
+    </script>
+
     <div id="loading-screen">
         <div class="spinner"></div>
         <h2 style="font-size: 1.2rem; font-weight: bold; margin-bottom: 0.5rem;">載入系統中...</h2>
@@ -658,11 +672,117 @@
             );
         }
 
+
+        function DatePickerModal({ isOpen, value, onSelect, onClose, title = '選擇日期' }) {
+            const parseInitial = () => {
+                const d = value ? new Date(value) : new Date();
+                return isNaN(d.getTime()) ? new Date() : d;
+            };
+            const [viewDate, setViewDate] = useState(parseInitial());
+            useEffect(() => { if (isOpen) setViewDate(parseInitial()); }, [isOpen, value]);
+            if (!isOpen) return null;
+            const y = viewDate.getFullYear();
+            const m = viewDate.getMonth();
+            const first = new Date(y, m, 1);
+            const start = new Date(first);
+            start.setDate(first.getDate() - first.getDay());
+            const selected = value ? new Date(value) : null;
+            const days = Array.from({ length: 42 }, (_, i) => {
+                const d = new Date(start);
+                d.setDate(start.getDate() + i);
+                return d;
+            });
+            const toKey = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+            const todayKey = toKey(new Date());
+            const selectedKey = selected && !isNaN(selected.getTime()) ? toKey(selected) : '';
+            return (
+                <div className="fixed inset-0 z-[190] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" onClick={onClose}></div>
+                    <div className="relative z-10 w-full max-w-sm rounded-[2rem] bg-white/95 dark:bg-slate-900/95 border border-white/60 dark:border-slate-700 shadow-2xl p-5 modal-animate">
+                        <div className="flex items-center justify-between mb-4">
+                            <div>
+                                <h3 className="text-lg font-black text-slate-800 dark:text-white">{title}</h3>
+                                <p className="text-xs font-bold text-slate-400">網站自製日期面板</p>
+                            </div>
+                            <button type="button" onClick={onClose} className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white"><Icon name="x" className="w-4 h-4" /></button>
+                        </div>
+                        <div className="flex items-center justify-between mb-3 rounded-2xl bg-slate-50 dark:bg-slate-800/70 p-2">
+                            <button type="button" onClick={() => setViewDate(new Date(y, m - 1, 1))} className="p-2 rounded-xl hover:bg-white dark:hover:bg-slate-700 text-slate-500"><Icon name="chevron-left" className="w-4 h-4" /></button>
+                            <div className="font-black text-slate-700 dark:text-slate-100">{y} 年 {m + 1} 月</div>
+                            <button type="button" onClick={() => setViewDate(new Date(y, m + 1, 1))} className="p-2 rounded-xl hover:bg-white dark:hover:bg-slate-700 text-slate-500"><Icon name="chevron-right" className="w-4 h-4" /></button>
+                        </div>
+                        <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-black text-slate-400 mb-2">
+                            {['日','一','二','三','四','五','六'].map(d => <div key={d} className="py-1">{d}</div>)}
+                        </div>
+                        <div className="grid grid-cols-7 gap-1">
+                            {days.map(d => {
+                                const key = toKey(d);
+                                const inMonth = d.getMonth() === m;
+                                const isSel = key === selectedKey;
+                                const isToday = key === todayKey;
+                                return (
+                                    <button key={key} type="button" onClick={() => { onSelect(key); onClose(); }} className={`aspect-square rounded-xl text-sm font-black transition-all ${isSel ? 'bg-indigo-600 text-white shadow-lg scale-105' : isToday ? 'bg-orange-50 text-orange-600 border border-orange-200' : inMonth ? 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-indigo-50 hover:text-indigo-600' : 'text-slate-300 dark:text-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'}`}>{d.getDate()}</button>
+                                );
+                            })}
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 mt-4">
+                            {[0,1,7].map(offset => {
+                                const d = new Date(); d.setDate(d.getDate() + offset);
+                                return <button key={offset} type="button" onClick={() => { onSelect(toKey(d)); onClose(); }} className="py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-black hover:bg-indigo-50 hover:text-indigo-600">{offset === 0 ? '今日' : offset === 1 ? '聽日' : '一星期後'}</button>;
+                            })}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function TimePickerModal({ isOpen, value, onSelect, onClose, title = '選擇時間' }) {
+            const [hour, setHour] = useState(value ? value.split(':')[0] : '08');
+            const [minute, setMinute] = useState(value ? value.split(':')[1] : '00');
+            useEffect(() => { if (isOpen && value) { const [h, m] = value.split(':'); setHour(h || '08'); setMinute(m || '00'); } }, [isOpen, value]);
+            if (!isOpen) return null;
+            const hours = Array.from({ length: 16 }, (_, i) => String(i + 6).padStart(2, '0'));
+            const minutes = ['00','05','10','15','20','25','30','35','40','45','50','55'];
+            const confirm = () => { onSelect(`${hour}:${minute}`); onClose(); };
+            return (
+                <div className="fixed inset-0 z-[190] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" onClick={onClose}></div>
+                    <div className="relative z-10 w-full max-w-md rounded-[2rem] bg-white/95 dark:bg-slate-900/95 border border-white/60 dark:border-slate-700 shadow-2xl p-5 modal-animate">
+                        <div className="flex items-center justify-between mb-4">
+                            <div>
+                                <h3 className="text-lg font-black text-slate-800 dark:text-white">{title}</h3>
+                                <p className="text-xs font-bold text-slate-400">網站自製時間面板</p>
+                            </div>
+                            <button type="button" onClick={onClose} className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white"><Icon name="x" className="w-4 h-4" /></button>
+                        </div>
+                        <div className="text-center py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-black text-3xl tracking-widest shadow-lg mb-4">{hour}:{minute}</div>
+                        <div className="grid grid-cols-[1fr_1fr] gap-4">
+                            <div>
+                                <div className="text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">小時</div>
+                                <div className="grid grid-cols-4 gap-1.5 max-h-48 overflow-y-auto scrollbar-hide pr-1">
+                                    {hours.map(h => <button key={h} type="button" onClick={() => setHour(h)} className={`py-2 rounded-xl text-sm font-black transition-all ${hour === h ? 'bg-indigo-600 text-white shadow' : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-indigo-50 hover:text-indigo-600'}`}>{h}</button>)}
+                                </div>
+                            </div>
+                            <div>
+                                <div className="text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">分鐘</div>
+                                <div className="grid grid-cols-3 gap-1.5 max-h-48 overflow-y-auto scrollbar-hide pr-1">
+                                    {minutes.map(m => <button key={m} type="button" onClick={() => setMinute(m)} className={`py-2 rounded-xl text-sm font-black transition-all ${minute === m ? 'bg-indigo-600 text-white shadow' : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-indigo-50 hover:text-indigo-600'}`}>{m}</button>)}
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" onClick={confirm} className="w-full mt-5 py-3 rounded-2xl bg-indigo-600 text-white font-black hover:bg-indigo-700 active:scale-95 transition-all">套用時間</button>
+                    </div>
+                </div>
+            );
+        }
+
         function EditModal({ item, onClose, onSave, triggerAlert, triggerConfirm, subjects }) { 
             const [description, setDescription] = useState(item.description || '');
             const [subject, setSubject] = useState(item.subject || '其他'); 
             const [dueDate, setDueDate] = useState(item.dueDate || ''); 
+            const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
             const [loading, setLoading] = useState(false);
+            const handleSubjectSelect = (subjectName) => setSubject(subjectName);
             const handleSave = async (e) => { 
                 e.preventDefault();
                 triggerConfirm("確定要儲存修改嗎？", async () => {
@@ -694,10 +814,11 @@
                             </div> 
                             <div> 
                                 <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">繳交/考試日期</label> 
-                                <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="w-full h-10 rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all px-3 border text-slate-600 dark:text-slate-300 text-sm outline-none" required /> 
+                                <button type="button" onClick={() => setIsDatePickerOpen(true)} className={`w-full h-11 rounded-xl border text-left px-3 text-sm font-bold transition-all flex items-center justify-between ${dueDate ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300' : 'bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-300 hover:border-indigo-300'}`}><span>{dueDate ? formatDueDate(dueDate) : '選擇日期'}</span><Icon name="calendar" className="w-4 h-4" /></button>
                             </div> 
                             <button type="submit" disabled={loading} className="w-full py-3 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 shadow-lg transition-all active:scale-95 disabled:opacity-70 flex items-center justify-center gap-2">{loading ? '儲存中...' : <><Icon name="save" className="w-4 h-4" /> 儲存修改</>}</button> 
                         </form> 
+                        <DatePickerModal isOpen={isDatePickerOpen} value={dueDate} onSelect={setDueDate} onClose={() => setIsDatePickerOpen(false)} title="選擇繳交 / 考試日期" />
                     </div> 
                 </div> 
             );
@@ -723,7 +844,7 @@
             );
         }
 
-        function SubjectManagerModal({ isOpen, onClose, currentSubjects, onSave, triggerConfirm }) {
+        function SubjectManagerModal({ isOpen, onClose, currentSubjects, onSave, triggerConfirm, triggerAlert }) {
             const [newSubjectName, setNewSubjectName] = useState('');
             const [newSubjectColor, setNewSubjectColor] = useState(COLOR_PALETTE[0].value);
             const [tempSubjects, setTempSubjects] = useState([]);
@@ -734,7 +855,7 @@
             const handleAdd = (e) => {
                 e.preventDefault();
                 if (!newSubjectName.trim()) return;
-                if (tempSubjects.some(s => s.name === newSubjectName.trim())) { alert("科目名稱重複"); return; }
+                if (tempSubjects.some(s => s.name === newSubjectName.trim())) { triggerAlert ? triggerAlert("科目名稱重複", "error") : console.warn("科目名稱重複"); return; }
                 setTempSubjects([...tempSubjects, { name: newSubjectName.trim(), color: newSubjectColor }]);
                 setNewSubjectName('');
             };
@@ -818,6 +939,7 @@
             const [schedule, setSchedule] = useState(initialConfig?.schedule || { ...DEFAULT_SCHEDULE });
             const [editDay, setEditDay] = useState(1); 
             const [editingCell, setEditingCell] = useState(null);
+            const [editingTimeIndex, setEditingTimeIndex] = useState(null);
 
             const handleSlotChange = (index, field, value) => { const newSlots = [...timeSlots]; newSlots[index] = { ...newSlots[index], [field]: value }; setTimeSlots(newSlots); };
             const addSlot = () => setTimeSlots([...timeSlots, { id: 's' + Date.now(), label: '新課節', type: 'lesson', startTime: '08:00', duration: 35 }]);
@@ -866,7 +988,7 @@
                                             <button onClick={() => moveSlot(index, 'up')} disabled={index === 0} className="p-1 text-slate-400 hover:text-indigo-600 disabled:opacity-20 active:scale-90"><Icon name="chevron-up" className="w-4 h-4"/></button>
                                             <button onClick={() => moveSlot(index, 'down')} disabled={index === timeSlots.length - 1} className="p-1 text-slate-400 hover:text-indigo-600 disabled:opacity-20 active:scale-90"><Icon name="chevron-down" className="w-4 h-4"/></button>
                                         </div>
-                                        <input type="time" value={slot.startTime} onChange={(e) => handleSlotChange(index, 'startTime', e.target.value)} className="w-24 p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500" />
+                                        <button type="button" onClick={() => setEditingTimeIndex(index)} className="w-24 p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500 font-mono font-black flex items-center justify-center gap-1"><Icon name="clock" className="w-3.5 h-3.5 text-indigo-500" />{slot.startTime}</button>
                                         <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 px-2 rounded-lg border border-slate-200 dark:border-slate-700">
                                             <input type="number" value={slot.duration} onChange={(e) => handleSlotChange(index, 'duration', parseInt(e.target.value) || 0)} className="w-12 p-2 bg-transparent text-sm text-center outline-none text-slate-800 dark:text-white" /><span className="text-xs text-slate-500 pr-1">分</span>
                                         </div>
@@ -910,6 +1032,7 @@
                         <button onClick={() => triggerConfirm("確定要儲存時間表設定嗎？", () => onSave({ timeSlots, schedule }))} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 active:scale-95 flex items-center justify-center gap-2"><Icon name="save" className="w-4 h-4" /> 儲存設定</button>
                     </div>
                     {editingCell && <SubjectSelectionModal onClose={() => setEditingCell(null)} onSelect={handleSubjectSelect} subjects={subjects} />}
+                    {editingTimeIndex !== null && <TimePickerModal isOpen={editingTimeIndex !== null} value={timeSlots[editingTimeIndex]?.startTime} onSelect={(val) => handleSlotChange(editingTimeIndex, 'startTime', val)} onClose={() => setEditingTimeIndex(null)} title="選擇課節開始時間" />}
                 </div>
             );
         }
@@ -981,6 +1104,10 @@
             const [updateGuideInput, setUpdateGuideInput] = useState(systemConfig?.updateGuide || '');
             const [updateAudienceInput, setUpdateAudienceInput] = useState(systemConfig?.updateAudience || 'students');
             const [updatePopupEnabledInput, setUpdatePopupEnabledInput] = useState(systemConfig?.updatePopupEnabled !== false);
+            const [maintenanceModeInput, setMaintenanceModeInput] = useState(systemConfig?.maintenanceMode || 'normal');
+            const [maintenanceTitleInput, setMaintenanceTitleInput] = useState(systemConfig?.maintenanceTitle || '網站更新中');
+            const [maintenanceMessageInput, setMaintenanceMessageInput] = useState(systemConfig?.message || '管理員正在更新系統，請稍後再回來。');
+            const [estimatedTimeInput, setEstimatedTimeInput] = useState(systemConfig?.estimatedTime || '約 10 分鐘');
             const [viewingClass, setViewingClass] = useState(null); 
             const [taskStats, setTaskStats] = useState({});
             const [isFetchingStats, setIsFetchingStats] = useState(false);
@@ -1049,7 +1176,11 @@
                 setUpdateGuideInput(systemConfig?.updateGuide || '');
                 setUpdateAudienceInput(systemConfig?.updateAudience || 'students');
                 setUpdatePopupEnabledInput(systemConfig?.updatePopupEnabled !== false);
-            }, [systemConfig?.updateVersion, systemConfig?.updateTitle, systemConfig?.updateSummary, systemConfig?.updateGuide, systemConfig?.updateAudience, systemConfig?.updatePopupEnabled]);
+                setMaintenanceModeInput(systemConfig?.maintenanceMode || 'normal');
+                setMaintenanceTitleInput(systemConfig?.maintenanceTitle || '網站更新中');
+                setMaintenanceMessageInput(systemConfig?.message || '管理員正在更新系統，請稍後再回來。');
+                setEstimatedTimeInput(systemConfig?.estimatedTime || '約 10 分鐘');
+            }, [systemConfig?.updateVersion, systemConfig?.updateTitle, systemConfig?.updateSummary, systemConfig?.updateGuide, systemConfig?.updateAudience, systemConfig?.updatePopupEnabled, systemConfig?.maintenanceMode, systemConfig?.maintenanceTitle, systemConfig?.message, systemConfig?.estimatedTime]);
 
             const handlePublishUpdateNotice = async () => {
                 const version = updateVersionInput.trim();
@@ -1067,11 +1198,72 @@
                             updateSummary: summary,
                             updateGuide: guide,
                             updateAudience: updateAudienceInput,
-                            updatePublishedAt: new Date().toISOString()
+                            updatePublishedAt: new Date().toISOString(),
+                            updateHistory: arrayUnion({ version, title, summary, guide, audience: updateAudienceInput, popupEnabled: updatePopupEnabledInput, publishedAt: new Date().toISOString() })
                         }, { merge: true });
                         triggerAlert('版本更新彈窗已發佈');
                     } catch (e) {
                         triggerAlert('發佈失敗：' + e.message, 'error');
+                    }
+                });
+            };
+
+
+            const handleRepublishUpdateNotice = (notice) => {
+                const version = notice.version || updateVersionInput || 'v1.0.0';
+                triggerConfirm(`確定要重新發放「${version}」更新資訊嗎？用戶下次開頁面會再次看到。`, async () => {
+                    try {
+                        await setDoc(doc(db, 'system_settings', 'config'), {
+                            updatePopupEnabled: notice.popupEnabled !== false,
+                            updateVersion: version,
+                            updateTitle: notice.title || '系統已更新',
+                            updateSummary: notice.summary || '',
+                            updateGuide: notice.guide || '',
+                            updateAudience: notice.audience || 'students',
+                            updatePublishedAt: new Date().toISOString()
+                        }, { merge: true });
+                        triggerAlert('已重新發放舊版更新資訊');
+                    } catch (e) {
+                        triggerAlert('重新發放失敗：' + e.message, 'error');
+                    }
+                });
+            };
+
+            const handleSaveMaintenanceBlock = async () => {
+                triggerConfirm(maintenanceModeInput === 'normal' ? '確定要關閉更新阻攔畫面嗎？' : '確定要開啟更新阻攔畫面嗎？普通用戶會被暫時阻擋。', async () => {
+                    try {
+                        await setDoc(doc(db, 'system_settings', 'config'), {
+                            maintenanceMode: maintenanceModeInput,
+                            maintenanceTitle: maintenanceTitleInput.trim() || '網站更新中',
+                            message: maintenanceMessageInput.trim() || '管理員正在更新系統，請稍後再回來。',
+                            estimatedTime: estimatedTimeInput.trim() || ''
+                        }, { merge: true });
+                        triggerAlert(maintenanceModeInput === 'normal' ? '已關閉阻攔畫面' : '已啟用阻攔畫面');
+                    } catch (e) {
+                        triggerAlert('更新阻攔設定失敗：' + e.message, 'error');
+                    }
+                });
+            };
+
+            const handleSendSyncReminder = async (task, stats) => {
+                if (!task || !stats || !stats.pendingList?.length) { triggerAlert('目前沒有未同步學生需要提醒'); return; }
+                const title = '你有廣播功課未同步';
+                const message = `${task.subject || '功課'}：${task.description || '未填寫內容'}，請前往班級分頁同步到個人手冊。`;
+                triggerConfirm(`確定提醒 ${stats.pendingList.length} 位未同步學生嗎？`, async () => {
+                    try {
+                        await setDoc(doc(db, 'system_settings', 'config'), {
+                            adminReminders: arrayUnion({
+                                id: `reminder-${task.id}-${Date.now()}`,
+                                taskId: task.id,
+                                targetClass: task.targetClass || '全校',
+                                title,
+                                message,
+                                createdAt: new Date().toISOString()
+                            })
+                        }, { merge: true });
+                        triggerAlert('已發送提醒到學生通知中心');
+                    } catch (e) {
+                        triggerAlert('發送提醒失敗：' + e.message, 'error');
                     }
                 });
             };
@@ -1670,17 +1862,24 @@
                         )}
 
                         {activeTab === 'syncMonitor' && (
-                            <div className="space-y-6 animate-fadeIn">
-                                <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
-                                    <div>
-                                        <h3 className="text-2xl font-black dark:text-white">廣播同步監控</h3>
-                                        <p className="text-sm text-slate-500 mt-1">查看每份廣播功課有幾多學生已同步、未同步，以及邊個需要提醒。</p>
+                            <div className="space-y-7 animate-fadeIn">
+                                <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-indigo-600 via-blue-600 to-slate-900 p-6 text-white shadow-xl">
+                                    <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-white/10 blur-2xl"></div>
+                                    <div className="relative z-10 grid grid-cols-1 lg:grid-cols-[1.618fr_1fr] gap-6 items-end">
+                                        <div>
+                                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 border border-white/20 text-xs font-black mb-3"><Icon name="activity" className="w-4 h-4" /> 廣播同步監控</div>
+                                            <h3 className="text-3xl font-black tracking-tight">掌握每份廣播功課同步情況</h3>
+                                            <p className="text-sm text-indigo-100 mt-2 font-bold">查看已同步、未同步、完成率，並可直接提醒未同步學生或開啟更新阻攔畫面。</p>
+                                        </div>
+                                        <div className="flex flex-col sm:flex-row lg:flex-col gap-2">
+                                            <button onClick={fetchAllTaskProgress} disabled={isFetchingStats || publicTasks.length === 0} className="px-5 py-3 rounded-2xl bg-white text-indigo-700 text-sm font-black shadow-md hover:bg-indigo-50 active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2">
+                                                <Icon name={isFetchingStats ? "loader" : "scan-search"} className={`w-4 h-4 ${isFetchingStats ? 'animate-spin' : ''}`} /> 掃描全部任務
+                                            </button>
+                                            <button onClick={() => setActiveTab('settings')} className="px-5 py-3 rounded-2xl bg-white/10 border border-white/20 text-white text-sm font-black hover:bg-white/20 active:scale-95 flex items-center justify-center gap-2"><Icon name="shield-alert" className="w-4 h-4" /> 管理更新阻攔畫面</button>
+                                        </div>
                                     </div>
-                                    <button onClick={fetchAllTaskProgress} disabled={isFetchingStats || publicTasks.length === 0} className="px-5 py-3 rounded-2xl bg-indigo-600 text-white text-sm font-black shadow-md hover:bg-indigo-700 active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2">
-                                        <Icon name={isFetchingStats ? "loader" : "scan-search"} className={`w-4 h-4 ${isFetchingStats ? 'animate-spin' : ''}`} /> 掃描全部任務
-                                    </button>
                                 </div>
-                                <div className="grid grid-cols-1 gap-4">
+                                <div className="grid grid-cols-1 gap-5">
                                     {publicTasks.length === 0 && <div className="text-center py-16 rounded-3xl bg-white dark:bg-slate-800 border border-dashed border-slate-200 dark:border-slate-700 text-slate-400 font-bold">目前沒有廣播任務可監控</div>}
                                     {publicTasks.map(task => {
                                         const cls = systemClasses.find(c => c.code === task.targetClass);
@@ -1688,7 +1887,7 @@
                                         const stats = taskStats[task.id];
                                         const percent = stats?.total ? Math.round((stats.synced / stats.total) * 100) : 0;
                                         return (
-                                            <div key={task.id} className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700 p-5 shadow-sm overflow-hidden">
+                                            <div key={task.id} className="bg-white dark:bg-slate-800 rounded-[2rem] border border-slate-100 dark:border-slate-700 p-5 shadow-sm overflow-hidden hover:shadow-xl transition-all">
                                                 <div className="flex flex-col xl:flex-row xl:items-start justify-between gap-4">
                                                     <div className="min-w-0 flex-1">
                                                         <div className="flex flex-wrap items-center gap-2 mb-2">
@@ -1715,6 +1914,11 @@
                                                             <div className="flex justify-between text-xs font-black text-slate-500 mb-1"><span>同步率</span><span>{percent}%</span></div>
                                                             <div className="w-full h-3 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden"><div className="h-3 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full transition-all" style={{ width: `${percent}%` }}></div></div>
                                                         </div>
+                                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                                            <button type="button" onClick={() => handleSendSyncReminder(task, stats)} disabled={!stats.pendingList?.length} className="px-4 py-3 rounded-2xl bg-orange-500 text-white text-xs font-black hover:bg-orange-600 disabled:opacity-40 flex items-center justify-center gap-2"><Icon name="bell-ring" className="w-4 h-4" /> 提醒未同步</button>
+                                                            <button type="button" onClick={() => { setActiveTab('settings'); setMaintenanceModeInput('updating'); setMaintenanceTitleInput('系統更新中'); setMaintenanceMessageInput('管理員正在更新電子手冊功能，請稍後再回來。'); }} className="px-4 py-3 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-black hover:opacity-90 flex items-center justify-center gap-2"><Icon name="shield-alert" className="w-4 h-4" /> 開啟阻攔設定</button>
+                                                            <button type="button" onClick={() => setActiveTab('tasks')} className="px-4 py-3 rounded-2xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-200 text-xs font-black hover:bg-slate-200 dark:hover:bg-slate-600 flex items-center justify-center gap-2"><Icon name="list-checks" className="w-4 h-4" /> 返回任務中心</button>
+                                                        </div>
                                                         {stats.pendingList.length > 0 ? (
                                                             <div className="rounded-2xl bg-orange-50 dark:bg-orange-900/20 border border-orange-100 dark:border-orange-800 p-4">
                                                                 <div className="font-black text-orange-700 dark:text-orange-300 text-sm mb-2 flex items-center gap-2"><Icon name="user-x" className="w-4 h-4"/> 未同步學生</div>
@@ -1737,7 +1941,7 @@
                         )}
 
                         {activeTab === 'settings' && (
-                            <div className="space-y-8 animate-fadeIn max-w-2xl">
+                            <div className="space-y-8 animate-fadeIn max-w-5xl">
                                 <div><h3 className="text-2xl font-bold mb-2 dark:text-white">核心系統設定</h3></div>
                                 <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
                                     <div className="p-5 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 flex flex-col gap-2">
@@ -1753,6 +1957,33 @@
                                 </div>
 
                                 <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
+                                    <div className="p-5 border-b border-slate-100 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-indigo-50 dark:from-slate-900 dark:to-indigo-950/40 flex flex-col gap-2">
+                                        <h4 className="font-bold flex items-center gap-2 dark:text-white"><Icon name="shield-alert" className="w-5 h-5 text-indigo-500"/> 更新阻攔畫面</h4>
+                                        <p className="text-xs text-slate-500">系統更新、資料重整或維護時，可暫時阻擋普通用戶進入，管理員仍可進入後台操作。</p>
+                                    </div>
+                                    <div className="p-6 space-y-4">
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                            {[{ value: 'normal', label: '正常開放', icon: 'unlock' }, { value: 'updating', label: '網站更新中', icon: 'hammer' }, { value: 'restructuring', label: '資料重整中', icon: 'database' }, { value: 'maintenance', label: '系統維護中', icon: 'lock' }].map(opt => (
+                                                <button key={opt.value} type="button" onClick={() => setMaintenanceModeInput(opt.value)} className={`p-3 rounded-2xl border text-left transition-all ${maintenanceModeInput === opt.value ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg' : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-indigo-300'}`}>
+                                                    <Icon name={opt.icon} className="w-4 h-4 mb-2" />
+                                                    <div className="text-xs font-black">{opt.label}</div>
+                                                </button>
+                                            ))}
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-[1.2fr_0.8fr] gap-3">
+                                            <input type="text" placeholder="阻攔畫面標題" value={maintenanceTitleInput} onChange={e => setMaintenanceTitleInput(e.target.value)} className="px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-sm focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white" />
+                                            <input type="text" placeholder="預計恢復時間，例如 約 10 分鐘" value={estimatedTimeInput} onChange={e => setEstimatedTimeInput(e.target.value)} className="px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-sm focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white" />
+                                        </div>
+                                        <textarea rows="3" placeholder="阻攔畫面說明文字" value={maintenanceMessageInput} onChange={e => setMaintenanceMessageInput(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-sm focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white resize-none"></textarea>
+                                        <div className="flex flex-col sm:flex-row gap-2">
+                                            <button onClick={handleSaveMaintenanceBlock} className="flex-1 bg-indigo-600 text-white px-5 py-3 rounded-xl font-bold text-sm hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2 active:scale-95 shadow-sm"><Icon name="save" className="w-4 h-4"/> 儲存阻攔設定</button>
+                                            <button onClick={() => { setMaintenanceModeInput('normal'); setMaintenanceTitleInput('網站已恢復'); setMaintenanceMessageInput(''); setEstimatedTimeInput(''); }} className="px-5 py-3 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-200 font-bold text-sm hover:bg-slate-200 dark:hover:bg-slate-600">快速設為正常</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+
+                                <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
                                     <div className="p-5 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 flex flex-col gap-2">
                                         <h4 className="font-bold flex items-center gap-2 dark:text-white"><Icon name="sparkles" className="w-5 h-5 text-indigo-500"/> 版本更新彈窗</h4>
                                         <p className="text-xs text-slate-500">發佈新版後，用戶第一次打開頁面會自動看到「更新內容 + 使用方法」。同一版本只會彈一次；想再次彈出請更改版本號。</p>
@@ -1765,11 +1996,7 @@
                                             </div>
                                             <div>
                                                 <label className="text-xs font-black text-slate-400 uppercase ml-1">顯示對象</label>
-                                                <select value={updateAudienceInput} onChange={e => setUpdateAudienceInput(e.target.value)} className="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-sm focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white transition-all">
-                                                    <option value="students">普通用戶</option>
-                                                    <option value="all">所有人</option>
-                                                    <option value="admin">只給管理員</option>
-                                                </select>
+                                                <div className="mt-1"><CustomDropdown value={updateAudienceInput} onChange={setUpdateAudienceInput} options={[{ value: 'students', label: '普通用戶' }, { value: 'all', label: '所有人' }, { value: 'admin', label: '只給管理員' }]} customClasses="w-full flex items-center justify-between gap-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 text-sm rounded-xl px-4 py-3 focus:outline-none font-bold hover:bg-white dark:hover:bg-slate-800 transition-all" /></div>
                                             </div>
                                         </div>
                                         <div>
@@ -1790,6 +2017,27 @@
                                                 <span className="text-sm font-black text-indigo-700 dark:text-indigo-300">啟用自動彈窗</span>
                                             </label>
                                             <button onClick={handlePublishUpdateNotice} className="bg-indigo-600 text-white px-5 py-3 rounded-xl font-bold text-sm hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2 active:scale-95 shadow-sm"><Icon name="send" className="w-4 h-4"/> 發佈更新彈窗</button>
+                                        </div>
+                                        <div className="rounded-2xl border border-slate-100 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-900/40 p-4">
+                                            <div className="flex items-center justify-between mb-3">
+                                                <h5 className="font-black text-sm dark:text-white flex items-center gap-2"><Icon name="history" className="w-4 h-4 text-indigo-500" /> 之前發放過的更新資訊</h5>
+                                                <span className="text-[10px] font-black text-slate-400">可重新發放</span>
+                                            </div>
+                                            {(systemConfig?.updateHistory || []).length === 0 ? (
+                                                <div className="text-xs font-bold text-slate-400 py-4 text-center">暫時未有歷史更新資訊</div>
+                                            ) : (
+                                                <div className="space-y-2 max-h-56 overflow-y-auto scrollbar-hide">
+                                                    {(systemConfig?.updateHistory || []).slice().reverse().map((notice, idx) => (
+                                                        <div key={`${notice.version || 'old'}-${notice.publishedAt || idx}`} className="flex items-center justify-between gap-3 p-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
+                                                            <div className="min-w-0">
+                                                                <div className="font-black text-sm dark:text-white truncate">{notice.title || '系統已更新'}</div>
+                                                                <div className="text-[11px] text-slate-400 font-mono truncate">{notice.version || '無版本'} · {formatFirebaseDateTime(notice.publishedAt) || '未知時間'}</div>
+                                                            </div>
+                                                            <button type="button" onClick={() => handleRepublishUpdateNotice(notice)} className="px-3 py-2 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300 text-xs font-black hover:bg-indigo-100 dark:hover:bg-indigo-800/50 shrink-0">再次發放</button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -1877,6 +2125,7 @@
             const [subject, setSubject] = useState('中文');
             const [description, setDescription] = useState('');
             const [dueDate, setDueDate] = useState(''); 
+            const [isDueDatePickerOpen, setIsDueDatePickerOpen] = useState(false);
             const [searchQuery, setSearchQuery] = useState('');
 
             const [isBroadcast, setIsBroadcast] = useState(false);
@@ -1933,8 +2182,9 @@
 
             useEffect(() => { 
                 const loadingScreen = document.getElementById('loading-screen');
+                window.__EHANDBOOK_RENDERED__ = true;
                 if (loadingScreen) { loadingScreen.classList.add('hidden-loader'); setTimeout(() => loadingScreen.remove(), 500); }
-                if ("Notification" in window && Notification.permission === "default") Notification.requestPermission(); 
+                // v1.8.1: 不再於載入時自動要求瀏覽器通知權限，避免部分裝置卡住或彈出原生提示。 
                 const timer = setInterval(() => setGlobalNow(new Date()), 1000);
                 return () => clearInterval(timer);
             }, []);
@@ -1944,7 +2194,12 @@
 
             useEffect(() => {
                 if (!window.firebaseServices || !auth) { setAuthLoading(false); return; }
+                const authFallbackTimer = setTimeout(() => {
+                    console.warn('Auth loading fallback triggered');
+                    setAuthLoading(false);
+                }, 12000);
                 const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+                    clearTimeout(authFallbackTimer);
                     try {
                         setUser(currentUser); 
                         if (currentUser) {
@@ -1970,7 +2225,7 @@
                         }
                     } catch (e) { console.warn("Auth err:", e); setAuthLoading(false); }
                 });
-                return () => unsubscribe();
+                return () => { clearTimeout(authFallbackTimer); unsubscribe(); };
             }, []);
 
             useEffect(() => {
@@ -2001,13 +2256,32 @@
                 const audience = systemConfig.updateAudience || 'students';
                 const audienceMatched = audience === 'all' || (audience === 'admin' && isAdmin) || (audience === 'students' && !isAdmin);
                 if (!audienceMatched) { setShowUpdateIntro(false); return; }
-                const seenVersion = localStorage.getItem(`ehandbook_update_seen_${user.uid}`);
-                setShowUpdateIntro(seenVersion !== version);
-            }, [user?.uid, systemConfig?.updatePopupEnabled, systemConfig?.updateVersion, systemConfig?.updateAudience, isAdmin]);
+                const releaseKey = `${version}::${systemConfig.updatePublishedAt || ''}`;
+                let hiddenReleases = [];
+                try {
+                    const rawHidden = localStorage.getItem(`ehandbook_update_hidden_${user.uid}`) || '[]';
+                    const parsedHidden = JSON.parse(rawHidden);
+                    hiddenReleases = Array.isArray(parsedHidden) ? parsedHidden : [];
+                } catch (e) {
+                    hiddenReleases = [];
+                }
+                setShowUpdateIntro(!hiddenReleases.includes(releaseKey));
+            }, [user?.uid, systemConfig?.updatePopupEnabled, systemConfig?.updateVersion, systemConfig?.updateAudience, systemConfig?.updatePublishedAt, isAdmin]);
 
-            const acknowledgeUpdateIntro = () => {
+            const closeUpdateIntroForNow = () => { setShowUpdateIntro(false); };
+
+            const hideUpdateIntroForThisRelease = () => {
                 const version = String(systemConfig?.updateVersion || '').trim();
-                if (user?.uid && version) localStorage.setItem(`ehandbook_update_seen_${user.uid}`, version);
+                const releaseKey = `${version}::${systemConfig?.updatePublishedAt || ''}`;
+                if (user?.uid && version) {
+                    const key = `ehandbook_update_hidden_${user.uid}`;
+                    let old = [];
+                    try {
+                        const parsedOld = JSON.parse(localStorage.getItem(key) || '[]');
+                        old = Array.isArray(parsedOld) ? parsedOld : [];
+                    } catch (e) { old = []; }
+                    localStorage.setItem(key, JSON.stringify(Array.from(new Set([...old, releaseKey]))));
+                }
                 setShowUpdateIntro(false);
             };
 
@@ -2175,6 +2449,26 @@
                     });
                 }
 
+
+                (systemConfig?.adminReminders || []).forEach(reminder => {
+                    const target = reminder.targetClass || '全校';
+                    const visible = target === '全校' || joinedClasses.includes(target);
+                    if (!visible) return;
+                    notices.push({
+                        id: reminder.id || `reminder-${reminder.taskId || makeHash(reminder.message || '')}`,
+                        type: 'admin-reminder',
+                        icon: 'bell-ring',
+                        title: reminder.title || '管理員提醒',
+                        message: reminder.message || '請查看最新系統提醒。',
+                        meta: target === '全校' ? '全校提醒' : `班級 ${target}`,
+                        time: formatFirebaseDateTime(reminder.createdAt) || '剛剛',
+                        sortTime: getSortTime(reminder.createdAt) || Date.now(),
+                        accent: 'orange',
+                        action: 'class',
+                        targetClass: target
+                    });
+                });
+
                 if (systemConfig?.updatePopupEnabled !== false && systemConfig?.updateVersion) {
                     const audience = systemConfig.updateAudience || 'students';
                     const audienceMatched = audience === 'all' || (audience === 'admin' && isAdmin) || (audience === 'students' && !isAdmin);
@@ -2260,7 +2554,7 @@
                 return notices
                     .sort((a, b) => (b.sortTime || 0) - (a.sortTime || 0))
                     .map(n => ({ ...n, unread: !readNotificationIds.includes(n.id) }));
-            }, [systemConfig?.announcementText, systemConfig?.updatePopupEnabled, systemConfig?.updateVersion, systemConfig?.updateTitle, systemConfig?.updateSummary, systemConfig?.updateAudience, systemConfig?.updatePublishedAt, isAdmin, visiblePublicTasks, systemClasses, syncedPublicIds, readNotificationIds, items, timetableConfig?.updatedAt, timetableConfig?.updatedBy]);
+            }, [systemConfig?.announcementText, systemConfig?.adminReminders, systemConfig?.updatePopupEnabled, systemConfig?.updateVersion, systemConfig?.updateTitle, systemConfig?.updateSummary, systemConfig?.updateAudience, systemConfig?.updatePublishedAt, isAdmin, visiblePublicTasks, joinedClassesStr, systemClasses, syncedPublicIds, readNotificationIds, items, timetableConfig?.updatedAt, timetableConfig?.updatedBy]);
 
             const unreadNotificationCount = useMemo(() => userNotifications.filter(n => n.unread).length, [userNotifications]);
 
@@ -2679,10 +2973,9 @@
                                                         <div className="flex flex-wrap sm:flex-nowrap justify-between items-center gap-3 mt-2 pt-3 border-t border-slate-200/60 px-2 pb-1">
                                                             <div className="flex items-center gap-2.5 overflow-x-auto scrollbar-hide py-1 flex-1">
                                                                 <div className="relative group cursor-pointer shrink-0">
-                                                                    <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" required />
-                                                                    <div className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all border ${dueDate ? t.bg + ' text-white shadow-sm border-transparent' : 'bg-white text-slate-500 border-slate-200 group-hover:border-indigo-400'}`}>
+                                                                    <button type="button" onClick={() => setIsDueDatePickerOpen(true)} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all border ${dueDate ? t.bg + ' text-white shadow-sm border-transparent' : 'bg-white text-slate-500 border-slate-200 hover:border-indigo-400'}`}>
                                                                         <Icon name="calendar-clock" className="w-4 h-4" /><span>{dueDate ? formatDueDate(dueDate) : '選擇交期'}</span>
-                                                                    </div>
+                                                                    </button>
                                                                 </div>
                                                                 <button type="button" onClick={() => { const d = new Date(); d.setDate(d.getDate() + 1); setDueDate(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`); }} className="shrink-0 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-600 text-sm font-bold hover:bg-slate-50 transition-all shadow-sm active:scale-95 flex items-center gap-1.5"><Icon name="check-circle-2" className="w-4 h-4 text-orange-500" />聽日</button>
                                                             </div>
@@ -2844,11 +3137,12 @@
                     </div>
 
                     {editingItem && <EditModal item={editingItem} onClose={() => setEditingItem(null)} onSave={handleUpdateItem} triggerAlert={triggerAlert} triggerConfirm={triggerConfirm} subjects={subjects} />}
+                    <DatePickerModal isOpen={isDueDatePickerOpen} value={dueDate} onSelect={setDueDate} onClose={() => setIsDueDatePickerOpen(false)} title="選擇功課交期" />
                     {quickView.isOpen && <QuickViewModal isOpen={quickView.isOpen} onClose={() => setQuickView({ isOpen: false, title: '', items: [] })} title={quickView.title} items={quickView.items} subjects={subjects} onEdit={setEditingItem} onDelete={deleteItem} isAdmin={isAdmin} userUid={user?.uid} />}
                     {isPreferencesOpen && <AppearanceModal isOpen={isPreferencesOpen} onClose={() => setIsPreferencesOpen(false)} t={t} themeColor={themeColor} setThemeColor={setThemeColor} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} layoutMode={layoutMode} setLayoutMode={setLayoutMode} customLayout={customLayout} setCustomLayout={setCustomLayout} />}
                     {showNameSetup && <NameSetupModal user={user} onSave={handleNameSetupSave} loading={nameSetupLoading} triggerAlert={triggerAlert} triggerConfirm={triggerConfirm} t={t} />}
                     <JoinClassModal isOpen={isJoinClassOpen} onClose={() => setIsJoinClassOpen(false)} systemClasses={systemClasses} joinedClasses={joinedClasses} onJoin={handleJoinClassSubmit} triggerConfirm={triggerConfirm} t={t} />
-                    {isSubjectManagerOpen && <SubjectManagerModal isOpen={isSubjectManagerOpen} onClose={() => setIsSubjectManagerOpen(false)} currentSubjects={subjects} onSave={saveSubjects} triggerConfirm={triggerConfirm} />}
+                    {isSubjectManagerOpen && <SubjectManagerModal isOpen={isSubjectManagerOpen} onClose={() => setIsSubjectManagerOpen(false)} currentSubjects={subjects} onSave={saveSubjects} triggerConfirm={triggerConfirm} triggerAlert={triggerAlert} />}
 
                     {showUpdateIntro && systemConfig?.updateVersion && (
                         <div className="fixed inset-0 z-[270] flex items-center justify-center p-4 sm:p-6">
@@ -2885,7 +3179,7 @@
                                     )}
                                 </div>
                                 <div className="p-5 border-t border-slate-100 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl">
-                                    <button onClick={acknowledgeUpdateIntro} className="w-full py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black shadow-lg active:scale-[0.98] transition-all">我知道了，開始使用</button>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3"><button onClick={closeUpdateIntroForNow} className="py-4 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-200 font-black active:scale-[0.98] transition-all">今次關閉，下次再提示</button><button onClick={hideUpdateIntroForThisRelease} className="py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black shadow-lg active:scale-[0.98] transition-all">不再顯示今次更新</button></div>
                                     <p className="text-center text-[11px] text-slate-400 font-bold mt-3">同一版本只會自動顯示一次，可在通知中心再次查看。</p>
                                 </div>
                             </div>
@@ -2973,8 +3267,16 @@
             );
         }
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+        try {
+            const root = ReactDOM.createRoot(document.getElementById('root'));
+            root.render(<App />);
+        } catch (e) {
+            console.error('Root render failed:', e);
+            const loadingScreen = document.getElementById('loading-screen');
+            if (loadingScreen) {
+                loadingScreen.innerHTML = "<div style='max-width:420px;padding:22px;text-align:center'><div style='font-size:42px;margin-bottom:10px'>⚠️</div><h2 style='font-size:1.2rem;font-weight:800;margin-bottom:8px;color:#ef4444'>主畫面啟動失敗</h2><p style='font-size:13px;color:#64748b;line-height:1.6'>請先使用上一個穩定版，或截圖 Console 錯誤。</p></div>";
+            }
+        }
     </script>
 </body>
 </html>
