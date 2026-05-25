@@ -1122,19 +1122,16 @@
                 setIsFetchingStats(true);
                 try {
                     const targetUsers = task.targetClass === '全校' ? users : users.filter(u => (u.joinedClasses || []).includes(task.targetClass));
-                    let synced = 0; let completed = 0; let pendingList = []; let unsyncedList = [];
+                    let completed = 0; let pendingList = [];
                     for (const u of targetUsers) {
                         const q = query(collection(db, "users", u.uid, "items"), where("publicRefId", "==", task.id));
                         const snap = await getDocs(q);
                         if (!snap.empty) {
-                            synced++;
                             if (snap.docs[0].data().completed) completed++;
                             else pendingList.push(u.displayName || u.email);
-                        } else {
-                            unsyncedList.push(u.displayName || u.email);
-                        }
+                        } else { pendingList.push(u.displayName || u.email); }
                     }
-                    setTaskStats(prev => ({ ...prev, [task.id]: { total: targetUsers.length, synced, completed, pendingList, unsyncedList } }));
+                    setTaskStats(prev => ({ ...prev, [task.id]: { total: targetUsers.length, completed, pendingList } }));
                 } catch (e) { triggerAlert("讀取進度失敗: " + e.message, "error"); }
                 setIsFetchingStats(false);
             };
@@ -1232,37 +1229,6 @@
 
             const activeTodayCount = users.filter(u => u.lastSeen && typeof u.lastSeen.toDate === 'function' && (new Date() - u.lastSeen.toDate()) < 24 * 60 * 60 * 1000).length;
             const filteredUsers = users.filter(u => (u.displayName || '').toLowerCase().includes(searchQuery.toLowerCase()) || (u.email || '').toLowerCase().includes(searchQuery.toLowerCase()));
-            const activeNowCount = users.filter(u => u.lastSeen && typeof u.lastSeen.toDate === 'function' && (new Date() - u.lastSeen.toDate()) < 10 * 60 * 1000).length;
-            const recentTaskCount = publicTasks.filter(t => {
-                const ms = t.createdAt && typeof t.createdAt.toDate === 'function' ? t.createdAt.toDate().getTime() : new Date(t.createdAt || 0).getTime();
-                return ms && (Date.now() - ms) < 7 * 24 * 60 * 60 * 1000;
-            }).length;
-            const totalClassMemberships = users.reduce((sum, u) => sum + ((u.joinedClasses || []).length), 0);
-            const getTaskCreatedMs = (task) => {
-                if (task?.createdAt && typeof task.createdAt.toDate === 'function') return task.createdAt.toDate().getTime();
-                const parsed = new Date(task?.createdAt || 0).getTime();
-                return Number.isFinite(parsed) ? parsed : 0;
-            };
-            const getTaskTargetName = (task) => systemClasses.find(c => c.code === task.targetClass)?.name || task.targetClass || '全校';
-            const getTaskTargetUsers = (task) => task.targetClass === '全校' ? users : users.filter(u => (u.joinedClasses || []).includes(task.targetClass));
-            const getTaskSyncSummary = (task) => {
-                const targetUsers = getTaskTargetUsers(task);
-                const stats = taskStats[task.id];
-                return {
-                    total: stats?.total ?? targetUsers.length,
-                    synced: stats?.synced ?? null,
-                    completed: stats?.completed ?? null,
-                    unsyncedList: stats?.unsyncedList || [],
-                    pendingList: stats?.pendingList || []
-                };
-            };
-            const classSummaryRows = systemClasses.map(c => ({
-                ...c,
-                memberCount: users.filter(u => (u.joinedClasses || []).includes(c.code)).length,
-                taskCount: publicTasks.filter(t => t.targetClass === c.code).length
-            })).sort((a, b) => b.memberCount - a.memberCount);
-            const latestPublicTasks = [...publicTasks].sort((a,b) => getTaskCreatedMs(b) - getTaskCreatedMs(a)).slice(0, 5);
-            const securityLevel = systemConfig?.blacklistEnabled && systemConfig?.whitelistEnabled ? '高' : systemConfig?.blacklistEnabled || systemConfig?.whitelistEnabled ? '中' : '基本';
 
             return (
                 <div className="glass-card bg-white/95 dark:bg-slate-900/95 rounded-[2.5rem] shadow-lg border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col md:flex-row min-h-[700px] relative z-20 mt-4">
@@ -1272,7 +1238,7 @@
                             <h2 className="text-xl font-black tracking-wide">超級管理中心</h2>
                         </div>
                         <div className="flex flex-row md:flex-col gap-2 overflow-x-auto scrollbar-hide pb-2 md:pb-0">
-                            {[ { id: 'overview', icon: 'layout-dashboard', label: '專業總覽' }, { id: 'monitor', icon: 'activity', label: '同步監控' }, { id: 'users', icon: 'users', label: '用戶數據管理' }, { id: 'classes', icon: 'school', label: '班級代碼管理' }, { id: 'tasks', icon: 'bell', label: '廣播任務中心' }, { id: 'settings', icon: 'settings', label: '核心系統設定' } ].map(tab => (
+                            {[ { id: 'overview', icon: 'check-circle-2', label: '系統概覽' }, { id: 'users', icon: 'users', label: '用戶數據管理' }, { id: 'classes', icon: 'school', label: '班級代碼管理' }, { id: 'tasks', icon: 'bell', label: '廣播任務中心' }, { id: 'settings', icon: 'settings', label: '核心系統設定' } ].map(tab => (
                                 <button key={tab.id} onClick={() => { setActiveTab(tab.id); setSelectedUser(null); setViewingClass(null); }} className={`flex items-center gap-3 px-4 py-3 rounded-2xl font-bold text-sm transition-all whitespace-nowrap md:whitespace-normal ${activeTab === tab.id ? 'bg-indigo-600 text-white shadow-lg' : 'hover:bg-slate-800 hover:text-white'}`}>
                                     <Icon name={tab.icon} className={`w-5 h-5 ${activeTab === tab.id ? 'text-indigo-200' : 'text-slate-500'}`} /> {tab.label}
                                 </button>
@@ -1285,87 +1251,19 @@
 
                         {activeTab === 'overview' && (
                             <div className="space-y-6 animate-fadeIn">
-                                <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
-                                    <div>
-                                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300 text-xs font-black border border-indigo-100 dark:border-indigo-800 mb-3">
-                                            <Icon name="shield-check" className="w-4 h-4" /> Admin Command Center
-                                        </div>
-                                        <h3 className="text-3xl font-black dark:text-white tracking-tight">專業管理總覽</h3>
-                                        <p className="text-sm text-slate-500 mt-1">集中監控用戶、班級、廣播、同步及安全狀態。</p>
-                                    </div>
-                                    <div className="flex gap-2 flex-wrap">
-                                        <button onClick={() => setActiveTab('monitor')} className="px-4 py-2 rounded-2xl bg-indigo-600 text-white text-xs font-black shadow-sm hover:bg-indigo-700 flex items-center gap-2"><Icon name="activity" className="w-4 h-4" /> 查看同步監控</button>
-                                        <button onClick={() => setActiveTab('settings')} className="px-4 py-2 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-black shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-2"><Icon name="settings" className="w-4 h-4" /> 系統設定</button>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                                    <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl p-5 text-white shadow-lg relative overflow-hidden">
-                                        <Icon name="users" className="w-16 h-16 absolute -right-4 -bottom-4 opacity-20" />
-                                        <div className="text-blue-100 text-xs font-black mb-1">已載入用戶</div>
+                                <h3 className="text-2xl font-bold dark:text-white mb-6">系統概覽</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl p-6 text-white shadow-lg">
+                                        <div className="text-blue-100 text-sm font-bold mb-1 flex items-center gap-2">總註冊用戶</div>
                                         <div className="text-4xl font-black">{users.length}</div>
-                                        <div className="text-[10px] text-blue-100 mt-2">每頁載入 20 位，避免 Firebase 浪費讀取額度</div>
                                     </div>
-                                    <div className="bg-gradient-to-br from-emerald-400 to-teal-500 rounded-3xl p-5 text-white shadow-lg relative overflow-hidden">
-                                        <Icon name="wifi" className="w-16 h-16 absolute -right-4 -bottom-4 opacity-20" />
-                                        <div className="text-emerald-50 text-xs font-black mb-1">10分鐘內在線</div>
-                                        <div className="text-4xl font-black">{activeNowCount}</div>
-                                        <div className="text-[10px] text-emerald-50 mt-2">24小時活躍：{activeTodayCount} 人</div>
+                                    <div className="bg-gradient-to-br from-emerald-400 to-teal-500 rounded-3xl p-6 text-white shadow-lg">
+                                        <div className="text-emerald-100 text-sm font-bold mb-1 flex items-center gap-2">24小時內活躍</div>
+                                        <div className="text-4xl font-black">{activeTodayCount}</div>
                                     </div>
-                                    <div className="bg-gradient-to-br from-orange-400 to-red-500 rounded-3xl p-5 text-white shadow-lg relative overflow-hidden">
-                                        <Icon name="megaphone" className="w-16 h-16 absolute -right-4 -bottom-4 opacity-20" />
-                                        <div className="text-orange-50 text-xs font-black mb-1">廣播任務</div>
+                                    <div className="bg-gradient-to-br from-orange-400 to-red-500 rounded-3xl p-6 text-white shadow-lg">
+                                        <div className="text-orange-100 text-sm font-bold mb-1 flex items-center gap-2">廣播任務總數</div>
                                         <div className="text-4xl font-black">{publicTasks.length}</div>
-                                        <div className="text-[10px] text-orange-50 mt-2">最近 7 日新增：{recentTaskCount} 份</div>
-                                    </div>
-                                    <div className="bg-gradient-to-br from-violet-500 to-purple-700 rounded-3xl p-5 text-white shadow-lg relative overflow-hidden">
-                                        <Icon name="shield" className="w-16 h-16 absolute -right-4 -bottom-4 opacity-20" />
-                                        <div className="text-violet-100 text-xs font-black mb-1">安全級別</div>
-                                        <div className="text-4xl font-black">{securityLevel}</div>
-                                        <div className="text-[10px] text-violet-100 mt-2">白名單 {allowedEmails.length}｜黑名單 {blacklistedEmails.length}</div>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
-                                    <div className="xl:col-span-2 bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">
-                                        <div className="p-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
-                                            <h4 className="font-black dark:text-white flex items-center gap-2"><Icon name="school" className="w-5 h-5 text-indigo-500" /> 班級營運概況</h4>
-                                            <span className="text-xs font-bold text-slate-400">總班級 {systemClasses.length}｜班級加入紀錄 {totalClassMemberships}</span>
-                                        </div>
-                                        <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[360px] overflow-y-auto scrollbar-hide">
-                                            {classSummaryRows.length === 0 ? <div className="text-center text-slate-400 py-8 md:col-span-2">尚未建立班級</div> : classSummaryRows.map(c => (
-                                                <div key={c.code} className="p-4 rounded-2xl border border-slate-100 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-900/40 hover:border-indigo-200 dark:hover:border-indigo-800 transition-all">
-                                                    <div className="flex items-center justify-between gap-3">
-                                                        <div>
-                                                            <div className="font-black dark:text-white">{c.name}</div>
-                                                            <div className="text-[10px] text-slate-400 font-mono tracking-widest mt-1">{c.code}</div>
-                                                        </div>
-                                                        <button onClick={() => { setActiveTab('classes'); setViewingClass(c); }} className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-black text-indigo-600 dark:text-indigo-300">管理</button>
-                                                    </div>
-                                                    <div className="grid grid-cols-2 gap-2 mt-4 text-center">
-                                                        <div className="rounded-xl bg-white dark:bg-slate-800 p-3 border border-slate-100 dark:border-slate-700"><div className="text-xl font-black text-slate-800 dark:text-white">{c.memberCount}</div><div className="text-[10px] font-bold text-slate-400">學生</div></div>
-                                                        <div className="rounded-xl bg-white dark:bg-slate-800 p-3 border border-slate-100 dark:border-slate-700"><div className="text-xl font-black text-slate-800 dark:text-white">{c.taskCount}</div><div className="text-[10px] font-bold text-slate-400">班級廣播</div></div>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">
-                                        <div className="p-5 border-b border-slate-100 dark:border-slate-700">
-                                            <h4 className="font-black dark:text-white flex items-center gap-2"><Icon name="bell-ring" className="w-5 h-5 text-orange-500" /> 最近廣播</h4>
-                                        </div>
-                                        <div className="p-4 space-y-3 max-h-[360px] overflow-y-auto scrollbar-hide">
-                                            {latestPublicTasks.length === 0 ? <div className="text-center text-slate-400 py-8 text-sm">未有廣播紀錄</div> : latestPublicTasks.map(task => (
-                                                <button key={task.id} onClick={() => { setActiveTab('monitor'); fetchTaskProgress(task); }} className="w-full text-left p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700 hover:border-orange-200 transition-all">
-                                                    <div className="flex justify-between items-start gap-2">
-                                                        <div className="font-black text-sm dark:text-white line-clamp-2">{task.description}</div>
-                                                        <span className="text-[10px] bg-orange-100 text-orange-700 px-2 py-0.5 rounded-lg font-bold shrink-0">{getTaskTargetName(task)}</span>
-                                                    </div>
-                                                    <div className="mt-2 text-[10px] text-slate-400 font-mono">{formatDueDate(task.dueDate)}</div>
-                                                </button>
-                                            ))}
-                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1540,12 +1438,6 @@
                                         <p className="text-sm text-slate-500">{selectedUser.email}</p>
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                                    <div className="rounded-3xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-4 shadow-sm"><div className="text-[10px] font-black text-slate-400 mb-1">功課總數</div><div className="text-3xl font-black dark:text-white">{userHomeworks.length}</div></div>
-                                    <div className="rounded-3xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-4 shadow-sm"><div className="text-[10px] font-black text-slate-400 mb-1">未完成</div><div className="text-3xl font-black text-orange-500">{userHomeworks.filter(h => !h.completed).length}</div></div>
-                                    <div className="rounded-3xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-4 shadow-sm"><div className="text-[10px] font-black text-slate-400 mb-1">已同步廣播</div><div className="text-3xl font-black text-emerald-500">{userHomeworks.filter(h => h.publicRefId).length}</div></div>
-                                    <div className="rounded-3xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-4 shadow-sm"><div className="text-[10px] font-black text-slate-400 mb-1">加入班級</div><div className="text-3xl font-black text-indigo-500">{(selectedUser.joinedClasses || []).length}</div></div>
-                                </div>
                                 <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col md:flex-row gap-6 items-center md:items-start">
                                      <div className="w-full md:w-auto flex-1 space-y-4">
                                          <h4 className="font-bold text-slate-700 dark:text-slate-200">用戶檔案編輯</h4>
@@ -1590,61 +1482,6 @@
                             </div>
                         )}
 
-                        {activeTab === 'monitor' && (
-                            <div className="space-y-6 animate-fadeIn">
-                                <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
-                                    <div>
-                                        <h3 className="text-2xl font-black dark:text-white flex items-center gap-2"><Icon name="activity" className="w-6 h-6 text-indigo-500" /> 廣播同步監控</h3>
-                                        <p className="text-sm text-slate-500 mt-1">查看每份廣播有幾多學生已同步、未同步、已完成。同步資料會按已載入用戶計算。</p>
-                                    </div>
-                                    <button onClick={() => setActiveTab('tasks')} className="px-4 py-2 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-black text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-2"><Icon name="bell" className="w-4 h-4" /> 返回任務中心</button>
-                                </div>
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                                    {publicTasks.length === 0 ? <div className="lg:col-span-2 text-center py-12 text-slate-400 bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700">暫無廣播任務</div> : publicTasks.map(task => {
-                                        const summary = getTaskSyncSummary(task);
-                                        const syncPct = summary.synced === null || !summary.total ? null : Math.round((summary.synced / summary.total) * 100);
-                                        const completePct = summary.completed === null || !summary.total ? null : Math.round((summary.completed / summary.total) * 100);
-                                        return (
-                                            <div key={task.id} className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm p-5 hover:border-indigo-200 dark:hover:border-indigo-800 transition-all">
-                                                <div className="flex justify-between items-start gap-3">
-                                                    <div className="min-w-0">
-                                                        <div className="flex items-center gap-2 mb-2 flex-wrap">
-                                                            <span className={`px-2.5 py-0.5 rounded-lg text-[10px] font-black border ${subjects.find(s => s.name === task.subject)?.color || 'bg-slate-100 text-slate-600 border-slate-200'}`}>{task.subject || '其他'}</span>
-                                                            <span className="px-2.5 py-0.5 rounded-lg text-[10px] font-black bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">{getTaskTargetName(task)}</span>
-                                                        </div>
-                                                        <h4 className="font-black text-slate-800 dark:text-white line-clamp-2">{task.description}</h4>
-                                                        <p className="text-xs text-slate-400 font-mono mt-2">截止：{formatDueDate(task.dueDate)}</p>
-                                                    </div>
-                                                    <button onClick={() => fetchTaskProgress(task)} disabled={isFetchingStats} className="px-3 py-2 rounded-xl bg-indigo-600 text-white text-xs font-black hover:bg-indigo-700 disabled:opacity-50 shrink-0 flex items-center gap-1">
-                                                        {isFetchingStats ? <Icon name="loader" className="w-4 h-4 animate-spin" /> : <Icon name="refresh-cw" className="w-4 h-4" />} 更新
-                                                    </button>
-                                                </div>
-
-                                                <div className="grid grid-cols-3 gap-2 mt-5">
-                                                    <div className="rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700 p-3 text-center"><div className="text-2xl font-black dark:text-white">{summary.total}</div><div className="text-[10px] font-bold text-slate-400">目標學生</div></div>
-                                                    <div className="rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 p-3 text-center"><div className="text-2xl font-black text-emerald-600">{summary.synced ?? '-'}</div><div className="text-[10px] font-bold text-emerald-500">已同步</div></div>
-                                                    <div className="rounded-2xl bg-orange-50 dark:bg-orange-900/20 border border-orange-100 dark:border-orange-800 p-3 text-center"><div className="text-2xl font-black text-orange-600">{summary.unsyncedList.length || (summary.synced === null ? '-' : 0)}</div><div className="text-[10px] font-bold text-orange-500">未同步</div></div>
-                                                </div>
-
-                                                <div className="mt-5 space-y-3">
-                                                    <div>
-                                                        <div className="flex justify-between text-xs font-black text-slate-500 mb-1"><span>同步率</span><span>{syncPct === null ? '按「更新」讀取' : `${syncPct}%`}</span></div>
-                                                        <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden"><div className="h-2 bg-emerald-500 rounded-full transition-all" style={{ width: syncPct === null ? '0%' : `${syncPct}%` }}></div></div>
-                                                    </div>
-                                                    <div>
-                                                        <div className="flex justify-between text-xs font-black text-slate-500 mb-1"><span>完成率</span><span>{completePct === null ? '按「更新」讀取' : `${completePct}%`}</span></div>
-                                                        <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden"><div className="h-2 bg-indigo-500 rounded-full transition-all" style={{ width: completePct === null ? '0%' : `${completePct}%` }}></div></div>
-                                                    </div>
-                                                </div>
-
-                                                {summary.unsyncedList.length > 0 && <div className="mt-4 p-3 rounded-2xl bg-orange-50 dark:bg-orange-900/20 border border-orange-100 dark:border-orange-800 text-xs text-orange-700 dark:text-orange-300"><b>未同步：</b>{summary.unsyncedList.slice(0, 8).join('、')}{summary.unsyncedList.length > 8 ? ` 等 ${summary.unsyncedList.length} 人` : ''}</div>}
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        )}
-
                         {activeTab === 'tasks' && (
                             <div className="space-y-6 animate-fadeIn">
                                 <h3 className="text-2xl font-bold dark:text-white">廣播任務中心</h3>
@@ -1676,17 +1513,16 @@
                                                                 {stats ? (
                                                                     <div className="flex flex-col gap-2">
                                                                         <div className="flex items-center justify-between text-xs font-bold text-slate-500">
-                                                                            <span className="text-emerald-500">{stats.synced} 已同步</span>
+                                                                            <span className="text-emerald-500">{stats.completed} 已完成</span>
                                                                             <span>共 {stats.total} 人</span>
                                                                         </div>
                                                                         <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
-                                                                            <div className="bg-emerald-500 h-1.5 rounded-full" style={{ width: stats.total ? `${(stats.synced / stats.total) * 100}%` : '0%' }}></div>
+                                                                            <div className="bg-emerald-500 h-1.5 rounded-full" style={{ width: stats.total ? `${(stats.completed / stats.total) * 100}%` : '0%' }}></div>
                                                                         </div>
                                                                         {stats.pendingList.length > 0 && (
-                                                                            <div className="mt-1 text-[10px] text-slate-400 max-w-[150px] truncate" title={stats.pendingList.join(', ')}>未完成: {stats.pendingList.join(', ')}</div>
+                                                                            <div className="mt-1 text-[10px] text-slate-400 max-w-[150px] truncate" title={stats.pendingList.join(', ')}>未交: {stats.pendingList.join(', ')}</div>
                                                                         )}
-                                                                        {stats.unsyncedList?.length > 0 && <div className="mt-1 text-[10px] text-orange-500 max-w-[150px] truncate" title={stats.unsyncedList.join(', ')}>未同步: {stats.unsyncedList.join(', ')}</div>}
-                                                                        {stats.pendingList.length === 0 && (stats.unsyncedList || []).length === 0 && stats.total > 0 && <span className="text-[10px] text-emerald-500 font-bold">全部已同步並完成 🎉</span>}
+                                                                        {stats.pendingList.length === 0 && stats.total > 0 && <span className="text-[10px] text-emerald-500 font-bold">全班已交齊 🎉</span>}
                                                                     </div>
                                                                 ) : (
                                                                     <button onClick={() => fetchTaskProgress(task)} disabled={isFetchingStats} className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-xs font-bold transition-colors disabled:opacity-50">查看進度</button>
@@ -1845,12 +1681,12 @@
             const [isJoinClassOpen, setIsJoinClassOpen] = useState(false);
             const [selectedClassBoard, setSelectedClassBoard] = useState('全校');
             const [publicTasks, setPublicTasks] = useState([]);
-            const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-            const [readNotificationIds, setReadNotificationIds] = useState([]);
             const [syncingPublicIds, setSyncingPublicIds] = useState({});
+            const [isNotificationCenterOpen, setIsNotificationCenterOpen] = useState(false);
+            const [readNotificationIds, setReadNotificationIds] = useState([]);
             const [predictedSubject, setPredictedSubject] = useState('');
-            const [subjectPredictionApplied, setSubjectPredictionApplied] = useState(false);
             const [subjectManuallySelected, setSubjectManuallySelected] = useState(false);
+            const [subjectPredictionApplied, setSubjectPredictionApplied] = useState(false);
             const [pageLoadTime] = useState(Date.now());
             const [currentTimetableDay, setCurrentTimetableDay] = useState(new Date().getDay() || 1);
             const [quickView, setQuickView] = useState({ isOpen: false, title: '', items: [] });
@@ -1908,6 +1744,19 @@
             }, [user, db]);
 
             useEffect(() => {
+                if (!user?.uid) {
+                    setReadNotificationIds([]);
+                    return;
+                }
+                try {
+                    const saved = JSON.parse(localStorage.getItem(`ehandbook_read_notifications_${user.uid}`) || '[]');
+                    setReadNotificationIds(Array.isArray(saved) ? saved : []);
+                } catch (e) {
+                    setReadNotificationIds([]);
+                }
+            }, [user?.uid]);
+
+            useEffect(() => {
                 if (!db || !user) return;
                 const unsubConfig = onSnapshot(doc(db, "system_settings", "config"), (docSnap) => { setSystemConfig(docSnap.exists() ? docSnap.data() : null); }, (err) => { console.warn("Config err:", err); });
                 const unsubClasses = onSnapshot(doc(db, "system_settings", "classes"), (docSnap) => setSystemClasses(docSnap.exists() && docSnap.data().list ? docSnap.data().list : []), (err) => console.warn("Classes err:", err));
@@ -1946,144 +1795,35 @@
             }, [joinedClassesStr, selectedClassBoard]);
 
             useEffect(() => {
-                if (!user || !db || !collection || !query || !where || !onSnapshot) return;
+                if (!user || !db) return;
+                const q = query(collection(db, "public_assignments"), orderBy("createdAt", "desc"));
+                const unsubscribe = onSnapshot(q, (snapshot) => {
+                    try {
+                        const loadedPublicTasks = snapshot.docs.map(publicDoc => ({ id: publicDoc.id, ...publicDoc.data() }));
+                        setPublicTasks(loadedPublicTasks);
 
-                const classTargets = Array.from(new Set([
-                    '全校',
-                    ...(joinedClassesStr ? joinedClassesStr.split(',').filter(Boolean) : [])
-                ]));
-
-                const chunkTargets = [];
-                for (let i = 0; i < classTargets.length; i += 30) {
-                    chunkTargets.push(classTargets.slice(i, i + 30));
-                }
-
-                const publicTaskMap = new Map();
-                const getCreatedMs = (task) => {
-                    const createdValue = task.createdAt;
-                    if (typeof createdValue?.toDate === 'function') return createdValue.toDate().getTime();
-                    return createdValue ? new Date(createdValue).getTime() : 0;
-                };
-
-                const flushPublicTasks = () => {
-                    const sortedTasks = Array.from(publicTaskMap.values()).sort((a, b) => getCreatedMs(b) - getCreatedMs(a));
-                    setPublicTasks(sortedTasks);
-                };
-
-                const unsubscribes = chunkTargets.map(targetChunk => {
-                    const publicQuery = query(
-                        collection(db, "public_assignments"),
-                        where("targetClass", "in", targetChunk)
-                    );
-
-                    return onSnapshot(publicQuery, (snapshot) => {
-                        try {
-                            const existingPublicIds = new Set(itemsRef.current.map(i => i.publicRefId).filter(Boolean));
-
-                            snapshot.docChanges().forEach(change => {
-                                const publicId = change.doc.id;
-
-                                if (change.type === "removed") {
-                                    publicTaskMap.delete(publicId);
-                                    return;
-                                }
-
-                                const publicData = { id: publicId, ...change.doc.data() };
-                                publicTaskMap.set(publicId, publicData);
-
-                                if (change.type !== "added") return;
-                                const createdTime = getCreatedMs(publicData);
-                                if (!existingPublicIds.has(publicId) && createdTime > pageLoadTime) {
-                                    triggerAlert(`收到新廣播功課通知：${publicData.subject || '未命名科目'}`);
-                                }
-                            });
-
-                            if (snapshot.docChanges().length === 0) {
-                                snapshot.docs.forEach(publicDoc => publicTaskMap.set(publicDoc.id, { id: publicDoc.id, ...publicDoc.data() }));
+                        const currentClasses = joinedClassesStr ? joinedClassesStr.split(',') : [];
+                        const existingPublicIds = new Set(itemsRef.current.map(i => i.publicRefId).filter(Boolean));
+                        snapshot.docChanges().forEach(change => {
+                            if (change.type !== "added") return;
+                            const publicData = change.doc.data();
+                            const publicId = change.doc.id;
+                            const target = publicData.targetClass || '全校';
+                            const isForMe = target === '全校' || currentClasses.includes(target);
+                            const createdValue = publicData.createdAt;
+                            const createdTime = typeof createdValue?.toDate === 'function'
+                                ? createdValue.toDate().getTime()
+                                : (createdValue ? new Date(createdValue).getTime() : 0);
+                            if (isForMe && !existingPublicIds.has(publicId) && createdTime > pageLoadTime) {
+                                triggerAlert(`收到新廣播功課通知：${publicData.subject || '未命名科目'}`);
                             }
-
-                            flushPublicTasks();
-                        } catch (e) {
-                            console.warn("Public tasks wrapper err:", e);
-                        }
-                    }, (err) => console.warn("Public tasks restricted query err:", err));
-                });
-
-                return () => unsubscribes.forEach(unsubscribe => unsubscribe && unsubscribe());
-            }, [user, db, collection, query, where, onSnapshot, joinedClassesStr, pageLoadTime]);
-
-            useEffect(() => {
-                if (!user) { setReadNotificationIds([]); return; }
-                try {
-                    const saved = JSON.parse(localStorage.getItem(`ehandbook_read_notifications_${user.uid}`) || '[]');
-                    setReadNotificationIds(Array.isArray(saved) ? saved : []);
-                } catch (e) {
-                    setReadNotificationIds([]);
-                }
-            }, [user?.uid]);
-
-            const getTimestampMs = (value) => {
-                if (!value) return 0;
-                if (typeof value?.toDate === 'function') return value.toDate().getTime();
-                const parsed = new Date(value).getTime();
-                return Number.isFinite(parsed) ? parsed : 0;
-            };
-
-            const userNotifications = useMemo(() => {
-                const classNameOf = (code) => systemClasses.find(c => c.code === code)?.name || code || '全校';
-                const notes = [];
-                if (systemConfig?.announcementText) {
-                    notes.push({
-                        id: `announcement-${systemConfig.announcementText}`,
-                        type: 'announcement',
-                        icon: 'radio',
-                        title: '全校公告',
-                        body: systemConfig.announcementText,
-                        dateMs: Date.now(),
-                        actionText: '查看公告'
-                    });
-                }
-                publicTasks.forEach(task => {
-                    const targetName = classNameOf(task.targetClass);
-                    notes.push({
-                        id: `broadcast-${task.id}`,
-                        type: 'broadcast',
-                        icon: 'bell-ring',
-                        title: `${task.subject || '功課'}｜${targetName}`,
-                        body: task.description || '新廣播功課',
-                        dateMs: getTimestampMs(task.createdAt),
-                        targetClass: task.targetClass || '全校',
-                        dueDate: task.dueDate,
-                        actionText: '前往同步'
-                    });
-                });
-                return notes
-                    .sort((a, b) => (b.dateMs || 0) - (a.dateMs || 0))
-                    .slice(0, 30)
-                    .map(n => ({ ...n, unread: !readNotificationIds.includes(n.id) }));
-            }, [publicTasks, systemConfig?.announcementText, systemClasses, readNotificationIds]);
-
-            const unreadNotificationCount = userNotifications.filter(n => n.unread).length;
-
-            const markNotificationsRead = (ids) => {
-                if (!user) return;
-                const targetIds = Array.isArray(ids) ? ids : [ids];
-                setReadNotificationIds(prev => {
-                    const merged = Array.from(new Set([...prev, ...targetIds])).slice(-120);
-                    localStorage.setItem(`ehandbook_read_notifications_${user.uid}`, JSON.stringify(merged));
-                    return merged;
-                });
-            };
-
-            const handleOpenUserNotification = (note) => {
-                markNotificationsRead(note.id);
-                setIsNotificationOpen(false);
-                if (note.type === 'broadcast') {
-                    setViewMode('current');
-                    setAppMode('class');
-                    if (note.targetClass) setSelectedClassBoard(note.targetClass);
-                }
-            };
+                        });
+                    } catch (e) {
+                        console.warn("Public tasks wrapper err:", e);
+                    }
+                }, (err) => console.warn("Public tasks err:", err));
+                return () => unsubscribe();
+            }, [user, db, joinedClassesStr, pageLoadTime]);
 
             const triggerAlert = (message, type = 'success') => {
                 setToast({ isVisible: true, message, type });
@@ -2135,7 +1875,7 @@
                     setSubjectPredictionApplied(true);
                     return;
                 }
-                if (subject !== predictedSubject && !description.trim()) {
+                if (subject !== predictedSubject && (!description.trim() || subjectPredictionApplied)) {
                     setSubject(predictedSubject);
                     setSubjectPredictionApplied(true);
                 }
@@ -2152,6 +1892,68 @@
             }, [publicTasks, joinedClassesStr]);
 
             const unsyncedPublicTasks = useMemo(() => visiblePublicTasks.filter(task => !syncedPublicIds.has(task.id) && !task.forceExpired), [visiblePublicTasks, syncedPublicIds]);
+
+            const userNotifications = useMemo(() => {
+                const notices = [];
+                if (systemConfig?.announcementText) {
+                    const text = String(systemConfig.announcementText || '');
+                    const hash = Array.from(text).reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
+                    notices.push({
+                        id: `announcement-${hash}-${text.length}`,
+                        type: 'announcement',
+                        icon: 'megaphone',
+                        title: '最新全校公告',
+                        message: text,
+                        time: '置頂公告',
+                        accent: 'amber',
+                        action: 'none'
+                    });
+                }
+
+                visiblePublicTasks.slice(0, 12).forEach(task => {
+                    const targetCode = task.targetClass || '全校';
+                    const cls = systemClasses.find(c => c.code === targetCode);
+                    const targetName = targetCode === '全校' ? '全校' : (cls?.name || targetCode);
+                    const synced = syncedPublicIds.has(task.id);
+                    notices.push({
+                        id: `public-${task.id}-${task.forceExpired ? 'expired' : 'active'}-${synced ? 'synced' : 'unsynced'}`,
+                        type: 'broadcast',
+                        icon: task.forceExpired ? 'archive-x' : (synced ? 'check-circle-2' : 'bell-ring'),
+                        title: task.forceExpired ? '廣播功課已撤回' : (synced ? '已同步廣播功課' : '新廣播功課待同步'),
+                        message: `${task.subject || '其他'}｜${task.description || '未填寫內容'}`,
+                        meta: targetName,
+                        time: formatFirebaseDateTime(task.createdAt),
+                        accent: task.forceExpired ? 'slate' : (synced ? 'emerald' : 'orange'),
+                        action: task.forceExpired ? 'none' : 'class',
+                        targetClass: targetCode
+                    });
+                });
+
+                return notices.map(n => ({ ...n, unread: !readNotificationIds.includes(n.id) }));
+            }, [systemConfig?.announcementText, visiblePublicTasks, systemClasses, syncedPublicIds, readNotificationIds]);
+
+            const unreadNotificationCount = useMemo(() => userNotifications.filter(n => n.unread).length, [userNotifications]);
+
+            const markNotificationsRead = (ids) => {
+                if (!user?.uid) return;
+                const targetIds = Array.isArray(ids) ? ids : [ids];
+                setReadNotificationIds(prev => {
+                    const merged = Array.from(new Set([...prev, ...targetIds.filter(Boolean)]));
+                    localStorage.setItem(`ehandbook_read_notifications_${user.uid}`, JSON.stringify(merged));
+                    return merged;
+                });
+            };
+
+            const handleOpenUserNotification = (note) => {
+                if (!note) return;
+                markNotificationsRead(note.id);
+                if (note.action === 'class') {
+                    setViewMode('current');
+                    setAppMode('class');
+                    setSelectedClassBoard(note.targetClass || '全校');
+                }
+                setIsNotificationCenterOpen(false);
+            };
 
             const classBoardOptions = useMemo(() => ['全校', ...(joinedClassesStr ? joinedClassesStr.split(',') : [])], [joinedClassesStr]);
 
@@ -2390,7 +2192,7 @@
 
                     <div className="max-w-[1200px] mx-auto relative z-10 transition-all duration-500">
                         {viewMode !== 'admin' && (
-                        <header className="relative flex items-center justify-between mb-8 max-w-3xl mx-auto glass-card bg-white/80 dark:bg-slate-900/80 px-5 py-4 rounded-[2rem]">
+                        <header className="flex items-center justify-between mb-8 max-w-3xl mx-auto glass-card bg-white/80 dark:bg-slate-900/80 px-5 py-4 rounded-[2rem]">
                             <div className="flex items-center gap-3">
                                 <div className={`w-11 h-11 rounded-2xl flex items-center justify-center bg-gradient-to-br ${t.gradient} text-white shadow-lg`}>
                                     <Icon name={viewMode === 'timetable' || viewMode === 'timetable_edit' ? "calendar-clock" : viewMode === 'history' ? "timer" : "book-open"} className="w-6 h-6" />
@@ -2406,45 +2208,17 @@
                                 {viewMode === 'timetable' && (
                                     <button onClick={() => setViewMode('timetable_edit')} className="px-3 py-2 rounded-xl font-bold text-xs bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-200 shadow-sm transition-all flex items-center gap-2"><Icon name="book-open" className="w-4 h-4" /><span className="hidden sm:inline">編輯時間表</span></button>
                                 )}
-                                <div className="relative">
-                                    <button onClick={() => setIsNotificationOpen(!isNotificationOpen)} className={`relative p-3 rounded-2xl border shadow-sm transition-all active:scale-95 ${unreadNotificationCount > 0 ? 'bg-orange-500 text-white border-orange-400 shadow-orange-200/60 animate-pulse' : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'}`} title="通知中心">
-                                        <Icon name="bell" className="w-4 h-4" />
-                                        {unreadNotificationCount > 0 && <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-black flex items-center justify-center border-2 border-white dark:border-slate-900">{unreadNotificationCount > 9 ? '9+' : unreadNotificationCount}</span>}
-                                    </button>
-                                    {isNotificationOpen && (
-                                        <div className="absolute right-0 top-14 w-[320px] sm:w-[380px] max-w-[calc(100vw-2rem)] z-[90] rounded-3xl border border-white/60 dark:border-slate-700 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl shadow-2xl overflow-hidden animate-pop-in">
-                                            <div className="p-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
-                                                <div>
-                                                    <div className="font-black text-slate-800 dark:text-white flex items-center gap-2"><Icon name="bell-ring" className="w-4 h-4 text-orange-500" /> 通知中心</div>
-                                                    <div className="text-[10px] text-slate-400 font-bold">最近廣播、公告及同步提醒</div>
-                                                </div>
-                                                <button onClick={() => markNotificationsRead(userNotifications.map(n => n.id))} className="text-[10px] font-black text-indigo-600 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 px-3 py-1.5 rounded-xl">全部已讀</button>
-                                            </div>
-                                            <div className="max-h-[430px] overflow-y-auto scrollbar-hide p-2">
-                                                {userNotifications.length === 0 ? (
-                                                    <div className="text-center py-10 text-slate-400 text-sm font-bold">暫時未有通知</div>
-                                                ) : userNotifications.map(note => (
-                                                    <button key={note.id} onClick={() => handleOpenUserNotification(note)} className={`w-full text-left p-3 rounded-2xl mb-2 border transition-all ${note.unread ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-100 dark:border-orange-800' : 'bg-slate-50/70 dark:bg-slate-800/60 border-slate-100 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
-                                                        <div className="flex gap-3 items-start">
-                                                            <div className={`w-9 h-9 rounded-2xl flex items-center justify-center shrink-0 ${note.unread ? 'bg-orange-500 text-white' : 'bg-white dark:bg-slate-900 text-slate-400 border border-slate-200 dark:border-slate-700'}`}><Icon name={note.icon} className="w-4 h-4" /></div>
-                                                            <div className="min-w-0 flex-1">
-                                                                <div className="flex items-center justify-between gap-2">
-                                                                    <div className="font-black text-sm text-slate-800 dark:text-white truncate">{note.title}</div>
-                                                                    {note.unread && <span className="w-2 h-2 rounded-full bg-orange-500 shrink-0"></span>}
-                                                                </div>
-                                                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 font-medium">{note.body}</p>
-                                                                <div className="flex items-center justify-between mt-2">
-                                                                    <span className="text-[10px] text-slate-400 font-mono">{note.dueDate ? `Due: ${formatDueDate(note.dueDate)}` : '最新公告'}</span>
-                                                                    <span className="text-[10px] font-black text-indigo-600 dark:text-indigo-300">{note.actionText}</span>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsNotificationCenterOpen(true)}
+                                    className={`relative p-2.5 rounded-2xl border shadow-sm transition-all active:scale-95 ${unreadNotificationCount > 0 ? 'bg-orange-500 text-white border-orange-400 shadow-orange-200/60 dark:shadow-orange-900/30' : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'}`}
+                                    title="通知中心"
+                                >
+                                    <Icon name="bell" className="w-4 h-4" />
+                                    {unreadNotificationCount > 0 && (
+                                        <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-black flex items-center justify-center border-2 border-white dark:border-slate-900 leading-none">{unreadNotificationCount > 9 ? '9+' : unreadNotificationCount}</span>
                                     )}
-                                </div>
+                                </button>
                                 <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-xl p-1 shadow-inner border border-slate-200/50">
                                     <button onClick={() => setIsPreferencesOpen(true)} className="p-2 rounded-lg hover:bg-white text-slate-500 hover:text-slate-800 transition-all hover:shadow-sm" title="外觀設定"><Icon name="palette" className="w-4 h-4" /></button>
                                     <div className="w-px h-4 bg-slate-300 mx-1"></div>
@@ -2727,6 +2501,64 @@
                     {showNameSetup && <NameSetupModal user={user} onSave={handleNameSetupSave} loading={nameSetupLoading} triggerAlert={triggerAlert} triggerConfirm={triggerConfirm} t={t} />}
                     <JoinClassModal isOpen={isJoinClassOpen} onClose={() => setIsJoinClassOpen(false)} systemClasses={systemClasses} joinedClasses={joinedClasses} onJoin={handleJoinClassSubmit} triggerConfirm={triggerConfirm} t={t} />
                     {isSubjectManagerOpen && <SubjectManagerModal isOpen={isSubjectManagerOpen} onClose={() => setIsSubjectManagerOpen(false)} currentSubjects={subjects} onSave={saveSubjects} triggerConfirm={triggerConfirm} />}
+
+                    {isNotificationCenterOpen && (
+                        <div className="fixed inset-0 z-[220] flex items-end sm:items-start sm:justify-end sm:p-5">
+                            <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-sm" onClick={() => setIsNotificationCenterOpen(false)}></div>
+                            <div className={`relative w-full sm:w-[420px] max-h-[82vh] sm:max-h-[calc(100vh-7rem)] overflow-hidden rounded-t-[2rem] sm:rounded-[2rem] glass-card bg-white/95 dark:bg-slate-900/95 border border-white/60 dark:border-slate-700 shadow-2xl flex flex-col ${systemConfig?.announcementText ? 'sm:mt-14' : 'sm:mt-4'}`}>
+                                <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3 shrink-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl">
+                                    <div className="min-w-0">
+                                        <div className="flex items-center gap-2 font-black text-slate-800 dark:text-white"><Icon name="bell-ring" className="w-5 h-5 text-orange-500" /> 通知中心</div>
+                                        <div className="text-[11px] font-bold text-slate-400 mt-0.5">最近公告、廣播功課及同步狀態</div>
+                                    </div>
+                                    <div className="flex items-center gap-2 shrink-0">
+                                        {userNotifications.length > 0 && (
+                                            <button type="button" onClick={() => markNotificationsRead(userNotifications.map(n => n.id))} className="px-3 py-2 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300 text-[11px] font-black border border-indigo-100 dark:border-indigo-800">全部已讀</button>
+                                        )}
+                                        <button type="button" onClick={() => setIsNotificationCenterOpen(false)} className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors"><Icon name="x" className="w-4 h-4" /></button>
+                                    </div>
+                                </div>
+
+                                <div className="overflow-y-auto p-4 space-y-3 min-h-[220px] max-h-[70vh] scrollbar-hide">
+                                    {userNotifications.length === 0 ? (
+                                        <div className="h-[220px] flex flex-col items-center justify-center text-center text-slate-400">
+                                            <div className="w-16 h-16 rounded-3xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-3"><Icon name="bell-off" className="w-7 h-7" /></div>
+                                            <div className="font-black text-sm">暫時未有通知</div>
+                                            <div className="text-xs mt-1">有新公告或廣播功課時會出現在這裡</div>
+                                        </div>
+                                    ) : userNotifications.map(note => {
+                                        const accentMap = {
+                                            amber: 'bg-amber-50 dark:bg-amber-900/20 border-amber-100 dark:border-amber-800 text-amber-600 dark:text-amber-300',
+                                            orange: 'bg-orange-50 dark:bg-orange-900/20 border-orange-100 dark:border-orange-800 text-orange-600 dark:text-orange-300',
+                                            emerald: 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-800 text-emerald-600 dark:text-emerald-300',
+                                            slate: 'bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-500 dark:text-slate-300'
+                                        };
+                                        const accentClass = accentMap[note.accent] || accentMap.slate;
+                                        return (
+                                            <button key={note.id} type="button" onClick={() => handleOpenUserNotification(note)} className={`w-full text-left rounded-3xl border p-4 transition-all hover:-translate-y-0.5 hover:shadow-md ${note.unread ? accentClass : 'bg-white/70 dark:bg-slate-800/70 border-slate-100 dark:border-slate-700 text-slate-500 dark:text-slate-300'}`}>
+                                                <div className="flex items-start gap-3">
+                                                    <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${note.unread ? 'bg-white/80 dark:bg-slate-950/40' : 'bg-slate-100 dark:bg-slate-900/60'}`}>
+                                                        <Icon name={note.icon} className="w-5 h-5" />
+                                                    </div>
+                                                    <div className="min-w-0 flex-1">
+                                                        <div className="flex items-center justify-between gap-2">
+                                                            <div className="font-black text-sm text-slate-800 dark:text-white truncate">{note.title}</div>
+                                                            {note.unread && <span className="w-2.5 h-2.5 rounded-full bg-red-500 shrink-0 shadow-sm"></span>}
+                                                        </div>
+                                                        <div className="text-xs font-bold mt-1 line-clamp-2 break-words">{note.message}</div>
+                                                        <div className="mt-2 flex items-center justify-between gap-2 text-[10px] font-black opacity-70">
+                                                            <span className="truncate">{note.meta || note.time || '剛剛'}</span>
+                                                            {note.action === 'class' && <span className="shrink-0 flex items-center gap-1">前往同步 <Icon name="arrow-right" className="w-3 h-3" /></span>}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {notification.isOpen && (
                         <div className="fixed inset-0 z-[250] flex items-center justify-center p-4">
