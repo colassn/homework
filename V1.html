@@ -1779,35 +1779,71 @@
             }, [joinedClassesStr, selectedClassBoard]);
 
             useEffect(() => {
-                if (!user || !db) return;
-                const q = query(collection(db, "public_assignments"), orderBy("createdAt", "desc"));
-                const unsubscribe = onSnapshot(q, (snapshot) => {
-                    try {
-                        const loadedPublicTasks = snapshot.docs.map(publicDoc => ({ id: publicDoc.id, ...publicDoc.data() }));
-                        setPublicTasks(loadedPublicTasks);
+                if (!user || !db || !collection || !query || !where || !onSnapshot) return;
 
-                        const currentClasses = joinedClassesStr ? joinedClassesStr.split(',') : [];
-                        const existingPublicIds = new Set(itemsRef.current.map(i => i.publicRefId).filter(Boolean));
-                        snapshot.docChanges().forEach(change => {
-                            if (change.type !== "added") return;
-                            const publicData = change.doc.data();
-                            const publicId = change.doc.id;
-                            const target = publicData.targetClass || '全校';
-                            const isForMe = target === '全校' || currentClasses.includes(target);
-                            const createdValue = publicData.createdAt;
-                            const createdTime = typeof createdValue?.toDate === 'function'
-                                ? createdValue.toDate().getTime()
-                                : (createdValue ? new Date(createdValue).getTime() : 0);
-                            if (isForMe && !existingPublicIds.has(publicId) && createdTime > pageLoadTime) {
-                                triggerAlert(`收到新廣播功課通知：${publicData.subject || '未命名科目'}`);
+                const classTargets = Array.from(new Set([
+                    '全校',
+                    ...(joinedClassesStr ? joinedClassesStr.split(',').filter(Boolean) : [])
+                ]));
+
+                const chunkTargets = [];
+                for (let i = 0; i < classTargets.length; i += 30) {
+                    chunkTargets.push(classTargets.slice(i, i + 30));
+                }
+
+                const publicTaskMap = new Map();
+                const getCreatedMs = (task) => {
+                    const createdValue = task.createdAt;
+                    if (typeof createdValue?.toDate === 'function') return createdValue.toDate().getTime();
+                    return createdValue ? new Date(createdValue).getTime() : 0;
+                };
+
+                const flushPublicTasks = () => {
+                    const sortedTasks = Array.from(publicTaskMap.values()).sort((a, b) => getCreatedMs(b) - getCreatedMs(a));
+                    setPublicTasks(sortedTasks);
+                };
+
+                const unsubscribes = chunkTargets.map(targetChunk => {
+                    const publicQuery = query(
+                        collection(db, "public_assignments"),
+                        where("targetClass", "in", targetChunk)
+                    );
+
+                    return onSnapshot(publicQuery, (snapshot) => {
+                        try {
+                            const existingPublicIds = new Set(itemsRef.current.map(i => i.publicRefId).filter(Boolean));
+
+                            snapshot.docChanges().forEach(change => {
+                                const publicId = change.doc.id;
+
+                                if (change.type === "removed") {
+                                    publicTaskMap.delete(publicId);
+                                    return;
+                                }
+
+                                const publicData = { id: publicId, ...change.doc.data() };
+                                publicTaskMap.set(publicId, publicData);
+
+                                if (change.type !== "added") return;
+                                const createdTime = getCreatedMs(publicData);
+                                if (!existingPublicIds.has(publicId) && createdTime > pageLoadTime) {
+                                    triggerAlert(`收到新廣播功課通知：${publicData.subject || '未命名科目'}`);
+                                }
+                            });
+
+                            if (snapshot.docChanges().length === 0) {
+                                snapshot.docs.forEach(publicDoc => publicTaskMap.set(publicDoc.id, { id: publicDoc.id, ...publicDoc.data() }));
                             }
-                        });
-                    } catch (e) {
-                        console.warn("Public tasks wrapper err:", e);
-                    }
-                }, (err) => console.warn("Public tasks err:", err));
-                return () => unsubscribe();
-            }, [user, db, joinedClassesStr, pageLoadTime]);
+
+                            flushPublicTasks();
+                        } catch (e) {
+                            console.warn("Public tasks wrapper err:", e);
+                        }
+                    }, (err) => console.warn("Public tasks restricted query err:", err));
+                });
+
+                return () => unsubscribes.forEach(unsubscribe => unsubscribe && unsubscribe());
+            }, [user, db, collection, query, where, onSnapshot, joinedClassesStr, pageLoadTime]);
 
             const triggerAlert = (message, type = 'success') => {
                 setToast({ isVisible: true, message, type });
