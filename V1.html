@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-HK">
 <head>
-    <!-- 電子手冊 Pro v1.8 專業後台增強版：自製選單/日期時間彈窗 + 同步監控重排 + 更新阻攔畫面 + 更新歷史重發 -->
+    <!-- 電子手冊 Pro v1.8.1 載入修復版：保留 v1.8 功能 + 修正主畫面載入卡住風險 -->
 
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-8VCPLTE2QT"></script>
     <script>
@@ -114,6 +114,20 @@
 </head>
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 selection:bg-indigo-200 dark:selection:bg-indigo-900">
     
+    <script>
+        window.addEventListener('error', function(event) {
+            try {
+                var box = document.getElementById('loading-screen');
+                if (box && !window.__EHANDBOOK_RENDERED__) {
+                    box.innerHTML = "<div style='max-width:420px;padding:22px;text-align:center'><div style='font-size:42px;margin-bottom:10px'>⚠️</div><h2 style='font-size:1.2rem;font-weight:800;margin-bottom:8px;color:#ef4444'>網站載入時發生錯誤</h2><p style='font-size:13px;color:#64748b;line-height:1.6'>請重新整理一次；如果仍然出現，請截圖 Console 錯誤。系統已加入 v1.8.1 載入保護。</p></div>";
+                }
+            } catch(e) {}
+        });
+        window.addEventListener('unhandledrejection', function(event) {
+            console.warn('Unhandled promise rejection:', event.reason);
+        });
+    </script>
+
     <div id="loading-screen">
         <div class="spinner"></div>
         <h2 style="font-size: 1.2rem; font-weight: bold; margin-bottom: 0.5rem;">載入系統中...</h2>
@@ -2168,8 +2182,9 @@
 
             useEffect(() => { 
                 const loadingScreen = document.getElementById('loading-screen');
+                window.__EHANDBOOK_RENDERED__ = true;
                 if (loadingScreen) { loadingScreen.classList.add('hidden-loader'); setTimeout(() => loadingScreen.remove(), 500); }
-                if ("Notification" in window && Notification.permission === "default") Notification.requestPermission(); 
+                // v1.8.1: 不再於載入時自動要求瀏覽器通知權限，避免部分裝置卡住或彈出原生提示。 
                 const timer = setInterval(() => setGlobalNow(new Date()), 1000);
                 return () => clearInterval(timer);
             }, []);
@@ -2179,7 +2194,12 @@
 
             useEffect(() => {
                 if (!window.firebaseServices || !auth) { setAuthLoading(false); return; }
+                const authFallbackTimer = setTimeout(() => {
+                    console.warn('Auth loading fallback triggered');
+                    setAuthLoading(false);
+                }, 12000);
                 const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+                    clearTimeout(authFallbackTimer);
                     try {
                         setUser(currentUser); 
                         if (currentUser) {
@@ -2205,7 +2225,7 @@
                         }
                     } catch (e) { console.warn("Auth err:", e); setAuthLoading(false); }
                 });
-                return () => unsubscribe();
+                return () => { clearTimeout(authFallbackTimer); unsubscribe(); };
             }, []);
 
             useEffect(() => {
@@ -2237,7 +2257,14 @@
                 const audienceMatched = audience === 'all' || (audience === 'admin' && isAdmin) || (audience === 'students' && !isAdmin);
                 if (!audienceMatched) { setShowUpdateIntro(false); return; }
                 const releaseKey = `${version}::${systemConfig.updatePublishedAt || ''}`;
-                const hiddenReleases = JSON.parse(localStorage.getItem(`ehandbook_update_hidden_${user.uid}`) || '[]');
+                let hiddenReleases = [];
+                try {
+                    const rawHidden = localStorage.getItem(`ehandbook_update_hidden_${user.uid}`) || '[]';
+                    const parsedHidden = JSON.parse(rawHidden);
+                    hiddenReleases = Array.isArray(parsedHidden) ? parsedHidden : [];
+                } catch (e) {
+                    hiddenReleases = [];
+                }
                 setShowUpdateIntro(!hiddenReleases.includes(releaseKey));
             }, [user?.uid, systemConfig?.updatePopupEnabled, systemConfig?.updateVersion, systemConfig?.updateAudience, systemConfig?.updatePublishedAt, isAdmin]);
 
@@ -2248,7 +2275,11 @@
                 const releaseKey = `${version}::${systemConfig?.updatePublishedAt || ''}`;
                 if (user?.uid && version) {
                     const key = `ehandbook_update_hidden_${user.uid}`;
-                    const old = JSON.parse(localStorage.getItem(key) || '[]');
+                    let old = [];
+                    try {
+                        const parsedOld = JSON.parse(localStorage.getItem(key) || '[]');
+                        old = Array.isArray(parsedOld) ? parsedOld : [];
+                    } catch (e) { old = []; }
                     localStorage.setItem(key, JSON.stringify(Array.from(new Set([...old, releaseKey]))));
                 }
                 setShowUpdateIntro(false);
@@ -3236,8 +3267,16 @@
             );
         }
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+        try {
+            const root = ReactDOM.createRoot(document.getElementById('root'));
+            root.render(<App />);
+        } catch (e) {
+            console.error('Root render failed:', e);
+            const loadingScreen = document.getElementById('loading-screen');
+            if (loadingScreen) {
+                loadingScreen.innerHTML = "<div style='max-width:420px;padding:22px;text-align:center'><div style='font-size:42px;margin-bottom:10px'>⚠️</div><h2 style='font-size:1.2rem;font-weight:800;margin-bottom:8px;color:#ef4444'>主畫面啟動失敗</h2><p style='font-size:13px;color:#64748b;line-height:1.6'>請先使用上一個穩定版，或截圖 Console 錯誤。</p></div>";
+            }
+        }
     </script>
 </body>
 </html>
