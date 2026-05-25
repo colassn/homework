@@ -1684,6 +1684,7 @@
             const [syncingPublicIds, setSyncingPublicIds] = useState({});
             const [predictedSubject, setPredictedSubject] = useState('');
             const [subjectPredictionApplied, setSubjectPredictionApplied] = useState(false);
+            const [subjectManuallySelected, setSubjectManuallySelected] = useState(false);
             const [pageLoadTime] = useState(Date.now());
             const [currentTimetableDay, setCurrentTimetableDay] = useState(new Date().getDay() || 1);
             const [quickView, setQuickView] = useState({ isOpen: false, title: '', items: [] });
@@ -1874,6 +1875,7 @@
             const handleSubjectSelect = (subjectName) => {
                 setSubject(subjectName);
                 setSubjectPredictionApplied(false);
+                setSubjectManuallySelected(true);
             };
 
             useEffect(() => {
@@ -1888,16 +1890,17 @@
 
             useEffect(() => {
                 if (viewMode !== 'current' || appMode !== 'personal' || isBroadcast) return;
+                if (subjectManuallySelected) return;
                 if (!predictedSubject || !subjects.some(s => s.name === predictedSubject)) return;
                 if (subject === predictedSubject && !subjectPredictionApplied && !description.trim()) {
                     setSubjectPredictionApplied(true);
                     return;
                 }
-                if (subject !== predictedSubject && (!description.trim() || subjectPredictionApplied)) {
+                if (subject !== predictedSubject && !description.trim()) {
                     setSubject(predictedSubject);
                     setSubjectPredictionApplied(true);
                 }
-            }, [viewMode, appMode, isBroadcast, predictedSubject, subjects, description, subjectPredictionApplied, subject]);
+            }, [viewMode, appMode, isBroadcast, predictedSubject, subjects, description, subjectPredictionApplied, subject, subjectManuallySelected]);
 
             const syncedPublicIds = useMemo(() => new Set(items.map(i => i.publicRefId).filter(Boolean)), [items]);
 
@@ -1967,7 +1970,7 @@
                             const className = targetClassInput === '全校' ? '全校' : (systemClasses.find(c => c.code === targetClassInput)?.name || targetClassInput);
                             triggerAlert(`已發送廣播功課給 ${className}！`); 
                         } else { await addDoc(collection(db, "users", user.uid, "items"), newItem); triggerAlert("已新增紀錄"); } 
-                        setDescription(''); setAppMode('personal'); setIsBroadcast(false); setTargetClassInput('全校');
+                        setDescription(''); setAppMode('personal'); setIsBroadcast(false); setTargetClassInput('全校'); setSubjectManuallySelected(false); setSubjectPredictionApplied(false);
                     } catch (error) { triggerAlert("新增失敗", "error"); } 
                 };
                 if (isBroadcast && isAdmin) { 
