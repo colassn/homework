@@ -119,7 +119,7 @@
             try {
                 var box = document.getElementById('loading-screen');
                 if (box && !window.__EHANDBOOK_RENDERED__) {
-                    box.innerHTML = "<div style='max-width:420px;padding:22px;text-align:center'><div style='font-size:42px;margin-bottom:10px'>⚠️</div><h2 style='font-size:1.2rem;font-weight:800;margin-bottom:8px;color:#ef4444'>網站載入時發生錯誤</h2><p style='font-size:13px;color:#64748b;line-height:1.6'>請重新整理一次；如果仍然出現，請截圖 Console 錯誤。系統已加入 v1.8.1 載入保護。</p></div>";
+                    box.innerHTML = "<div style='max-width:420px;padding:22px;text-align:center'><div style='font-size:42px;margin-bottom:10px'>⚠️</div><h2 style='font-size:1.2rem;font-weight:800;margin-bottom:8px;color:#ef4444'>網站載入時發生錯誤</h2><p style='font-size:13px;color:#64748b;line-height:1.6'>請重新整理一次；如果仍然出現，請截圖 Console 錯誤。系統已加入 v1.8.2 iPad 登入保護。</p></div>";
                 }
             } catch(e) {}
         });
@@ -137,7 +137,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs, setDoc, arrayUnion, arrayRemove, getDoc, writeBatch, limit, startAfter } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         const firebaseConfig = {
@@ -157,7 +157,7 @@
             const googleProvider = new GoogleAuthProvider();
             window.firebaseServices = { 
                 auth, db, googleProvider, 
-                signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, 
+                signInWithPopup, signInWithRedirect, getRedirectResult, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, 
                 collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs, setDoc, arrayUnion, arrayRemove, getDoc, writeBatch, limit, startAfter
             };
         } catch (e) {
@@ -169,6 +169,47 @@
     <script type="text/babel">
         const { useState, useEffect, useRef, useMemo } = React;
         const ADMIN_EMAIL = 'chimhinhin@gmail.com'; 
+
+        const isIPadLike = () => {
+            try {
+                const ua = navigator.userAgent || '';
+                const platform = navigator.platform || '';
+                return /iPad|iPhone|iPod/i.test(ua) || (platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            } catch (e) { return false; }
+        };
+
+        const isSafariLike = () => {
+            try {
+                const ua = navigator.userAgent || '';
+                return /Safari/i.test(ua) && !/Chrome|CriOS|FxiOS|Edg|Android/i.test(ua);
+            } catch (e) { return false; }
+        };
+
+        const isStandaloneMode = () => {
+            try {
+                return window.navigator.standalone === true || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+            } catch (e) { return false; }
+        };
+
+        const safeStorageGet = (key, fallback = '') => {
+            try {
+                const value = window.localStorage.getItem(key);
+                return value === null || value === undefined ? fallback : value;
+            } catch (e) { return fallback; }
+        };
+
+        const safeStorageSet = (key, value) => {
+            try { window.localStorage.setItem(key, value); } catch (e) {}
+        };
+
+        const safeStorageJSON = (key, fallback) => {
+            try {
+                const raw = window.localStorage.getItem(key);
+                if (!raw) return fallback;
+                const parsed = JSON.parse(raw);
+                return parsed === undefined || parsed === null ? fallback : parsed;
+            } catch (e) { return fallback; }
+        };
 
         const DEFAULT_SUBJECTS = [
             { name: '中文', color: 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800' },
@@ -354,11 +395,39 @@
             const [isLogin, setIsLogin] = useState(true);
             const [email, setEmail] = useState(''); const [password, setPassword] = useState(''); 
             const [loading, setLoading] = useState(false);
-            const { auth, googleProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword } = window.firebaseServices || {};
+            const { auth, googleProvider, signInWithPopup, signInWithRedirect, getRedirectResult, createUserWithEmailAndPassword, signInWithEmailAndPassword } = window.firebaseServices || {};
+
+            useEffect(() => {
+                if (!auth || !getRedirectResult) return;
+                getRedirectResult(auth).catch((error) => {
+                    console.warn('Google redirect result error:', error);
+                    if (error?.code && error.code !== 'auth/no-auth-event') {
+                        triggerAlert('Google 登入返回失敗: ' + (error.message || error.code), 'error');
+                    }
+                });
+            }, [auth, getRedirectResult]);
 
             const handleGoogleLogin = async () => { 
-                try { setLoading(true); await signInWithPopup(auth, googleProvider); } 
-                catch (error) { triggerAlert("Google 登入失敗: " + error.message, "error"); setLoading(false); } 
+                if (!auth || !googleProvider) { triggerAlert('Firebase 尚未準備好，請重新整理後再試。', 'error'); return; }
+                try {
+                    setLoading(true);
+                    const shouldUseRedirect = isIPadLike() || isSafariLike() || isStandaloneMode();
+                    if (shouldUseRedirect && signInWithRedirect) {
+                        await signInWithRedirect(auth, googleProvider);
+                        return;
+                    }
+                    await signInWithPopup(auth, googleProvider);
+                } catch (error) {
+                    console.warn('Google popup login failed:', error);
+                    const fallbackCodes = ['auth/popup-blocked', 'auth/popup-closed-by-user', 'auth/cancelled-popup-request', 'auth/operation-not-supported-in-this-environment'];
+                    if (signInWithRedirect && (isIPadLike() || isSafariLike() || isStandaloneMode() || fallbackCodes.includes(error?.code))) {
+                        try { await signInWithRedirect(auth, googleProvider); return; }
+                        catch (redirectError) { triggerAlert('Google 重新導向登入失敗: ' + (redirectError.message || redirectError.code), 'error'); }
+                    } else {
+                        triggerAlert('Google 登入失敗: ' + (error.message || error.code), 'error');
+                    }
+                    setLoading(false);
+                } 
             };
 
             const handleEmailAuth = async (e) => { 
@@ -2133,11 +2202,11 @@
             const [viewMode, setViewMode] = useState('current');
             const [appMode, setAppMode] = useState('personal'); 
 
-            const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('isDarkMode') === 'true');
-            const [themeColor, setThemeColor] = useState(() => localStorage.getItem('themeColor') || 'indigo');
+            const [isDarkMode, setIsDarkMode] = useState(() => safeStorageGet('isDarkMode') === 'true');
+            const [themeColor, setThemeColor] = useState(() => safeStorageGet('themeColor', 'indigo') || 'indigo');
             const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
-            const [layoutMode, setLayoutMode] = useState(() => localStorage.getItem('layoutMode') || 'normal');
-            const [customLayout, setCustomLayout] = useState(() => JSON.parse(localStorage.getItem('customLayout')) || { cards: true, timetable: true, input: true, list: true });
+            const [layoutMode, setLayoutMode] = useState(() => safeStorageGet('layoutMode', 'normal') || 'normal');
+            const [customLayout, setCustomLayout] = useState(() => safeStorageJSON('customLayout', { cards: true, timetable: true, input: true, list: true }));
             
             const t = THEME_CONFIG[themeColor] || THEME_CONFIG.indigo;
             const [exitingIds, setExitingIds] = useState([]);
@@ -2167,8 +2236,11 @@
             const [selectedClassBoard, setSelectedClassBoard] = useState('全校');
             const [publicTasks, setPublicTasks] = useState([]);
             const [syncingPublicIds, setSyncingPublicIds] = useState({});
+            const [autoSyncPublicEnabled, setAutoSyncPublicEnabled] = useState(false);
+            const [syncPreferenceLoaded, setSyncPreferenceLoaded] = useState(false);
             const [isNotificationCenterOpen, setIsNotificationCenterOpen] = useState(false);
             const [showUpdateIntro, setShowUpdateIntro] = useState(false);
+            const [showSyncModeIntro, setShowSyncModeIntro] = useState(false);
             const [readNotificationIds, setReadNotificationIds] = useState([]);
             const [predictedSubject, setPredictedSubject] = useState('');
             const [subjectManuallySelected, setSubjectManuallySelected] = useState(false);
@@ -2179,6 +2251,8 @@
             const [globalNow, setGlobalNow] = useState(new Date());
             const itemsRef = useRef([]);
             const autoDeleteRan = useRef(false);
+            const autoSyncingPublicIdsRef = useRef(new Set());
+            const syncModeIntroClosedForSessionRef = useRef(false);
 
             useEffect(() => { 
                 const loadingScreen = document.getElementById('loading-screen');
@@ -2189,8 +2263,8 @@
                 return () => clearInterval(timer);
             }, []);
 
-            useEffect(() => { localStorage.setItem('isDarkMode', isDarkMode); if (isDarkMode) document.documentElement.classList.add('dark'); else document.documentElement.classList.remove('dark'); }, [isDarkMode]);
-            useEffect(() => { localStorage.setItem('themeColor', themeColor); localStorage.setItem('layoutMode', layoutMode); localStorage.setItem('customLayout', JSON.stringify(customLayout)); }, [themeColor, layoutMode, customLayout]);
+            useEffect(() => { safeStorageSet('isDarkMode', String(isDarkMode)); if (isDarkMode) document.documentElement.classList.add('dark'); else document.documentElement.classList.remove('dark'); }, [isDarkMode]);
+            useEffect(() => { safeStorageSet('themeColor', themeColor); safeStorageSet('layoutMode', layoutMode); safeStorageSet('customLayout', JSON.stringify(customLayout)); }, [themeColor, layoutMode, customLayout]);
 
             useEffect(() => {
                 if (!window.firebaseServices || !auth) { setAuthLoading(false); return; }
@@ -2241,7 +2315,7 @@
                     return;
                 }
                 try {
-                    const saved = JSON.parse(localStorage.getItem(`ehandbook_read_notifications_${user.uid}`) || '[]');
+                    const saved = safeStorageJSON(`ehandbook_read_notifications_${user.uid}`, []);
                     setReadNotificationIds(Array.isArray(saved) ? saved : []);
                 } catch (e) {
                     setReadNotificationIds([]);
@@ -2259,7 +2333,7 @@
                 const releaseKey = `${version}::${systemConfig.updatePublishedAt || ''}`;
                 let hiddenReleases = [];
                 try {
-                    const rawHidden = localStorage.getItem(`ehandbook_update_hidden_${user.uid}`) || '[]';
+                    const rawHidden = safeStorageGet(`ehandbook_update_hidden_${user.uid}`, '[]');
                     const parsedHidden = JSON.parse(rawHidden);
                     hiddenReleases = Array.isArray(parsedHidden) ? parsedHidden : [];
                 } catch (e) {
@@ -2277,12 +2351,32 @@
                     const key = `ehandbook_update_hidden_${user.uid}`;
                     let old = [];
                     try {
-                        const parsedOld = JSON.parse(localStorage.getItem(key) || '[]');
+                        const parsedOld = safeStorageJSON(key, []);
                         old = Array.isArray(parsedOld) ? parsedOld : [];
                     } catch (e) { old = []; }
-                    localStorage.setItem(key, JSON.stringify(Array.from(new Set([...old, releaseKey]))));
+                    safeStorageSet(key, JSON.stringify(Array.from(new Set([...old, releaseKey]))));
                 }
                 setShowUpdateIntro(false);
+            };
+
+            useEffect(() => {
+                if (!user?.uid || showUpdateIntro || syncModeIntroClosedForSessionRef.current) {
+                    setShowSyncModeIntro(false);
+                    return;
+                }
+                const hidden = safeStorageGet(`ehandbook_sync_mode_intro_v183_${user.uid}`, '') === 'hidden';
+                setShowSyncModeIntro(!hidden);
+            }, [user?.uid, showUpdateIntro]);
+
+            const closeSyncModeIntroForNow = () => {
+                syncModeIntroClosedForSessionRef.current = true;
+                setShowSyncModeIntro(false);
+            };
+
+            const hideSyncModeIntroPermanently = () => {
+                if (user?.uid) safeStorageSet(`ehandbook_sync_mode_intro_v183_${user.uid}`, 'hidden');
+                syncModeIntroClosedForSessionRef.current = true;
+                setShowSyncModeIntro(false);
             };
 
             useEffect(() => {
@@ -2301,6 +2395,25 @@
                 const unsubTimetable = onSnapshot(doc(db, 'users', user.uid, 'settings', 'timetable'), (docSnap) => setTimetableConfig(docSnap.exists() && docSnap.data().timeSlots ? docSnap.data() : { timeSlots: DEFAULT_TIME_SLOTS, schedule: DEFAULT_SCHEDULE }), (err) => console.warn("Timetable err:", err));
                 const unsubSubjects = onSnapshot(doc(db, 'users', user.uid, 'settings', 'subjects'), (docSnap) => setSubjects(docSnap.exists() && docSnap.data().list ? docSnap.data().list : DEFAULT_SUBJECTS), (err) => console.warn("Subjects err:", err));
                 return () => { unsubItems(); unsubTimetable(); unsubSubjects(); };
+            }, [user, db]);
+
+            useEffect(() => {
+                if (!user || !db) {
+                    setAutoSyncPublicEnabled(false);
+                    setSyncPreferenceLoaded(false);
+                    return;
+                }
+                setSyncPreferenceLoaded(false);
+                const unsubSyncPrefs = onSnapshot(doc(db, 'users', user.uid, 'settings', 'syncPreferences'), (docSnap) => {
+                    const data = docSnap.exists() ? docSnap.data() : {};
+                    setAutoSyncPublicEnabled(data.autoSyncPublicEnabled === true);
+                    setSyncPreferenceLoaded(true);
+                }, (err) => {
+                    console.warn('Sync preferences err:', err);
+                    setAutoSyncPublicEnabled(false);
+                    setSyncPreferenceLoaded(true);
+                });
+                return () => unsubSyncPrefs();
             }, [user, db]);
 
             useEffect(() => {
@@ -2344,7 +2457,7 @@
                                 ? createdValue.toDate().getTime()
                                 : (createdValue ? new Date(createdValue).getTime() : 0);
                             if (isForMe && !existingPublicIds.has(publicId) && createdTime > pageLoadTime) {
-                                triggerAlert(`收到新廣播功課通知：${publicData.subject || '未命名科目'}`);
+                                triggerAlert(autoSyncPublicEnabled ? `收到新廣播功課，正在自動同步：${publicData.subject || '未命名科目'}` : `收到新廣播功課通知：${publicData.subject || '未命名科目'}`);
                             }
                         });
                     } catch (e) {
@@ -2352,7 +2465,7 @@
                     }
                 }, (err) => console.warn("Public tasks err:", err));
                 return () => unsubscribe();
-            }, [user, db, joinedClassesStr, pageLoadTime]);
+            }, [user, db, joinedClassesStr, pageLoadTime, autoSyncPublicEnabled]);
 
             const triggerAlert = (message, type = 'success') => {
                 setToast({ isVisible: true, message, type });
@@ -2421,6 +2534,80 @@
             }, [publicTasks, joinedClassesStr]);
 
             const unsyncedPublicTasks = useMemo(() => visiblePublicTasks.filter(task => !syncedPublicIds.has(task.id) && !task.forceExpired), [visiblePublicTasks, syncedPublicIds]);
+
+            const handleToggleAutoSyncPublic = async (nextValue) => {
+                if (!user || !db) return;
+                const oldValue = autoSyncPublicEnabled;
+                setAutoSyncPublicEnabled(nextValue);
+                try {
+                    await setDoc(doc(db, 'users', user.uid, 'settings', 'syncPreferences'), {
+                        autoSyncPublicEnabled: nextValue,
+                        updatedAt: serverTimestamp(),
+                        updatedBy: user.displayName || user.email || 'user'
+                    }, { merge: true });
+                    triggerAlert(nextValue ? '已開啟自動同步：新廣播功課會自動加入個人手冊' : '已關閉自動同步：新廣播功課會在主頁提示你手動同步');
+                } catch (e) {
+                    setAutoSyncPublicEnabled(oldValue);
+                    triggerAlert('同步模式儲存失敗，請稍後再試', 'error');
+                }
+            };
+
+            const syncPublicTaskToPersonal = async (task, options = {}) => {
+                if (!user || !db || !task?.id) return false;
+                const { silent = false, auto = false } = options;
+                try {
+                    const duplicateQ = query(collection(db, "users", user.uid, "items"), where("publicRefId", "==", task.id));
+                    const duplicateSnap = await getDocs(duplicateQ);
+                    if (!duplicateSnap.empty || syncedPublicIds.has(task.id)) {
+                        if (!silent) triggerAlert("呢份廣播功課已經同步過");
+                        return false;
+                    }
+
+                    const syncedItem = {
+                        type: task.type || 'homework',
+                        subject: task.subject || '其他',
+                        description: task.description || '',
+                        dueDate: task.dueDate || '',
+                        completed: false,
+                        createdAt: new Date().toISOString(),
+                        publicRefId: task.id,
+                        senderName: task.senderName || '老師',
+                        targetClass: task.targetClass || '全校',
+                        autoSynced: auto === true,
+                        forceExpired: task.forceExpired === true
+                    };
+                    await addDoc(collection(db, "users", user.uid, "items"), syncedItem);
+                    if (!silent) triggerAlert("已同步到你嘅個人手冊");
+                    return true;
+                } catch (error) {
+                    console.warn("Sync public task failed:", error);
+                    if (!silent) triggerAlert("同步失敗，請稍後再試", "error");
+                    throw error;
+                }
+            };
+
+            useEffect(() => {
+                if (!autoSyncPublicEnabled || !syncPreferenceLoaded || !user?.uid || !db || unsyncedPublicTasks.length === 0) return;
+                const targets = unsyncedPublicTasks.filter(task => !autoSyncingPublicIdsRef.current.has(task.id));
+                if (targets.length === 0) return;
+                targets.forEach(async (task) => {
+                    autoSyncingPublicIdsRef.current.add(task.id);
+                    setSyncingPublicIds(prev => ({ ...prev, [task.id]: true }));
+                    try {
+                        const ok = await syncPublicTaskToPersonal(task, { silent: true, auto: true });
+                        if (ok) triggerAlert(`已自動同步「${task.subject || '功課'}」到個人手冊`);
+                    } catch (e) {
+                        // silent catch already logged by helper
+                    } finally {
+                        autoSyncingPublicIdsRef.current.delete(task.id);
+                        setSyncingPublicIds(prev => {
+                            const next = { ...prev };
+                            delete next[task.id];
+                            return next;
+                        });
+                    }
+                });
+            }, [autoSyncPublicEnabled, syncPreferenceLoaded, user?.uid, db, unsyncedPublicTasks]);
 
             const userNotifications = useMemo(() => {
                 const notices = [];
@@ -2527,6 +2714,22 @@
                     });
                 }
 
+                if (!autoSyncPublicEnabled && unsyncedPublicTasks.length > 0) {
+                    notices.push({
+                        id: `manual-sync-needed-${unsyncedPublicTasks.map(t => t.id).join('-')}`,
+                        type: 'sync-mode',
+                        icon: 'hand',
+                        title: '你有功課需要手動同步',
+                        message: `自動同步目前關閉，尚有 ${unsyncedPublicTasks.length} 份廣播功課等你同步。`,
+                        meta: '班級廣播提醒',
+                        time: '現在',
+                        sortTime: Date.now() + 2,
+                        accent: 'orange',
+                        action: 'class',
+                        targetClass: '全校'
+                    });
+                }
+
                 visiblePublicTasks.slice(0, 12).forEach(task => {
                     const targetCode = task.targetClass || '全校';
                     const cls = systemClasses.find(c => c.code === targetCode);
@@ -2554,7 +2757,7 @@
                 return notices
                     .sort((a, b) => (b.sortTime || 0) - (a.sortTime || 0))
                     .map(n => ({ ...n, unread: !readNotificationIds.includes(n.id) }));
-            }, [systemConfig?.announcementText, systemConfig?.adminReminders, systemConfig?.updatePopupEnabled, systemConfig?.updateVersion, systemConfig?.updateTitle, systemConfig?.updateSummary, systemConfig?.updateAudience, systemConfig?.updatePublishedAt, isAdmin, visiblePublicTasks, joinedClassesStr, systemClasses, syncedPublicIds, readNotificationIds, items, timetableConfig?.updatedAt, timetableConfig?.updatedBy]);
+            }, [systemConfig?.announcementText, systemConfig?.adminReminders, systemConfig?.updatePopupEnabled, systemConfig?.updateVersion, systemConfig?.updateTitle, systemConfig?.updateSummary, systemConfig?.updateAudience, systemConfig?.updatePublishedAt, isAdmin, visiblePublicTasks, joinedClassesStr, systemClasses, syncedPublicIds, readNotificationIds, items, timetableConfig?.updatedAt, timetableConfig?.updatedBy, autoSyncPublicEnabled, unsyncedPublicTasks]);
 
             const unreadNotificationCount = useMemo(() => userNotifications.filter(n => n.unread).length, [userNotifications]);
 
@@ -2563,7 +2766,7 @@
                 const targetIds = Array.isArray(ids) ? ids : [ids];
                 setReadNotificationIds(prev => {
                     const merged = Array.from(new Set([...prev, ...targetIds.filter(Boolean)]));
-                    localStorage.setItem(`ehandbook_read_notifications_${user.uid}`, JSON.stringify(merged));
+                    safeStorageSet(`ehandbook_read_notifications_${user.uid}`, JSON.stringify(merged));
                     return merged;
                 });
             };
@@ -2599,30 +2802,9 @@
                 if (syncingPublicIds[task.id]) return;
                 setSyncingPublicIds(prev => ({ ...prev, [task.id]: true }));
                 try {
-                    const duplicateQ = query(collection(db, "users", user.uid, "items"), where("publicRefId", "==", task.id));
-                    const duplicateSnap = await getDocs(duplicateQ);
-                    if (!duplicateSnap.empty || syncedPublicIds.has(task.id)) {
-                        triggerAlert("呢份廣播功課已經同步過");
-                        return;
-                    }
-
-                    const syncedItem = {
-                        type: task.type || 'homework',
-                        subject: task.subject || '其他',
-                        description: task.description || '',
-                        dueDate: task.dueDate || '',
-                        completed: false,
-                        createdAt: new Date().toISOString(),
-                        publicRefId: task.id,
-                        senderName: task.senderName || '老師',
-                        targetClass: task.targetClass || '全校',
-                        forceExpired: task.forceExpired === true
-                    };
-                    await addDoc(collection(db, "users", user.uid, "items"), syncedItem);
-                    triggerAlert("已同步到你嘅個人手冊");
+                    await syncPublicTaskToPersonal(task, { silent: false, auto: false });
                 } catch (error) {
                     console.warn("Manual sync public task failed:", error);
-                    triggerAlert("同步失敗，請稍後再試", "error");
                 } finally {
                     setSyncingPublicIds(prev => {
                         const next = { ...prev };
@@ -2884,7 +3066,24 @@
                                  viewMode === 'timetable_edit' ? ( <TimetableEditor initialConfig={timetableConfig} onSave={saveTimetableConfig} onCancel={() => setViewMode('timetable')} subjects={subjects} triggerConfirm={triggerConfirm} /> ) : (
                                 
                                 <div className="max-w-3xl mx-auto pt-2">
-                                    {viewMode === 'current' && appMode === 'personal' && unsyncedPublicTasks.length > 0 && (
+                                    {viewMode === 'current' && appMode === 'personal' && (
+                                        <div className="mb-6 glass-card bg-white/85 dark:bg-slate-800/85 rounded-3xl p-4 sm:p-5 border border-white/50 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                            <div className="flex items-start gap-3 min-w-0">
+                                                <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${autoSyncPublicEnabled ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-300' : 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-300'}`}><Icon name={autoSyncPublicEnabled ? 'refresh-cw' : 'hand'} className="w-5 h-5" /></div>
+                                                <div className="min-w-0">
+                                                    <div className="text-sm sm:text-base font-black text-slate-800 dark:text-white">廣播功課同步模式</div>
+                                                    <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-bold mt-0.5">
+                                                        {autoSyncPublicEnabled ? '自動同步已開啟：新廣播功課會自動加入個人手冊。' : '手動同步模式：收到新廣播後，主頁會提示你去班級分頁同步。'}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <button type="button" onClick={() => handleToggleAutoSyncPublic(!autoSyncPublicEnabled)} disabled={!syncPreferenceLoaded} className={`shrink-0 px-4 py-3 rounded-2xl font-black text-xs flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-50 ${autoSyncPublicEnabled ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-200/60' : 'bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900'}`}>
+                                                <Icon name={autoSyncPublicEnabled ? 'toggle-right' : 'toggle-left'} className="w-4 h-4" /> {autoSyncPublicEnabled ? '關閉自動同步' : '開啟自動同步'}
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {viewMode === 'current' && appMode === 'personal' && !autoSyncPublicEnabled && unsyncedPublicTasks.length > 0 && (
                                         <button onClick={() => { setAppMode('class'); setViewMode('current'); }} className="w-full mb-6 text-left relative overflow-hidden rounded-3xl p-[2px] shadow-lg transition-all hover:scale-[1.01] active:scale-[0.99]">
                                             <div className="absolute inset-0 bg-gradient-to-r from-amber-400 via-orange-500 to-pink-500 animate-gradient-x"></div>
                                             <div className="relative rounded-3xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl p-4 sm:p-5 flex items-center justify-between gap-4">
@@ -2892,7 +3091,7 @@
                                                     <div className="w-11 h-11 rounded-2xl bg-orange-100 dark:bg-orange-900/40 text-orange-500 flex items-center justify-center shrink-0 animate-float"><Icon name="bell-ring" className="w-5 h-5" /></div>
                                                     <div>
                                                         <div className="text-sm sm:text-base font-black text-slate-800 dark:text-white">收到新廣播功課通知</div>
-                                                        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-bold mt-0.5">請前往班級分頁一鍵同步，尚有 {unsyncedPublicTasks.length} 份未同步。</p>
+                                                        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-bold mt-0.5">你已關閉自動同步，請前往班級分頁自行同步。尚有 {unsyncedPublicTasks.length} 份未同步。</p>
                                                     </div>
                                                 </div>
                                                 <span className="hidden sm:flex items-center gap-1 text-xs font-black text-orange-600 bg-orange-50 dark:bg-orange-900/30 px-3 py-2 rounded-xl">立即同步 <Icon name="arrow-right" className="w-4 h-4" /></span>
@@ -3048,12 +3247,15 @@
 
                                     {viewMode === 'current' && appMode === 'class' && (
                                         <div className="space-y-6 animate-fadeIn pb-10">
-                                            <div className="glass-card bg-white/90 dark:bg-slate-800/90 rounded-3xl p-6 shadow-sm border border-white/40 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                                            <div className="glass-card bg-white/90 dark:bg-slate-800/90 rounded-3xl p-6 shadow-sm border border-white/40 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                                                 <div>
                                                     <h3 className="text-xl font-bold flex items-center gap-2 dark:text-white"><Icon name="school" className={t.text} /> 班級廣播</h3>
-                                                    <p className="text-sm text-slate-500 mt-1">全校及已加入班級的廣播任務，需要你手動同步到個人手冊。</p>
+                                                    <p className="text-sm text-slate-500 mt-1">全校及已加入班級的廣播任務，可選擇自動同步或手動同步到個人手冊。</p>
                                                 </div>
-                                                <button onClick={() => setIsJoinClassOpen(true)} className={`px-4 py-2.5 rounded-xl font-bold text-sm text-white shadow-md active:scale-95 transition-all flex items-center gap-2 ${t.bg}`}><Icon name="plus" className="w-4 h-4" /> 加入班級</button>
+                                                <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
+                                                    <button type="button" onClick={() => handleToggleAutoSyncPublic(!autoSyncPublicEnabled)} disabled={!syncPreferenceLoaded} className={`px-4 py-2.5 rounded-xl font-bold text-sm shadow-md active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50 ${autoSyncPublicEnabled ? 'bg-emerald-500 hover:bg-emerald-600 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600'}`}><Icon name={autoSyncPublicEnabled ? 'refresh-cw' : 'hand'} className="w-4 h-4" /> {autoSyncPublicEnabled ? '自動同步已開' : '手動同步中'}</button>
+                                                    <button onClick={() => setIsJoinClassOpen(true)} className={`px-4 py-2.5 rounded-xl font-bold text-sm text-white shadow-md active:scale-95 transition-all flex items-center justify-center gap-2 ${t.bg}`}><Icon name="plus" className="w-4 h-4" /> 加入班級</button>
+                                                </div>
                                             </div>
 
                                             {joinedClasses.length === 0 && (
@@ -3181,6 +3383,48 @@
                                 <div className="p-5 border-t border-slate-100 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl">
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3"><button onClick={closeUpdateIntroForNow} className="py-4 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-200 font-black active:scale-[0.98] transition-all">今次關閉，下次再提示</button><button onClick={hideUpdateIntroForThisRelease} className="py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black shadow-lg active:scale-[0.98] transition-all">不再顯示今次更新</button></div>
                                     <p className="text-center text-[11px] text-slate-400 font-bold mt-3">同一版本只會自動顯示一次，可在通知中心再次查看。</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {showSyncModeIntro && !showUpdateIntro && (
+                        <div className="fixed inset-0 z-[268] flex items-center justify-center p-4 sm:p-6">
+                            <div className="absolute inset-0 bg-slate-950/55 backdrop-blur-md"></div>
+                            <div className="relative w-full max-w-[520px] max-h-[86vh] overflow-hidden rounded-[2rem] glass-card bg-white/95 dark:bg-slate-900/95 border border-white/60 dark:border-slate-700 shadow-2xl flex flex-col animate-pop-in">
+                                <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-blue-600 to-emerald-500 text-white p-6 sm:p-7">
+                                    <div className="absolute inset-0 opacity-25 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.9),transparent_45%)]"></div>
+                                    <div className="relative">
+                                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 border border-white/20 text-xs font-black mb-4"><Icon name="refresh-cw" className="w-4 h-4" /> 新功能教學</div>
+                                        <h3 className="text-2xl font-black tracking-tight">廣播功課同步模式已升級</h3>
+                                        <p className="text-sm text-indigo-100 font-bold mt-2">你可以自行選擇「自動同步」或「手動同步」，按自己習慣使用。</p>
+                                    </div>
+                                </div>
+                                <div className="overflow-y-auto p-5 sm:p-6 space-y-4 scrollbar-hide">
+                                    <div className="rounded-3xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 p-4">
+                                        <div className="flex items-center gap-2 font-black text-emerald-700 dark:text-emerald-300 mb-2"><Icon name="refresh-cw" className="w-5 h-5"/> 自動同步</div>
+                                        <p className="text-sm font-bold text-emerald-800/80 dark:text-emerald-100/90 leading-relaxed">開啟後，管理員發放新廣播功課時，系統會自動幫你加入個人手冊，不需要再手動按同步。</p>
+                                    </div>
+                                    <div className="rounded-3xl bg-orange-50 dark:bg-orange-900/20 border border-orange-100 dark:border-orange-800 p-4">
+                                        <div className="flex items-center gap-2 font-black text-orange-700 dark:text-orange-300 mb-2"><Icon name="hand" className="w-5 h-5"/> 手動同步</div>
+                                        <p className="text-sm font-bold text-orange-800/80 dark:text-orange-100/90 leading-relaxed">關閉自動同步後，有新廣播功課時主頁會顯示醒目提示，你可以前往班級分頁自行選擇同步。</p>
+                                    </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <button type="button" onClick={() => handleToggleAutoSyncPublic(true)} className="rounded-3xl p-4 text-left bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-700 transition-all">
+                                            <div className="font-black text-slate-800 dark:text-white flex items-center gap-2"><Icon name="toggle-right" className="w-5 h-5 text-emerald-500"/> 開啟自動同步</div>
+                                            <div className="text-xs font-bold text-slate-400 mt-1">適合想省時間、不想漏功課的用戶。</div>
+                                        </button>
+                                        <button type="button" onClick={() => handleToggleAutoSyncPublic(false)} className="rounded-3xl p-4 text-left bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 hover:border-orange-300 dark:hover:border-orange-700 transition-all">
+                                            <div className="font-black text-slate-800 dark:text-white flex items-center gap-2"><Icon name="toggle-left" className="w-5 h-5 text-orange-500"/> 保持手動同步</div>
+                                            <div className="text-xs font-bold text-slate-400 mt-1">適合想自己確認每份功課才加入的人。</div>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="p-5 border-t border-slate-100 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <button onClick={closeSyncModeIntroForNow} className="py-4 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-200 font-black active:scale-[0.98] transition-all">今次關閉，下次再提示</button>
+                                        <button onClick={hideSyncModeIntroPermanently} className="py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black shadow-lg active:scale-[0.98] transition-all">我知道了，不再顯示</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
