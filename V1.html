@@ -1682,9 +1682,11 @@
             const [selectedClassBoard, setSelectedClassBoard] = useState('全校');
             const [publicTasks, setPublicTasks] = useState([]);
             const [syncingPublicIds, setSyncingPublicIds] = useState({});
+            const [isNotificationCenterOpen, setIsNotificationCenterOpen] = useState(false);
+            const [readNotificationIds, setReadNotificationIds] = useState([]);
             const [predictedSubject, setPredictedSubject] = useState('');
-            const [subjectPredictionApplied, setSubjectPredictionApplied] = useState(false);
             const [subjectManuallySelected, setSubjectManuallySelected] = useState(false);
+            const [subjectPredictionApplied, setSubjectPredictionApplied] = useState(false);
             const [pageLoadTime] = useState(Date.now());
             const [currentTimetableDay, setCurrentTimetableDay] = useState(new Date().getDay() || 1);
             const [quickView, setQuickView] = useState({ isOpen: false, title: '', items: [] });
@@ -1742,6 +1744,19 @@
             }, [user, db]);
 
             useEffect(() => {
+                if (!user?.uid) {
+                    setReadNotificationIds([]);
+                    return;
+                }
+                try {
+                    const saved = JSON.parse(localStorage.getItem(`ehandbook_read_notifications_${user.uid}`) || '[]');
+                    setReadNotificationIds(Array.isArray(saved) ? saved : []);
+                } catch (e) {
+                    setReadNotificationIds([]);
+                }
+            }, [user?.uid]);
+
+            useEffect(() => {
                 if (!db || !user) return;
                 const unsubConfig = onSnapshot(doc(db, "system_settings", "config"), (docSnap) => { setSystemConfig(docSnap.exists() ? docSnap.data() : null); }, (err) => { console.warn("Config err:", err); });
                 const unsubClasses = onSnapshot(doc(db, "system_settings", "classes"), (docSnap) => setSystemClasses(docSnap.exists() && docSnap.data().list ? docSnap.data().list : []), (err) => console.warn("Classes err:", err));
@@ -1780,71 +1795,35 @@
             }, [joinedClassesStr, selectedClassBoard]);
 
             useEffect(() => {
-                if (!user || !db || !collection || !query || !where || !onSnapshot) return;
+                if (!user || !db) return;
+                const q = query(collection(db, "public_assignments"), orderBy("createdAt", "desc"));
+                const unsubscribe = onSnapshot(q, (snapshot) => {
+                    try {
+                        const loadedPublicTasks = snapshot.docs.map(publicDoc => ({ id: publicDoc.id, ...publicDoc.data() }));
+                        setPublicTasks(loadedPublicTasks);
 
-                const classTargets = Array.from(new Set([
-                    '全校',
-                    ...(joinedClassesStr ? joinedClassesStr.split(',').filter(Boolean) : [])
-                ]));
-
-                const chunkTargets = [];
-                for (let i = 0; i < classTargets.length; i += 30) {
-                    chunkTargets.push(classTargets.slice(i, i + 30));
-                }
-
-                const publicTaskMap = new Map();
-                const getCreatedMs = (task) => {
-                    const createdValue = task.createdAt;
-                    if (typeof createdValue?.toDate === 'function') return createdValue.toDate().getTime();
-                    return createdValue ? new Date(createdValue).getTime() : 0;
-                };
-
-                const flushPublicTasks = () => {
-                    const sortedTasks = Array.from(publicTaskMap.values()).sort((a, b) => getCreatedMs(b) - getCreatedMs(a));
-                    setPublicTasks(sortedTasks);
-                };
-
-                const unsubscribes = chunkTargets.map(targetChunk => {
-                    const publicQuery = query(
-                        collection(db, "public_assignments"),
-                        where("targetClass", "in", targetChunk)
-                    );
-
-                    return onSnapshot(publicQuery, (snapshot) => {
-                        try {
-                            const existingPublicIds = new Set(itemsRef.current.map(i => i.publicRefId).filter(Boolean));
-
-                            snapshot.docChanges().forEach(change => {
-                                const publicId = change.doc.id;
-
-                                if (change.type === "removed") {
-                                    publicTaskMap.delete(publicId);
-                                    return;
-                                }
-
-                                const publicData = { id: publicId, ...change.doc.data() };
-                                publicTaskMap.set(publicId, publicData);
-
-                                if (change.type !== "added") return;
-                                const createdTime = getCreatedMs(publicData);
-                                if (!existingPublicIds.has(publicId) && createdTime > pageLoadTime) {
-                                    triggerAlert(`收到新廣播功課通知：${publicData.subject || '未命名科目'}`);
-                                }
-                            });
-
-                            if (snapshot.docChanges().length === 0) {
-                                snapshot.docs.forEach(publicDoc => publicTaskMap.set(publicDoc.id, { id: publicDoc.id, ...publicDoc.data() }));
+                        const currentClasses = joinedClassesStr ? joinedClassesStr.split(',') : [];
+                        const existingPublicIds = new Set(itemsRef.current.map(i => i.publicRefId).filter(Boolean));
+                        snapshot.docChanges().forEach(change => {
+                            if (change.type !== "added") return;
+                            const publicData = change.doc.data();
+                            const publicId = change.doc.id;
+                            const target = publicData.targetClass || '全校';
+                            const isForMe = target === '全校' || currentClasses.includes(target);
+                            const createdValue = publicData.createdAt;
+                            const createdTime = typeof createdValue?.toDate === 'function'
+                                ? createdValue.toDate().getTime()
+                                : (createdValue ? new Date(createdValue).getTime() : 0);
+                            if (isForMe && !existingPublicIds.has(publicId) && createdTime > pageLoadTime) {
+                                triggerAlert(`收到新廣播功課通知：${publicData.subject || '未命名科目'}`);
                             }
-
-                            flushPublicTasks();
-                        } catch (e) {
-                            console.warn("Public tasks wrapper err:", e);
-                        }
-                    }, (err) => console.warn("Public tasks restricted query err:", err));
-                });
-
-                return () => unsubscribes.forEach(unsubscribe => unsubscribe && unsubscribe());
-            }, [user, db, collection, query, where, onSnapshot, joinedClassesStr, pageLoadTime]);
+                        });
+                    } catch (e) {
+                        console.warn("Public tasks wrapper err:", e);
+                    }
+                }, (err) => console.warn("Public tasks err:", err));
+                return () => unsubscribe();
+            }, [user, db, joinedClassesStr, pageLoadTime]);
 
             const triggerAlert = (message, type = 'success') => {
                 setToast({ isVisible: true, message, type });
@@ -1896,7 +1875,7 @@
                     setSubjectPredictionApplied(true);
                     return;
                 }
-                if (subject !== predictedSubject && !description.trim()) {
+                if (subject !== predictedSubject && (!description.trim() || subjectPredictionApplied)) {
                     setSubject(predictedSubject);
                     setSubjectPredictionApplied(true);
                 }
@@ -1913,6 +1892,130 @@
             }, [publicTasks, joinedClassesStr]);
 
             const unsyncedPublicTasks = useMemo(() => visiblePublicTasks.filter(task => !syncedPublicIds.has(task.id) && !task.forceExpired), [visiblePublicTasks, syncedPublicIds]);
+
+            const userNotifications = useMemo(() => {
+                const notices = [];
+                const makeHash = (text) => Array.from(String(text || '')).reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
+                const getSortTime = (value) => {
+                    try {
+                        if (!value) return 0;
+                        const d = typeof value?.toDate === 'function' ? value.toDate() : new Date(value);
+                        return d instanceof Date && !isNaN(d.getTime()) ? d.getTime() : 0;
+                    } catch (e) { return 0; }
+                };
+
+                if (systemConfig?.announcementText) {
+                    const text = String(systemConfig.announcementText || '').trim();
+                    notices.push({
+                        id: `announcement-${makeHash(text)}-${text.length}`,
+                        type: 'announcement',
+                        icon: 'megaphone',
+                        title: '全校公告已更新',
+                        message: text || '管理員更新了全校公告。',
+                        meta: '置頂公告',
+                        time: '置頂公告',
+                        sortTime: Date.now() + 2,
+                        accent: 'amber',
+                        action: 'none'
+                    });
+                }
+
+                const expiredItems = items.filter(item => {
+                    if (!item || item.completed || item.isHidden) return false;
+                    if (item.forceExpired) return true;
+                    const today = new Date(); today.setHours(0,0,0,0);
+                    const due = new Date(item.dueDate); due.setHours(0,0,0,0);
+                    return due instanceof Date && !isNaN(due.getTime()) && due < today;
+                });
+                if (expiredItems.length > 0) {
+                    notices.push({
+                        id: `cleanup-expired-${expiredItems.length}-${expiredItems.map(i => i.id).join('-')}`,
+                        type: 'cleanup',
+                        icon: 'trash-2',
+                        title: '要清理過期功課',
+                        message: `你有 ${expiredItems.length} 份過期功課未處理，建議盡快清理。`,
+                        meta: '個人手冊提醒',
+                        time: '現在',
+                        sortTime: Date.now() + 1,
+                        accent: 'rose',
+                        action: 'cleanup'
+                    });
+                }
+
+                if (timetableConfig?.updatedAt) {
+                    const updater = timetableConfig.updatedBy || '你';
+                    notices.push({
+                        id: `timetable-${timetableConfig.updatedAt}`,
+                        type: 'timetable',
+                        icon: 'calendar-clock',
+                        title: '時間表已更新',
+                        message: `${updater} 剛剛更改了上課時間表。`,
+                        meta: formatFirebaseDateTime(timetableConfig.updatedAt) || '最近更新',
+                        time: formatFirebaseDateTime(timetableConfig.updatedAt),
+                        sortTime: getSortTime(timetableConfig.updatedAt),
+                        accent: 'sky',
+                        action: 'timetable'
+                    });
+                }
+
+                visiblePublicTasks.slice(0, 12).forEach(task => {
+                    const targetCode = task.targetClass || '全校';
+                    const cls = systemClasses.find(c => c.code === targetCode);
+                    const targetName = targetCode === '全校' ? '全校' : (cls?.name || targetCode);
+                    const sender = task.senderName || '管理員';
+                    const subjectName = task.subject || '其他';
+                    const taskText = task.description || '未填寫內容';
+                    const synced = syncedPublicIds.has(task.id);
+                    const forceExpired = task.forceExpired === true;
+                    notices.push({
+                        id: `public-${task.id}-${forceExpired ? 'expired' : 'active'}-${synced ? 'synced' : 'unsynced'}`,
+                        type: 'broadcast',
+                        icon: forceExpired ? 'archive-x' : (synced ? 'check-circle-2' : 'bell-ring'),
+                        title: forceExpired ? '一份廣播功課已撤回' : (synced ? '你已同步一份功課' : `${sender} 新增了一份功課`),
+                        message: forceExpired ? `「${subjectName}｜${taskText}」已被撤回。` : (synced ? `你已將「${subjectName}｜${taskText}」同步到個人手冊。` : `${sender} 新增了「${subjectName}」功課：${taskText}`),
+                        meta: `${targetName}${task.dueDate ? ` · 交期 ${formatDueDate(task.dueDate)}` : ''}`,
+                        time: formatFirebaseDateTime(task.createdAt),
+                        sortTime: getSortTime(task.createdAt),
+                        accent: forceExpired ? 'slate' : (synced ? 'emerald' : 'orange'),
+                        action: forceExpired ? 'none' : 'class',
+                        targetClass: targetCode
+                    });
+                });
+
+                return notices
+                    .sort((a, b) => (b.sortTime || 0) - (a.sortTime || 0))
+                    .map(n => ({ ...n, unread: !readNotificationIds.includes(n.id) }));
+            }, [systemConfig?.announcementText, visiblePublicTasks, systemClasses, syncedPublicIds, readNotificationIds, items, timetableConfig?.updatedAt, timetableConfig?.updatedBy]);
+
+            const unreadNotificationCount = useMemo(() => userNotifications.filter(n => n.unread).length, [userNotifications]);
+
+            const markNotificationsRead = (ids) => {
+                if (!user?.uid) return;
+                const targetIds = Array.isArray(ids) ? ids : [ids];
+                setReadNotificationIds(prev => {
+                    const merged = Array.from(new Set([...prev, ...targetIds.filter(Boolean)]));
+                    localStorage.setItem(`ehandbook_read_notifications_${user.uid}`, JSON.stringify(merged));
+                    return merged;
+                });
+            };
+
+            const handleOpenUserNotification = (note) => {
+                if (!note) return;
+                markNotificationsRead(note.id);
+                if (note.action === 'class') {
+                    setViewMode('current');
+                    setAppMode('class');
+                    setSelectedClassBoard(note.targetClass || '全校');
+                } else if (note.action === 'timetable') {
+                    setViewMode('timetable');
+                    setAppMode('personal');
+                } else if (note.action === 'cleanup') {
+                    setViewMode('current');
+                    setAppMode('personal');
+                    triggerAlert('可以在主頁使用「清理過期」功能處理過期功課。');
+                }
+                setIsNotificationCenterOpen(false);
+            };
 
             const classBoardOptions = useMemo(() => ['全校', ...(joinedClassesStr ? joinedClassesStr.split(',') : [])], [joinedClassesStr]);
 
@@ -2041,7 +2144,16 @@
 
             const saveTimetableConfig = async (newConfig) => { 
                 if (!user) return;
-                try { await setDoc(doc(db, 'users', user.uid, 'settings', 'timetable'), JSON.parse(JSON.stringify(newConfig))); triggerAlert("時間表已儲存"); setViewMode('timetable'); } catch (e) { triggerAlert("儲存失敗", "error"); } 
+                try {
+                    const payload = {
+                        ...JSON.parse(JSON.stringify(newConfig)),
+                        updatedAt: new Date().toISOString(),
+                        updatedBy: user.displayName || '你'
+                    };
+                    await setDoc(doc(db, 'users', user.uid, 'settings', 'timetable'), payload);
+                    triggerAlert("時間表已儲存");
+                    setViewMode('timetable');
+                } catch (e) { triggerAlert("儲存失敗", "error"); } 
             };
             
             const saveSubjects = async (newSubjects) => { 
@@ -2167,6 +2279,17 @@
                                 {viewMode === 'timetable' && (
                                     <button onClick={() => setViewMode('timetable_edit')} className="px-3 py-2 rounded-xl font-bold text-xs bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-200 shadow-sm transition-all flex items-center gap-2"><Icon name="book-open" className="w-4 h-4" /><span className="hidden sm:inline">編輯時間表</span></button>
                                 )}
+                                <button
+                                    type="button"
+                                    onClick={() => setIsNotificationCenterOpen(true)}
+                                    className={`relative p-2.5 rounded-2xl border shadow-sm transition-all active:scale-95 ${unreadNotificationCount > 0 ? 'bg-orange-500 text-white border-orange-400 shadow-orange-200/60 dark:shadow-orange-900/30' : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'}`}
+                                    title="通知中心"
+                                >
+                                    <Icon name="bell" className="w-4 h-4" />
+                                    {unreadNotificationCount > 0 && (
+                                        <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-black flex items-center justify-center border-2 border-white dark:border-slate-900 leading-none">{unreadNotificationCount > 9 ? '9+' : unreadNotificationCount}</span>
+                                    )}
+                                </button>
                                 <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-xl p-1 shadow-inner border border-slate-200/50">
                                     <button onClick={() => setIsPreferencesOpen(true)} className="p-2 rounded-lg hover:bg-white text-slate-500 hover:text-slate-800 transition-all hover:shadow-sm" title="外觀設定"><Icon name="palette" className="w-4 h-4" /></button>
                                     <div className="w-px h-4 bg-slate-300 mx-1"></div>
@@ -2449,6 +2572,68 @@
                     {showNameSetup && <NameSetupModal user={user} onSave={handleNameSetupSave} loading={nameSetupLoading} triggerAlert={triggerAlert} triggerConfirm={triggerConfirm} t={t} />}
                     <JoinClassModal isOpen={isJoinClassOpen} onClose={() => setIsJoinClassOpen(false)} systemClasses={systemClasses} joinedClasses={joinedClasses} onJoin={handleJoinClassSubmit} triggerConfirm={triggerConfirm} t={t} />
                     {isSubjectManagerOpen && <SubjectManagerModal isOpen={isSubjectManagerOpen} onClose={() => setIsSubjectManagerOpen(false)} currentSubjects={subjects} onSave={saveSubjects} triggerConfirm={triggerConfirm} />}
+
+                    {isNotificationCenterOpen && (
+                        <div className="fixed inset-0 z-[260] flex items-center justify-center p-4 sm:p-6">
+                            <div className="absolute inset-0 bg-slate-950/45 backdrop-blur-sm" onClick={() => setIsNotificationCenterOpen(false)}></div>
+                            <div className="relative w-full max-w-[440px] max-h-[84vh] overflow-hidden rounded-[2rem] glass-card bg-white/95 dark:bg-slate-900/95 border border-white/60 dark:border-slate-700 shadow-2xl flex flex-col animate-pop-in">
+                                <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3 shrink-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl">
+                                    <div className="min-w-0">
+                                        <div className="flex items-center gap-2 font-black text-slate-800 dark:text-white"><Icon name="bell-ring" className="w-5 h-5 text-orange-500" /> 通知中心</div>
+                                        <div className="text-[11px] font-bold text-slate-400 mt-0.5">直接顯示最新功課、時間表更改與清理提醒</div>
+                                    </div>
+                                    <div className="flex items-center gap-2 shrink-0">
+                                        {userNotifications.length > 0 && (
+                                            <button type="button" onClick={() => markNotificationsRead(userNotifications.map(n => n.id))} className="px-3 py-2 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300 text-[11px] font-black border border-indigo-100 dark:border-indigo-800">全部已讀</button>
+                                        )}
+                                        <button type="button" onClick={() => setIsNotificationCenterOpen(false)} className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors"><Icon name="x" className="w-4 h-4" /></button>
+                                    </div>
+                                </div>
+
+                                <div className="overflow-y-auto p-4 space-y-3 min-h-[220px] max-h-[70vh] scrollbar-hide">
+                                    {userNotifications.length === 0 ? (
+                                        <div className="h-[220px] flex flex-col items-center justify-center text-center text-slate-400">
+                                            <div className="w-16 h-16 rounded-3xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-3"><Icon name="bell-off" className="w-7 h-7" /></div>
+                                            <div className="font-black text-sm">暫時未有通知</div>
+                                            <div className="text-xs mt-1">有新公告或廣播功課時會出現在這裡</div>
+                                        </div>
+                                    ) : userNotifications.map(note => {
+                                        const accentMap = {
+                                            amber: 'bg-amber-50 dark:bg-amber-900/20 border-amber-100 dark:border-amber-800 text-amber-600 dark:text-amber-300',
+                                            orange: 'bg-orange-50 dark:bg-orange-900/20 border-orange-100 dark:border-orange-800 text-orange-600 dark:text-orange-300',
+                                            emerald: 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-800 text-emerald-600 dark:text-emerald-300',
+                                            rose: 'bg-rose-50 dark:bg-rose-900/20 border-rose-100 dark:border-rose-800 text-rose-600 dark:text-rose-300',
+                                            sky: 'bg-sky-50 dark:bg-sky-900/20 border-sky-100 dark:border-sky-800 text-sky-600 dark:text-sky-300',
+                                            slate: 'bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-500 dark:text-slate-300'
+                                        };
+                                        const accentClass = accentMap[note.accent] || accentMap.slate;
+                                        return (
+                                            <button key={note.id} type="button" onClick={() => handleOpenUserNotification(note)} className={`w-full text-left rounded-3xl border p-4 transition-all hover:-translate-y-0.5 hover:shadow-md ${note.unread ? accentClass : 'bg-white/70 dark:bg-slate-800/70 border-slate-100 dark:border-slate-700 text-slate-500 dark:text-slate-300'}`}>
+                                                <div className="flex items-start gap-3">
+                                                    <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${note.unread ? 'bg-white/80 dark:bg-slate-950/40' : 'bg-slate-100 dark:bg-slate-900/60'}`}>
+                                                        <Icon name={note.icon} className="w-5 h-5" />
+                                                    </div>
+                                                    <div className="min-w-0 flex-1">
+                                                        <div className="flex items-center justify-between gap-2">
+                                                            <div className="font-black text-sm text-slate-800 dark:text-white truncate">{note.title}</div>
+                                                            {note.unread && <span className="w-2.5 h-2.5 rounded-full bg-red-500 shrink-0 shadow-sm"></span>}
+                                                        </div>
+                                                        <div className="text-xs font-bold mt-1 line-clamp-2 break-words">{note.message}</div>
+                                                        <div className="mt-2 flex items-center justify-between gap-2 text-[10px] font-black opacity-70">
+                                                            <span className="truncate">{note.meta || note.time || '剛剛'}</span>
+                                                            {note.action === 'class' && <span className="shrink-0 flex items-center gap-1">前往同步 <Icon name="arrow-right" className="w-3 h-3" /></span>}
+                                                            {note.action === 'timetable' && <span className="shrink-0 flex items-center gap-1">查看時間表 <Icon name="arrow-right" className="w-3 h-3" /></span>}
+                                                            {note.action === 'cleanup' && <span className="shrink-0 flex items-center gap-1">返回主頁 <Icon name="arrow-right" className="w-3 h-3" /></span>}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {notification.isOpen && (
                         <div className="fixed inset-0 z-[250] flex items-center justify-center p-4">
