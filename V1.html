@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-HK">
 <head>
-    <!-- 電子手冊 Pro 最新合併版：通知中心置中 + 直接通知文案 + 專業後台 + 版本更新彈窗 + 手動選科修正 -->
+    <!-- 電子手冊 Pro v1.7 完整修復版：找回所有近期更新 + 專業後台同步監控 + 通知中心 + 版本更新彈窗 + 手動選科修正 -->
 
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-8VCPLTE2QT"></script>
     <script>
@@ -1162,19 +1162,54 @@
             const fetchTaskProgress = async (task) => {
                 setIsFetchingStats(true);
                 try {
-                    const targetUsers = task.targetClass === '全校' ? users : users.filter(u => (u.joinedClasses || []).includes(task.targetClass));
-                    let completed = 0; let pendingList = [];
+                    const targetUsers = (task.targetClass === '全校' || !task.targetClass)
+                        ? users
+                        : users.filter(u => (u.joinedClasses || []).includes(task.targetClass));
+                    let synced = 0;
+                    let completed = 0;
+                    let pendingList = [];
+                    let syncedList = [];
+                    let completedList = [];
                     for (const u of targetUsers) {
                         const q = query(collection(db, "users", u.uid, "items"), where("publicRefId", "==", task.id));
                         const snap = await getDocs(q);
+                        const display = u.displayName || u.email || u.uid;
                         if (!snap.empty) {
-                            if (snap.docs[0].data().completed) completed++;
-                            else pendingList.push(u.displayName || u.email);
-                        } else { pendingList.push(u.displayName || u.email); }
+                            synced++;
+                            syncedList.push(display);
+                            const itemData = snap.docs[0].data();
+                            if (itemData.completed) {
+                                completed++;
+                                completedList.push(display);
+                            }
+                        } else {
+                            pendingList.push(display);
+                        }
                     }
-                    setTaskStats(prev => ({ ...prev, [task.id]: { total: targetUsers.length, completed, pendingList } }));
-                } catch (e) { triggerAlert("讀取進度失敗: " + e.message, "error"); }
+                    setTaskStats(prev => ({
+                        ...prev,
+                        [task.id]: {
+                            total: targetUsers.length,
+                            synced,
+                            completed,
+                            pendingList,
+                            syncedList,
+                            completedList,
+                            syncRate: targetUsers.length ? Math.round((synced / targetUsers.length) * 100) : 0,
+                            completedRate: targetUsers.length ? Math.round((completed / targetUsers.length) * 100) : 0,
+                            scannedAt: new Date().toISOString()
+                        }
+                    }));
+                } catch (e) { triggerAlert("讀取同步狀態失敗: " + e.message, "error"); }
                 setIsFetchingStats(false);
+            };
+
+            const fetchAllTaskProgress = async () => {
+                if (!publicTasks.length) return triggerAlert("目前沒有廣播任務可掃描", "error");
+                for (const task of publicTasks) {
+                    await fetchTaskProgress(task);
+                }
+                triggerAlert("已更新所有廣播任務的同步狀態");
             };
 
             const handleDeleteUser = async (targetUser) => {
@@ -1269,6 +1304,21 @@
             };
 
             const activeTodayCount = users.filter(u => u.lastSeen && typeof u.lastSeen.toDate === 'function' && (new Date() - u.lastSeen.toDate()) < 24 * 60 * 60 * 1000).length;
+            const onlineNowCount = users.filter(u => u.lastSeen && typeof u.lastSeen.toDate === 'function' && (new Date() - u.lastSeen.toDate()) < 10 * 60 * 1000).length;
+            const recent7DayTaskCount = publicTasks.filter(t => t.createdAt && typeof t.createdAt.toDate === 'function' && (new Date() - t.createdAt.toDate()) < 7 * 24 * 60 * 60 * 1000).length;
+            const classMemberTotal = systemClasses.reduce((sum, c) => sum + users.filter(u => (u.joinedClasses || []).includes(c.code)).length, 0);
+            const selectedUserStats = selectedUser ? {
+                total: userHomeworks.length,
+                unfinished: userHomeworks.filter(h => !h.completed && !h.isHidden).length,
+                synced: userHomeworks.filter(h => h.publicRefId).length,
+                expired: userHomeworks.filter(h => {
+                    if (h.completed || h.isHidden) return false;
+                    const today = new Date(); today.setHours(0,0,0,0);
+                    const due = new Date(h.dueDate); due.setHours(0,0,0,0);
+                    return due instanceof Date && !isNaN(due.getTime()) && due < today;
+                }).length,
+                classes: (selectedUser.joinedClasses || []).length
+            } : { total: 0, unfinished: 0, synced: 0, expired: 0, classes: 0 };
             const filteredUsers = users.filter(u => (u.displayName || '').toLowerCase().includes(searchQuery.toLowerCase()) || (u.email || '').toLowerCase().includes(searchQuery.toLowerCase()));
 
             return (
@@ -1279,7 +1329,7 @@
                             <h2 className="text-xl font-black tracking-wide">超級管理中心</h2>
                         </div>
                         <div className="flex flex-row md:flex-col gap-2 overflow-x-auto scrollbar-hide pb-2 md:pb-0">
-                            {[ { id: 'overview', icon: 'check-circle-2', label: '系統概覽' }, { id: 'users', icon: 'users', label: '用戶數據管理' }, { id: 'classes', icon: 'school', label: '班級代碼管理' }, { id: 'tasks', icon: 'bell', label: '廣播任務中心' }, { id: 'settings', icon: 'settings', label: '核心系統設定' } ].map(tab => (
+                            {[ { id: 'overview', icon: 'layout-dashboard', label: '專業總覽' }, { id: 'users', icon: 'users', label: '用戶數據管理' }, { id: 'classes', icon: 'school', label: '班級代碼管理' }, { id: 'tasks', icon: 'bell', label: '廣播任務中心' }, { id: 'syncMonitor', icon: 'activity', label: '同步監控' }, { id: 'settings', icon: 'settings', label: '核心系統設定' } ].map(tab => (
                                 <button key={tab.id} onClick={() => { setActiveTab(tab.id); setSelectedUser(null); setViewingClass(null); }} className={`flex items-center gap-3 px-4 py-3 rounded-2xl font-bold text-sm transition-all whitespace-nowrap md:whitespace-normal ${activeTab === tab.id ? 'bg-indigo-600 text-white shadow-lg' : 'hover:bg-slate-800 hover:text-white'}`}>
                                     <Icon name={tab.icon} className={`w-5 h-5 ${activeTab === tab.id ? 'text-indigo-200' : 'text-slate-500'}`} /> {tab.label}
                                 </button>
@@ -1292,19 +1342,47 @@
 
                         {activeTab === 'overview' && (
                             <div className="space-y-6 animate-fadeIn">
-                                <h3 className="text-2xl font-bold dark:text-white mb-6">系統概覽</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl p-6 text-white shadow-lg">
-                                        <div className="text-blue-100 text-sm font-bold mb-1 flex items-center gap-2">總註冊用戶</div>
-                                        <div className="text-4xl font-black">{users.length}</div>
+                                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-2">
+                                    <div>
+                                        <h3 className="text-2xl font-black dark:text-white">專業系統總覽</h3>
+                                        <p className="text-sm text-slate-500 mt-1">快速查看用戶活躍、廣播任務、班級營運與安全狀態。</p>
                                     </div>
-                                    <div className="bg-gradient-to-br from-emerald-400 to-teal-500 rounded-3xl p-6 text-white shadow-lg">
-                                        <div className="text-emerald-100 text-sm font-bold mb-1 flex items-center gap-2">24小時內活躍</div>
-                                        <div className="text-4xl font-black">{activeTodayCount}</div>
+                                    <button onClick={() => fetchUsersPage(true)} disabled={usersLoading} className="px-4 py-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-black text-slate-600 dark:text-slate-300 hover:bg-slate-50 active:scale-95 flex items-center gap-2">
+                                        <Icon name="refresh-cw" className={`w-4 h-4 ${usersLoading ? 'animate-spin' : ''}`} /> 重新整理用戶
+                                    </button>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                                    <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl p-6 text-white shadow-lg"><div className="text-blue-100 text-sm font-bold mb-1">已載入用戶</div><div className="text-4xl font-black">{users.length}</div><div className="text-[11px] text-blue-100 mt-2">用戶管理使用分頁載入，每頁 20 人</div></div>
+                                    <div className="bg-gradient-to-br from-emerald-400 to-teal-500 rounded-3xl p-6 text-white shadow-lg"><div className="text-emerald-100 text-sm font-bold mb-1">10分鐘內在線</div><div className="text-4xl font-black">{onlineNowCount}</div><div className="text-[11px] text-emerald-50 mt-2">24小時活躍：{activeTodayCount} 人</div></div>
+                                    <div className="bg-gradient-to-br from-orange-400 to-red-500 rounded-3xl p-6 text-white shadow-lg"><div className="text-orange-100 text-sm font-bold mb-1">廣播任務</div><div className="text-4xl font-black">{publicTasks.length}</div><div className="text-[11px] text-orange-50 mt-2">最近 7 日：{recent7DayTaskCount} 份</div></div>
+                                    <div className="bg-gradient-to-br from-violet-500 to-fuchsia-600 rounded-3xl p-6 text-white shadow-lg"><div className="text-violet-100 text-sm font-bold mb-1">班級系統</div><div className="text-4xl font-black">{systemClasses.length}</div><div className="text-[11px] text-violet-50 mt-2">已載入班級成員記錄：{classMemberTotal}</div></div>
+                                </div>
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                                    <div className="lg:col-span-2 bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700 p-5 shadow-sm">
+                                        <div className="flex items-center justify-between mb-4"><h4 className="font-black dark:text-white flex items-center gap-2"><Icon name="radio" className="w-5 h-5 text-orange-500"/> 最近廣播</h4><button onClick={() => setActiveTab('syncMonitor')} className="text-xs font-black text-indigo-600 dark:text-indigo-400">查看同步監控</button></div>
+                                        <div className="space-y-3">
+                                            {publicTasks.slice(0, 5).map(task => {
+                                                const cls = systemClasses.find(c => c.code === task.targetClass);
+                                                const targetName = task.targetClass === '全校' || !task.targetClass ? '全校' : (cls?.name || task.targetClass);
+                                                return (
+                                                    <div key={task.id} className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700 flex items-start justify-between gap-3">
+                                                        <div className="min-w-0"><div className="font-black text-sm dark:text-white truncate">{task.description}</div><div className="text-[11px] text-slate-400 mt-1">{targetName} · {task.subject || '其他'} · {formatFirebaseDateTime(task.createdAt) || '最近發佈'}</div></div>
+                                                        <button onClick={() => fetchTaskProgress(task)} className="shrink-0 px-3 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300 text-[11px] font-black">掃描</button>
+                                                    </div>
+                                                );
+                                            })}
+                                            {publicTasks.length === 0 && <div className="text-center py-8 text-slate-400 font-bold">暫時未有廣播任務</div>}
+                                        </div>
                                     </div>
-                                    <div className="bg-gradient-to-br from-orange-400 to-red-500 rounded-3xl p-6 text-white shadow-lg">
-                                        <div className="text-orange-100 text-sm font-bold mb-1 flex items-center gap-2">廣播任務總數</div>
-                                        <div className="text-4xl font-black">{publicTasks.length}</div>
+                                    <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700 p-5 shadow-sm">
+                                        <h4 className="font-black dark:text-white mb-4 flex items-center gap-2"><Icon name="shield-check" className="w-5 h-5 text-emerald-500"/> 安全狀態</h4>
+                                        <div className="space-y-3 text-sm">
+                                            <div className="flex justify-between items-center"><span className="font-bold text-slate-500">白名單</span><span className={`px-2.5 py-1 rounded-lg text-xs font-black ${systemConfig?.whitelistEnabled ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>{systemConfig?.whitelistEnabled ? '已啟用' : '未啟用'}</span></div>
+                                            <div className="flex justify-between items-center"><span className="font-bold text-slate-500">白名單人數</span><span className="font-black dark:text-white">{allowedEmails.length}</span></div>
+                                            <div className="flex justify-between items-center"><span className="font-bold text-slate-500">黑名單</span><span className={`px-2.5 py-1 rounded-lg text-xs font-black ${systemConfig?.blacklistEnabled ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-500'}`}>{systemConfig?.blacklistEnabled ? '已啟用' : '未啟用'}</span></div>
+                                            <div className="flex justify-between items-center"><span className="font-bold text-slate-500">封鎖人數</span><span className="font-black dark:text-white">{blacklistedEmails.length}</span></div>
+                                            <button onClick={() => setActiveTab('settings')} className="w-full mt-2 py-3 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black text-xs">前往安全設定</button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1479,6 +1557,13 @@
                                         <p className="text-sm text-slate-500">{selectedUser.email}</p>
                                     </div>
                                 </div>
+                                <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+                                    <div className="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700"><div className="text-[10px] font-black text-slate-400 uppercase">功課總數</div><div className="text-2xl font-black dark:text-white">{selectedUserStats.total}</div></div>
+                                    <div className="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700"><div className="text-[10px] font-black text-slate-400 uppercase">未完成</div><div className="text-2xl font-black text-orange-500">{selectedUserStats.unfinished}</div></div>
+                                    <div className="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700"><div className="text-[10px] font-black text-slate-400 uppercase">已同步廣播</div><div className="text-2xl font-black text-indigo-500">{selectedUserStats.synced}</div></div>
+                                    <div className="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700"><div className="text-[10px] font-black text-slate-400 uppercase">過期未處理</div><div className="text-2xl font-black text-red-500">{selectedUserStats.expired}</div></div>
+                                    <div className="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700"><div className="text-[10px] font-black text-slate-400 uppercase">加入班級</div><div className="text-2xl font-black text-emerald-500">{selectedUserStats.classes}</div></div>
+                                </div>
                                 <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col md:flex-row gap-6 items-center md:items-start">
                                      <div className="w-full md:w-auto flex-1 space-y-4">
                                          <h4 className="font-bold text-slate-700 dark:text-slate-200">用戶檔案編輯</h4>
@@ -1526,7 +1611,7 @@
                         {activeTab === 'tasks' && (
                             <div className="space-y-6 animate-fadeIn">
                                 <h3 className="text-2xl font-bold dark:text-white">廣播任務中心</h3>
-                                <p className="text-sm text-slate-500 -mt-2">管理發佈到全校或指定班級的廣播任務，並可追蹤完成進度。</p>
+                                <p className="text-sm text-slate-500 -mt-2">管理發佈到全校或指定班級的廣播任務，並快速查看學生同步情況。</p>
                                 <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700 overflow-hidden flex flex-col shadow-sm">
                                     <div className="overflow-y-auto max-h-[600px]">
                                         <table className="w-full text-left text-sm whitespace-nowrap">
@@ -1554,16 +1639,17 @@
                                                                 {stats ? (
                                                                     <div className="flex flex-col gap-2">
                                                                         <div className="flex items-center justify-between text-xs font-bold text-slate-500">
-                                                                            <span className="text-emerald-500">{stats.completed} 已完成</span>
+                                                                            <span className="text-indigo-500">{stats.synced} 已同步</span>
                                                                             <span>共 {stats.total} 人</span>
                                                                         </div>
                                                                         <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
-                                                                            <div className="bg-emerald-500 h-1.5 rounded-full" style={{ width: stats.total ? `${(stats.completed / stats.total) * 100}%` : '0%' }}></div>
+                                                                            <div className="bg-emerald-500 h-1.5 rounded-full" style={{ width: stats.total ? `${(stats.synced / stats.total) * 100}%` : '0%' }}></div>
                                                                         </div>
                                                                         {stats.pendingList.length > 0 && (
-                                                                            <div className="mt-1 text-[10px] text-slate-400 max-w-[150px] truncate" title={stats.pendingList.join(', ')}>未交: {stats.pendingList.join(', ')}</div>
+                                                                            <div className="mt-1 text-[10px] text-slate-400 max-w-[150px] truncate" title={stats.pendingList.join(', ')}>未同步: {stats.pendingList.join(', ')}</div>
                                                                         )}
-                                                                        {stats.pendingList.length === 0 && stats.total > 0 && <span className="text-[10px] text-emerald-500 font-bold">全班已交齊 🎉</span>}
+                                                                        {stats.pendingList.length === 0 && stats.total > 0 && <span className="text-[10px] text-emerald-500 font-bold">全部已同步 🎉</span>}
+                                                                        <span className="text-[10px] text-slate-400">其中 {stats.completed || 0} 人已標記完成</span>
                                                                     </div>
                                                                 ) : (
                                                                     <button onClick={() => fetchTaskProgress(task)} disabled={isFetchingStats} className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-xs font-bold transition-colors disabled:opacity-50">查看進度</button>
@@ -1579,6 +1665,73 @@
                                             </tbody>
                                         </table>
                                     </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'syncMonitor' && (
+                            <div className="space-y-6 animate-fadeIn">
+                                <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
+                                    <div>
+                                        <h3 className="text-2xl font-black dark:text-white">廣播同步監控</h3>
+                                        <p className="text-sm text-slate-500 mt-1">查看每份廣播功課有幾多學生已同步、未同步，以及邊個需要提醒。</p>
+                                    </div>
+                                    <button onClick={fetchAllTaskProgress} disabled={isFetchingStats || publicTasks.length === 0} className="px-5 py-3 rounded-2xl bg-indigo-600 text-white text-sm font-black shadow-md hover:bg-indigo-700 active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2">
+                                        <Icon name={isFetchingStats ? "loader" : "scan-search"} className={`w-4 h-4 ${isFetchingStats ? 'animate-spin' : ''}`} /> 掃描全部任務
+                                    </button>
+                                </div>
+                                <div className="grid grid-cols-1 gap-4">
+                                    {publicTasks.length === 0 && <div className="text-center py-16 rounded-3xl bg-white dark:bg-slate-800 border border-dashed border-slate-200 dark:border-slate-700 text-slate-400 font-bold">目前沒有廣播任務可監控</div>}
+                                    {publicTasks.map(task => {
+                                        const cls = systemClasses.find(c => c.code === task.targetClass);
+                                        const targetName = task.targetClass === '全校' || !task.targetClass ? '全校' : (cls?.name || task.targetClass);
+                                        const stats = taskStats[task.id];
+                                        const percent = stats?.total ? Math.round((stats.synced / stats.total) * 100) : 0;
+                                        return (
+                                            <div key={task.id} className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700 p-5 shadow-sm overflow-hidden">
+                                                <div className="flex flex-col xl:flex-row xl:items-start justify-between gap-4">
+                                                    <div className="min-w-0 flex-1">
+                                                        <div className="flex flex-wrap items-center gap-2 mb-2">
+                                                            <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border ${subjects.find(s => s.name === task.subject)?.color || 'bg-slate-100 text-slate-600 border-slate-200'}`}>{task.subject || '其他'}</span>
+                                                            <span className="px-2.5 py-1 rounded-lg text-[10px] font-black bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300">{targetName}</span>
+                                                            <span className="text-[10px] text-slate-400 font-mono">{formatFirebaseDateTime(task.createdAt) || '最近發佈'}</span>
+                                                        </div>
+                                                        <div className="font-black text-slate-800 dark:text-white text-base break-words">{task.description}</div>
+                                                        <div className="text-xs text-slate-400 mt-2">交期：{formatDueDate(task.dueDate)}</div>
+                                                    </div>
+                                                    <button onClick={() => fetchTaskProgress(task)} disabled={isFetchingStats} className="px-4 py-2.5 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-black hover:opacity-90 active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2">
+                                                        <Icon name={isFetchingStats ? "loader" : "refresh-cw"} className={`w-4 h-4 ${isFetchingStats ? 'animate-spin' : ''}`} /> 更新狀態
+                                                    </button>
+                                                </div>
+                                                {stats ? (
+                                                    <div className="mt-5 space-y-4">
+                                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                                            <div className="rounded-2xl bg-slate-50 dark:bg-slate-900/60 p-4"><div className="text-[10px] font-black text-slate-400 uppercase">目標學生</div><div className="text-2xl font-black dark:text-white">{stats.total}</div></div>
+                                                            <div className="rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 p-4"><div className="text-[10px] font-black text-indigo-400 uppercase">已同步</div><div className="text-2xl font-black text-indigo-600 dark:text-indigo-300">{stats.synced}</div></div>
+                                                            <div className="rounded-2xl bg-orange-50 dark:bg-orange-900/20 p-4"><div className="text-[10px] font-black text-orange-400 uppercase">未同步</div><div className="text-2xl font-black text-orange-600 dark:text-orange-300">{stats.pendingList.length}</div></div>
+                                                            <div className="rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 p-4"><div className="text-[10px] font-black text-emerald-400 uppercase">已完成</div><div className="text-2xl font-black text-emerald-600 dark:text-emerald-300">{stats.completed}</div></div>
+                                                        </div>
+                                                        <div>
+                                                            <div className="flex justify-between text-xs font-black text-slate-500 mb-1"><span>同步率</span><span>{percent}%</span></div>
+                                                            <div className="w-full h-3 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden"><div className="h-3 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full transition-all" style={{ width: `${percent}%` }}></div></div>
+                                                        </div>
+                                                        {stats.pendingList.length > 0 ? (
+                                                            <div className="rounded-2xl bg-orange-50 dark:bg-orange-900/20 border border-orange-100 dark:border-orange-800 p-4">
+                                                                <div className="font-black text-orange-700 dark:text-orange-300 text-sm mb-2 flex items-center gap-2"><Icon name="user-x" className="w-4 h-4"/> 未同步學生</div>
+                                                                <div className="flex flex-wrap gap-2">{stats.pendingList.map(name => <span key={name} className="px-2.5 py-1 rounded-lg bg-white/80 dark:bg-slate-900/40 text-orange-700 dark:text-orange-200 text-xs font-bold border border-orange-100 dark:border-orange-800">{name}</span>)}</div>
+                                                            </div>
+                                                        ) : stats.total > 0 ? (
+                                                            <div className="rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 p-4 font-black text-emerald-700 dark:text-emerald-300 flex items-center gap-2"><Icon name="party-popper" className="w-4 h-4"/> 全部目標學生已同步</div>
+                                                        ) : (
+                                                            <div className="rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700 p-4 font-bold text-slate-400">目前沒有符合此目標的已載入學生。請在用戶管理頁載入更多學生後再掃描。</div>
+                                                        )}
+                                                    </div>
+                                                ) : (
+                                                    <div className="mt-5 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 p-5 text-center text-slate-400 font-bold text-sm">按「更新狀態」後會顯示已同步 / 未同步學生名單。</div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             </div>
                         )}
