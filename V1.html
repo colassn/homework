@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-HK">
 <head>
-    <!-- 電子手冊 Pro v1.8.14 Google Redirect Resolver Fix：保留所有設定功能，專注修復 Google 登入 argument-error -->
+    <!-- 電子手冊 Pro v1.8.17 Auth Only Stable Fix：保留所有設定功能，專注修復 Google 登入 argument-error -->
 
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-8VCPLTE2QT"></script>
     <script>
@@ -20,8 +20,8 @@
     <meta name="apple-mobile-web-app-title" content="電子手冊">
     
     <title>電子手冊 Pro</title>
-    <meta name="ehandbook-version" content="v1.8.14-google-redirect-resolver-fix">
-    <script>window.__EHANDBOOK_VERSION__ = "v1.8.14-google-redirect-resolver-fix"; console.log("電子手冊 Pro v1.8.14-google-redirect-resolver-fix loaded");</script>
+    <meta name="ehandbook-version" content="v1.8.17-auth-only-stable-fix">
+    <script>window.__EHANDBOOK_VERSION__ = "v1.8.17-auth-only-stable-fix"; console.log("電子手冊 Pro v1.8.17-auth-only-stable-fix loaded");</script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js" crossorigin></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js" crossorigin></script>
@@ -130,7 +130,7 @@
             try {
                 var box = document.getElementById('loading-screen');
                 if (box && !window.__EHANDBOOK_RENDERED__) {
-                    box.innerHTML = "<div style='max-width:420px;padding:22px;text-align:center'><div style='font-size:42px;margin-bottom:10px'>⚠️</div><h2 style='font-size:1.2rem;font-weight:800;margin-bottom:8px;color:#ef4444'>網站載入時發生錯誤</h2><p style='font-size:13px;color:#64748b;line-height:1.6'>請重新整理一次；如果仍然出現，請截圖 Console 錯誤。系統已加入 v1.8.14 Google 登入修復版啟動保護。</p></div>";
+                    box.innerHTML = "<div style='max-width:420px;padding:22px;text-align:center'><div style='font-size:42px;margin-bottom:10px'>⚠️</div><h2 style='font-size:1.2rem;font-weight:800;margin-bottom:8px;color:#ef4444'>網站載入時發生錯誤</h2><p style='font-size:13px;color:#64748b;line-height:1.6'>請重新整理一次；如果仍然出現，請截圖 Console 錯誤。系統已加入 v1.8.17 登入修復版啟動保護。</p></div>";
                 }
             } catch(e) {}
         });
@@ -148,7 +148,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, initializeAuth, indexedDBLocalPersistence, browserLocalPersistence, browserSessionPersistence, inMemoryPersistence, browserPopupRedirectResolver, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, initializeAuth, indexedDBLocalPersistence, browserLocalPersistence, browserSessionPersistence, inMemoryPersistence, browserPopupRedirectResolver, setPersistence, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs, setDoc, arrayUnion, arrayRemove, getDoc, writeBatch, limit, startAfter } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         const firebaseConfig = {
@@ -176,29 +176,47 @@
             const db = getFirestore(app);
             const googleProvider = new GoogleAuthProvider();
             try { auth.useDeviceLanguage && auth.useDeviceLanguage(); } catch(e) {}
+            window.__EHANDBOOK_AUTH_PERSISTENCE_READY__ = setPersistence(auth, browserLocalPersistence).catch((persistenceError) => {
+                console.warn('Auth persistence fallback warning:', persistenceError);
+                return null;
+            });
             window.__EHANDBOOK_REDIRECT_PENDING__ = false;
+            window.__EHANDBOOK_CLEAR_REDIRECT_PENDING__ = () => {
+                window.__EHANDBOOK_REDIRECT_PENDING__ = false;
+                try { localStorage.removeItem('ehandbook_google_redirect_pending'); } catch(e) {}
+                try { localStorage.removeItem('ehandbook_google_redirect_started_at'); } catch(e) {}
+            };
             window.__EHANDBOOK_REDIRECT_RESULT_PROMISE__ = getRedirectResult(auth)
                 .then((result) => {
                     window.__EHANDBOOK_REDIRECT_RESULT__ = result || null;
-                    window.__EHANDBOOK_REDIRECT_PENDING__ = false;
-                    try { localStorage.removeItem('ehandbook_google_redirect_pending'); } catch(e) {}
-                    if (result && result.user) console.log('Google redirect sign-in resolved:', result.user.email);
+                    if (result && result.user) {
+                        console.log('Google redirect sign-in resolved:', result.user.email);
+                        window.__EHANDBOOK_CLEAR_REDIRECT_PENDING__();
+                    } else {
+                        const startedAt = Number(localStorage.getItem('ehandbook_google_redirect_started_at') || 0);
+                        const isStale = !startedAt || (Date.now() - startedAt > 2 * 60 * 1000);
+                        if (isStale) window.__EHANDBOOK_CLEAR_REDIRECT_PENDING__();
+                    }
                     return result;
                 })
                 .catch((error) => {
                     window.__EHANDBOOK_REDIRECT_ERROR__ = error;
-                    window.__EHANDBOOK_REDIRECT_PENDING__ = false;
+                    window.__EHANDBOOK_CLEAR_REDIRECT_PENDING__();
                     console.warn('Google redirect result failed:', error);
-                    try { localStorage.removeItem('ehandbook_google_redirect_pending'); } catch(e) {}
                     return null;
                 });
             window.firebaseServices = { 
                 auth, db, googleProvider, 
-                signInWithPopup, signInWithRedirect, getRedirectResult, browserPopupRedirectResolver, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged, updateProfile, 
+                signInWithPopup, signInWithRedirect, getRedirectResult, browserPopupRedirectResolver, setPersistence, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged, updateProfile, 
                 collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs, setDoc, arrayUnion, arrayRemove, getDoc, writeBatch, limit, startAfter
             };
+            window.__EHANDBOOK_FIREBASE_READY__ = true;
+            try { window.dispatchEvent(new Event('ehandbook:firebase-ready')); } catch(e) {}
         } catch (e) {
             console.error("Firebase Init Error:", e);
+            window.__EHANDBOOK_FIREBASE_READY__ = false;
+            window.__EHANDBOOK_FIREBASE_INIT_ERROR__ = e;
+            try { window.dispatchEvent(new CustomEvent('ehandbook:firebase-error', { detail: e?.message || String(e) })); } catch(eventError) {}
             document.getElementById('loading-screen').innerHTML = "<div style='color:red'>系統連線失敗，請檢查網路。</div>";
         }
     </script>
@@ -466,54 +484,68 @@
             const [email, setEmail] = useState('');
             const [password, setPassword] = useState(''); 
             const [loading, setLoading] = useState(false);
-            const { auth, googleProvider, signInWithPopup, signInWithRedirect, getRedirectResult, browserPopupRedirectResolver, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail } = window.firebaseServices || {};
+            const { auth, googleProvider, signInWithPopup, signInWithRedirect, getRedirectResult, browserPopupRedirectResolver, setPersistence, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail } = window.firebaseServices || {};
             const browserHint = getBrowserLoginModeText();
             const inAppBrowser = isInAppBrowser();
 
             useEffect(() => {
                 if (!auth) return;
+                let cancelled = false;
                 const wasRedirecting = safeStorageGet('ehandbook_google_redirect_pending', '') === '1';
                 if (wasRedirecting) setLoading(true);
                 const redirectPromise = window.__EHANDBOOK_REDIRECT_RESULT_PROMISE__;
+                const persistencePromise = window.__EHANDBOOK_AUTH_PERSISTENCE_READY__ || Promise.resolve();
                 if (!redirectPromise) return;
-                redirectPromise.then((result) => {
+                Promise.allSettled([persistencePromise, redirectPromise]).then((settled) => {
+                    if (cancelled) return;
+                    const result = settled[1]?.value || window.__EHANDBOOK_REDIRECT_RESULT__ || null;
                     const signedInUser = result?.user || auth.currentUser;
                     if (signedInUser) {
-                        safeStorageRemove('ehandbook_google_redirect_pending');
+                        window.__EHANDBOOK_CLEAR_REDIRECT_PENDING__?.();
                         triggerAlert('Google 登入成功，正在進入主頁…');
                     } else if (wasRedirecting && window.__EHANDBOOK_REDIRECT_ERROR__) {
                         triggerAlert(getFriendlyAuthError(window.__EHANDBOOK_REDIRECT_ERROR__, 'login'), 'error');
                     }
                 }).finally(() => {
-                    if (!auth.currentUser) setLoading(false);
+                    if (!cancelled && !auth.currentUser) setLoading(false);
                 });
+                return () => { cancelled = true; };
             }, [auth]);
 
             const handleGoogleLogin = async () => { 
                 if (!auth || !googleProvider) { triggerAlert('Firebase 尚未準備好，請重新整理後再試。', 'error'); return; }
+                const startRedirectLogin = async () => {
+                    safeStorageSet('ehandbook_google_redirect_pending', '1');
+                    safeStorageSet('ehandbook_google_redirect_started_at', String(Date.now()));
+                    window.__EHANDBOOK_REDIRECT_PENDING__ = true;
+                    await signInWithRedirect(auth, googleProvider);
+                };
                 try {
                     setLoading(true);
+                    await (window.__EHANDBOOK_AUTH_PERSISTENCE_READY__ || Promise.resolve());
                     googleProvider.setCustomParameters?.({ prompt: 'select_account' });
                     const shouldUseRedirect = isIPadLike() || isSafariLike() || isStandaloneMode() || isInAppBrowser();
                     if (shouldUseRedirect && signInWithRedirect) {
-                        safeStorageSet('ehandbook_google_redirect_pending', '1');
-                        safeStorageSet('ehandbook_google_redirect_started_at', String(Date.now()));
-                        await signInWithRedirect(auth, googleProvider);
+                        await startRedirectLogin();
                         return;
                     }
-                    safeStorageRemove('ehandbook_google_redirect_pending');
-                    await signInWithPopup(auth, googleProvider);
+                    window.__EHANDBOOK_CLEAR_REDIRECT_PENDING__?.();
+                    const credential = await signInWithPopup(auth, googleProvider);
+                    if (credential?.user) {
+                        triggerAlert('Google 登入成功，正在進入主頁…');
+                    }
                 } catch (error) {
                     console.warn('Google popup login failed:', error);
-                    const fallbackCodes = ['auth/popup-blocked', 'auth/popup-closed-by-user', 'auth/cancelled-popup-request', 'auth/operation-not-supported-in-this-environment'];
+                    const fallbackCodes = ['auth/popup-blocked', 'auth/popup-closed-by-user', 'auth/cancelled-popup-request', 'auth/operation-not-supported-in-this-environment', 'auth/web-storage-unsupported'];
                     if (signInWithRedirect && (isIPadLike() || isSafariLike() || isStandaloneMode() || isInAppBrowser() || fallbackCodes.includes(error?.code))) {
                         try {
-                            safeStorageSet('ehandbook_google_redirect_pending', '1');
-                            safeStorageSet('ehandbook_google_redirect_started_at', String(Date.now()));
-                            await signInWithRedirect(auth, googleProvider);
+                            await startRedirectLogin();
                             return;
                         }
-                        catch (redirectError) { safeStorageRemove('ehandbook_google_redirect_pending'); triggerAlert(getFriendlyAuthError(redirectError, 'login'), 'error'); }
+                        catch (redirectError) {
+                            window.__EHANDBOOK_CLEAR_REDIRECT_PENDING__?.();
+                            triggerAlert(getFriendlyAuthError(redirectError, 'login'), 'error');
+                        }
                     } else {
                         triggerAlert(getFriendlyAuthError(error, 'login'), 'error');
                     }
@@ -546,8 +578,10 @@
                 if(!targetEmail || !password) { triggerAlert('請輸入 Email 同密碼。', 'error'); return; }
                 try {
                     setLoading(true);
+                    await (window.__EHANDBOOK_AUTH_PERSISTENCE_READY__ || Promise.resolve());
                     if (isLogin) await signInWithEmailAndPassword(auth, targetEmail, password);
                     else await createUserWithEmailAndPassword(auth, targetEmail, password);
+                    triggerAlert(isLogin ? '登入成功，正在進入主頁…' : '註冊成功，正在建立個人資料…');
                 } catch (error) {
                     triggerAlert(getFriendlyAuthError(error, isLogin ? 'login' : 'register'), 'error');
                     setLoading(false);
@@ -2420,7 +2454,7 @@
                                 <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-[1.7rem] bg-white/15 border border-white/20 backdrop-blur-xl flex items-center justify-center text-3xl font-black shadow-lg shrink-0">{initial}</div>
                                 <div className="min-w-0 pt-1">
                                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-[11px] font-black mb-3">
-                                        <Icon name="settings-2" className="w-3.5 h-3.5" /> 應用程式設定 · v1.8.14
+                                        <Icon name="settings-2" className="w-3.5 h-3.5" /> 應用程式設定 · v1.8.17
                                     </div>
                                     <h2 className="text-2xl sm:text-3xl font-black tracking-tight truncate">{displayName}</h2>
                                     <p className="text-sm text-indigo-100 font-bold mt-1 truncate">{email || '個人化你的電子手冊'}</p>
@@ -2583,6 +2617,7 @@
 function App() {
             const [user, setUser] = useState(null);
             const [authLoading, setAuthLoading] = useState(true);
+            const [firebaseReadyTick, setFirebaseReadyTick] = useState(() => window.__EHANDBOOK_FIREBASE_READY__ ? 1 : 0);
             const [items, setItems] = useState([]);
             const [timetableConfig, setTimetableConfig] = useState({ timeSlots: DEFAULT_TIME_SLOTS, schedule: DEFAULT_SCHEDULE });
             const [subjects, setSubjects] = useState(DEFAULT_SUBJECTS);
@@ -2668,7 +2703,32 @@ function App() {
                 const loadingScreen = document.getElementById('loading-screen');
                 window.__EHANDBOOK_RENDERED__ = true;
                 if (loadingScreen) { loadingScreen.classList.add('hidden-loader'); setTimeout(() => loadingScreen.remove(), 500); }
-                // v1.8.14: 已保留全站功能；不再於載入時自動要求通知權限，並加入 browserPopupRedirectResolver 修復 Google Redirect argument-error。
+                // v1.8.17: 已保留全站功能；不再於載入時自動要求通知權限，並加入 Firebase ready event，避免 Redirect 返回後 React 先於 Firebase 初始化而卡在登入頁。
+            }, []);
+
+            useEffect(() => {
+                if (window.__EHANDBOOK_FIREBASE_READY__ && window.firebaseServices?.auth) {
+                    setFirebaseReadyTick(v => v + 1);
+                    return;
+                }
+                const handleReady = () => setFirebaseReadyTick(v => v + 1);
+                const handleError = () => {
+                    console.warn('Firebase ready event reported an init error:', window.__EHANDBOOK_FIREBASE_INIT_ERROR__);
+                    setAuthLoading(false);
+                };
+                window.addEventListener('ehandbook:firebase-ready', handleReady);
+                window.addEventListener('ehandbook:firebase-error', handleError);
+                const timeout = setTimeout(() => {
+                    if (!window.__EHANDBOOK_FIREBASE_READY__ || !window.firebaseServices?.auth) {
+                        console.warn('Firebase services were not ready after timeout');
+                        setAuthLoading(false);
+                    }
+                }, 15000);
+                return () => {
+                    clearTimeout(timeout);
+                    window.removeEventListener('ehandbook:firebase-ready', handleReady);
+                    window.removeEventListener('ehandbook:firebase-error', handleError);
+                };
             }, []);
 
             useEffect(() => {
@@ -2690,7 +2750,10 @@ function App() {
             }, [advancedPrefs]);
 
             useEffect(() => {
-                if (!window.firebaseServices || !auth) { setAuthLoading(false); return; }
+                if (!window.firebaseServices || !auth || !db || !onAuthStateChanged) {
+                    console.warn('Firebase Auth services not ready yet; waiting for ready event...', { firebaseReadyTick });
+                    return;
+                }
                 let mounted = true;
                 let profileUnsubscribe = null;
                 const cleanupProfile = () => {
@@ -2702,6 +2765,9 @@ function App() {
                 const resolveSignedOut = () => {
                     if (!mounted) return;
                     cleanupProfile();
+                    window.__EHANDBOOK_CLEAR_REDIRECT_PENDING__?.();
+                    safeStorageRemove('ehandbook_google_redirect_pending');
+                    safeStorageRemove('ehandbook_google_redirect_started_at');
                     setUser(null);
                     setItems([]); setIsAdmin(false); setShowNameSetup(false); setUserProfile(null); setTimetableConfig({ timeSlots: DEFAULT_TIME_SLOTS, schedule: DEFAULT_SCHEDULE }); setSubjects(DEFAULT_SUBJECTS); setAuthLoading(false);
                 };
@@ -2713,7 +2779,9 @@ function App() {
                         const d = new Date(); d.setDate(d.getDate() + (d.getDay()===5?3:d.getDay()===6?2:1));
                         setDueDate(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`); 
                         setIsAdmin(currentUser.email === ADMIN_EMAIL);
+                        window.__EHANDBOOK_CLEAR_REDIRECT_PENDING__?.();
                         safeStorageRemove('ehandbook_google_redirect_pending');
+                        safeStorageRemove('ehandbook_google_redirect_started_at');
 
                         profileUnsubscribe = onSnapshot(doc(db, "users_public", currentUser.uid), async (docSnap) => {
                             try {
@@ -2757,7 +2825,9 @@ function App() {
                             await resolveSignedInUser(currentUser);
                         } else {
                             const redirectPending = safeStorageGet('ehandbook_google_redirect_pending', '') === '1';
-                            if (redirectPending && redirectPromise) {
+                            const startedAt = Number(safeStorageGet('ehandbook_google_redirect_started_at', '0') || 0);
+                            const redirectStillFresh = redirectPending && startedAt && (Date.now() - startedAt < 2 * 60 * 1000);
+                            if (redirectStillFresh && redirectPromise) {
                                 redirectPromise.finally(() => {
                                     if (!auth.currentUser) resolveSignedOut();
                                 });
@@ -2768,7 +2838,7 @@ function App() {
                     } catch (e) { console.warn("Auth err:", e); setAuthLoading(false); }
                 });
                 return () => { mounted = false; clearTimeout(authFallbackTimer); unsubscribe(); cleanupProfile(); };
-            }, []);
+            }, [firebaseReadyTick]);
 
             useEffect(() => {
                 if(!user || !db) return;
@@ -3988,6 +4058,6 @@ function App() {
             }
         }
     </script>
-<!-- VERSION_CHECK: v1.8.14-google-redirect-resolver-fix | no-v1.8.11-marker | generated-after-user-audit -->
+<!-- VERSION_CHECK: v1.8.17-auth-only-stable-fix | based-on-uploaded-v1.8.14 | auth-only-changes | original-functions-preserved -->
 </body>
 </html>
