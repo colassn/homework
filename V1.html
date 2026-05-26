@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-HK">
 <head>
-    <!-- 電子手冊 Pro v1.8.18 Google Login Stable：保留所有設定功能，重整 Google 登入流程 -->
+    <!-- 電子手冊 Pro v1.8.19 Google Login Callback Fix：保留所有設定功能，修復 Google 選帳戶後仍停留登入頁 -->
 
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-8VCPLTE2QT"></script>
     <script>
@@ -20,8 +20,8 @@
     <meta name="apple-mobile-web-app-title" content="電子手冊">
     
     <title>電子手冊 Pro</title>
-    <meta name="ehandbook-version" content="v1.8.18-google-login-stable">
-    <script>window.__EHANDBOOK_VERSION__ = "v1.8.18-google-login-stable"; console.log("電子手冊 Pro v1.8.18-google-login-stable loaded");</script>
+    <meta name="ehandbook-version" content="v1.8.19-google-login-callback-fix">
+    <script>window.__EHANDBOOK_VERSION__ = "v1.8.19-google-login-callback-fix"; console.log("電子手冊 Pro v1.8.19-google-login-callback-fix loaded");</script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js" crossorigin></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js" crossorigin></script>
@@ -151,9 +151,31 @@
         import { getAuth, initializeAuth, indexedDBLocalPersistence, browserLocalPersistence, browserSessionPersistence, inMemoryPersistence, browserPopupRedirectResolver, setPersistence, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs, setDoc, arrayUnion, arrayRemove, getDoc, writeBatch, limit, startAfter } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
+        const DEFAULT_FIREBASE_AUTH_DOMAIN = "recordhwv2.firebaseapp.com";
+        const getStableFirebaseAuthDomain = () => {
+            try {
+                const manualOverride = String(window.__EHANDBOOK_AUTH_DOMAIN_OVERRIDE__ || '').trim();
+                if (manualOverride) return manualOverride;
+
+                const host = window.location.hostname;
+                const protocol = window.location.protocol;
+                if (!host || protocol === 'file:') return DEFAULT_FIREBASE_AUTH_DOMAIN;
+                if (host === 'localhost' || host === '127.0.0.1' || host === '[::1]') return DEFAULT_FIREBASE_AUTH_DOMAIN;
+
+                // Firebase 官方建議：如果網站在 web.app / Firebase Hosting 自訂網域，authDomain 要盡量同源。
+                // 最常見出事位是網站放在 recordhwv2.web.app，但 config 仍然用 recordhwv2.firebaseapp.com。
+                if (host.endsWith('.web.app') || host.endsWith('.firebaseapp.com')) return host;
+
+                // 非 Firebase Hosting 的自訂網域不能單靠前端修復 Redirect；保留 firebaseapp.com，並優先用 Popup 登入。
+                return DEFAULT_FIREBASE_AUTH_DOMAIN;
+            } catch (e) {
+                return DEFAULT_FIREBASE_AUTH_DOMAIN;
+            }
+        };
+
         const firebaseConfig = {
             apiKey: "AIzaSyB3gYuwnyoTUwO7PFh4Nuue-Ud8GTruuRk",
-            authDomain: "recordhwv2.firebaseapp.com",
+            authDomain: getStableFirebaseAuthDomain(),
             projectId: "recordhwv2",
             storageBucket: "recordhwv2.firebasestorage.app",
             messagingSenderId: "599261009391",
@@ -166,7 +188,7 @@
             let auth;
             try {
                 auth = initializeAuth(app, {
-                    persistence: [indexedDBLocalPersistence, browserLocalPersistence, browserSessionPersistence, inMemoryPersistence],
+                    persistence: [browserLocalPersistence, browserSessionPersistence, indexedDBLocalPersistence, inMemoryPersistence],
                     popupRedirectResolver: browserPopupRedirectResolver
                 });
             } catch (authInitError) {
@@ -185,6 +207,17 @@
 
             try { auth.useDeviceLanguage && auth.useDeviceLanguage(); } catch(e) {}
 
+            window.__EHANDBOOK_AUTH_DEBUG__ = {
+                version: 'v1.8.19-google-login-callback-fix',
+                host: window.location.hostname || '',
+                protocol: window.location.protocol || '',
+                authDomainUsed: firebaseConfig.authDomain,
+                redirectStartedAt: null,
+                redirectResultState: 'not-started',
+                lastErrorCode: '',
+                lastErrorMessage: ''
+            };
+
             window.__EHANDBOOK_REDIRECT_PENDING__ = false;
             window.__EHANDBOOK_REDIRECT_RESULT__ = null;
             window.__EHANDBOOK_REDIRECT_ERROR__ = null;
@@ -194,40 +227,64 @@
                 window.__EHANDBOOK_REDIRECT_PENDING__ = false;
                 try { localStorage.removeItem('ehandbook_google_redirect_pending'); } catch(e) {}
                 try { localStorage.removeItem('ehandbook_google_redirect_started_at'); } catch(e) {}
+                try { sessionStorage.removeItem('ehandbook_google_redirect_pending'); } catch(e) {}
+                try { sessionStorage.removeItem('ehandbook_google_redirect_started_at'); } catch(e) {}
             };
 
             window.__EHANDBOOK_MARK_REDIRECT_PENDING__ = () => {
+                const nowText = String(Date.now());
                 window.__EHANDBOOK_REDIRECT_PENDING__ = true;
+                window.__EHANDBOOK_AUTH_DEBUG__.redirectStartedAt = nowText;
                 try { localStorage.setItem('ehandbook_google_redirect_pending', '1'); } catch(e) {}
-                try { localStorage.setItem('ehandbook_google_redirect_started_at', String(Date.now())); } catch(e) {}
+                try { localStorage.setItem('ehandbook_google_redirect_started_at', nowText); } catch(e) {}
+                try { sessionStorage.setItem('ehandbook_google_redirect_pending', '1'); } catch(e) {}
+                try { sessionStorage.setItem('ehandbook_google_redirect_started_at', nowText); } catch(e) {}
+            };
+
+            const rememberAuthError = (error) => {
+                try {
+                    window.__EHANDBOOK_AUTH_DEBUG__.lastErrorCode = error?.code || '';
+                    window.__EHANDBOOK_AUTH_DEBUG__.lastErrorMessage = error?.message || String(error || '');
+                } catch(e) {}
             };
 
             window.__EHANDBOOK_AUTH_PERSISTENCE_READY__ = setPersistence(auth, browserLocalPersistence).catch((persistenceError) => {
+                rememberAuthError(persistenceError);
                 console.warn('Auth persistence fallback warning:', persistenceError);
                 return null;
             });
 
-            window.__EHANDBOOK_REDIRECT_RESULT_PROMISE__ = getRedirectResult(auth, browserPopupRedirectResolver)
-                .then((result) => {
+            window.__EHANDBOOK_REDIRECT_RESULT_PROMISE__ = (async () => {
+                try {
+                    window.__EHANDBOOK_AUTH_DEBUG__.redirectResultState = 'waiting-persistence';
+                    await (window.__EHANDBOOK_AUTH_PERSISTENCE_READY__ || Promise.resolve());
+                    window.__EHANDBOOK_AUTH_DEBUG__.redirectResultState = 'checking-redirect-result';
+                    const result = await getRedirectResult(auth, browserPopupRedirectResolver);
                     window.__EHANDBOOK_REDIRECT_RESULT_SETTLED__ = true;
                     window.__EHANDBOOK_REDIRECT_RESULT__ = result || null;
+                    window.__EHANDBOOK_AUTH_DEBUG__.redirectResultState = result?.user ? 'signed-in' : 'empty-result';
                     if (result && result.user) {
                         console.log('Google redirect sign-in resolved:', result.user.email);
                         window.__EHANDBOOK_CLEAR_REDIRECT_PENDING__();
+                    } else if (auth.currentUser) {
+                        window.__EHANDBOOK_AUTH_DEBUG__.redirectResultState = 'current-user-found';
+                        window.__EHANDBOOK_CLEAR_REDIRECT_PENDING__();
                     } else {
-                        const startedAt = Number(localStorage.getItem('ehandbook_google_redirect_started_at') || 0);
+                        const startedAt = Number(localStorage.getItem('ehandbook_google_redirect_started_at') || sessionStorage.getItem('ehandbook_google_redirect_started_at') || 0);
                         const isStale = !startedAt || (Date.now() - startedAt > 5 * 60 * 1000);
                         if (isStale) window.__EHANDBOOK_CLEAR_REDIRECT_PENDING__();
                     }
                     return result;
-                })
-                .catch((error) => {
+                } catch (error) {
                     window.__EHANDBOOK_REDIRECT_RESULT_SETTLED__ = true;
                     window.__EHANDBOOK_REDIRECT_ERROR__ = error;
+                    window.__EHANDBOOK_AUTH_DEBUG__.redirectResultState = 'error';
+                    rememberAuthError(error);
                     window.__EHANDBOOK_CLEAR_REDIRECT_PENDING__();
                     console.warn('Google redirect result failed:', error);
                     return null;
-                });
+                }
+            })();
 
             window.firebaseServices = { 
                 auth, db, googleProvider, createGoogleProvider,
@@ -279,9 +336,10 @@
         };
 
         const getBrowserLoginModeText = () => {
-            if (isInAppBrowser()) return '偵測到內置瀏覽器，Google 登入會自動改用跳轉方式；如仍失敗，請用 Chrome / Safari 開啟。';
-            if (isIPadLike() || isSafariLike() || isStandaloneMode()) return '此裝置會使用較穩定的跳轉式 Google 登入。';
-            return '此瀏覽器支援標準登入流程。';
+            if (isInAppBrowser()) return '偵測到內置瀏覽器，會改用跳轉登入；如仍失敗，請用 Chrome / Safari 正常瀏覽器開啟。';
+            if (isStandaloneMode()) return '目前像是安裝版 / PWA，會使用跳轉登入；如返回後仍在登入頁，請用瀏覽器開啟網站。';
+            if (isIPadLike() || isSafariLike()) return '此裝置會先用彈出式登入；如果瀏覽器阻擋，才會改用跳轉登入。';
+            return '此瀏覽器會先使用彈出式 Google 登入，失敗時再自動改用跳轉登入。';
         };
 
         const getFriendlyAuthError = (error, mode = 'login') => {
@@ -293,12 +351,12 @@
             if (code === 'auth/weak-password') return '密碼太短或太簡單，請設定至少 6 個字元。';
             if (code === 'auth/too-many-requests') return '登入嘗試太多次，Firebase 暫時保護帳號，請稍後再試或重設密碼。';
             if (code === 'auth/network-request-failed') return '網絡連線不穩定，請檢查網絡後再試。';
-            if (code === 'auth/popup-blocked') return '瀏覽器阻擋了登入視窗，請再按一次 Google 登入，系統會改用跳轉登入。';
+            if (code === 'auth/popup-blocked') return '瀏覽器阻擋了登入視窗，請再按一次 Google 登入，系統會自動改用跳轉登入。';
             if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') return '你已取消 Google 登入，請再按一次「使用 Google 繼續」。';
             if (code === 'auth/operation-not-supported-in-this-environment' || code === 'auth/web-storage-unsupported') return '這個瀏覽器不支援彈出式登入，請用 Chrome / Safari 開啟，或再按一次讓系統改用跳轉登入。';
             if (code === 'auth/unauthorized-domain') return '此網站網域未加入 Firebase 授權網域，請管理員到 Firebase Authentication > Settings > Authorized domains 加入目前網址。';
             if (code === 'auth/operation-not-allowed') return 'Firebase 尚未開啟 Google 或 Email 登入方式，請管理員到 Firebase Authentication 啟用。';
-            if (code === 'auth/argument-error') return 'Google 登入參數錯誤。已重整登入流程；如仍出現，請確認此檔案是 v1.8.18 版本並重新部署。';
+            if (code === 'auth/argument-error') return 'Google 登入參數錯誤。已改為 v1.8.19 登入流程；請重新部署此檔案並清除快取。';
             return (mode === 'reset' ? '重設密碼失敗：' : mode === 'register' ? '註冊失敗：' : '登入失敗：') + (error?.message || code || '請稍後再試');
         };
 
@@ -517,10 +575,10 @@
             const browserHint = getBrowserLoginModeText();
             const inAppBrowser = isInAppBrowser();
 
-            const shouldUseRedirectLogin = () => isIPadLike() || isSafariLike() || isStandaloneMode() || isInAppBrowser();
+            const mustUseRedirectLogin = () => isStandaloneMode() || isInAppBrowser();
             const shouldFallbackToRedirect = (error) => {
                 const code = error?.code || '';
-                return ['auth/popup-blocked', 'auth/operation-not-supported-in-this-environment', 'auth/web-storage-unsupported', 'auth/argument-error'].includes(code);
+                return ['auth/popup-blocked', 'auth/operation-not-supported-in-this-environment', 'auth/web-storage-unsupported', 'auth/argument-error', 'auth/cancelled-popup-request'].includes(code);
             };
             const getFreshGoogleProvider = () => {
                 try {
@@ -536,6 +594,7 @@
                 const provider = getFreshGoogleProvider();
                 if (!provider) throw new Error('Google Provider 尚未準備好');
                 window.__EHANDBOOK_MARK_REDIRECT_PENDING__?.();
+                try { window.__EHANDBOOK_AUTH_DEBUG__.redirectResultState = 'redirect-started'; } catch(e) {}
                 await signInWithRedirect(auth, provider, browserPopupRedirectResolver);
             };
 
@@ -555,6 +614,8 @@
                         triggerAlert('Google 登入成功，正在進入主頁…');
                     } else if (wasRedirecting && window.__EHANDBOOK_REDIRECT_ERROR__) {
                         triggerAlert(getFriendlyAuthError(window.__EHANDBOOK_REDIRECT_ERROR__, 'login'), 'error');
+                    } else if (wasRedirecting && window.__EHANDBOOK_REDIRECT_RESULT_SETTLED__) {
+                        triggerAlert('Google 已返回，但未取得登入狀態。請再按一次 Google 登入；如仍失敗，請檢查 Firebase 授權網域。', 'error');
                     }
                 }).finally(() => {
                     if (!cancelled && !auth.currentUser) setLoading(false);
@@ -568,16 +629,23 @@
                     setLoading(true);
                     await (window.__EHANDBOOK_AUTH_PERSISTENCE_READY__ || Promise.resolve());
 
-                    if (shouldUseRedirectLogin()) {
+                    if (mustUseRedirectLogin()) {
                         await startRedirectLogin();
                         return;
                     }
 
+                    // v1.8.19：先用 Popup。這可以避開部分 Safari / iPad Redirect 回來後讀不到登入暫存的問題。
                     window.__EHANDBOOK_CLEAR_REDIRECT_PENDING__?.();
                     const provider = getFreshGoogleProvider();
                     const credential = await signInWithPopup(auth, provider, browserPopupRedirectResolver);
                     if (credential?.user) {
+                        window.__EHANDBOOK_CLEAR_REDIRECT_PENDING__?.();
                         triggerAlert('Google 登入成功，正在進入主頁…');
+                    } else if (auth.currentUser) {
+                        window.__EHANDBOOK_CLEAR_REDIRECT_PENDING__?.();
+                        triggerAlert('Google 登入成功，正在進入主頁…');
+                    } else {
+                        throw { code: 'auth/no-user-after-popup', message: 'Google 登入完成，但系統未取得使用者狀態。' };
                     }
                 } catch (error) {
                     console.warn('Google login failed:', error);
@@ -710,7 +778,8 @@
                                             {loading ? <Icon name="loader" className="w-5 h-5 animate-spin" /> : <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />} 使用 Google 繼續 
                                         </button>
                                         <div className="mt-4 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-100 dark:border-slate-700 p-3 text-xs font-bold text-slate-500 dark:text-slate-400 leading-relaxed">
-                                            Email 密碼登入失敗時，請先確認帳號是否已註冊；如果這個帳號以前是用 Google 建立，請用 Google 登入。
+                                            Email 密碼登入失敗時，請先確認帳號是否已註冊；如果這個帳號以前是用 Google 建立，請用 Google 登入。<br/>
+                                            <span className="text-[10px] opacity-70">登入修復版：v1.8.19｜Auth Domain：{window.__EHANDBOOK_AUTH_DEBUG__?.authDomainUsed || 'checking'}</span>
                                         </div>
                                         <div className="mt-8 text-center"> 
                                             <p className="text-slate-500 text-sm font-medium">{isLogin ? '尚未擁有帳號？' : '已經有帳號了？'}  
@@ -2748,7 +2817,7 @@ function App() {
                 const loadingScreen = document.getElementById('loading-screen');
                 window.__EHANDBOOK_RENDERED__ = true;
                 if (loadingScreen) { loadingScreen.classList.add('hidden-loader'); setTimeout(() => loadingScreen.remove(), 500); }
-                // v1.8.18: 已保留全站功能；重整 Google Popup / Redirect 流程，避免 Redirect 返回後卡在登入頁。
+                // v1.8.19: 已保留全站功能；改為 Google Popup 優先，並修復 Redirect callback / authDomain 判斷。
             }, []);
 
             useEffect(() => {
@@ -4108,6 +4177,6 @@ function App() {
             }
         }
     </script>
-<!-- VERSION_CHECK: v1.8.18-google-login-stable | based-on-uploaded-v1.8.17 | google-auth-flow-rebuilt | original-functions-preserved -->
+<!-- VERSION_CHECK: v1.8.19-google-login-callback-fix | based-on-uploaded-v1.8.17 | google-auth-flow-rebuilt | original-functions-preserved -->
 </body>
 </html>
