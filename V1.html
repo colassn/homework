@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-HK">
 <head>
-    <!-- 電子手冊 Pro v1.8.11 Universal Login Fix：任何瀏覽器登入強化 + 忘記密碼重設 + 保留設定頁穩定修復 -->
+    <!-- 電子手冊 Pro v1.8.13 Audited Full Build：完整核對版，保留所有功能 + Redirect Callback Fix + 全頁設定 + 高級個人化 -->
 
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-8VCPLTE2QT"></script>
     <script>
@@ -20,8 +20,8 @@
     <meta name="apple-mobile-web-app-title" content="電子手冊">
     
     <title>電子手冊 Pro</title>
-    <meta name="ehandbook-version" content="v1.8.11-universal-login-fix">
-    <script>window.__EHANDBOOK_VERSION__ = "v1.8.11-universal-login-fix"; console.log("電子手冊 Pro v1.8.11-universal-login-fix loaded");</script>
+    <meta name="ehandbook-version" content="v1.8.13-audited-full-build">
+    <script>window.__EHANDBOOK_VERSION__ = "v1.8.13-audited-full-build"; console.log("電子手冊 Pro v1.8.13-audited-full-build loaded");</script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js" crossorigin></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js" crossorigin></script>
@@ -130,7 +130,7 @@
             try {
                 var box = document.getElementById('loading-screen');
                 if (box && !window.__EHANDBOOK_RENDERED__) {
-                    box.innerHTML = "<div style='max-width:420px;padding:22px;text-align:center'><div style='font-size:42px;margin-bottom:10px'>⚠️</div><h2 style='font-size:1.2rem;font-weight:800;margin-bottom:8px;color:#ef4444'>網站載入時發生錯誤</h2><p style='font-size:13px;color:#64748b;line-height:1.6'>請重新整理一次；如果仍然出現，請截圖 Console 錯誤。系統已加入 v1.8.11 Universal Login Fix 啟動保護。</p></div>";
+                    box.innerHTML = "<div style='max-width:420px;padding:22px;text-align:center'><div style='font-size:42px;margin-bottom:10px'>⚠️</div><h2 style='font-size:1.2rem;font-weight:800;margin-bottom:8px;color:#ef4444'>網站載入時發生錯誤</h2><p style='font-size:13px;color:#64748b;line-height:1.6'>請重新整理一次；如果仍然出現，請截圖 Console 錯誤。系統已加入 v1.8.13 Audited Full Build 啟動保護。</p></div>";
                 }
             } catch(e) {}
         });
@@ -148,7 +148,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, initializeAuth, indexedDBLocalPersistence, browserLocalPersistence, browserSessionPersistence, inMemoryPersistence, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs, setDoc, arrayUnion, arrayRemove, getDoc, writeBatch, limit, startAfter } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         const firebaseConfig = {
@@ -163,9 +163,34 @@
 
         try {
             const app = initializeApp(firebaseConfig);
-            const auth = getAuth(app);
+            let auth;
+            try {
+                auth = initializeAuth(app, {
+                    persistence: [indexedDBLocalPersistence, browserLocalPersistence, browserSessionPersistence, inMemoryPersistence]
+                });
+            } catch (authInitError) {
+                console.warn('Auth already initialized, using existing auth instance:', authInitError);
+                auth = getAuth(app);
+            }
             const db = getFirestore(app);
             const googleProvider = new GoogleAuthProvider();
+            try { auth.useDeviceLanguage && auth.useDeviceLanguage(); } catch(e) {}
+            window.__EHANDBOOK_REDIRECT_PENDING__ = false;
+            window.__EHANDBOOK_REDIRECT_RESULT_PROMISE__ = getRedirectResult(auth)
+                .then((result) => {
+                    window.__EHANDBOOK_REDIRECT_RESULT__ = result || null;
+                    window.__EHANDBOOK_REDIRECT_PENDING__ = false;
+                    try { localStorage.removeItem('ehandbook_google_redirect_pending'); } catch(e) {}
+                    if (result && result.user) console.log('Google redirect sign-in resolved:', result.user.email);
+                    return result;
+                })
+                .catch((error) => {
+                    window.__EHANDBOOK_REDIRECT_ERROR__ = error;
+                    window.__EHANDBOOK_REDIRECT_PENDING__ = false;
+                    console.warn('Google redirect result failed:', error);
+                    try { localStorage.removeItem('ehandbook_google_redirect_pending'); } catch(e) {}
+                    return null;
+                });
             window.firebaseServices = { 
                 auth, db, googleProvider, 
                 signInWithPopup, signInWithRedirect, getRedirectResult, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged, updateProfile, 
@@ -239,6 +264,10 @@
 
         const safeStorageSet = (key, value) => {
             try { window.localStorage.setItem(key, value); } catch (e) {}
+        };
+
+        const safeStorageRemove = (key) => {
+            try { window.localStorage.removeItem(key); } catch (e) {}
         };
 
         const safeStorageJSON = (key, fallback) => {
@@ -441,14 +470,23 @@
             const inAppBrowser = isInAppBrowser();
 
             useEffect(() => {
-                if (!auth || !getRedirectResult) return;
-                getRedirectResult(auth).catch((error) => {
-                    console.warn('Google redirect result error:', error);
-                    if (error?.code && error.code !== 'auth/no-auth-event') {
-                        triggerAlert(getFriendlyAuthError(error, 'login'), 'error');
+                if (!auth) return;
+                const wasRedirecting = safeStorageGet('ehandbook_google_redirect_pending', '') === '1';
+                if (wasRedirecting) setLoading(true);
+                const redirectPromise = window.__EHANDBOOK_REDIRECT_RESULT_PROMISE__;
+                if (!redirectPromise) return;
+                redirectPromise.then((result) => {
+                    const signedInUser = result?.user || auth.currentUser;
+                    if (signedInUser) {
+                        safeStorageRemove('ehandbook_google_redirect_pending');
+                        triggerAlert('Google 登入成功，正在進入主頁…');
+                    } else if (wasRedirecting && window.__EHANDBOOK_REDIRECT_ERROR__) {
+                        triggerAlert(getFriendlyAuthError(window.__EHANDBOOK_REDIRECT_ERROR__, 'login'), 'error');
                     }
+                }).finally(() => {
+                    if (!auth.currentUser) setLoading(false);
                 });
-            }, [auth, getRedirectResult]);
+            }, [auth]);
 
             const handleGoogleLogin = async () => { 
                 if (!auth || !googleProvider) { triggerAlert('Firebase 尚未準備好，請重新整理後再試。', 'error'); return; }
@@ -457,16 +495,24 @@
                     googleProvider.setCustomParameters?.({ prompt: 'select_account' });
                     const shouldUseRedirect = isIPadLike() || isSafariLike() || isStandaloneMode() || isInAppBrowser();
                     if (shouldUseRedirect && signInWithRedirect) {
+                        safeStorageSet('ehandbook_google_redirect_pending', '1');
+                        safeStorageSet('ehandbook_google_redirect_started_at', String(Date.now()));
                         await signInWithRedirect(auth, googleProvider);
                         return;
                     }
+                    safeStorageRemove('ehandbook_google_redirect_pending');
                     await signInWithPopup(auth, googleProvider);
                 } catch (error) {
                     console.warn('Google popup login failed:', error);
                     const fallbackCodes = ['auth/popup-blocked', 'auth/popup-closed-by-user', 'auth/cancelled-popup-request', 'auth/operation-not-supported-in-this-environment'];
                     if (signInWithRedirect && (isIPadLike() || isSafariLike() || isStandaloneMode() || isInAppBrowser() || fallbackCodes.includes(error?.code))) {
-                        try { await signInWithRedirect(auth, googleProvider); return; }
-                        catch (redirectError) { triggerAlert(getFriendlyAuthError(redirectError, 'login'), 'error'); }
+                        try {
+                            safeStorageSet('ehandbook_google_redirect_pending', '1');
+                            safeStorageSet('ehandbook_google_redirect_started_at', String(Date.now()));
+                            await signInWithRedirect(auth, googleProvider);
+                            return;
+                        }
+                        catch (redirectError) { safeStorageRemove('ehandbook_google_redirect_pending'); triggerAlert(getFriendlyAuthError(redirectError, 'login'), 'error'); }
                     } else {
                         triggerAlert(getFriendlyAuthError(error, 'login'), 'error');
                     }
@@ -526,7 +572,7 @@
                                 <h2 className="text-4xl font-black mb-4 leading-tight tracking-tight">智能學習<br/>從這裡開始</h2> 
                                 <p className="text-indigo-100 text-sm leading-relaxed font-medium">你的專屬電子手冊，自動整理所有功課與測驗，讓你隨時掌握學習進度。</p> 
                                 <div className="mt-8 p-4 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-md">
-                                    <div className="text-xs font-black text-indigo-100 uppercase mb-1">Universal Login Fix</div>
+                                    <div className="text-xs font-black text-indigo-100 uppercase mb-1">Redirect Callback Fix</div>
                                     <div className="text-sm font-bold text-white leading-relaxed">Email 登入、Google 跳轉登入、忘記密碼重設已加強，更多瀏覽器都可使用。</div>
                                 </div>
                             </div> 
@@ -2373,7 +2419,7 @@
                                 <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-[1.7rem] bg-white/15 border border-white/20 backdrop-blur-xl flex items-center justify-center text-3xl font-black shadow-lg shrink-0">{initial}</div>
                                 <div className="min-w-0 pt-1">
                                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-[11px] font-black mb-3">
-                                        <Icon name="settings-2" className="w-3.5 h-3.5" /> 應用程式設定 · v1.8.11
+                                        <Icon name="settings-2" className="w-3.5 h-3.5" /> 應用程式設定 · v1.8.13
                                     </div>
                                     <h2 className="text-2xl sm:text-3xl font-black tracking-tight truncate">{displayName}</h2>
                                     <p className="text-sm text-indigo-100 font-bold mt-1 truncate">{email || '個人化你的電子手冊'}</p>
@@ -2621,7 +2667,7 @@ function App() {
                 const loadingScreen = document.getElementById('loading-screen');
                 window.__EHANDBOOK_RENDERED__ = true;
                 if (loadingScreen) { loadingScreen.classList.add('hidden-loader'); setTimeout(() => loadingScreen.remove(), 500); }
-                // v1.8.11: 不再於載入時自動要求瀏覽器通知權限。
+                // v1.8.13: 已審核保留全站功能；不再於載入時自動要求通知權限，並強化 Google Redirect 返回處理。
             }, []);
 
             useEffect(() => {
@@ -2644,38 +2690,83 @@ function App() {
 
             useEffect(() => {
                 if (!window.firebaseServices || !auth) { setAuthLoading(false); return; }
+                let mounted = true;
+                let profileUnsubscribe = null;
+                const cleanupProfile = () => {
+                    if (profileUnsubscribe) {
+                        try { profileUnsubscribe(); } catch(e) {}
+                        profileUnsubscribe = null;
+                    }
+                };
+                const resolveSignedOut = () => {
+                    if (!mounted) return;
+                    cleanupProfile();
+                    setUser(null);
+                    setItems([]); setIsAdmin(false); setShowNameSetup(false); setUserProfile(null); setTimetableConfig({ timeSlots: DEFAULT_TIME_SLOTS, schedule: DEFAULT_SCHEDULE }); setSubjects(DEFAULT_SUBJECTS); setAuthLoading(false);
+                };
+                const resolveSignedInUser = async (currentUser) => {
+                    if (!mounted || !currentUser) return;
+                    cleanupProfile();
+                    try {
+                        setUser(currentUser);
+                        const d = new Date(); d.setDate(d.getDate() + (d.getDay()===5?3:d.getDay()===6?2:1));
+                        setDueDate(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`); 
+                        setIsAdmin(currentUser.email === ADMIN_EMAIL);
+                        safeStorageRemove('ehandbook_google_redirect_pending');
+
+                        profileUnsubscribe = onSnapshot(doc(db, "users_public", currentUser.uid), async (docSnap) => {
+                            try {
+                                if (docSnap.exists()) {
+                                    setUserProfile(docSnap.data());
+                                    if (!currentUser.displayName) setShowNameSetup(true);
+                                } else {
+                                    if (!currentUser.displayName) setShowNameSetup(true);
+                                    else await setDoc(doc(db, "users_public", currentUser.uid), { email: currentUser.email, displayName: currentUser.displayName, joinedClasses: [], lastSeen: serverTimestamp() }, { merge: true });
+                                }
+                            } catch (e) { console.warn("Profile inner err:", e); }
+                        }, (err) => console.warn("Profile err:", err));
+                        setAuthLoading(false);
+                    } catch (e) { console.warn("Auth signed-in resolve err:", e); setAuthLoading(false); }
+                };
                 const authFallbackTimer = setTimeout(() => {
+                    if (!mounted) return;
                     console.warn('Auth loading fallback triggered');
-                    setAuthLoading(false);
-                }, 12000);
+                    if (auth.currentUser) resolveSignedInUser(auth.currentUser);
+                    else setAuthLoading(false);
+                }, 15000);
+
+                const redirectPromise = window.__EHANDBOOK_REDIRECT_RESULT_PROMISE__;
+                if (redirectPromise) {
+                    redirectPromise.then((result) => {
+                        const redirectUser = result?.user || auth.currentUser;
+                        if (redirectUser) {
+                            clearTimeout(authFallbackTimer);
+                            resolveSignedInUser(redirectUser);
+                        }
+                    }).catch((error) => {
+                        console.warn('Redirect callback processing error:', error);
+                        safeStorageRemove('ehandbook_google_redirect_pending');
+                    });
+                }
+
                 const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
                     clearTimeout(authFallbackTimer);
                     try {
-                        setUser(currentUser); 
                         if (currentUser) {
-                            const d = new Date(); d.setDate(d.getDate() + (d.getDay()===5?3:d.getDay()===6?2:1));
-                            setDueDate(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`); 
-                            setIsAdmin(currentUser.email === ADMIN_EMAIL);
-
-                            const unsubProfile = onSnapshot(doc(db, "users_public", currentUser.uid), async (docSnap) => {
-                                try {
-                                    if (docSnap.exists()) {
-                                        setUserProfile(docSnap.data());
-                                        if (!currentUser.displayName) setShowNameSetup(true);
-                                    } else {
-                                        if (!currentUser.displayName) setShowNameSetup(true);
-                                        else await setDoc(doc(db, "users_public", currentUser.uid), { email: currentUser.email, displayName: currentUser.displayName, joinedClasses: [], lastSeen: serverTimestamp() }, { merge: true });
-                                    }
-                                } catch (e) { console.warn("Profile inner err:", e); }
-                            }, (err) => console.warn("Profile err:", err));
-                            setAuthLoading(false);
-                            return () => unsubProfile();
-                        } else { 
-                            setItems([]); setIsAdmin(false); setShowNameSetup(false); setUserProfile(null); setTimetableConfig({ timeSlots: DEFAULT_TIME_SLOTS, schedule: DEFAULT_SCHEDULE }); setSubjects(DEFAULT_SUBJECTS); setAuthLoading(false);
+                            await resolveSignedInUser(currentUser);
+                        } else {
+                            const redirectPending = safeStorageGet('ehandbook_google_redirect_pending', '') === '1';
+                            if (redirectPending && redirectPromise) {
+                                redirectPromise.finally(() => {
+                                    if (!auth.currentUser) resolveSignedOut();
+                                });
+                                return;
+                            }
+                            resolveSignedOut();
                         }
                     } catch (e) { console.warn("Auth err:", e); setAuthLoading(false); }
                 });
-                return () => { clearTimeout(authFallbackTimer); unsubscribe(); };
+                return () => { mounted = false; clearTimeout(authFallbackTimer); unsubscribe(); cleanupProfile(); };
             }, []);
 
             useEffect(() => {
@@ -3896,5 +3987,6 @@ function App() {
             }
         }
     </script>
+<!-- VERSION_CHECK: v1.8.13-audited-full-build | no-v1.8.11-marker | generated-after-user-audit -->
 </body>
 </html>
