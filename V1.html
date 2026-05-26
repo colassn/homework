@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-HK">
 <head>
-    <!-- 電子手冊 Pro v1.8.21 Homework Push Sync Fix：保留所有設定功能，修復 Google 選帳戶後仍停留登入頁 -->
+    <!-- 電子手冊 Pro v1.8.24 Class Page Clean + Auto Update Notice：移除班級頁手動加入提示，內建版本更新彈窗 -->
 
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-8VCPLTE2QT"></script>
     <script>
@@ -20,8 +20,8 @@
     <meta name="apple-mobile-web-app-title" content="電子手冊">
     
     <title>電子手冊 Pro</title>
-    <meta name="ehandbook-version" content="v1.8.23-login-claim-delivery">
-    <script>window.__EHANDBOOK_VERSION__ = "v1.8.23-login-claim-delivery"; console.log("電子手冊 Pro v1.8.23-login-claim-delivery loaded");</script>
+    <meta name="ehandbook-version" content="v1.8.24-class-page-clean-update-notice">
+    <script>window.__EHANDBOOK_VERSION__ = "v1.8.24-class-page-clean-update-notice"; console.log("電子手冊 Pro v1.8.24-class-page-clean-update-notice loaded");</script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js" crossorigin></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js" crossorigin></script>
@@ -208,7 +208,7 @@
             try { auth.useDeviceLanguage && auth.useDeviceLanguage(); } catch(e) {}
 
             window.__EHANDBOOK_AUTH_DEBUG__ = {
-                version: 'v1.8.23-login-claim-delivery',
+                version: 'v1.8.24-class-page-clean-update-notice',
                 host: window.location.hostname || '',
                 protocol: window.location.protocol || '',
                 authDomainUsed: firebaseConfig.authDomain,
@@ -305,6 +305,25 @@
     <script type="text/babel">
         const { useState, useEffect, useRef, useMemo } = React;
         const ADMIN_EMAIL = 'chimhinhin@gmail.com'; 
+
+        const CURRENT_RELEASE_NOTICE = {
+            version: window.__EHANDBOOK_VERSION__ || 'v1.8.24-class-page-clean-update-notice',
+            title: '電子手冊已更新',
+            summary: [
+                '班級廣播頁面已清走手動加入提示，只保留功課內容和狀態。',
+                '學生登入後會自動補領應收廣播功課，不需要再按任何加入或補領按鈕。',
+                '新版會內建更新彈窗，之後部署新版時可自動向用戶顯示更新內容。'
+            ].join('\n'),
+            guide: [
+                '管理員照常發放廣播功課。',
+                '學生打開主頁或班級廣播頁即可查看功課。',
+                '下次更新只需要更新程式內的版本資訊，用戶開頁會自動看到更新說明。'
+            ].join('\n'),
+            audience: 'all',
+            popupEnabled: true,
+            publishedAt: '2026-05-26T22:45:00+08:00',
+            source: 'built-in'
+        };
 
         const isIPadLike = () => {
             try {
@@ -2561,7 +2580,7 @@
                                         </div>
                                         <div>
                                             <label className="text-xs font-black text-slate-400 uppercase ml-1">更新咗啲乜</label>
-                                            <textarea rows="4" placeholder={"例如：\n新增通知中心\n新增廣播廣播派發\n修正科目自動預測問題"} value={updateSummaryInput} onChange={e => setUpdateSummaryInput(e.target.value)} className="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-sm focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white transition-all resize-none"></textarea>
+                                            <textarea rows="4" placeholder={"例如：\n新增通知中心\n新增廣播功課自動派發\n修正科目自動預測問題"} value={updateSummaryInput} onChange={e => setUpdateSummaryInput(e.target.value)} className="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-sm focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white transition-all resize-none"></textarea>
                                         </div>
                                         <div>
                                             <label className="text-xs font-black text-slate-400 uppercase ml-1">點樣使用新功能</label>
@@ -2941,17 +2960,34 @@ function App() {
             const joinedClasses = userProfile?.joinedClasses || [];
             const joinedClassesStr = joinedClasses.join(',');
 
+            const activeUpdateNotice = useMemo(() => {
+                const builtInNotice = CURRENT_RELEASE_NOTICE;
+                const configuredVersion = String(systemConfig?.updateVersion || '').trim();
+                const currentVersion = String(builtInNotice.version || '').trim();
+                const configIsForCurrentVersion = configuredVersion && configuredVersion === currentVersion;
+                if (configIsForCurrentVersion && systemConfig?.updatePopupEnabled !== false) {
+                    return {
+                        version: configuredVersion,
+                        title: systemConfig.updateTitle || builtInNotice.title,
+                        summary: systemConfig.updateSummary || builtInNotice.summary,
+                        guide: systemConfig.updateGuide || builtInNotice.guide,
+                        audience: systemConfig.updateAudience || builtInNotice.audience || 'all',
+                        popupEnabled: systemConfig.updatePopupEnabled !== false,
+                        publishedAt: systemConfig.updatePublishedAt || builtInNotice.publishedAt,
+                        source: 'admin'
+                    };
+                }
+                return builtInNotice;
+            }, [systemConfig?.updateVersion, systemConfig?.updateTitle, systemConfig?.updateSummary, systemConfig?.updateGuide, systemConfig?.updateAudience, systemConfig?.updatePopupEnabled, systemConfig?.updatePublishedAt]);
+
             const [isJoinClassOpen, setIsJoinClassOpen] = useState(false);
             const [selectedClassBoard, setSelectedClassBoard] = useState('全校');
             const [publicTasks, setPublicTasks] = useState([]);
             const [syncingPublicIds, setSyncingPublicIds] = useState({});
-            const [autoSyncPublicEnabled, setAutoSyncPublicEnabled] = useState(true);
-            const [syncPreferenceLoaded, setSyncPreferenceLoaded] = useState(true);
             const [itemsLoaded, setItemsLoaded] = useState(false);
             const [publicTasksLoaded, setPublicTasksLoaded] = useState(false);
             const [isNotificationCenterOpen, setIsNotificationCenterOpen] = useState(false);
             const [showUpdateIntro, setShowUpdateIntro] = useState(false);
-            const [showSyncModeIntro, setShowSyncModeIntro] = useState(false);
             const [readNotificationIds, setReadNotificationIds] = useState([]);
             const [predictedSubject, setPredictedSubject] = useState('');
             const [subjectManuallySelected, setSubjectManuallySelected] = useState(false);
@@ -2964,7 +3000,6 @@ function App() {
             const publicTasksRef = useRef([]);
             const autoDeleteRan = useRef(false);
             const autoSyncingPublicIdsRef = useRef(new Set());
-            const syncModeIntroClosedForSessionRef = useRef(false);
 
             useEffect(() => { 
                 const loadingScreen = document.getElementById('loading-screen');
@@ -3134,14 +3169,14 @@ function App() {
             }, [user?.uid]);
 
             useEffect(() => {
-                if (!user?.uid || !systemConfig) { setShowUpdateIntro(false); return; }
-                const enabled = systemConfig.updatePopupEnabled !== false;
-                const version = String(systemConfig.updateVersion || '').trim();
+                if (!user?.uid || !activeUpdateNotice) { setShowUpdateIntro(false); return; }
+                const enabled = activeUpdateNotice.popupEnabled !== false;
+                const version = String(activeUpdateNotice.version || '').trim();
                 if (!enabled || !version) { setShowUpdateIntro(false); return; }
-                const audience = systemConfig.updateAudience || 'students';
+                const audience = activeUpdateNotice.audience || 'all';
                 const audienceMatched = audience === 'all' || (audience === 'admin' && isAdmin) || (audience === 'students' && !isAdmin);
                 if (!audienceMatched) { setShowUpdateIntro(false); return; }
-                const releaseKey = `${version}::${systemConfig.updatePublishedAt || ''}`;
+                const releaseKey = `${activeUpdateNotice.source || 'notice'}::${version}::${activeUpdateNotice.publishedAt || ''}`;
                 let hiddenReleases = [];
                 try {
                     const rawHidden = safeStorageGet(`ehandbook_update_hidden_${user.uid}`, '[]');
@@ -3151,13 +3186,13 @@ function App() {
                     hiddenReleases = [];
                 }
                 setShowUpdateIntro(!hiddenReleases.includes(releaseKey));
-            }, [user?.uid, systemConfig?.updatePopupEnabled, systemConfig?.updateVersion, systemConfig?.updateAudience, systemConfig?.updatePublishedAt, isAdmin]);
+            }, [user?.uid, activeUpdateNotice?.version, activeUpdateNotice?.publishedAt, activeUpdateNotice?.popupEnabled, activeUpdateNotice?.audience, activeUpdateNotice?.source, isAdmin]);
 
             const closeUpdateIntroForNow = () => { setShowUpdateIntro(false); };
 
             const hideUpdateIntroForThisRelease = () => {
-                const version = String(systemConfig?.updateVersion || '').trim();
-                const releaseKey = `${version}::${systemConfig?.updatePublishedAt || ''}`;
+                const version = String(activeUpdateNotice?.version || '').trim();
+                const releaseKey = `${activeUpdateNotice?.source || 'notice'}::${version}::${activeUpdateNotice?.publishedAt || ''}`;
                 if (user?.uid && version) {
                     const key = `ehandbook_update_hidden_${user.uid}`;
                     let old = [];
@@ -3168,21 +3203,6 @@ function App() {
                     safeStorageSet(key, JSON.stringify(Array.from(new Set([...old, releaseKey]))));
                 }
                 setShowUpdateIntro(false);
-            };
-
-            useEffect(() => {
-                setShowSyncModeIntro(false);
-            }, [user?.uid, showUpdateIntro, advancedPrefs.smartHints]);
-
-            const closeSyncModeIntroForNow = () => {
-                syncModeIntroClosedForSessionRef.current = true;
-                setShowSyncModeIntro(false);
-            };
-
-            const hideSyncModeIntroPermanently = () => {
-                if (user?.uid) safeStorageSet(`ehandbook_sync_mode_intro_v183_${user.uid}`, 'hidden');
-                syncModeIntroClosedForSessionRef.current = true;
-                setShowSyncModeIntro(false);
             };
 
             useEffect(() => {
@@ -3204,10 +3224,6 @@ function App() {
                 return () => { unsubItems(); unsubTimetable(); unsubSubjects(); };
             }, [user, db]);
 
-            useEffect(() => {
-                setAutoSyncPublicEnabled(true);
-                setSyncPreferenceLoaded(true);
-            }, [user?.uid]);
 
             useEffect(() => {
                 if (!user || !db || items.length === 0 || autoDeleteRan.current) return; 
@@ -3436,20 +3452,20 @@ function App() {
                     });
                 });
 
-                if (systemConfig?.updatePopupEnabled !== false && systemConfig?.updateVersion) {
-                    const audience = systemConfig.updateAudience || 'students';
+                if (activeUpdateNotice?.popupEnabled !== false && activeUpdateNotice?.version) {
+                    const audience = activeUpdateNotice.audience || 'all';
                     const audienceMatched = audience === 'all' || (audience === 'admin' && isAdmin) || (audience === 'students' && !isAdmin);
                     if (audienceMatched) {
-                        const summary = String(systemConfig.updateSummary || '').split('\n').filter(Boolean)[0] || '系統加入了新功能，打開後會顯示使用提示。';
+                        const summary = String(activeUpdateNotice.summary || '').split('\n').filter(Boolean)[0] || '系統加入了新功能，打開後會顯示使用提示。';
                         notices.push({
-                            id: `release-${systemConfig.updateVersion}`,
+                            id: `release-${activeUpdateNotice.source || 'notice'}-${activeUpdateNotice.version}`,
                             type: 'release',
                             icon: 'sparkles',
-                            title: systemConfig.updateTitle || '系統已更新',
+                            title: activeUpdateNotice.title || '系統已更新',
                             message: summary,
-                            meta: `版本 ${systemConfig.updateVersion}`,
-                            time: formatFirebaseDateTime(systemConfig.updatePublishedAt) || '最近更新',
-                            sortTime: getSortTime(systemConfig.updatePublishedAt) || Date.now(),
+                            meta: `版本 ${activeUpdateNotice.version}`,
+                            time: formatFirebaseDateTime(activeUpdateNotice.publishedAt) || '最近更新',
+                            sortTime: getSortTime(activeUpdateNotice.publishedAt) || Date.now(),
                             accent: 'sky',
                             action: 'release'
                         });
@@ -3522,7 +3538,7 @@ function App() {
                 return notices
                     .sort((a, b) => (b.sortTime || 0) - (a.sortTime || 0))
                     .map(n => ({ ...n, unread: !readNotificationIds.includes(n.id) }));
-            }, [systemConfig?.announcementText, systemConfig?.adminReminders, systemConfig?.updatePopupEnabled, systemConfig?.updateVersion, systemConfig?.updateTitle, systemConfig?.updateSummary, systemConfig?.updateAudience, systemConfig?.updatePublishedAt, isAdmin, visiblePublicTasks, joinedClassesStr, systemClasses, syncedPublicIds, readNotificationIds, items, timetableConfig?.updatedAt, timetableConfig?.updatedBy, autoSyncPublicEnabled, unsyncedPublicTasks]);
+            }, [systemConfig?.announcementText, systemConfig?.adminReminders, activeUpdateNotice?.popupEnabled, activeUpdateNotice?.version, activeUpdateNotice?.title, activeUpdateNotice?.summary, activeUpdateNotice?.audience, activeUpdateNotice?.publishedAt, activeUpdateNotice?.source, isAdmin, visiblePublicTasks, joinedClassesStr, systemClasses, syncedPublicIds, readNotificationIds, items, timetableConfig?.updatedAt, timetableConfig?.updatedBy]);
 
             const unreadNotificationCount = useMemo(() => userNotifications.filter(n => n.unread).length, [userNotifications]);
 
@@ -4069,7 +4085,7 @@ function App() {
                                                     <p className="text-sm text-slate-500 mt-1">全校及已加入班級的廣播任務，會出現在你的個人手冊。</p>
                                                 </div>
                                                 <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
-                                                    <div className="px-4 py-2.5 rounded-xl font-bold text-sm shadow-md flex items-center justify-center gap-2 bg-emerald-500 text-white"><Icon name="check-circle-2" className="w-4 h-4" /> 廣播派發已開</div>
+                                                    <div className="px-4 py-2.5 rounded-xl font-bold text-sm shadow-md flex items-center justify-center gap-2 bg-emerald-500 text-white"><Icon name="check-circle-2" className="w-4 h-4" /> 自動收取已啟用</div>
                                                     <button onClick={() => setIsJoinClassOpen(true)} className={`px-4 py-2.5 rounded-xl font-bold text-sm text-white shadow-md active:scale-95 transition-all flex items-center justify-center gap-2 ${t.bg}`}><Icon name="plus" className="w-4 h-4" /> 加入班級</button>
                                                 </div>
                                             </div>
@@ -4106,8 +4122,8 @@ function App() {
                                                     </div>
                                                 ) : selectedClassTasks.map((task, idx) => {
                                                     const subjectStyle = subjects.find(s => s.name === task.subject)?.color || 'bg-slate-100 text-slate-600 border-slate-200';
-                                                    const isSynced = syncedPublicIds.has(task.id);
-                                                    const isSyncing = syncingPublicIds[task.id];
+                                                    const isDelivered = syncedPublicIds.has(task.id);
+                                                    const isDelivering = syncingPublicIds[task.id];
                                                     const targetCode = task.targetClass || '全校';
                                                     const targetClass = systemClasses.find(c => c.code === targetCode);
                                                     const targetName = targetCode === '全校' ? '全校' : (targetClass?.name || targetCode);
@@ -4120,7 +4136,11 @@ function App() {
                                                                         <div className="flex gap-2 items-center flex-wrap">
                                                                             <span className={`text-[10px] font-bold px-2.5 py-1 rounded border ${subjectStyle}`}>{task.subject || '其他'}</span>
                                                                             <span className="text-[10px] bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 px-2.5 py-1 rounded font-bold">{targetName}</span>
-                                                                            {isSynced && <span className="text-[10px] bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-300 px-2.5 py-1 rounded font-bold">已在個人清單</span>}
+                                                                            {!task.forceExpired && (
+                                                                                <span className={`text-[10px] px-2.5 py-1 rounded font-bold ${isDelivered ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-300' : isDelivering ? 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300' : 'bg-sky-100 dark:bg-sky-900/30 text-sky-600 dark:text-sky-300'}`}>
+                                                                                    {isDelivered ? '已加入個人清單' : isDelivering ? '自動加入中' : '登入後自動加入'}
+                                                                                </span>
+                                                                            )}
                                                                         </div>
                                                                     </div>
                                                                     <p className="font-bold text-lg text-slate-800 dark:text-white mb-3 break-words">{task.description}</p>
@@ -4129,9 +4149,6 @@ function App() {
                                                                         <span className="flex items-center gap-1"><Icon name="calendar-clock" className="w-3.5 h-3.5" /> 交期: {formatDueDate(task.dueDate)}</span>
                                                                         <span>{formatFirebaseDateTime(task.createdAt)}</span>
                                                                     </div>
-                                                                </div>
-                                                                <div className={`w-full sm:w-auto shrink-0 px-4 py-3 rounded-2xl font-black text-xs shadow-sm flex items-center justify-center gap-2 ${isSynced ? 'bg-emerald-500 text-white' : isSyncing ? 'bg-slate-300 text-white' : 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-800'}`}>
-                                                                    {isSynced ? <><Icon name="check-circle-2" className="w-4 h-4" /> 已加入個人清單</> : isSyncing ? <><Icon name="loader" className="w-4 h-4 animate-spin" /> 加入中...</> : <><Icon name="send" className="w-4 h-4" /> 等待加入個人清單</>}
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -4158,34 +4175,34 @@ function App() {
                     {editingItem && <EditModal item={editingItem} onClose={() => setEditingItem(null)} onSave={handleUpdateItem} triggerAlert={triggerAlert} triggerConfirm={triggerConfirm} subjects={subjects} />}
                     <DatePickerModal isOpen={isDueDatePickerOpen} value={dueDate} onSelect={setDueDate} onClose={() => setIsDueDatePickerOpen(false)} title="選擇功課交期" />
                     {quickView.isOpen && <QuickViewModal isOpen={quickView.isOpen} onClose={() => setQuickView({ isOpen: false, title: '', items: [] })} title={quickView.title} items={quickView.items} subjects={subjects} onEdit={setEditingItem} onDelete={deleteItem} isAdmin={isAdmin} userUid={user?.uid} />}
-                    {showUpdateIntro && systemConfig?.updateVersion && (
+                    {showUpdateIntro && activeUpdateNotice?.version && (
                         <div className="fixed inset-0 z-[270] flex items-center justify-center p-4 sm:p-6">
                             <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-md"></div>
                             <div className="relative w-full max-w-[500px] max-h-[86vh] overflow-hidden rounded-[2rem] glass-card bg-white/95 dark:bg-slate-900/95 border border-white/60 dark:border-slate-700 shadow-2xl flex flex-col animate-pop-in">
                                 <div className="relative overflow-hidden p-6 bg-gradient-to-br from-indigo-600 via-violet-600 to-sky-500 text-white">
                                     <div className="absolute -top-12 -right-10 w-36 h-36 rounded-full bg-white/20 blur-2xl"></div>
                                     <div className="relative z-10">
-                                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 border border-white/20 text-xs font-black mb-4"><Icon name="sparkles" className="w-4 h-4" /> 版本 {systemConfig.updateVersion}</div>
-                                        <h3 className="text-2xl font-black tracking-tight">{systemConfig.updateTitle || '電子手冊 Pro 已更新'}</h3>
+                                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 border border-white/20 text-xs font-black mb-4"><Icon name="sparkles" className="w-4 h-4" /> 版本 {activeUpdateNotice.version}</div>
+                                        <h3 className="text-2xl font-black tracking-tight">{activeUpdateNotice.title || '電子手冊 Pro 已更新'}</h3>
                                         <p className="text-sm text-indigo-100 font-bold mt-2">以下係今次更新內容同使用方法。</p>
                                     </div>
                                 </div>
                                 <div className="overflow-y-auto p-5 sm:p-6 space-y-5 scrollbar-hide">
-                                    {systemConfig.updateSummary && (
+                                    {activeUpdateNotice.summary && (
                                         <div className="rounded-3xl bg-slate-50 dark:bg-slate-800/70 border border-slate-100 dark:border-slate-700 p-4">
                                             <div className="flex items-center gap-2 font-black text-slate-800 dark:text-white mb-3"><Icon name="list-checks" className="w-5 h-5 text-indigo-500"/> 更新咗啲乜</div>
                                             <div className="space-y-2">
-                                                {String(systemConfig.updateSummary).split('\n').map((line, idx) => line.trim() && (
+                                                {String(activeUpdateNotice.summary).split('\n').map((line, idx) => line.trim() && (
                                                     <div key={idx} className="flex items-start gap-2 text-sm font-bold text-slate-600 dark:text-slate-300"><span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0"></span><span>{line.trim().replace(/^[-•\d.、)）\s]+/, '')}</span></div>
                                                 ))}
                                             </div>
                                         </div>
                                     )}
-                                    {systemConfig.updateGuide && (
+                                    {activeUpdateNotice.guide && (
                                         <div className="rounded-3xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 p-4">
                                             <div className="flex items-center gap-2 font-black text-emerald-700 dark:text-emerald-300 mb-3"><Icon name="mouse-pointer-click" className="w-5 h-5"/> 點樣使用</div>
                                             <div className="space-y-2">
-                                                {String(systemConfig.updateGuide).split('\n').map((line, idx) => line.trim() && (
+                                                {String(activeUpdateNotice.guide).split('\n').map((line, idx) => line.trim() && (
                                                     <div key={idx} className="flex items-start gap-2 text-sm font-bold text-emerald-800/80 dark:text-emerald-100/90"><span className="w-5 h-5 rounded-full bg-emerald-500 text-white text-[10px] font-black flex items-center justify-center shrink-0 mt-0.5">{idx + 1}</span><span>{line.trim().replace(/^[-•\d.、)）\s]+/, '')}</span></div>
                                                 ))}
                                             </div>
@@ -4200,47 +4217,6 @@ function App() {
                         </div>
                     )}
 
-                    {false && showSyncModeIntro && !showUpdateIntro && (
-                        <div className="fixed inset-0 z-[268] flex items-center justify-center p-4 sm:p-6">
-                            <div className="absolute inset-0 bg-slate-950/55 backdrop-blur-md"></div>
-                            <div className="relative w-full max-w-[520px] max-h-[86vh] overflow-hidden rounded-[2rem] glass-card bg-white/95 dark:bg-slate-900/95 border border-white/60 dark:border-slate-700 shadow-2xl flex flex-col animate-pop-in">
-                                <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-blue-600 to-emerald-500 text-white p-6 sm:p-7">
-                                    <div className="absolute inset-0 opacity-25 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.9),transparent_45%)]"></div>
-                                    <div className="relative">
-                                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 border border-white/20 text-xs font-black mb-4"><Icon name="refresh-cw" className="w-4 h-4" /> 新功能教學</div>
-                                        <h3 className="text-2xl font-black tracking-tight">廣播功課派發模式已升級</h3>
-                                        <p className="text-sm text-indigo-100 font-bold mt-2">管理員發放後會自動加入你的個人手冊。</p>
-                                    </div>
-                                </div>
-                                <div className="overflow-y-auto p-5 sm:p-6 space-y-4 scrollbar-hide">
-                                    <div className="rounded-3xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 p-4">
-                                        <div className="flex items-center gap-2 font-black text-emerald-700 dark:text-emerald-300 mb-2"><Icon name="refresh-cw" className="w-5 h-5"/> 廣播派發</div>
-                                        <p className="text-sm font-bold text-emerald-800/80 dark:text-emerald-100/90 leading-relaxed">管理員發放新廣播功課時，系統會自動幫你加入個人手冊，不需要再手動操作。</p>
-                                    </div>
-                                    <div className="rounded-3xl bg-orange-50 dark:bg-orange-900/20 border border-orange-100 dark:border-orange-800 p-4">
-                                        <div className="flex items-center gap-2 font-black text-orange-700 dark:text-orange-300 mb-2"><Icon name="hand" className="w-5 h-5"/> 無需手動</div>
-                                        <p className="text-sm font-bold text-orange-800/80 dark:text-orange-100/90 leading-relaxed">系統已取消手動操作模式，避免任何學生漏收功課。</p>
-                                    </div>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        <button type="button" onClick={() => handleToggleAutoSyncPublic(true)} className="rounded-3xl p-4 text-left bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-700 transition-all">
-                                            <div className="font-black text-slate-800 dark:text-white flex items-center gap-2"><Icon name="toggle-right" className="w-5 h-5 text-emerald-500"/> 開啟廣播派發</div>
-                                            <div className="text-xs font-bold text-slate-400 mt-1">所有學生自動收到。</div>
-                                        </button>
-                                        <button type="button" onClick={() => handleToggleAutoSyncPublic(false)} className="rounded-3xl p-4 text-left bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 hover:border-orange-300 dark:hover:border-orange-700 transition-all">
-                                            <div className="font-black text-slate-800 dark:text-white flex items-center gap-2"><Icon name="toggle-left" className="w-5 h-5 text-orange-500"/> 保持無需手動</div>
-                                            <div className="text-xs font-bold text-slate-400 mt-1">已取消手動操作。</div>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div className="p-5 border-t border-slate-100 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl">
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        <button onClick={closeSyncModeIntroForNow} className="py-4 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-200 font-black active:scale-[0.98] transition-all">今次關閉，下次再提示</button>
-                                        <button onClick={hideSyncModeIntroPermanently} className="py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black shadow-lg active:scale-[0.98] transition-all">我知道了，不再顯示</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
 
                     {isNotificationCenterOpen && (
                         <div className="fixed inset-0 z-[260] flex items-center justify-center p-4 sm:p-6">
@@ -4334,11 +4310,11 @@ function App() {
             }
         }
     </script>
-<!-- VERSION_CHECK: v1.8.23-login-claim-delivery | based-on-uploaded-v1.8.17 | google-auth-flow-rebuilt | original-functions-preserved -->
-    <!-- ehandbook-build: v1.8.23-login-claim-delivery -->
+<!-- VERSION_CHECK: v1.8.24-class-page-clean-update-notice | based-on-uploaded-v1.8.17 | google-auth-flow-rebuilt | original-functions-preserved -->
+    <!-- ehandbook-build: v1.8.24-class-page-clean-update-notice -->
 </body>
 </html>
 
-<!-- ehandbook_v1.8.21_homework_push_sync: admin one-click homework push; corporate login UI and Google auth preserved. -->
+<!-- ehandbook_v1.8.24_class_page_clean_update_notice: class page manual status removed; built-in update popup added. -->
 
-<!-- v1.8.23-login-claim-delivery: admin broadcast assignments are delivered to target users immediately; manual sync UI removed. -->
+<!-- v1.8.24-class-page-clean-update-notice: students auto-claim broadcast assignments on login; no class page manual join controls. -->
