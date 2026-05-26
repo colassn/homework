@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-HK">
 <head>
-    <!-- 電子手冊 Pro v1.8.19 Google Login Callback Fix：保留所有設定功能，修復 Google 選帳戶後仍停留登入頁 -->
+    <!-- 電子手冊 Pro v1.8.24 Class Page Clean + Auto Update Notice：移除班級頁手動加入提示，內建版本更新彈窗 -->
 
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-8VCPLTE2QT"></script>
     <script>
@@ -20,8 +20,8 @@
     <meta name="apple-mobile-web-app-title" content="電子手冊">
     
     <title>電子手冊 Pro</title>
-    <meta name="ehandbook-version" content="v1.8.19-google-login-callback-fix">
-    <script>window.__EHANDBOOK_VERSION__ = "v1.8.19-google-login-callback-fix"; console.log("電子手冊 Pro v1.8.19-google-login-callback-fix loaded");</script>
+    <meta name="ehandbook-version" content="v1.8.24-class-page-clean-update-notice">
+    <script>window.__EHANDBOOK_VERSION__ = "v1.8.24-class-page-clean-update-notice"; console.log("電子手冊 Pro v1.8.24-class-page-clean-update-notice loaded");</script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js" crossorigin></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js" crossorigin></script>
@@ -208,7 +208,7 @@
             try { auth.useDeviceLanguage && auth.useDeviceLanguage(); } catch(e) {}
 
             window.__EHANDBOOK_AUTH_DEBUG__ = {
-                version: 'v1.8.19-google-login-callback-fix',
+                version: 'v1.8.24-class-page-clean-update-notice',
                 host: window.location.hostname || '',
                 protocol: window.location.protocol || '',
                 authDomainUsed: firebaseConfig.authDomain,
@@ -306,6 +306,25 @@
         const { useState, useEffect, useRef, useMemo } = React;
         const ADMIN_EMAIL = 'chimhinhin@gmail.com'; 
 
+        const CURRENT_RELEASE_NOTICE = {
+            version: window.__EHANDBOOK_VERSION__ || 'v1.8.24-class-page-clean-update-notice',
+            title: '電子手冊已更新',
+            summary: [
+                '班級廣播頁面已清走手動加入提示，只保留功課內容和狀態。',
+                '學生登入後會自動補領應收廣播功課，不需要再按任何加入或補領按鈕。',
+                '新版會內建更新彈窗，之後部署新版時可自動向用戶顯示更新內容。'
+            ].join('\n'),
+            guide: [
+                '管理員照常發放廣播功課。',
+                '學生打開主頁或班級廣播頁即可查看功課。',
+                '下次更新只需要更新程式內的版本資訊，用戶開頁會自動看到更新說明。'
+            ].join('\n'),
+            audience: 'all',
+            popupEnabled: true,
+            publishedAt: '2026-05-26T22:45:00+08:00',
+            source: 'built-in'
+        };
+
         const isIPadLike = () => {
             try {
                 const ua = navigator.userAgent || '';
@@ -356,7 +375,7 @@
             if (code === 'auth/operation-not-supported-in-this-environment' || code === 'auth/web-storage-unsupported') return '這個瀏覽器不支援彈出式登入，請用 Chrome / Safari 開啟，或再按一次讓系統改用跳轉登入。';
             if (code === 'auth/unauthorized-domain') return '此網站網域未加入 Firebase 授權網域，請管理員到 Firebase Authentication > Settings > Authorized domains 加入目前網址。';
             if (code === 'auth/operation-not-allowed') return 'Firebase 尚未開啟 Google 或 Email 登入方式，請管理員到 Firebase Authentication 啟用。';
-            if (code === 'auth/argument-error') return 'Google 登入參數錯誤。已改為 v1.8.19 登入流程；請重新部署此檔案並清除快取。';
+            if (code === 'auth/argument-error') return 'Google 登入參數錯誤。已改為 v1.8.21 登入流程；請重新部署此檔案並清除快取。';
             return (mode === 'reset' ? '重設密碼失敗：' : mode === 'register' ? '註冊失敗：' : '登入失敗：') + (error?.message || code || '請稍後再試');
         };
 
@@ -572,7 +591,6 @@
             const [loading, setLoading] = useState(false);
             const services = window.firebaseServices || {};
             const { auth, googleProvider, createGoogleProvider, signInWithPopup, signInWithRedirect, browserPopupRedirectResolver, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail } = services;
-            const browserHint = getBrowserLoginModeText();
             const inAppBrowser = isInAppBrowser();
 
             const mustUseRedirectLogin = () => isStandaloneMode() || isInAppBrowser();
@@ -615,7 +633,7 @@
                     } else if (wasRedirecting && window.__EHANDBOOK_REDIRECT_ERROR__) {
                         triggerAlert(getFriendlyAuthError(window.__EHANDBOOK_REDIRECT_ERROR__, 'login'), 'error');
                     } else if (wasRedirecting && window.__EHANDBOOK_REDIRECT_RESULT_SETTLED__) {
-                        triggerAlert('Google 已返回，但未取得登入狀態。請再按一次 Google 登入；如仍失敗，請檢查 Firebase 授權網域。', 'error');
+                        triggerAlert('Google 已返回，但未取得登入狀態。請再按一次 Google 登入。', 'error');
                     }
                 }).finally(() => {
                     if (!cancelled && !auth.currentUser) setLoading(false);
@@ -634,7 +652,7 @@
                         return;
                     }
 
-                    // v1.8.19：先用 Popup。這可以避開部分 Safari / iPad Redirect 回來後讀不到登入暫存的問題。
+                    // v1.8.23：保留成功登入邏輯，廣播功課改為發放即廣播派發。
                     window.__EHANDBOOK_CLEAR_REDIRECT_PENDING__?.();
                     const provider = getFreshGoogleProvider();
                     const credential = await signInWithPopup(auth, provider, browserPopupRedirectResolver);
@@ -668,12 +686,12 @@
             const handlePasswordReset = async (e) => {
                 e.preventDefault();
                 const targetEmail = email.trim();
-                if (!targetEmail) { triggerAlert('請先輸入 Email，系統先可以發送重設密碼電郵。', 'error'); return; }
+                if (!targetEmail) { triggerAlert('請先輸入 Email。', 'error'); return; }
                 if (!sendPasswordResetEmail || !auth) { triggerAlert('密碼重設服務尚未準備好，請重新整理後再試。', 'error'); return; }
                 try {
                     setLoading(true);
                     await sendPasswordResetEmail(auth, targetEmail);
-                    triggerAlert('已發送重設密碼電郵，請到信箱查看。沒有收到的話請檢查垃圾郵件。');
+                    triggerAlert('已發送重設密碼電郵，請到信箱查看。');
                     setIsResetMode(false);
                     setIsLogin(true);
                 } catch (error) {
@@ -701,93 +719,110 @@
                 } 
             };
 
-            const titleText = isResetMode ? '重設密碼 🔐' : (isLogin ? '歡迎回來 👋' : '建立新帳號 🚀');
-            const subtitleText = isResetMode ? '輸入你的 Email，系統會發送重設密碼連結' : (isLogin ? '請輸入您的帳號密碼繼續使用' : '只需幾秒鐘，立即開啟雲端記錄');
-            const submitText = isResetMode ? '發送重設密碼電郵' : (isLogin ? '登入帳號' : '註冊帳號');
+            const titleText = isResetMode ? '重設密碼' : (isLogin ? '歡迎回來' : '建立帳戶');
+            const subtitleText = isResetMode ? '輸入 Email 收取重設連結' : (isLogin ? '登入你的學習空間' : '開始使用電子手冊 Pro');
+            const submitText = isResetMode ? '發送重設連結' : (isLogin ? '登入' : '建立帳戶');
 
             return ( 
-                <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4 relative overflow-hidden"> 
-                    <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-                        <div className="absolute -top-[10%] -left-[5%] w-[50vw] h-[50vw] rounded-full mix-blend-multiply filter blur-[120px] opacity-30 dark:opacity-20 animate-blob bg-indigo-500"></div>
-                        <div className="absolute top-[20%] -right-[5%] w-[40vw] h-[50vw] rounded-full mix-blend-multiply filter blur-[120px] opacity-30 dark:opacity-20 animate-blob animation-delay-2000 bg-purple-500"></div>
-                        <div className="absolute -bottom-[20%] left-[20%] w-[60vw] h-[60vw] rounded-full mix-blend-multiply filter blur-[120px] opacity-20 dark:opacity-10 animate-blob animation-delay-4000 bg-blue-500"></div>
-                    </div>
-                    <div className="modal-animate flex flex-col md:flex-row w-full max-w-5xl glass-card rounded-[2.5rem] overflow-hidden relative z-10"> 
-                        <div className="hidden md:flex md:w-5/12 bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-800 relative items-center justify-center p-12 overflow-hidden"> 
-                            <div className="absolute top-0 left-0 w-full h-full opacity-30 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.8),transparent_50%)]"></div> 
-                            <div className="relative z-10 text-white text-left w-full"> 
-                                <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mb-8 border border-white/30 shadow-xl"><Icon name="book-open" className="w-8 h-8 text-white" /></div> 
-                                <h2 className="text-4xl font-black mb-4 leading-tight tracking-tight">智能學習<br/>從這裡開始</h2> 
-                                <p className="text-indigo-100 text-sm leading-relaxed font-medium">你的專屬電子手冊，自動整理所有功課與測驗，讓你隨時掌握學習進度。</p> 
-                                <div className="mt-8 p-4 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-md">
-                                    <div className="text-xs font-black text-indigo-100 uppercase mb-1">Google Login Stable v1.8.18</div>
-                                    <div className="text-sm font-bold text-white leading-relaxed">桌面使用彈出登入；手機、iPad、Safari 及內置瀏覽器會自動使用跳轉登入。</div>
+                <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#e0e7ff,transparent_35%),linear-gradient(135deg,#f8fafc_0%,#eef2ff_45%,#f8fafc_100%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(79,70,229,0.28),transparent_32%),linear-gradient(135deg,#020617_0%,#111827_48%,#020617_100%)] flex items-center justify-center px-4 py-8 relative overflow-hidden"> 
+                    <div className="absolute inset-x-0 top-0 h-24 bg-white/40 dark:bg-white/5 backdrop-blur-3xl pointer-events-none"></div>
+                    <div className="w-full max-w-4xl grid md:grid-cols-[0.95fr_1.05fr] rounded-[2rem] overflow-hidden shadow-2xl shadow-indigo-200/40 dark:shadow-black/40 border border-white/70 dark:border-white/10 bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl modal-animate relative z-10">
+                        <div className="hidden md:flex flex-col justify-between p-10 bg-slate-950 text-white relative overflow-hidden">
+                            <div className="absolute -right-20 -top-20 w-64 h-64 rounded-full bg-indigo-500/30 blur-3xl"></div>
+                            <div className="absolute -left-24 bottom-0 w-72 h-72 rounded-full bg-sky-500/20 blur-3xl"></div>
+                            <div className="relative z-10">
+                                <div className="w-12 h-12 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center mb-8 shadow-lg">
+                                    <Icon name="book-open" className="w-6 h-6 text-white" />
                                 </div>
-                            </div> 
-                        </div> 
-                        <div className="w-full md:w-7/12 p-8 sm:p-12 relative flex flex-col justify-center bg-white/60 dark:bg-slate-900/60 backdrop-blur-md"> 
-                            <div className="max-w-md w-full mx-auto"> 
-                                <div className="md:hidden w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg"><Icon name="book-open" className="w-7 h-7 text-white" /></div> 
-                                <h2 className="text-3xl font-black text-slate-800 dark:text-white tracking-tight mb-2">{titleText}</h2> 
-                                <p className="text-slate-500 text-sm mb-5 font-medium">{subtitleText}</p>
+                                <div className="text-xs font-black tracking-[0.28em] text-indigo-200 uppercase mb-4">E-HANDBOOK PRO</div>
+                                <h1 className="text-4xl font-black tracking-tight leading-tight mb-4">專注記錄，<br/>簡單完成。</h1>
+                                <p className="text-sm text-slate-300 leading-7 max-w-xs">功課、測驗、時間表，一個地方管理。</p>
+                            </div>
+                            <div className="relative z-10 flex items-center gap-3 text-xs text-slate-400 font-bold">
+                                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                                Google 登入已啟用
+                            </div>
+                        </div>
 
-                                <div className={`mb-6 rounded-2xl border p-3 flex items-start gap-3 ${inAppBrowser ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 text-orange-700 dark:text-orange-300' : 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-100 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300'}`}>
-                                    <Icon name={inAppBrowser ? 'alert-triangle' : 'shield-check'} className="w-5 h-5 mt-0.5 shrink-0" />
-                                    <div className="text-xs font-bold leading-relaxed">
-                                        <div className="font-black mb-0.5">跨瀏覽器登入保護已啟用</div>
-                                        {browserHint}
+                        <div className="p-6 sm:p-10 md:p-12 bg-white/85 dark:bg-slate-900/85">
+                            <div className="max-w-sm mx-auto">
+                                <div className="md:hidden flex items-center gap-3 mb-8">
+                                    <div className="w-11 h-11 rounded-2xl bg-slate-950 dark:bg-white flex items-center justify-center shadow-lg">
+                                        <Icon name="book-open" className="w-5 h-5 text-white dark:text-slate-950" />
+                                    </div>
+                                    <div>
+                                        <div className="text-sm font-black text-slate-900 dark:text-white">電子手冊 Pro</div>
+                                        <div className="text-xs font-bold text-slate-400">E-HANDBOOK PRO</div>
                                     </div>
                                 </div>
 
-                                <form onSubmit={handleEmailAuth} className="space-y-5"> 
+                                <div className="mb-8">
+                                    <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-2">{titleText}</h2>
+                                    <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">{subtitleText}</p>
+                                </div>
+
+                                {!isResetMode && (
+                                    <button type="button" onClick={handleGoogleLogin} disabled={loading} className="w-full h-13 py-3.5 rounded-2xl bg-slate-950 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-950 font-black transition-all active:scale-[0.98] flex items-center justify-center gap-3 shadow-xl shadow-slate-300/50 dark:shadow-black/30 disabled:opacity-70">
+                                        {loading ? <Icon name="loader" className="w-5 h-5 animate-spin" /> : <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5 bg-white rounded-full" />}
+                                        使用 Google 登入
+                                    </button>
+                                )}
+
+                                {inAppBrowser && !isResetMode && (
+                                    <div className="mt-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800 px-3 py-2 text-xs font-bold text-amber-700 dark:text-amber-300 flex gap-2 items-center">
+                                        <Icon name="alert-triangle" className="w-4 h-4 shrink-0" />
+                                        如登入不順，請用 Safari / Chrome 開啟。
+                                    </div>
+                                )}
+
+                                {!isResetMode && (
+                                    <div className="relative my-7">
+                                        <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200 dark:border-slate-800"></div></div>
+                                        <div className="relative flex justify-center text-[11px] font-black text-slate-400"><span className="px-4 bg-white/90 dark:bg-slate-900/90">或用 Email</span></div>
+                                    </div>
+                                )}
+
+                                <form onSubmit={handleEmailAuth} className="space-y-4"> 
                                     <div> 
-                                        <label className="text-xs font-bold text-slate-500 uppercase ml-1">電子郵件</label> 
-                                        <div className="relative group mt-1.5"> 
+                                        <label className="text-xs font-black text-slate-500 dark:text-slate-400 ml-1">Email</label> 
+                                        <div className="relative mt-1.5"> 
                                             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400"><Icon name="mail" className="w-5 h-5" /></div> 
-                                            <input type="email" className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-white dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all font-medium dark:text-white" placeholder="name@example.com" value={email} onChange={e => setEmail(e.target.value)} required /> 
+                                            <input type="email" className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-semibold dark:text-white" placeholder="name@example.com" value={email} onChange={e => setEmail(e.target.value)} required /> 
                                         </div> 
                                     </div> 
                                     {!isResetMode && (
                                         <div> 
                                             <div className="flex items-center justify-between ml-1 mb-1.5">
-                                                <label className="text-xs font-bold text-slate-500 uppercase">密碼</label>
-                                                <button type="button" onClick={() => setIsResetMode(true)} className="text-xs font-black text-indigo-600 hover:text-indigo-700 underline decoration-2 underline-offset-4 decoration-indigo-200">忘記密碼？</button>
+                                                <label className="text-xs font-black text-slate-500 dark:text-slate-400">密碼</label>
+                                                <button type="button" onClick={() => setIsResetMode(true)} className="text-xs font-black text-indigo-600 dark:text-indigo-400 hover:opacity-80">忘記密碼？</button>
                                             </div>
-                                            <div className="relative group"> 
+                                            <div className="relative"> 
                                                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400"><Icon name="lock" className="w-5 h-5" /></div> 
-                                                <input type="password" className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-white dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all font-medium dark:text-white" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required /> 
+                                                <input type="password" className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-semibold dark:text-white" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required /> 
                                             </div> 
                                         </div>
                                     )}
-                                    <button type="submit" disabled={loading} className="w-full py-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-base shadow-[0_8px_25px_rgba(79,70,229,0.3)] transition-all active:scale-[0.98] flex items-center justify-center gap-2 mt-6">
+                                    <button type="submit" disabled={loading} className="w-full py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black shadow-lg shadow-indigo-200/60 dark:shadow-indigo-950/30 transition-all active:scale-[0.98] flex items-center justify-center gap-2 mt-5 disabled:opacity-70">
                                         {loading ? <Icon name="loader" className="w-5 h-5 animate-spin" /> : submitText}
                                     </button> 
                                 </form> 
 
                                 {isResetMode ? (
                                     <div className="mt-6 text-center">
-                                        <button type="button" onClick={() => { setIsResetMode(false); setIsLogin(true); }} className="text-sm font-bold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 underline decoration-2 underline-offset-4">返回登入</button>
+                                        <button type="button" onClick={() => { setIsResetMode(false); setIsLogin(true); }} className="text-sm font-black text-slate-500 hover:text-slate-800 dark:hover:text-slate-200">返回登入</button>
                                     </div>
                                 ) : (
-                                    <>
-                                        <div className="relative my-8"> 
-                                            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200 dark:border-slate-800"></div></div> 
-                                            <div className="relative flex justify-center text-xs font-bold"><span className="px-4 bg-transparent text-slate-400 backdrop-blur-md">或</span></div> 
-                                        </div> 
-                                        <button type="button" onClick={handleGoogleLogin} disabled={loading} className="w-full py-3.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-bold hover:bg-slate-50 dark:hover:bg-slate-700 transition-all flex items-center justify-center gap-3 active:scale-[0.98] dark:text-white disabled:opacity-70">
-                                            {loading ? <Icon name="loader" className="w-5 h-5 animate-spin" /> : <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />} 使用 Google 繼續 
-                                        </button>
-                                        <div className="mt-4 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-100 dark:border-slate-700 p-3 text-xs font-bold text-slate-500 dark:text-slate-400 leading-relaxed">
-                                            Email 密碼登入失敗時，請先確認帳號是否已註冊；如果這個帳號以前是用 Google 建立，請用 Google 登入。<br/>
-                                            <span className="text-[10px] opacity-70">登入修復版：v1.8.19｜Auth Domain：{window.__EHANDBOOK_AUTH_DEBUG__?.authDomainUsed || 'checking'}</span>
-                                        </div>
-                                        <div className="mt-8 text-center"> 
-                                            <p className="text-slate-500 text-sm font-medium">{isLogin ? '尚未擁有帳號？' : '已經有帳號了？'}  
-                                                <button type="button" onClick={() => setIsLogin(!isLogin)} className="text-indigo-600 font-bold hover:text-indigo-700 ml-1.5 transition-colors underline decoration-2 underline-offset-4 decoration-indigo-200">{isLogin ? '建立新帳號' : '登入現有帳號'}</button> 
-                                            </p> 
-                                        </div>
-                                    </>
+                                    <div className="mt-7 text-center"> 
+                                        <p className="text-slate-500 dark:text-slate-400 text-sm font-semibold">
+                                            {isLogin ? '未有帳戶？' : '已有帳戶？'}
+                                            <button type="button" onClick={() => setIsLogin(!isLogin)} className="text-indigo-600 dark:text-indigo-400 font-black hover:opacity-80 ml-1.5">
+                                                {isLogin ? '建立帳戶' : '返回登入'}
+                                            </button> 
+                                        </p>
+                                    </div>
                                 )}
+
+                                <div className="mt-8 text-center text-[10px] font-bold text-slate-300 dark:text-slate-700 select-none">v1.8.21</div>
                             </div> 
                         </div> 
                     </div> 
@@ -1481,6 +1516,8 @@
             const [viewingClass, setViewingClass] = useState(null); 
             const [taskStats, setTaskStats] = useState({});
             const [isFetchingStats, setIsFetchingStats] = useState(false);
+            const [isPushingPublic, setIsPushingPublic] = useState(false);
+            const [pushReport, setPushReport] = useState(null);
             
             const { collection, getDocs, query, orderBy, onSnapshot, doc, updateDoc, arrayUnion, arrayRemove, deleteDoc, setDoc, getDoc, writeBatch, limit, startAfter, where } = window.firebaseServices || {};
             const allowedEmails = systemConfig?.allowedEmails || [];
@@ -1616,10 +1653,10 @@
             };
 
             const handleSendSyncReminder = async (task, stats) => {
-                if (!task || !stats || !stats.pendingList?.length) { triggerAlert('目前沒有未同步學生需要提醒'); return; }
-                const title = '你有廣播功課未同步';
-                const message = `${task.subject || '功課'}：${task.description || '未填寫內容'}，請前往班級分頁同步到個人手冊。`;
-                triggerConfirm(`確定提醒 ${stats.pendingList.length} 位未同步學生嗎？`, async () => {
+                if (!task || !stats || !stats.pendingList?.length) { triggerAlert('目前沒有未到位學生需要提醒'); return; }
+                const title = '你有廣播功課未到位';
+                const message = `${task.subject || '功課'}：${task.description || '未填寫內容'}，系統會自動加入個人手冊。`;
+                triggerConfirm(`確定提醒 ${stats.pendingList.length} 位未到位學生嗎？`, async () => {
                     try {
                         await setDoc(doc(db, 'system_settings', 'config'), {
                             adminReminders: arrayUnion({
@@ -1721,48 +1758,179 @@
                 });
             };
 
+            const getTargetUsersForPublicTask = async (task) => {
+                if (!db || !collection || !getDocs || !query) return [];
+                const targetClass = task?.targetClass || '全校';
+                const usersRef = collection(db, "users_public");
+                const targetQuery = targetClass === '全校'
+                    ? query(usersRef)
+                    : query(usersRef, where("joinedClasses", "array-contains", targetClass));
+                const snapshot = await getDocs(targetQuery);
+                const allTargetUsers = snapshot.docs.map(d => ({ uid: d.id, ...d.data() }));
+                return allTargetUsers.filter(u => {
+                    if (!u?.uid) return false;
+                    if (u.email === ADMIN_EMAIL) return false;
+                    if (blacklistedEmails.includes(u.email)) return false;
+                    return true;
+                });
+            };
+
+            const buildPublicInsertPayload = (task) => ({
+                type: task.type || 'homework',
+                subject: task.subject || '其他',
+                description: task.description || '',
+                dueDate: task.dueDate || '',
+                completed: false,
+                createdAt: new Date().toISOString(),
+                publicRefId: task.id,
+                senderName: task.senderName || '管理員',
+                targetClass: task.targetClass || '全校',
+                autoSynced: true,
+                syncedByAdmin: true,
+                syncedAt: new Date().toISOString(),
+                forceExpired: false,
+                isHidden: false
+            });
+
+            const buildPublicUpdatePayload = (task) => ({
+                type: task.type || 'homework',
+                subject: task.subject || '其他',
+                description: task.description || '',
+                dueDate: task.dueDate || '',
+                publicRefId: task.id,
+                senderName: task.senderName || '管理員',
+                targetClass: task.targetClass || '全校',
+                syncedByAdmin: true,
+                syncedAt: new Date().toISOString(),
+                forceExpired: false,
+                isHidden: false
+            });
+
+            const updateTaskStatsFromTargetUsers = async (task, targetUsers) => {
+                let synced = 0;
+                let completed = 0;
+                const pendingList = [];
+                const syncedList = [];
+                const completedList = [];
+                for (const u of targetUsers) {
+                    const q = query(collection(db, "users", u.uid, "items"), where("publicRefId", "==", task.id));
+                    const snap = await getDocs(q);
+                    const display = u.displayName || u.email || u.uid;
+                    if (!snap.empty) {
+                        synced++;
+                        syncedList.push(display);
+                        const hasCompleted = snap.docs.some(d => d.data()?.completed === true && d.data()?.isHidden !== true);
+                        if (hasCompleted) {
+                            completed++;
+                            completedList.push(display);
+                        }
+                    } else {
+                        pendingList.push(display);
+                    }
+                }
+                setTaskStats(prev => ({
+                    ...prev,
+                    [task.id]: {
+                        total: targetUsers.length,
+                        synced,
+                        completed,
+                        pendingList,
+                        syncedList,
+                        completedList,
+                        syncRate: targetUsers.length ? Math.round((synced / targetUsers.length) * 100) : 0,
+                        completedRate: targetUsers.length ? Math.round((completed / targetUsers.length) * 100) : 0,
+                        scannedAt: new Date().toISOString()
+                    }
+                }));
+                return { total: targetUsers.length, synced, completed, pendingList, syncedList, completedList };
+            };
+
+            const pushPublicTaskToTargets = async (task, options = {}) => {
+                const { refreshStats = true } = options;
+                if (!task?.id) return { total: 0, created: 0, updated: 0, skipped: 0 };
+                if (task.forceExpired) throw new Error('這份廣播功課已撤回，不能再派發。');
+                const targetUsers = await getTargetUsersForPublicTask(task);
+                let created = 0;
+                let updated = 0;
+                let skipped = 0;
+                let batch = writeBatch(db);
+                let pendingWrites = 0;
+
+                const commitBatch = async () => {
+                    if (pendingWrites <= 0) return;
+                    await batch.commit();
+                    batch = writeBatch(db);
+                    pendingWrites = 0;
+                };
+
+                for (const u of targetUsers) {
+                    const duplicateQ = query(collection(db, "users", u.uid, "items"), where("publicRefId", "==", task.id));
+                    const duplicateSnap = await getDocs(duplicateQ);
+                    if (duplicateSnap.empty) {
+                        batch.set(doc(db, "users", u.uid, "items", `public_${task.id}`), buildPublicInsertPayload(task), { merge: true });
+                        created++;
+                        pendingWrites++;
+                    } else {
+                        duplicateSnap.docs.forEach(existingDoc => {
+                            batch.update(existingDoc.ref, buildPublicUpdatePayload(task));
+                            pendingWrites++;
+                        });
+                        updated++;
+                    }
+                    if (pendingWrites >= 420) await commitBatch();
+                }
+                await commitBatch();
+                if (refreshStats) await updateTaskStatsFromTargetUsers(task, targetUsers);
+                return { total: targetUsers.length, created, updated, skipped };
+            };
+
+            const handlePushPublicTaskNow = (task) => {
+                const cls = systemClasses.find(c => c.code === task.targetClass);
+                const targetName = task.targetClass === '全校' || !task.targetClass ? '全校' : (cls?.name || task.targetClass);
+                triggerConfirm(`確定要重新派發「${task.subject || '功課'}」到 ${targetName} 所有學生個人手冊嗎？`, async () => {
+                    setIsPushingPublic(true);
+                    try {
+                        const report = await pushPublicTaskToTargets(task);
+                        setPushReport({ type: 'single', taskId: task.id, subject: task.subject || '功課', ...report, pushedAt: new Date().toISOString() });
+                        triggerAlert(`派發完成：新增 ${report.created} 人，修復/更新 ${report.updated} 人。`);
+                    } catch (e) {
+                        triggerAlert('派發失敗：' + e.message, 'error');
+                    } finally {
+                        setIsPushingPublic(false);
+                    }
+                });
+            };
+
+            const handlePushAllPublicTasksNow = () => {
+                const activeTasks = publicTasks.filter(task => !task.forceExpired);
+                if (!activeTasks.length) { triggerAlert('目前沒有可推送的廣播功課', 'error'); return; }
+                triggerConfirm(`確定重新派發 ${activeTasks.length} 份廣播功課到各自目標學生嗎？系統會自動修復未到位紀錄。`, async () => {
+                    setIsPushingPublic(true);
+                    try {
+                        const summary = { totalTasks: activeTasks.length, totalTargets: 0, created: 0, updated: 0, skipped: 0 };
+                        for (const task of activeTasks) {
+                            const report = await pushPublicTaskToTargets(task, { refreshStats: false });
+                            summary.totalTargets += report.total;
+                            summary.created += report.created;
+                            summary.updated += report.updated;
+                            summary.skipped += report.skipped;
+                        }
+                        setPushReport({ type: 'all', ...summary, pushedAt: new Date().toISOString() });
+                        triggerAlert(`重新派發完成：新增 ${summary.created} 項，修復/更新 ${summary.updated} 項。`);
+                    } catch (e) {
+                        triggerAlert('重新派發失敗：' + e.message, 'error');
+                    } finally {
+                        setIsPushingPublic(false);
+                    }
+                });
+            };
+
             const fetchTaskProgress = async (task) => {
                 setIsFetchingStats(true);
                 try {
-                    const targetUsers = (task.targetClass === '全校' || !task.targetClass)
-                        ? users
-                        : users.filter(u => (u.joinedClasses || []).includes(task.targetClass));
-                    let synced = 0;
-                    let completed = 0;
-                    let pendingList = [];
-                    let syncedList = [];
-                    let completedList = [];
-                    for (const u of targetUsers) {
-                        const q = query(collection(db, "users", u.uid, "items"), where("publicRefId", "==", task.id));
-                        const snap = await getDocs(q);
-                        const display = u.displayName || u.email || u.uid;
-                        if (!snap.empty) {
-                            synced++;
-                            syncedList.push(display);
-                            const itemData = snap.docs[0].data();
-                            if (itemData.completed) {
-                                completed++;
-                                completedList.push(display);
-                            }
-                        } else {
-                            pendingList.push(display);
-                        }
-                    }
-                    setTaskStats(prev => ({
-                        ...prev,
-                        [task.id]: {
-                            total: targetUsers.length,
-                            synced,
-                            completed,
-                            pendingList,
-                            syncedList,
-                            completedList,
-                            syncRate: targetUsers.length ? Math.round((synced / targetUsers.length) * 100) : 0,
-                            completedRate: targetUsers.length ? Math.round((completed / targetUsers.length) * 100) : 0,
-                            scannedAt: new Date().toISOString()
-                        }
-                    }));
-                } catch (e) { triggerAlert("讀取同步狀態失敗: " + e.message, "error"); }
+                    const targetUsers = await getTargetUsersForPublicTask(task);
+                    await updateTaskStatsFromTargetUsers(task, targetUsers);
+                } catch (e) { triggerAlert("讀取派發狀態失敗: " + e.message, "error"); }
                 setIsFetchingStats(false);
             };
 
@@ -1771,7 +1939,7 @@
                 for (const task of publicTasks) {
                     await fetchTaskProgress(task);
                 }
-                triggerAlert("已更新所有廣播任務的同步狀態");
+                triggerAlert("已更新所有廣播任務的派發狀態");
             };
 
             const handleDeleteUser = async (targetUser) => {
@@ -1817,18 +1985,33 @@
                 });
             };
 
-            const handleDeletePublicTask = (taskId) => {
-                triggerConfirm("確定要撤回這份廣播功課嗎？這會同時從所有同學的清單中移除。", async () => {
-                    try { 
-                        const batch = writeBatch(db);
+            const handleDeletePublicTask = (taskOrId) => {
+                const task = typeof taskOrId === 'object' ? taskOrId : publicTasks.find(t => t.id === taskOrId);
+                const taskId = task?.id || taskOrId;
+                triggerConfirm("確定要撤回這份廣播功課嗎？這會同時從所有目標學生的清單中移除。", async () => {
+                    try {
+                        const targetUsers = task ? await getTargetUsersForPublicTask(task) : users;
+                        let batch = writeBatch(db);
+                        let pendingWrites = 0;
+                        const commitBatch = async () => {
+                            if (pendingWrites <= 0) return;
+                            await batch.commit();
+                            batch = writeBatch(db);
+                            pendingWrites = 0;
+                        };
                         batch.delete(doc(db, "public_assignments", taskId));
-                        for (const u of users) {
+                        pendingWrites++;
+                        for (const u of targetUsers) {
                             const dupQ = query(collection(db, "users", u.uid, "items"), where("publicRefId", "==", taskId));
                             const snap = await getDocs(dupQ);
-                            snap.forEach(d => batch.delete(d.ref));
+                            snap.forEach(d => {
+                                batch.delete(d.ref);
+                                pendingWrites++;
+                            });
+                            if (pendingWrites >= 420) await commitBatch();
                         }
-                        await batch.commit();
-                        triggerAlert("廣播功課已撤回並同步清理所有學生紀錄"); 
+                        await commitBatch();
+                        triggerAlert("廣播功課已撤回，並已清理所有目標學生紀錄");
                     } catch (e) { triggerAlert("撤回失敗: " + e.message, "error"); }
                 });
             };
@@ -1891,7 +2074,7 @@
                             <h2 className="text-xl font-black tracking-wide">超級管理中心</h2>
                         </div>
                         <div className="flex flex-row md:flex-col gap-2 overflow-x-auto scrollbar-hide pb-2 md:pb-0">
-                            {[ { id: 'overview', icon: 'layout-dashboard', label: '專業總覽' }, { id: 'users', icon: 'users', label: '用戶數據管理' }, { id: 'classes', icon: 'school', label: '班級代碼管理' }, { id: 'tasks', icon: 'bell', label: '廣播任務中心' }, { id: 'syncMonitor', icon: 'activity', label: '同步監控' }, { id: 'settings', icon: 'settings', label: '核心系統設定' } ].map(tab => (
+                            {[ { id: 'overview', icon: 'layout-dashboard', label: '專業總覽' }, { id: 'users', icon: 'users', label: '用戶數據管理' }, { id: 'classes', icon: 'school', label: '班級代碼管理' }, { id: 'tasks', icon: 'bell', label: '廣播任務中心' }, { id: 'syncMonitor', icon: 'activity', label: '派發狀態' }, { id: 'settings', icon: 'settings', label: '核心系統設定' } ].map(tab => (
                                 <button key={tab.id} onClick={() => { setActiveTab(tab.id); setSelectedUser(null); setViewingClass(null); }} className={`flex items-center gap-3 px-4 py-3 rounded-2xl font-bold text-sm transition-all whitespace-nowrap md:whitespace-normal ${activeTab === tab.id ? 'bg-indigo-600 text-white shadow-lg' : 'hover:bg-slate-800 hover:text-white'}`}>
                                     <Icon name={tab.icon} className={`w-5 h-5 ${activeTab === tab.id ? 'text-indigo-200' : 'text-slate-500'}`} /> {tab.label}
                                 </button>
@@ -1921,7 +2104,7 @@
                                 </div>
                                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                                     <div className="lg:col-span-2 bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700 p-5 shadow-sm">
-                                        <div className="flex items-center justify-between mb-4"><h4 className="font-black dark:text-white flex items-center gap-2"><Icon name="radio" className="w-5 h-5 text-orange-500"/> 最近廣播</h4><button onClick={() => setActiveTab('syncMonitor')} className="text-xs font-black text-indigo-600 dark:text-indigo-400">查看同步監控</button></div>
+                                        <div className="flex items-center justify-between mb-4"><h4 className="font-black dark:text-white flex items-center gap-2"><Icon name="radio" className="w-5 h-5 text-orange-500"/> 最近廣播</h4><button onClick={() => setActiveTab('syncMonitor')} className="text-xs font-black text-indigo-600 dark:text-indigo-400">查看派發狀態</button></div>
                                         <div className="space-y-3">
                                             {publicTasks.slice(0, 5).map(task => {
                                                 const cls = systemClasses.find(c => c.code === task.targetClass);
@@ -2122,7 +2305,7 @@
                                 <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
                                     <div className="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700"><div className="text-[10px] font-black text-slate-400 uppercase">功課總數</div><div className="text-2xl font-black dark:text-white">{selectedUserStats.total}</div></div>
                                     <div className="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700"><div className="text-[10px] font-black text-slate-400 uppercase">未完成</div><div className="text-2xl font-black text-orange-500">{selectedUserStats.unfinished}</div></div>
-                                    <div className="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700"><div className="text-[10px] font-black text-slate-400 uppercase">已同步廣播</div><div className="text-2xl font-black text-indigo-500">{selectedUserStats.synced}</div></div>
+                                    <div className="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700"><div className="text-[10px] font-black text-slate-400 uppercase">廣播功課</div><div className="text-2xl font-black text-indigo-500">{selectedUserStats.synced}</div></div>
                                     <div className="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700"><div className="text-[10px] font-black text-slate-400 uppercase">過期未處理</div><div className="text-2xl font-black text-red-500">{selectedUserStats.expired}</div></div>
                                     <div className="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700"><div className="text-[10px] font-black text-slate-400 uppercase">加入班級</div><div className="text-2xl font-black text-emerald-500">{selectedUserStats.classes}</div></div>
                                 </div>
@@ -2172,8 +2355,26 @@
 
                         {activeTab === 'tasks' && (
                             <div className="space-y-6 animate-fadeIn">
-                                <h3 className="text-2xl font-bold dark:text-white">廣播任務中心</h3>
-                                <p className="text-sm text-slate-500 -mt-2">管理發佈到全校或指定班級的廣播任務，並快速查看學生同步情況。</p>
+                                <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
+                                    <div>
+                                        <h3 className="text-2xl font-bold dark:text-white">廣播任務中心</h3>
+                                        <p className="text-sm text-slate-500 mt-1">管理員一發放廣播功課，系統會即時加入目標學生個人手冊。</p>
+                                    </div>
+                                    <button type="button" onClick={handlePushAllPublicTasksNow} disabled={isPushingPublic || publicTasks.filter(task => !task.forceExpired).length === 0} className="px-5 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-600 text-white text-sm font-black shadow-lg hover:opacity-95 active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2">
+                                        <Icon name={isPushingPublic ? "loader" : "send"} className={`w-4 h-4 ${isPushingPublic ? 'animate-spin' : ''}`} /> 重新派發全部功課
+                                    </button>
+                                </div>
+                                {pushReport && (
+                                    <div className="rounded-3xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                        <div>
+                                            <div className="font-black text-emerald-700 dark:text-emerald-300 flex items-center gap-2"><Icon name="check-circle-2" className="w-5 h-5" /> 最近派發完成</div>
+                                            <div className="text-xs font-bold text-emerald-700/80 dark:text-emerald-200/80 mt-1">
+                                                {pushReport.type === 'all' ? `共 ${pushReport.totalTasks} 份功課` : pushReport.subject} · 目標 {pushReport.totalTargets || pushReport.total || 0} · 新增 {pushReport.created || 0} · 修復/更新 {pushReport.updated || 0}
+                                            </div>
+                                        </div>
+                                        <button type="button" onClick={() => setPushReport(null)} className="text-xs font-black text-emerald-700 dark:text-emerald-300 underline">收起</button>
+                                    </div>
+                                )}
                                 <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700 overflow-hidden flex flex-col shadow-sm">
                                     <div className="overflow-y-auto max-h-[600px]">
                                         <table className="w-full text-left text-sm whitespace-nowrap">
@@ -2201,16 +2402,16 @@
                                                                 {stats ? (
                                                                     <div className="flex flex-col gap-2">
                                                                         <div className="flex items-center justify-between text-xs font-bold text-slate-500">
-                                                                            <span className="text-indigo-500">{stats.synced} 已同步</span>
+                                                                            <span className="text-indigo-500">{stats.synced} 已到位</span>
                                                                             <span>共 {stats.total} 人</span>
                                                                         </div>
                                                                         <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
                                                                             <div className="bg-emerald-500 h-1.5 rounded-full" style={{ width: stats.total ? `${(stats.synced / stats.total) * 100}%` : '0%' }}></div>
                                                                         </div>
                                                                         {stats.pendingList.length > 0 && (
-                                                                            <div className="mt-1 text-[10px] text-slate-400 max-w-[150px] truncate" title={stats.pendingList.join(', ')}>未同步: {stats.pendingList.join(', ')}</div>
+                                                                            <div className="mt-1 text-[10px] text-slate-400 max-w-[150px] truncate" title={stats.pendingList.join(', ')}>未到位: {stats.pendingList.join(', ')}</div>
                                                                         )}
-                                                                        {stats.pendingList.length === 0 && stats.total > 0 && <span className="text-[10px] text-emerald-500 font-bold">全部已同步 🎉</span>}
+                                                                        {stats.pendingList.length === 0 && stats.total > 0 && <span className="text-[10px] text-emerald-500 font-bold">全部已到位 🎉</span>}
                                                                         <span className="text-[10px] text-slate-400">其中 {stats.completed || 0} 人已標記完成</span>
                                                                     </div>
                                                                 ) : (
@@ -2218,7 +2419,10 @@
                                                                 )}
                                                             </td>
                                                             <td className="px-6 py-4 text-right">
-                                                                <button onClick={() => handleDeletePublicTask(task.id)} className="px-4 py-2 bg-red-50 text-red-600 hover:bg-red-500 hover:text-white rounded-xl font-bold text-xs transition-colors shadow-sm">撤回全班</button>
+                                                                <div className="flex flex-col sm:flex-row justify-end gap-2">
+                                                                    <button onClick={() => handlePushPublicTaskNow(task)} disabled={isPushingPublic || task.forceExpired} className="px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700 rounded-xl font-bold text-xs transition-colors shadow-sm disabled:opacity-40 flex items-center justify-center gap-1.5"><Icon name={isPushingPublic ? "loader" : "send"} className={`w-3.5 h-3.5 ${isPushingPublic ? 'animate-spin' : ''}`} /> 推送</button>
+                                                                    <button onClick={() => handleDeletePublicTask(task)} className="px-4 py-2 bg-red-50 text-red-600 hover:bg-red-500 hover:text-white rounded-xl font-bold text-xs transition-colors shadow-sm">撤回</button>
+                                                                </div>
                                                             </td>
                                                         </tr>
                                                     )
@@ -2237,9 +2441,9 @@
                                     <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-white/10 blur-2xl"></div>
                                     <div className="relative z-10 grid grid-cols-1 lg:grid-cols-[1.618fr_1fr] gap-6 items-end">
                                         <div>
-                                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 border border-white/20 text-xs font-black mb-3"><Icon name="activity" className="w-4 h-4" /> 廣播同步監控</div>
-                                            <h3 className="text-3xl font-black tracking-tight">掌握每份廣播功課同步情況</h3>
-                                            <p className="text-sm text-indigo-100 mt-2 font-bold">查看已同步、未同步、完成率，並可直接提醒未同步學生或開啟更新阻攔畫面。</p>
+                                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 border border-white/20 text-xs font-black mb-3"><Icon name="activity" className="w-4 h-4" /> 廣播派發狀態</div>
+                                            <h3 className="text-3xl font-black tracking-tight">查看每份廣播功課是否已派發到學生個人手冊</h3>
+                                            <p className="text-sm text-indigo-100 mt-2 font-bold">查看已到位、未到位、完成率，並可直接提醒未到位學生或開啟更新阻攔畫面。</p>
                                         </div>
                                         <div className="flex flex-col sm:flex-row lg:flex-col gap-2">
                                             <button onClick={fetchAllTaskProgress} disabled={isFetchingStats || publicTasks.length === 0} className="px-5 py-3 rounded-2xl bg-white text-indigo-700 text-sm font-black shadow-md hover:bg-indigo-50 active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2">
@@ -2276,32 +2480,33 @@
                                                     <div className="mt-5 space-y-4">
                                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                                                             <div className="rounded-2xl bg-slate-50 dark:bg-slate-900/60 p-4"><div className="text-[10px] font-black text-slate-400 uppercase">目標學生</div><div className="text-2xl font-black dark:text-white">{stats.total}</div></div>
-                                                            <div className="rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 p-4"><div className="text-[10px] font-black text-indigo-400 uppercase">已同步</div><div className="text-2xl font-black text-indigo-600 dark:text-indigo-300">{stats.synced}</div></div>
-                                                            <div className="rounded-2xl bg-orange-50 dark:bg-orange-900/20 p-4"><div className="text-[10px] font-black text-orange-400 uppercase">未同步</div><div className="text-2xl font-black text-orange-600 dark:text-orange-300">{stats.pendingList.length}</div></div>
+                                                            <div className="rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 p-4"><div className="text-[10px] font-black text-indigo-400 uppercase">已到位</div><div className="text-2xl font-black text-indigo-600 dark:text-indigo-300">{stats.synced}</div></div>
+                                                            <div className="rounded-2xl bg-orange-50 dark:bg-orange-900/20 p-4"><div className="text-[10px] font-black text-orange-400 uppercase">未到位</div><div className="text-2xl font-black text-orange-600 dark:text-orange-300">{stats.pendingList.length}</div></div>
                                                             <div className="rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 p-4"><div className="text-[10px] font-black text-emerald-400 uppercase">已完成</div><div className="text-2xl font-black text-emerald-600 dark:text-emerald-300">{stats.completed}</div></div>
                                                         </div>
                                                         <div>
-                                                            <div className="flex justify-between text-xs font-black text-slate-500 mb-1"><span>同步率</span><span>{percent}%</span></div>
+                                                            <div className="flex justify-between text-xs font-black text-slate-500 mb-1"><span>到位率</span><span>{percent}%</span></div>
                                                             <div className="w-full h-3 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden"><div className="h-3 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full transition-all" style={{ width: `${percent}%` }}></div></div>
                                                         </div>
-                                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                                                            <button type="button" onClick={() => handleSendSyncReminder(task, stats)} disabled={!stats.pendingList?.length} className="px-4 py-3 rounded-2xl bg-orange-500 text-white text-xs font-black hover:bg-orange-600 disabled:opacity-40 flex items-center justify-center gap-2"><Icon name="bell-ring" className="w-4 h-4" /> 提醒未同步</button>
+                                                        <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
+                                                            <button type="button" onClick={() => handlePushPublicTaskNow(task)} disabled={isPushingPublic || !stats.pendingList?.length} className="px-4 py-3 rounded-2xl bg-indigo-600 text-white text-xs font-black hover:bg-indigo-700 disabled:opacity-40 flex items-center justify-center gap-2"><Icon name={isPushingPublic ? "loader" : "send"} className={`w-4 h-4 ${isPushingPublic ? 'animate-spin' : ''}`} /> 重新派發未到位</button>
+                                                            <button type="button" onClick={() => handleSendSyncReminder(task, stats)} disabled={!stats.pendingList?.length} className="px-4 py-3 rounded-2xl bg-orange-500 text-white text-xs font-black hover:bg-orange-600 disabled:opacity-40 flex items-center justify-center gap-2"><Icon name="bell-ring" className="w-4 h-4" /> 提醒未到位</button>
                                                             <button type="button" onClick={() => { setActiveTab('settings'); setMaintenanceModeInput('updating'); setMaintenanceTitleInput('系統更新中'); setMaintenanceMessageInput('管理員正在更新電子手冊功能，請稍後再回來。'); }} className="px-4 py-3 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-black hover:opacity-90 flex items-center justify-center gap-2"><Icon name="shield-alert" className="w-4 h-4" /> 開啟阻攔設定</button>
                                                             <button type="button" onClick={() => setActiveTab('tasks')} className="px-4 py-3 rounded-2xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-200 text-xs font-black hover:bg-slate-200 dark:hover:bg-slate-600 flex items-center justify-center gap-2"><Icon name="list-checks" className="w-4 h-4" /> 返回任務中心</button>
                                                         </div>
                                                         {stats.pendingList.length > 0 ? (
                                                             <div className="rounded-2xl bg-orange-50 dark:bg-orange-900/20 border border-orange-100 dark:border-orange-800 p-4">
-                                                                <div className="font-black text-orange-700 dark:text-orange-300 text-sm mb-2 flex items-center gap-2"><Icon name="user-x" className="w-4 h-4"/> 未同步學生</div>
+                                                                <div className="font-black text-orange-700 dark:text-orange-300 text-sm mb-2 flex items-center gap-2"><Icon name="user-x" className="w-4 h-4"/> 未到位學生</div>
                                                                 <div className="flex flex-wrap gap-2">{stats.pendingList.map(name => <span key={name} className="px-2.5 py-1 rounded-lg bg-white/80 dark:bg-slate-900/40 text-orange-700 dark:text-orange-200 text-xs font-bold border border-orange-100 dark:border-orange-800">{name}</span>)}</div>
                                                             </div>
                                                         ) : stats.total > 0 ? (
-                                                            <div className="rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 p-4 font-black text-emerald-700 dark:text-emerald-300 flex items-center gap-2"><Icon name="party-popper" className="w-4 h-4"/> 全部目標學生已同步</div>
+                                                            <div className="rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 p-4 font-black text-emerald-700 dark:text-emerald-300 flex items-center gap-2"><Icon name="party-popper" className="w-4 h-4"/> 全部目標學生已收到</div>
                                                         ) : (
-                                                            <div className="rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700 p-4 font-bold text-slate-400">目前沒有符合此目標的已載入學生。請在用戶管理頁載入更多學生後再掃描。</div>
+                                                            <div className="rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700 p-4 font-bold text-slate-400">目前沒有符合此目標的學生。請確認學生已加入正確班級。</div>
                                                         )}
                                                     </div>
                                                 ) : (
-                                                    <div className="mt-5 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 p-5 text-center text-slate-400 font-bold text-sm">按「更新狀態」後會顯示已同步 / 未同步學生名單。</div>
+                                                    <div className="mt-5 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 p-5 text-center text-slate-400 font-bold text-sm">按「更新狀態」後會顯示已派發 / 未到位學生名單。</div>
                                                 )}
                                             </div>
                                         );
@@ -2375,11 +2580,11 @@
                                         </div>
                                         <div>
                                             <label className="text-xs font-black text-slate-400 uppercase ml-1">更新咗啲乜</label>
-                                            <textarea rows="4" placeholder={"例如：\n新增通知中心\n新增廣播同步提示\n修正科目自動預測問題"} value={updateSummaryInput} onChange={e => setUpdateSummaryInput(e.target.value)} className="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-sm focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white transition-all resize-none"></textarea>
+                                            <textarea rows="4" placeholder={"例如：\n新增通知中心\n新增廣播功課自動派發\n修正科目自動預測問題"} value={updateSummaryInput} onChange={e => setUpdateSummaryInput(e.target.value)} className="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-sm focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white transition-all resize-none"></textarea>
                                         </div>
                                         <div>
                                             <label className="text-xs font-black text-slate-400 uppercase ml-1">點樣使用新功能</label>
-                                            <textarea rows="4" placeholder={"例如：\n1. 按右上角小鈴鐺查看通知\n2. 有新廣播功課時，前往班級頁同步\n3. 同步後會自動加入個人手冊"} value={updateGuideInput} onChange={e => setUpdateGuideInput(e.target.value)} className="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-sm focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white transition-all resize-none"></textarea>
+                                            <textarea rows="4" placeholder={"例如：\n1. 按右上角小鈴鐺查看通知\n2. 有新廣播功課時，打開通知中心查看\n3. 廣播功課會出現在個人手冊"} value={updateGuideInput} onChange={e => setUpdateGuideInput(e.target.value)} className="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-sm focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white transition-all resize-none"></textarea>
                                         </div>
                                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 p-4">
                                             <label className="flex items-center gap-3 cursor-pointer">
@@ -2487,10 +2692,6 @@
             user,
             userProfile,
             t,
-            autoSyncPublicEnabled,
-            syncPreferenceLoaded,
-            onToggleAutoSyncPublic,
-            unsyncedCount,
             unreadNotificationCount,
             isDarkMode,
             setIsDarkMode,
@@ -2511,8 +2712,6 @@
             const displayName = userProfile?.displayName || user?.displayName || '學生';
             const email = user?.email || userProfile?.email || '';
             const initial = String(displayName || email || 'E').trim().charAt(0).toUpperCase();
-            const syncTitle = autoSyncPublicEnabled ? '自動同步已開啟' : '手動同步模式';
-            const syncDesc = autoSyncPublicEnabled ? '新廣播功課會自動加入個人手冊，適合想省時間同避免漏功課。' : '新廣播功課會先提示你，再由你到班級分頁自行同步。';
             const layoutOptions = [
                 { value: 'normal', label: '完整模式', desc: '顯示主頁卡片、時間表、輸入欄同任務列表', icon: 'layout-dashboard' },
                 { value: 'minimal', label: '極簡模式', desc: '只保留重要卡片同任務列表，主頁更乾淨', icon: 'minimize-2' },
@@ -2529,11 +2728,11 @@
                 { key: 'reduceMotion', label: '減少動畫', desc: '降低過場動畫，頁面操作更穩定', icon: 'wind' },
                 { key: 'cleanGlass', label: '清晰玻璃模式', desc: '降低磨砂透明度，文字更清楚', icon: 'glass-water' },
                 { key: 'comfortSpacing', label: '舒適間距', desc: '設定卡片與文字呼吸感更強', icon: 'move-horizontal' },
-                { key: 'smartHints', label: '智能提示', desc: '保留同步、過期、時間表等使用提示', icon: 'sparkles' },
+                { key: 'smartHints', label: '智能提示', desc: '保留過期、時間表等使用提示', icon: 'sparkles' },
                 { key: 'focusFirst', label: '專注優先', desc: '主頁更重視今日任務與待辦事項', icon: 'target' }
             ];
             const quickActionOptions = [
-                { key: 'showClassShortcut', label: '班級同步快捷', desc: '在設定頁保留快速前往班級同步', icon: 'school-2' },
+                { key: 'showClassShortcut', label: '班級廣播快捷', desc: '在設定頁快速查看班級廣播', icon: 'school-2' },
                 { key: 'showNotificationShortcut', label: '通知快捷', desc: '在設定頁快速打開通知中心', icon: 'bell' },
                 { key: 'showSubjectShortcut', label: '科目快捷', desc: '方便快速進入科目管理', icon: 'book-marked' },
                 { key: 'showAccountShortcut', label: '帳號操作', desc: '顯示登出與帳號相關操作', icon: 'user-cog' }
@@ -2568,7 +2767,7 @@
                                 <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-[1.7rem] bg-white/15 border border-white/20 backdrop-blur-xl flex items-center justify-center text-3xl font-black shadow-lg shrink-0">{initial}</div>
                                 <div className="min-w-0 pt-1">
                                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-[11px] font-black mb-3">
-                                        <Icon name="settings-2" className="w-3.5 h-3.5" /> 應用程式設定 · v1.8.17
+                                        <Icon name="settings-2" className="w-3.5 h-3.5" /> 應用程式設定 · v1.8.23
                                     </div>
                                     <h2 className="text-2xl sm:text-3xl font-black tracking-tight truncate">{displayName}</h2>
                                     <p className="text-sm text-indigo-100 font-bold mt-1 truncate">{email || '個人化你的電子手冊'}</p>
@@ -2576,8 +2775,8 @@
                             </div>
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="rounded-[1.6rem] bg-white/10 border border-white/15 p-4 backdrop-blur-xl">
-                                    <div className="text-[10px] font-black text-indigo-100 uppercase">同步模式</div>
-                                    <div className="text-sm font-black mt-1">{syncTitle}</div>
+                                    <div className="text-[10px] font-black text-indigo-100 uppercase">廣播功課</div>
+                                    <div className="text-sm font-black mt-1">登入補領功課</div>
                                 </div>
                                 <div className="rounded-[1.6rem] bg-white/10 border border-white/15 p-4 backdrop-blur-xl">
                                     <div className="text-[10px] font-black text-indigo-100 uppercase">通知</div>
@@ -2586,36 +2785,6 @@
                             </div>
                         </div>
                     </div>
-
-                    <SettingSection title="廣播功課同步" desc="控制管理員發放功課後，要自動加入個人手冊，定係由你手動確認。" icon="refresh-cw" right={
-                        unsyncedCount > 0 ? <span className="px-3 py-1.5 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 text-[11px] font-black shrink-0">{unsyncedCount} 份待同步</span> : null
-                    }>
-                        <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-5 items-stretch">
-                            <div className={`rounded-[1.75rem] p-5 border ${autoSyncPublicEnabled ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-800' : 'bg-orange-50 dark:bg-orange-900/20 border-orange-100 dark:border-orange-800'}`}>
-                                <div className="flex items-start gap-3">
-                                    <div className={`w-12 h-12 rounded-2xl text-white flex items-center justify-center shadow-lg ${autoSyncPublicEnabled ? 'bg-gradient-to-br from-emerald-500 to-teal-500' : 'bg-gradient-to-br from-orange-500 to-amber-500'}`}><Icon name={autoSyncPublicEnabled ? 'refresh-cw' : 'hand'} className="w-5 h-5" /></div>
-                                    <div>
-                                        <h4 className={`font-black text-lg ${autoSyncPublicEnabled ? 'text-emerald-800 dark:text-emerald-200' : 'text-orange-800 dark:text-orange-200'}`}>{syncTitle}</h4>
-                                        <p className={`text-sm font-bold leading-relaxed mt-1 ${autoSyncPublicEnabled ? 'text-emerald-700/80 dark:text-emerald-100/80' : 'text-orange-700/80 dark:text-orange-100/80'}`}>{syncDesc}</p>
-                                    </div>
-                                </div>
-                                {!autoSyncPublicEnabled && unsyncedCount > 0 && (
-                                    <button type="button" onClick={onGoClass} className="mt-4 w-full rounded-2xl bg-white/85 dark:bg-slate-900/50 border border-orange-200 dark:border-orange-800 px-4 py-3 flex items-center justify-between text-left hover:scale-[1.01] transition-all active:scale-[0.99]">
-                                        <span className="text-sm font-black text-orange-700 dark:text-orange-300 flex items-center gap-2"><Icon name="bell-ring" className="w-4 h-4" /> 前往班級分頁同步</span>
-                                        <Icon name="arrow-right" className="w-4 h-4 text-orange-500" />
-                                    </button>
-                                )}
-                            </div>
-                            <div className="grid grid-cols-2 lg:grid-cols-1 gap-3">
-                                <button type="button" disabled={!syncPreferenceLoaded} onClick={() => onToggleAutoSyncPublic(true)} className={`rounded-[1.5rem] border p-4 text-left transition-all active:scale-95 disabled:opacity-50 ${autoSyncPublicEnabled ? 'bg-emerald-500 text-white border-emerald-400 shadow-lg' : 'bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-emerald-300'}`}>
-                                    <Icon name="toggle-right" className="w-5 h-5 mb-2" /><div className="font-black text-sm">開啟自動同步</div><div className="text-[11px] font-bold opacity-75 mt-1">省時間，避免漏功課</div>
-                                </button>
-                                <button type="button" disabled={!syncPreferenceLoaded} onClick={() => onToggleAutoSyncPublic(false)} className={`rounded-[1.5rem] border p-4 text-left transition-all active:scale-95 disabled:opacity-50 ${!autoSyncPublicEnabled ? 'bg-orange-500 text-white border-orange-400 shadow-lg' : 'bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-orange-300'}`}>
-                                    <Icon name="toggle-left" className="w-5 h-5 mb-2" /><div className="font-black text-sm">保持手動同步</div><div className="text-[11px] font-bold opacity-75 mt-1">每份功課自己確認</div>
-                                </button>
-                            </div>
-                        </div>
-                    </SettingSection>
 
                     <SettingSection title="外觀個人化" desc="調整主題色、深色模式同整體介面密度，令電子手冊更貼合你嘅使用習慣。" icon="palette" right={<button type="button" onClick={onOpenAppearance} className="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-300 text-xs font-black hover:bg-slate-200 dark:hover:bg-slate-700">進階外觀</button>}>
                         <div className="space-y-5">
@@ -2713,7 +2882,7 @@
                         <SettingSection title="通知與提醒" desc="管理通知中心、未讀提醒同版本更新資訊。" icon="bell-ring" right={unreadNotificationCount > 0 ? <span className="px-2.5 py-1 rounded-full bg-red-500 text-white text-[10px] font-black">{unreadNotificationCount}</span> : null}>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 {advancedPrefs?.showNotificationShortcut !== false && <button type="button" onClick={onOpenNotifications} className="p-4 rounded-2xl bg-orange-50 dark:bg-orange-900/20 border border-orange-100 dark:border-orange-800 text-left hover:scale-[1.01] active:scale-[0.98] transition-all"><Icon name="bell" className="w-5 h-5 text-orange-500 mb-2" /><div className="font-black text-sm text-orange-700 dark:text-orange-300">打開通知中心</div><div className="text-[11px] font-bold text-orange-600/70 dark:text-orange-200/70 mt-1">查看廣播、更新、過期功課</div></button>}
-                                {advancedPrefs?.showClassShortcut !== false && <button type="button" onClick={onGoClass} className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 text-left hover:scale-[1.01] active:scale-[0.98] transition-all"><Icon name="school-2" className="w-5 h-5 text-emerald-500 mb-2" /><div className="font-black text-sm text-emerald-700 dark:text-emerald-300">前往班級同步</div><div className="text-[11px] font-bold text-emerald-600/70 dark:text-emerald-200/70 mt-1">處理老師發放的功課</div></button>}
+                                {advancedPrefs?.showClassShortcut !== false && <button type="button" onClick={onGoClass} className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 text-left hover:scale-[1.01] active:scale-[0.98] transition-all"><Icon name="school-2" className="w-5 h-5 text-emerald-500 mb-2" /><div className="font-black text-sm text-emerald-700 dark:text-emerald-300">查看班級廣播</div><div className="text-[11px] font-bold text-emerald-600/70 dark:text-emerald-200/70 mt-1">查看老師發放的功課</div></button>}
                             </div>
                         </SettingSection>
                         <SettingSection title="科目與帳號" desc="管理科目顏色、帳戶操作及登出。" icon="user-cog">
@@ -2791,15 +2960,34 @@ function App() {
             const joinedClasses = userProfile?.joinedClasses || [];
             const joinedClassesStr = joinedClasses.join(',');
 
+            const activeUpdateNotice = useMemo(() => {
+                const builtInNotice = CURRENT_RELEASE_NOTICE;
+                const configuredVersion = String(systemConfig?.updateVersion || '').trim();
+                const currentVersion = String(builtInNotice.version || '').trim();
+                const configIsForCurrentVersion = configuredVersion && configuredVersion === currentVersion;
+                if (configIsForCurrentVersion && systemConfig?.updatePopupEnabled !== false) {
+                    return {
+                        version: configuredVersion,
+                        title: systemConfig.updateTitle || builtInNotice.title,
+                        summary: systemConfig.updateSummary || builtInNotice.summary,
+                        guide: systemConfig.updateGuide || builtInNotice.guide,
+                        audience: systemConfig.updateAudience || builtInNotice.audience || 'all',
+                        popupEnabled: systemConfig.updatePopupEnabled !== false,
+                        publishedAt: systemConfig.updatePublishedAt || builtInNotice.publishedAt,
+                        source: 'admin'
+                    };
+                }
+                return builtInNotice;
+            }, [systemConfig?.updateVersion, systemConfig?.updateTitle, systemConfig?.updateSummary, systemConfig?.updateGuide, systemConfig?.updateAudience, systemConfig?.updatePopupEnabled, systemConfig?.updatePublishedAt]);
+
             const [isJoinClassOpen, setIsJoinClassOpen] = useState(false);
             const [selectedClassBoard, setSelectedClassBoard] = useState('全校');
             const [publicTasks, setPublicTasks] = useState([]);
             const [syncingPublicIds, setSyncingPublicIds] = useState({});
-            const [autoSyncPublicEnabled, setAutoSyncPublicEnabled] = useState(false);
-            const [syncPreferenceLoaded, setSyncPreferenceLoaded] = useState(false);
+            const [itemsLoaded, setItemsLoaded] = useState(false);
+            const [publicTasksLoaded, setPublicTasksLoaded] = useState(false);
             const [isNotificationCenterOpen, setIsNotificationCenterOpen] = useState(false);
             const [showUpdateIntro, setShowUpdateIntro] = useState(false);
-            const [showSyncModeIntro, setShowSyncModeIntro] = useState(false);
             const [readNotificationIds, setReadNotificationIds] = useState([]);
             const [predictedSubject, setPredictedSubject] = useState('');
             const [subjectManuallySelected, setSubjectManuallySelected] = useState(false);
@@ -2809,15 +2997,15 @@ function App() {
             const [quickView, setQuickView] = useState({ isOpen: false, title: '', items: [] });
             const [globalNow, setGlobalNow] = useState(new Date());
             const itemsRef = useRef([]);
+            const publicTasksRef = useRef([]);
             const autoDeleteRan = useRef(false);
             const autoSyncingPublicIdsRef = useRef(new Set());
-            const syncModeIntroClosedForSessionRef = useRef(false);
 
             useEffect(() => { 
                 const loadingScreen = document.getElementById('loading-screen');
                 window.__EHANDBOOK_RENDERED__ = true;
                 if (loadingScreen) { loadingScreen.classList.add('hidden-loader'); setTimeout(() => loadingScreen.remove(), 500); }
-                // v1.8.19: 已保留全站功能；改為 Google Popup 優先，並修復 Redirect callback / authDomain 判斷。
+                // v1.8.23: 已保留登入功能；廣播功課改為管理員發放後即時廣播派發。
             }, []);
 
             useEffect(() => {
@@ -2883,7 +3071,8 @@ function App() {
                     safeStorageRemove('ehandbook_google_redirect_pending');
                     safeStorageRemove('ehandbook_google_redirect_started_at');
                     setUser(null);
-                    setItems([]); setIsAdmin(false); setShowNameSetup(false); setUserProfile(null); setTimetableConfig({ timeSlots: DEFAULT_TIME_SLOTS, schedule: DEFAULT_SCHEDULE }); setSubjects(DEFAULT_SUBJECTS); setAuthLoading(false);
+                    setItems([]); setPublicTasks([]); itemsRef.current = []; publicTasksRef.current = []; setItemsLoaded(false); setPublicTasksLoaded(false);
+                    setIsAdmin(false); setShowNameSetup(false); setUserProfile(null); setTimetableConfig({ timeSlots: DEFAULT_TIME_SLOTS, schedule: DEFAULT_SCHEDULE }); setSubjects(DEFAULT_SUBJECTS); setAuthLoading(false);
                 };
                 const resolveSignedInUser = async (currentUser) => {
                     if (!mounted || !currentUser) return;
@@ -2980,14 +3169,14 @@ function App() {
             }, [user?.uid]);
 
             useEffect(() => {
-                if (!user?.uid || !systemConfig) { setShowUpdateIntro(false); return; }
-                const enabled = systemConfig.updatePopupEnabled !== false;
-                const version = String(systemConfig.updateVersion || '').trim();
+                if (!user?.uid || !activeUpdateNotice) { setShowUpdateIntro(false); return; }
+                const enabled = activeUpdateNotice.popupEnabled !== false;
+                const version = String(activeUpdateNotice.version || '').trim();
                 if (!enabled || !version) { setShowUpdateIntro(false); return; }
-                const audience = systemConfig.updateAudience || 'students';
+                const audience = activeUpdateNotice.audience || 'all';
                 const audienceMatched = audience === 'all' || (audience === 'admin' && isAdmin) || (audience === 'students' && !isAdmin);
                 if (!audienceMatched) { setShowUpdateIntro(false); return; }
-                const releaseKey = `${version}::${systemConfig.updatePublishedAt || ''}`;
+                const releaseKey = `${activeUpdateNotice.source || 'notice'}::${version}::${activeUpdateNotice.publishedAt || ''}`;
                 let hiddenReleases = [];
                 try {
                     const rawHidden = safeStorageGet(`ehandbook_update_hidden_${user.uid}`, '[]');
@@ -2997,13 +3186,13 @@ function App() {
                     hiddenReleases = [];
                 }
                 setShowUpdateIntro(!hiddenReleases.includes(releaseKey));
-            }, [user?.uid, systemConfig?.updatePopupEnabled, systemConfig?.updateVersion, systemConfig?.updateAudience, systemConfig?.updatePublishedAt, isAdmin]);
+            }, [user?.uid, activeUpdateNotice?.version, activeUpdateNotice?.publishedAt, activeUpdateNotice?.popupEnabled, activeUpdateNotice?.audience, activeUpdateNotice?.source, isAdmin]);
 
             const closeUpdateIntroForNow = () => { setShowUpdateIntro(false); };
 
             const hideUpdateIntroForThisRelease = () => {
-                const version = String(systemConfig?.updateVersion || '').trim();
-                const releaseKey = `${version}::${systemConfig?.updatePublishedAt || ''}`;
+                const version = String(activeUpdateNotice?.version || '').trim();
+                const releaseKey = `${activeUpdateNotice?.source || 'notice'}::${version}::${activeUpdateNotice?.publishedAt || ''}`;
                 if (user?.uid && version) {
                     const key = `ehandbook_update_hidden_${user.uid}`;
                     let old = [];
@@ -3017,26 +3206,6 @@ function App() {
             };
 
             useEffect(() => {
-                if (!user?.uid || showUpdateIntro || syncModeIntroClosedForSessionRef.current || advancedPrefs.smartHints === false) {
-                    setShowSyncModeIntro(false);
-                    return;
-                }
-                const hidden = safeStorageGet(`ehandbook_sync_mode_intro_v183_${user.uid}`, '') === 'hidden';
-                setShowSyncModeIntro(!hidden);
-            }, [user?.uid, showUpdateIntro, advancedPrefs.smartHints]);
-
-            const closeSyncModeIntroForNow = () => {
-                syncModeIntroClosedForSessionRef.current = true;
-                setShowSyncModeIntro(false);
-            };
-
-            const hideSyncModeIntroPermanently = () => {
-                if (user?.uid) safeStorageSet(`ehandbook_sync_mode_intro_v183_${user.uid}`, 'hidden');
-                syncModeIntroClosedForSessionRef.current = true;
-                setShowSyncModeIntro(false);
-            };
-
-            useEffect(() => {
                 if (!db || !user) return;
                 const unsubConfig = onSnapshot(doc(db, "system_settings", "config"), (docSnap) => { setSystemConfig(docSnap.exists() ? docSnap.data() : null); }, (err) => { console.warn("Config err:", err); });
                 const unsubClasses = onSnapshot(doc(db, "system_settings", "classes"), (docSnap) => setSystemClasses(docSnap.exists() && docSnap.data().list ? docSnap.data().list : []), (err) => console.warn("Classes err:", err));
@@ -3045,33 +3214,16 @@ function App() {
 
             useEffect(() => {
                 if (!user || !db) return;
+                setItemsLoaded(false);
                 const unsubItems = onSnapshot(query(collection(db, "users", user.uid, "items"), orderBy("dueDate")), (snapshot) => {
                     const loadedItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    setItems(loadedItems); itemsRef.current = loadedItems; 
-                }, (err) => console.warn("Items err:", err));
+                    setItems(loadedItems); itemsRef.current = loadedItems; setItemsLoaded(true);
+                }, (err) => { console.warn("Items err:", err); setItemsLoaded(true); });
                 const unsubTimetable = onSnapshot(doc(db, 'users', user.uid, 'settings', 'timetable'), (docSnap) => setTimetableConfig(docSnap.exists() && docSnap.data().timeSlots ? docSnap.data() : { timeSlots: DEFAULT_TIME_SLOTS, schedule: DEFAULT_SCHEDULE }), (err) => console.warn("Timetable err:", err));
                 const unsubSubjects = onSnapshot(doc(db, 'users', user.uid, 'settings', 'subjects'), (docSnap) => setSubjects(docSnap.exists() && docSnap.data().list ? docSnap.data().list : DEFAULT_SUBJECTS), (err) => console.warn("Subjects err:", err));
                 return () => { unsubItems(); unsubTimetable(); unsubSubjects(); };
             }, [user, db]);
 
-            useEffect(() => {
-                if (!user || !db) {
-                    setAutoSyncPublicEnabled(false);
-                    setSyncPreferenceLoaded(false);
-                    return;
-                }
-                setSyncPreferenceLoaded(false);
-                const unsubSyncPrefs = onSnapshot(doc(db, 'users', user.uid, 'settings', 'syncPreferences'), (docSnap) => {
-                    const data = docSnap.exists() ? docSnap.data() : {};
-                    setAutoSyncPublicEnabled(data.autoSyncPublicEnabled === true);
-                    setSyncPreferenceLoaded(true);
-                }, (err) => {
-                    console.warn('Sync preferences err:', err);
-                    setAutoSyncPublicEnabled(false);
-                    setSyncPreferenceLoaded(true);
-                });
-                return () => unsubSyncPrefs();
-            }, [user, db]);
 
             useEffect(() => {
                 if (!user || !db || items.length === 0 || autoDeleteRan.current) return; 
@@ -3095,11 +3247,12 @@ function App() {
 
             useEffect(() => {
                 if (!user || !db) return;
+                setPublicTasksLoaded(false);
                 const q = query(collection(db, "public_assignments"), orderBy("createdAt", "desc"));
                 const unsubscribe = onSnapshot(q, (snapshot) => {
                     try {
                         const loadedPublicTasks = snapshot.docs.map(publicDoc => ({ id: publicDoc.id, ...publicDoc.data() }));
-                        setPublicTasks(loadedPublicTasks);
+                        setPublicTasks(loadedPublicTasks); publicTasksRef.current = loadedPublicTasks; setPublicTasksLoaded(true);
 
                         const currentClasses = joinedClassesStr ? joinedClassesStr.split(',') : [];
                         const existingPublicIds = new Set(itemsRef.current.map(i => i.publicRefId).filter(Boolean));
@@ -3114,15 +3267,15 @@ function App() {
                                 ? createdValue.toDate().getTime()
                                 : (createdValue ? new Date(createdValue).getTime() : 0);
                             if (isForMe && !existingPublicIds.has(publicId) && createdTime > pageLoadTime) {
-                                triggerAlert(autoSyncPublicEnabled ? `收到新廣播功課，正在自動同步：${publicData.subject || '未命名科目'}` : `收到新廣播功課通知：${publicData.subject || '未命名科目'}`);
+                                triggerAlert(`收到新廣播功課：${publicData.subject || '未命名科目'}`);
                             }
                         });
                     } catch (e) {
                         console.warn("Public tasks wrapper err:", e);
                     }
-                }, (err) => console.warn("Public tasks err:", err));
+                }, (err) => { console.warn("Public tasks err:", err); setPublicTasksLoaded(true); });
                 return () => unsubscribe();
-            }, [user, db, joinedClassesStr, pageLoadTime, autoSyncPublicEnabled]);
+            }, [user, db, joinedClassesStr, pageLoadTime]);
 
             const triggerAlert = (message, type = 'success') => {
                 setToast({ isVisible: true, message, type });
@@ -3191,36 +3344,18 @@ function App() {
             }, [publicTasks, joinedClassesStr]);
 
             const unsyncedPublicTasks = useMemo(() => visiblePublicTasks.filter(task => !syncedPublicIds.has(task.id) && !task.forceExpired), [visiblePublicTasks, syncedPublicIds]);
-
-            const handleToggleAutoSyncPublic = async (nextValue) => {
-                if (!user || !db) return;
-                const oldValue = autoSyncPublicEnabled;
-                setAutoSyncPublicEnabled(nextValue);
-                try {
-                    await setDoc(doc(db, 'users', user.uid, 'settings', 'syncPreferences'), {
-                        autoSyncPublicEnabled: nextValue,
-                        updatedAt: serverTimestamp(),
-                        updatedBy: user.displayName || user.email || 'user'
-                    }, { merge: true });
-                    triggerAlert(nextValue ? '已開啟自動同步：新廣播功課會自動加入個人手冊' : '已關閉自動同步：新廣播功課會在主頁提示你手動同步');
-                } catch (e) {
-                    setAutoSyncPublicEnabled(oldValue);
-                    triggerAlert('同步模式儲存失敗，請稍後再試', 'error');
-                }
-            };
-
             const syncPublicTaskToPersonal = async (task, options = {}) => {
                 if (!user || !db || !task?.id) return false;
-                const { silent = false, auto = false } = options;
+                const { silent = false, auto = false, source = 'student_claim' } = options;
                 try {
                     const duplicateQ = query(collection(db, "users", user.uid, "items"), where("publicRefId", "==", task.id));
                     const duplicateSnap = await getDocs(duplicateQ);
                     if (!duplicateSnap.empty || syncedPublicIds.has(task.id)) {
-                        if (!silent) triggerAlert("呢份廣播功課已經同步過");
+                        if (!silent) triggerAlert("呢份廣播功課已經喺你個人手冊入面");
                         return false;
                     }
 
-                    const syncedItem = {
+                    const deliveredItem = {
                         type: task.type || 'homework',
                         subject: task.subject || '其他',
                         description: task.description || '',
@@ -3230,31 +3365,35 @@ function App() {
                         publicRefId: task.id,
                         senderName: task.senderName || '老師',
                         targetClass: task.targetClass || '全校',
-                        autoSynced: auto === true,
-                        forceExpired: task.forceExpired === true
+                        autoDelivered: true,
+                        autoSynced: true,
+                        deliveryMode: 'login_claim',
+                        deliverySource: source,
+                        deliveredAt: new Date().toISOString(),
+                        forceExpired: task.forceExpired === true,
+                        isHidden: false
                     };
-                    await addDoc(collection(db, "users", user.uid, "items"), syncedItem);
-                    if (!silent) triggerAlert("已同步到你嘅個人手冊");
+                    await setDoc(doc(db, "users", user.uid, "items", `public_${task.id}`), deliveredItem, { merge: true });
+                    if (!silent) triggerAlert("已加入你嘅個人手冊");
                     return true;
                 } catch (error) {
-                    console.warn("Sync public task failed:", error);
-                    if (!silent) triggerAlert("同步失敗，請稍後再試", "error");
+                    console.warn("Deliver public task to personal list failed:", error);
+                    if (!silent) triggerAlert("加入失敗，請稍後再試", "error");
                     throw error;
                 }
             };
 
             useEffect(() => {
-                if (!autoSyncPublicEnabled || !syncPreferenceLoaded || !user?.uid || !db || unsyncedPublicTasks.length === 0) return;
-                const targets = unsyncedPublicTasks.filter(task => !autoSyncingPublicIdsRef.current.has(task.id));
+                if (!user?.uid || !db || !itemsLoaded || !publicTasksLoaded || unsyncedPublicTasks.length === 0) return;
+                const targets = unsyncedPublicTasks.filter(task => !task.forceExpired && !autoSyncingPublicIdsRef.current.has(task.id));
                 if (targets.length === 0) return;
                 targets.forEach(async (task) => {
                     autoSyncingPublicIdsRef.current.add(task.id);
                     setSyncingPublicIds(prev => ({ ...prev, [task.id]: true }));
                     try {
-                        const ok = await syncPublicTaskToPersonal(task, { silent: true, auto: true });
-                        if (ok) triggerAlert(`已自動同步「${task.subject || '功課'}」到個人手冊`);
+                        await syncPublicTaskToPersonal(task, { silent: true, auto: true, source: 'login_claim' });
                     } catch (e) {
-                        // silent catch already logged by helper
+                        // 已在 helper 內記錄錯誤，避免打擾學生畫面。
                     } finally {
                         autoSyncingPublicIdsRef.current.delete(task.id);
                         setSyncingPublicIds(prev => {
@@ -3264,7 +3403,7 @@ function App() {
                         });
                     }
                 });
-            }, [autoSyncPublicEnabled, syncPreferenceLoaded, user?.uid, db, unsyncedPublicTasks]);
+            }, [user?.uid, db, itemsLoaded, publicTasksLoaded, unsyncedPublicTasks]);
 
             const userNotifications = useMemo(() => {
                 const notices = [];
@@ -3313,20 +3452,20 @@ function App() {
                     });
                 });
 
-                if (systemConfig?.updatePopupEnabled !== false && systemConfig?.updateVersion) {
-                    const audience = systemConfig.updateAudience || 'students';
+                if (activeUpdateNotice?.popupEnabled !== false && activeUpdateNotice?.version) {
+                    const audience = activeUpdateNotice.audience || 'all';
                     const audienceMatched = audience === 'all' || (audience === 'admin' && isAdmin) || (audience === 'students' && !isAdmin);
                     if (audienceMatched) {
-                        const summary = String(systemConfig.updateSummary || '').split('\n').filter(Boolean)[0] || '系統加入了新功能，打開後會顯示使用提示。';
+                        const summary = String(activeUpdateNotice.summary || '').split('\n').filter(Boolean)[0] || '系統加入了新功能，打開後會顯示使用提示。';
                         notices.push({
-                            id: `release-${systemConfig.updateVersion}`,
+                            id: `release-${activeUpdateNotice.source || 'notice'}-${activeUpdateNotice.version}`,
                             type: 'release',
                             icon: 'sparkles',
-                            title: systemConfig.updateTitle || '系統已更新',
+                            title: activeUpdateNotice.title || '系統已更新',
                             message: summary,
-                            meta: `版本 ${systemConfig.updateVersion}`,
-                            time: formatFirebaseDateTime(systemConfig.updatePublishedAt) || '最近更新',
-                            sortTime: getSortTime(systemConfig.updatePublishedAt) || Date.now(),
+                            meta: `版本 ${activeUpdateNotice.version}`,
+                            time: formatFirebaseDateTime(activeUpdateNotice.publishedAt) || '最近更新',
+                            sortTime: getSortTime(activeUpdateNotice.publishedAt) || Date.now(),
                             accent: 'sky',
                             action: 'release'
                         });
@@ -3371,21 +3510,6 @@ function App() {
                     });
                 }
 
-                if (!autoSyncPublicEnabled && unsyncedPublicTasks.length > 0) {
-                    notices.push({
-                        id: `manual-sync-needed-${unsyncedPublicTasks.map(t => t.id).join('-')}`,
-                        type: 'sync-mode',
-                        icon: 'hand',
-                        title: '你有功課需要手動同步',
-                        message: `自動同步目前關閉，尚有 ${unsyncedPublicTasks.length} 份廣播功課等你同步。`,
-                        meta: '班級廣播提醒',
-                        time: '現在',
-                        sortTime: Date.now() + 2,
-                        accent: 'orange',
-                        action: 'class',
-                        targetClass: '全校'
-                    });
-                }
 
                 visiblePublicTasks.slice(0, 12).forEach(task => {
                     const targetCode = task.targetClass || '全校';
@@ -3400,8 +3524,8 @@ function App() {
                         id: `public-${task.id}-${forceExpired ? 'expired' : 'active'}-${synced ? 'synced' : 'unsynced'}`,
                         type: 'broadcast',
                         icon: forceExpired ? 'archive-x' : (synced ? 'check-circle-2' : 'bell-ring'),
-                        title: forceExpired ? '一份廣播功課已撤回' : (synced ? '你已同步一份功課' : `${sender} 新增了一份功課`),
-                        message: forceExpired ? `「${subjectName}｜${taskText}」已被撤回。` : (synced ? `你已將「${subjectName}｜${taskText}」同步到個人手冊。` : `${sender} 新增了「${subjectName}」功課：${taskText}`),
+                        title: forceExpired ? '一份廣播功課已撤回' : (synced ? '你已收到一份功課' : `${sender} 新增了一份功課`),
+                        message: forceExpired ? `「${subjectName}｜${taskText}」已被撤回。` : (synced ? `「${subjectName}｜${taskText}」已加入你的個人手冊。` : `${sender} 新增了「${subjectName}」功課：${taskText}`),
                         meta: `${targetName}${task.dueDate ? ` · 交期 ${formatDueDate(task.dueDate)}` : ''}`,
                         time: formatFirebaseDateTime(task.createdAt),
                         sortTime: getSortTime(task.createdAt),
@@ -3414,7 +3538,7 @@ function App() {
                 return notices
                     .sort((a, b) => (b.sortTime || 0) - (a.sortTime || 0))
                     .map(n => ({ ...n, unread: !readNotificationIds.includes(n.id) }));
-            }, [systemConfig?.announcementText, systemConfig?.adminReminders, systemConfig?.updatePopupEnabled, systemConfig?.updateVersion, systemConfig?.updateTitle, systemConfig?.updateSummary, systemConfig?.updateAudience, systemConfig?.updatePublishedAt, isAdmin, visiblePublicTasks, joinedClassesStr, systemClasses, syncedPublicIds, readNotificationIds, items, timetableConfig?.updatedAt, timetableConfig?.updatedBy, autoSyncPublicEnabled, unsyncedPublicTasks]);
+            }, [systemConfig?.announcementText, systemConfig?.adminReminders, activeUpdateNotice?.popupEnabled, activeUpdateNotice?.version, activeUpdateNotice?.title, activeUpdateNotice?.summary, activeUpdateNotice?.audience, activeUpdateNotice?.publishedAt, activeUpdateNotice?.source, isAdmin, visiblePublicTasks, joinedClassesStr, systemClasses, syncedPublicIds, readNotificationIds, items, timetableConfig?.updatedAt, timetableConfig?.updatedBy]);
 
             const unreadNotificationCount = useMemo(() => userNotifications.filter(n => n.unread).length, [userNotifications]);
 
@@ -3454,14 +3578,79 @@ function App() {
                 return visiblePublicTasks.filter(task => (task.targetClass || '全校') === selectedClassBoard);
             }, [visiblePublicTasks, selectedClassBoard]);
 
-            const handleSyncPublicTask = async (task) => {
+            const getTargetUsersForBroadcastTask = async (task) => {
+                if (!db || !collection || !getDocs || !query) return [];
+                const targetClass = task?.targetClass || '全校';
+                const usersRef = collection(db, "users_public");
+                const targetQuery = targetClass === '全校'
+                    ? query(usersRef)
+                    : query(usersRef, where("joinedClasses", "array-contains", targetClass));
+                const snapshot = await getDocs(targetQuery);
+                const blacklisted = systemConfig?.blacklistedEmails || [];
+                return snapshot.docs
+                    .map(d => ({ uid: d.id, ...d.data() }))
+                    .filter(u => u?.uid && u.email !== ADMIN_EMAIL && !blacklisted.includes(u.email));
+            };
+
+            const buildBroadcastPersonalPayload = (task) => ({
+                type: task.type || 'homework',
+                subject: task.subject || '其他',
+                description: task.description || '',
+                dueDate: task.dueDate || '',
+                completed: false,
+                createdAt: new Date().toISOString(),
+                publicRefId: task.id,
+                senderName: task.senderName || '老師',
+                targetClass: task.targetClass || '全校',
+                autoDelivered: true,
+                autoSynced: true,
+                syncedByAdmin: true,
+                syncedAt: new Date().toISOString(),
+                deliveryMode: 'auto_immediate',
+                forceExpired: false,
+                isHidden: false
+            });
+
+            const deliverBroadcastTaskToTargets = async (publicId, taskData) => {
+                if (!db || !publicId) return 0;
+                const task = { id: publicId, ...taskData };
+                const targetUsers = await getTargetUsersForBroadcastTask(task);
+                let batch = writeBatch(db);
+                let pendingWrites = 0;
+                let delivered = 0;
+                const commitBatch = async () => {
+                    if (pendingWrites <= 0) return;
+                    await batch.commit();
+                    batch = writeBatch(db);
+                    pendingWrites = 0;
+                };
+                for (const targetUser of targetUsers) {
+                    batch.set(
+                        doc(db, "users", targetUser.uid, "items", `public_${publicId}`),
+                        buildBroadcastPersonalPayload(task),
+                        { merge: true }
+                    );
+                    delivered++;
+                    pendingWrites++;
+                    if (pendingWrites >= 420) await commitBatch();
+                }
+                await commitBatch();
+                await updateDoc(doc(db, "public_assignments", publicId), {
+                    deliveredAt: serverTimestamp(),
+                    deliveredCount: delivered,
+                    deliveryMode: 'auto_immediate'
+                });
+                return delivered;
+            };
+
+            const handleClaimPublicTask = async (task) => {
                 if (!user || !db || !task?.id) return;
                 if (syncingPublicIds[task.id]) return;
                 setSyncingPublicIds(prev => ({ ...prev, [task.id]: true }));
                 try {
-                    await syncPublicTaskToPersonal(task, { silent: false, auto: false });
+                    await syncPublicTaskToPersonal(task, { silent: false, auto: false, source: 'manual_claim' });
                 } catch (error) {
-                    console.warn("Manual sync public task failed:", error);
+                    console.warn("Manual claim public task failed:", error);
                 } finally {
                     setSyncingPublicIds(prev => {
                         const next = { ...prev };
@@ -3478,13 +3667,16 @@ function App() {
                     const newItem = { type: inputType, subject, description: description.trim(), dueDate, completed: false, createdAt: new Date().toISOString() };
                     try { 
                         if (isBroadcast && isAdmin) { 
-                            newItem.senderName = user.displayName || '老師'; newItem.targetClass = targetClassInput;
-                            await addDoc(collection(db, "public_assignments"), newItem); 
+                            newItem.senderName = user.displayName || '老師';
+                            newItem.targetClass = targetClassInput;
+                            newItem.deliveryMode = 'auto_immediate';
+                            const publicRef = await addDoc(collection(db, "public_assignments"), newItem);
+                            const deliveredCount = await deliverBroadcastTaskToTargets(publicRef.id, newItem);
                             const className = targetClassInput === '全校' ? '全校' : (systemClasses.find(c => c.code === targetClassInput)?.name || targetClassInput);
-                            triggerAlert(`已發送廣播功課給 ${className}！`); 
+                            triggerAlert(`已發送廣播功課給 ${className}，並已自動加入 ${deliveredCount} 位學生個人手冊！`); 
                         } else { await addDoc(collection(db, "users", user.uid, "items"), newItem); triggerAlert("已新增紀錄"); } 
                         setDescription(''); setAppMode('personal'); setIsBroadcast(false); setTargetClassInput('全校'); setSubjectManuallySelected(false); setSubjectPredictionApplied(false);
-                    } catch (error) { triggerAlert("新增失敗", "error"); } 
+                    } catch (error) { console.warn("新增或派發失敗", error); triggerAlert("新增或派發失敗：" + (error?.message || '請稍後再試'), "error"); } 
                 };
                 if (isBroadcast && isAdmin) { 
                     const targetName = targetClassInput === '全校' ? '全校' : (systemClasses.find(c => c.code === targetClassInput)?.name || targetClassInput);
@@ -3719,10 +3911,6 @@ function App() {
                                     user={user}
                                     userProfile={userProfile}
                                     t={t}
-                                    autoSyncPublicEnabled={autoSyncPublicEnabled}
-                                    syncPreferenceLoaded={syncPreferenceLoaded}
-                                    onToggleAutoSyncPublic={handleToggleAutoSyncPublic}
-                                    unsyncedCount={unsyncedPublicTasks.length}
                                     unreadNotificationCount={unreadNotificationCount}
                                     isDarkMode={isDarkMode}
                                     setIsDarkMode={setIsDarkMode}
@@ -3742,21 +3930,6 @@ function App() {
                                  /> ) : (
                                 
                                 <div className="max-w-3xl mx-auto pt-2">
-                                    {viewMode === 'current' && appMode === 'personal' && !autoSyncPublicEnabled && unsyncedPublicTasks.length > 0 && (
-                                        <button onClick={() => { setAppMode('class'); setViewMode('current'); }} className="w-full mb-6 text-left relative overflow-hidden rounded-3xl p-[2px] shadow-lg transition-all hover:scale-[1.01] active:scale-[0.99]">
-                                            <div className="absolute inset-0 bg-gradient-to-r from-amber-400 via-orange-500 to-pink-500 animate-gradient-x"></div>
-                                            <div className="relative rounded-3xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl p-4 sm:p-5 flex items-center justify-between gap-4">
-                                                <div className="flex items-start gap-3">
-                                                    <div className="w-11 h-11 rounded-2xl bg-orange-100 dark:bg-orange-900/40 text-orange-500 flex items-center justify-center shrink-0 animate-float"><Icon name="bell-ring" className="w-5 h-5" /></div>
-                                                    <div>
-                                                        <div className="text-sm sm:text-base font-black text-slate-800 dark:text-white">收到新廣播功課通知</div>
-                                                        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-bold mt-0.5">你已關閉自動同步，請前往班級分頁自行同步。尚有 {unsyncedPublicTasks.length} 份未同步。</p>
-                                                    </div>
-                                                </div>
-                                                <span className="hidden sm:flex items-center gap-1 text-xs font-black text-orange-600 bg-orange-50 dark:bg-orange-900/30 px-3 py-2 rounded-xl">立即同步 <Icon name="arrow-right" className="w-4 h-4" /></span>
-                                            </div>
-                                        </button>
-                                    )}
                                     {/* Cards */}
                                     {viewMode === 'current' && isVisible('cards') && (
                                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6 animate-fadeIn">
@@ -3909,10 +4082,10 @@ function App() {
                                             <div className="glass-card bg-white/90 dark:bg-slate-800/90 rounded-3xl p-6 shadow-sm border border-white/40 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                                                 <div>
                                                     <h3 className="text-xl font-bold flex items-center gap-2 dark:text-white"><Icon name="school" className={t.text} /> 班級廣播</h3>
-                                                    <p className="text-sm text-slate-500 mt-1">全校及已加入班級的廣播任務，可選擇自動同步或手動同步到個人手冊。</p>
+                                                    <p className="text-sm text-slate-500 mt-1">全校及已加入班級的廣播任務，會出現在你的個人手冊。</p>
                                                 </div>
                                                 <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
-                                                    <button type="button" onClick={() => handleToggleAutoSyncPublic(!autoSyncPublicEnabled)} disabled={!syncPreferenceLoaded} className={`px-4 py-2.5 rounded-xl font-bold text-sm shadow-md active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50 ${autoSyncPublicEnabled ? 'bg-emerald-500 hover:bg-emerald-600 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600'}`}><Icon name={autoSyncPublicEnabled ? 'refresh-cw' : 'hand'} className="w-4 h-4" /> {autoSyncPublicEnabled ? '自動同步已開' : '手動同步中'}</button>
+                                                    <div className="px-4 py-2.5 rounded-xl font-bold text-sm shadow-md flex items-center justify-center gap-2 bg-emerald-500 text-white"><Icon name="check-circle-2" className="w-4 h-4" /> 自動收取已啟用</div>
                                                     <button onClick={() => setIsJoinClassOpen(true)} className={`px-4 py-2.5 rounded-xl font-bold text-sm text-white shadow-md active:scale-95 transition-all flex items-center justify-center gap-2 ${t.bg}`}><Icon name="plus" className="w-4 h-4" /> 加入班級</button>
                                                 </div>
                                             </div>
@@ -3945,12 +4118,12 @@ function App() {
                                                 {selectedClassTasks.length === 0 ? (
                                                     <div className="text-center py-12 bg-white/50 dark:bg-slate-800/50 rounded-3xl border border-dashed border-slate-200 dark:border-slate-700">
                                                         <Icon name="inbox" className="w-12 h-12 mx-auto text-slate-300 dark:text-slate-600 mb-3" />
-                                                        <p className="text-slate-500 font-medium">目前沒有可同步的廣播任務 🎉</p>
+                                                        <p className="text-slate-500 font-medium">目前沒有廣播任務 🎉</p>
                                                     </div>
                                                 ) : selectedClassTasks.map((task, idx) => {
                                                     const subjectStyle = subjects.find(s => s.name === task.subject)?.color || 'bg-slate-100 text-slate-600 border-slate-200';
-                                                    const isSynced = syncedPublicIds.has(task.id);
-                                                    const isSyncing = syncingPublicIds[task.id];
+                                                    const isDelivered = syncedPublicIds.has(task.id);
+                                                    const isDelivering = syncingPublicIds[task.id];
                                                     const targetCode = task.targetClass || '全校';
                                                     const targetClass = systemClasses.find(c => c.code === targetCode);
                                                     const targetName = targetCode === '全校' ? '全校' : (targetClass?.name || targetCode);
@@ -3963,7 +4136,11 @@ function App() {
                                                                         <div className="flex gap-2 items-center flex-wrap">
                                                                             <span className={`text-[10px] font-bold px-2.5 py-1 rounded border ${subjectStyle}`}>{task.subject || '其他'}</span>
                                                                             <span className="text-[10px] bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 px-2.5 py-1 rounded font-bold">{targetName}</span>
-                                                                            {isSynced && <span className="text-[10px] bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-300 px-2.5 py-1 rounded font-bold">已在個人清單</span>}
+                                                                            {!task.forceExpired && (
+                                                                                <span className={`text-[10px] px-2.5 py-1 rounded font-bold ${isDelivered ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-300' : isDelivering ? 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300' : 'bg-sky-100 dark:bg-sky-900/30 text-sky-600 dark:text-sky-300'}`}>
+                                                                                    {isDelivered ? '已加入個人清單' : isDelivering ? '自動加入中' : '登入後自動加入'}
+                                                                                </span>
+                                                                            )}
                                                                         </div>
                                                                     </div>
                                                                     <p className="font-bold text-lg text-slate-800 dark:text-white mb-3 break-words">{task.description}</p>
@@ -3973,9 +4150,6 @@ function App() {
                                                                         <span>{formatFirebaseDateTime(task.createdAt)}</span>
                                                                     </div>
                                                                 </div>
-                                                                <button type="button" onClick={() => handleSyncPublicTask(task)} disabled={isSynced || isSyncing || task.forceExpired} className={`w-full sm:w-auto shrink-0 px-4 py-3 rounded-2xl font-black text-xs shadow-sm transition-all flex items-center justify-center gap-2 ${isSynced ? 'bg-emerald-500 text-white cursor-not-allowed' : isSyncing ? 'bg-slate-300 text-white cursor-wait' : 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white hover:shadow-lg hover:scale-[1.02] active:scale-95'}`}>
-                                                                    {isSynced ? <><Icon name="check-circle-2" className="w-4 h-4" /> 已同步至個人清單</> : isSyncing ? <><Icon name="loader" className="w-4 h-4 animate-spin" /> 同步中...</> : <><Icon name="download-cloud" className="w-4 h-4" /> 同步到我嘅手冊</>}
-                                                                </button>
                                                             </div>
                                                         </div>
                                                     );
@@ -4001,34 +4175,34 @@ function App() {
                     {editingItem && <EditModal item={editingItem} onClose={() => setEditingItem(null)} onSave={handleUpdateItem} triggerAlert={triggerAlert} triggerConfirm={triggerConfirm} subjects={subjects} />}
                     <DatePickerModal isOpen={isDueDatePickerOpen} value={dueDate} onSelect={setDueDate} onClose={() => setIsDueDatePickerOpen(false)} title="選擇功課交期" />
                     {quickView.isOpen && <QuickViewModal isOpen={quickView.isOpen} onClose={() => setQuickView({ isOpen: false, title: '', items: [] })} title={quickView.title} items={quickView.items} subjects={subjects} onEdit={setEditingItem} onDelete={deleteItem} isAdmin={isAdmin} userUid={user?.uid} />}
-                    {showUpdateIntro && systemConfig?.updateVersion && (
+                    {showUpdateIntro && activeUpdateNotice?.version && (
                         <div className="fixed inset-0 z-[270] flex items-center justify-center p-4 sm:p-6">
                             <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-md"></div>
                             <div className="relative w-full max-w-[500px] max-h-[86vh] overflow-hidden rounded-[2rem] glass-card bg-white/95 dark:bg-slate-900/95 border border-white/60 dark:border-slate-700 shadow-2xl flex flex-col animate-pop-in">
                                 <div className="relative overflow-hidden p-6 bg-gradient-to-br from-indigo-600 via-violet-600 to-sky-500 text-white">
                                     <div className="absolute -top-12 -right-10 w-36 h-36 rounded-full bg-white/20 blur-2xl"></div>
                                     <div className="relative z-10">
-                                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 border border-white/20 text-xs font-black mb-4"><Icon name="sparkles" className="w-4 h-4" /> 版本 {systemConfig.updateVersion}</div>
-                                        <h3 className="text-2xl font-black tracking-tight">{systemConfig.updateTitle || '電子手冊 Pro 已更新'}</h3>
+                                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 border border-white/20 text-xs font-black mb-4"><Icon name="sparkles" className="w-4 h-4" /> 版本 {activeUpdateNotice.version}</div>
+                                        <h3 className="text-2xl font-black tracking-tight">{activeUpdateNotice.title || '電子手冊 Pro 已更新'}</h3>
                                         <p className="text-sm text-indigo-100 font-bold mt-2">以下係今次更新內容同使用方法。</p>
                                     </div>
                                 </div>
                                 <div className="overflow-y-auto p-5 sm:p-6 space-y-5 scrollbar-hide">
-                                    {systemConfig.updateSummary && (
+                                    {activeUpdateNotice.summary && (
                                         <div className="rounded-3xl bg-slate-50 dark:bg-slate-800/70 border border-slate-100 dark:border-slate-700 p-4">
                                             <div className="flex items-center gap-2 font-black text-slate-800 dark:text-white mb-3"><Icon name="list-checks" className="w-5 h-5 text-indigo-500"/> 更新咗啲乜</div>
                                             <div className="space-y-2">
-                                                {String(systemConfig.updateSummary).split('\n').map((line, idx) => line.trim() && (
+                                                {String(activeUpdateNotice.summary).split('\n').map((line, idx) => line.trim() && (
                                                     <div key={idx} className="flex items-start gap-2 text-sm font-bold text-slate-600 dark:text-slate-300"><span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0"></span><span>{line.trim().replace(/^[-•\d.、)）\s]+/, '')}</span></div>
                                                 ))}
                                             </div>
                                         </div>
                                     )}
-                                    {systemConfig.updateGuide && (
+                                    {activeUpdateNotice.guide && (
                                         <div className="rounded-3xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 p-4">
                                             <div className="flex items-center gap-2 font-black text-emerald-700 dark:text-emerald-300 mb-3"><Icon name="mouse-pointer-click" className="w-5 h-5"/> 點樣使用</div>
                                             <div className="space-y-2">
-                                                {String(systemConfig.updateGuide).split('\n').map((line, idx) => line.trim() && (
+                                                {String(activeUpdateNotice.guide).split('\n').map((line, idx) => line.trim() && (
                                                     <div key={idx} className="flex items-start gap-2 text-sm font-bold text-emerald-800/80 dark:text-emerald-100/90"><span className="w-5 h-5 rounded-full bg-emerald-500 text-white text-[10px] font-black flex items-center justify-center shrink-0 mt-0.5">{idx + 1}</span><span>{line.trim().replace(/^[-•\d.、)）\s]+/, '')}</span></div>
                                                 ))}
                                             </div>
@@ -4043,47 +4217,6 @@ function App() {
                         </div>
                     )}
 
-                    {showSyncModeIntro && !showUpdateIntro && (
-                        <div className="fixed inset-0 z-[268] flex items-center justify-center p-4 sm:p-6">
-                            <div className="absolute inset-0 bg-slate-950/55 backdrop-blur-md"></div>
-                            <div className="relative w-full max-w-[520px] max-h-[86vh] overflow-hidden rounded-[2rem] glass-card bg-white/95 dark:bg-slate-900/95 border border-white/60 dark:border-slate-700 shadow-2xl flex flex-col animate-pop-in">
-                                <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-blue-600 to-emerald-500 text-white p-6 sm:p-7">
-                                    <div className="absolute inset-0 opacity-25 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.9),transparent_45%)]"></div>
-                                    <div className="relative">
-                                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 border border-white/20 text-xs font-black mb-4"><Icon name="refresh-cw" className="w-4 h-4" /> 新功能教學</div>
-                                        <h3 className="text-2xl font-black tracking-tight">廣播功課同步模式已升級</h3>
-                                        <p className="text-sm text-indigo-100 font-bold mt-2">你可以自行選擇「自動同步」或「手動同步」，按自己習慣使用。</p>
-                                    </div>
-                                </div>
-                                <div className="overflow-y-auto p-5 sm:p-6 space-y-4 scrollbar-hide">
-                                    <div className="rounded-3xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 p-4">
-                                        <div className="flex items-center gap-2 font-black text-emerald-700 dark:text-emerald-300 mb-2"><Icon name="refresh-cw" className="w-5 h-5"/> 自動同步</div>
-                                        <p className="text-sm font-bold text-emerald-800/80 dark:text-emerald-100/90 leading-relaxed">開啟後，管理員發放新廣播功課時，系統會自動幫你加入個人手冊，不需要再手動按同步。</p>
-                                    </div>
-                                    <div className="rounded-3xl bg-orange-50 dark:bg-orange-900/20 border border-orange-100 dark:border-orange-800 p-4">
-                                        <div className="flex items-center gap-2 font-black text-orange-700 dark:text-orange-300 mb-2"><Icon name="hand" className="w-5 h-5"/> 手動同步</div>
-                                        <p className="text-sm font-bold text-orange-800/80 dark:text-orange-100/90 leading-relaxed">關閉自動同步後，有新廣播功課時主頁會顯示醒目提示，你可以前往班級分頁自行選擇同步。</p>
-                                    </div>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        <button type="button" onClick={() => handleToggleAutoSyncPublic(true)} className="rounded-3xl p-4 text-left bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-700 transition-all">
-                                            <div className="font-black text-slate-800 dark:text-white flex items-center gap-2"><Icon name="toggle-right" className="w-5 h-5 text-emerald-500"/> 開啟自動同步</div>
-                                            <div className="text-xs font-bold text-slate-400 mt-1">適合想省時間、不想漏功課的用戶。</div>
-                                        </button>
-                                        <button type="button" onClick={() => handleToggleAutoSyncPublic(false)} className="rounded-3xl p-4 text-left bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 hover:border-orange-300 dark:hover:border-orange-700 transition-all">
-                                            <div className="font-black text-slate-800 dark:text-white flex items-center gap-2"><Icon name="toggle-left" className="w-5 h-5 text-orange-500"/> 保持手動同步</div>
-                                            <div className="text-xs font-bold text-slate-400 mt-1">適合想自己確認每份功課才加入的人。</div>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div className="p-5 border-t border-slate-100 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl">
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        <button onClick={closeSyncModeIntroForNow} className="py-4 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-200 font-black active:scale-[0.98] transition-all">今次關閉，下次再提示</button>
-                                        <button onClick={hideSyncModeIntroPermanently} className="py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black shadow-lg active:scale-[0.98] transition-all">我知道了，不再顯示</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
 
                     {isNotificationCenterOpen && (
                         <div className="fixed inset-0 z-[260] flex items-center justify-center p-4 sm:p-6">
@@ -4133,7 +4266,7 @@ function App() {
                                                         <div className="text-xs font-bold mt-1 line-clamp-2 break-words">{note.message}</div>
                                                         <div className="mt-2 flex items-center justify-between gap-2 text-[10px] font-black opacity-70">
                                                             <span className="truncate">{note.meta || note.time || '剛剛'}</span>
-                                                            {note.action === 'class' && <span className="shrink-0 flex items-center gap-1">前往同步 <Icon name="arrow-right" className="w-3 h-3" /></span>}
+                                                            {note.action === 'class' && <span className="shrink-0 flex items-center gap-1">查看功課 <Icon name="arrow-right" className="w-3 h-3" /></span>}
                                                             {note.action === 'timetable' && <span className="shrink-0 flex items-center gap-1">查看時間表 <Icon name="arrow-right" className="w-3 h-3" /></span>}
                                                             {note.action === 'cleanup' && <span className="shrink-0 flex items-center gap-1">返回主頁 <Icon name="arrow-right" className="w-3 h-3" /></span>}
                                                             {note.action === 'release' && <span className="shrink-0 flex items-center gap-1">查看更新 <Icon name="arrow-right" className="w-3 h-3" /></span>}
@@ -4177,6 +4310,11 @@ function App() {
             }
         }
     </script>
-<!-- VERSION_CHECK: v1.8.19-google-login-callback-fix | based-on-uploaded-v1.8.17 | google-auth-flow-rebuilt | original-functions-preserved -->
+<!-- VERSION_CHECK: v1.8.24-class-page-clean-update-notice | based-on-uploaded-v1.8.17 | google-auth-flow-rebuilt | original-functions-preserved -->
+    <!-- ehandbook-build: v1.8.24-class-page-clean-update-notice -->
 </body>
 </html>
+
+<!-- ehandbook_v1.8.24_class_page_clean_update_notice: class page manual status removed; built-in update popup added. -->
+
+<!-- v1.8.24-class-page-clean-update-notice: students auto-claim broadcast assignments on login; no class page manual join controls. -->
