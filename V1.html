@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-HK">
 <head>
-    <!-- 電子手冊 Pro v1.8.13 Audited Full Build：完整核對版，保留所有功能 + Redirect Callback Fix + 全頁設定 + 高級個人化 -->
+    <!-- 電子手冊 Pro v1.8.14 Google Redirect Resolver Fix：保留所有設定功能，專注修復 Google 登入 argument-error -->
 
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-8VCPLTE2QT"></script>
     <script>
@@ -20,8 +20,8 @@
     <meta name="apple-mobile-web-app-title" content="電子手冊">
     
     <title>電子手冊 Pro</title>
-    <meta name="ehandbook-version" content="v1.8.13-audited-full-build">
-    <script>window.__EHANDBOOK_VERSION__ = "v1.8.13-audited-full-build"; console.log("電子手冊 Pro v1.8.13-audited-full-build loaded");</script>
+    <meta name="ehandbook-version" content="v1.8.14-google-redirect-resolver-fix">
+    <script>window.__EHANDBOOK_VERSION__ = "v1.8.14-google-redirect-resolver-fix"; console.log("電子手冊 Pro v1.8.14-google-redirect-resolver-fix loaded");</script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js" crossorigin></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js" crossorigin></script>
@@ -130,7 +130,7 @@
             try {
                 var box = document.getElementById('loading-screen');
                 if (box && !window.__EHANDBOOK_RENDERED__) {
-                    box.innerHTML = "<div style='max-width:420px;padding:22px;text-align:center'><div style='font-size:42px;margin-bottom:10px'>⚠️</div><h2 style='font-size:1.2rem;font-weight:800;margin-bottom:8px;color:#ef4444'>網站載入時發生錯誤</h2><p style='font-size:13px;color:#64748b;line-height:1.6'>請重新整理一次；如果仍然出現，請截圖 Console 錯誤。系統已加入 v1.8.13 Audited Full Build 啟動保護。</p></div>";
+                    box.innerHTML = "<div style='max-width:420px;padding:22px;text-align:center'><div style='font-size:42px;margin-bottom:10px'>⚠️</div><h2 style='font-size:1.2rem;font-weight:800;margin-bottom:8px;color:#ef4444'>網站載入時發生錯誤</h2><p style='font-size:13px;color:#64748b;line-height:1.6'>請重新整理一次；如果仍然出現，請截圖 Console 錯誤。系統已加入 v1.8.14 Google 登入修復版啟動保護。</p></div>";
                 }
             } catch(e) {}
         });
@@ -148,7 +148,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, initializeAuth, indexedDBLocalPersistence, browserLocalPersistence, browserSessionPersistence, inMemoryPersistence, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, initializeAuth, indexedDBLocalPersistence, browserLocalPersistence, browserSessionPersistence, inMemoryPersistence, browserPopupRedirectResolver, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs, setDoc, arrayUnion, arrayRemove, getDoc, writeBatch, limit, startAfter } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         const firebaseConfig = {
@@ -166,7 +166,8 @@
             let auth;
             try {
                 auth = initializeAuth(app, {
-                    persistence: [indexedDBLocalPersistence, browserLocalPersistence, browserSessionPersistence, inMemoryPersistence]
+                    persistence: [indexedDBLocalPersistence, browserLocalPersistence, browserSessionPersistence, inMemoryPersistence],
+                    popupRedirectResolver: browserPopupRedirectResolver
                 });
             } catch (authInitError) {
                 console.warn('Auth already initialized, using existing auth instance:', authInitError);
@@ -193,7 +194,7 @@
                 });
             window.firebaseServices = { 
                 auth, db, googleProvider, 
-                signInWithPopup, signInWithRedirect, getRedirectResult, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged, updateProfile, 
+                signInWithPopup, signInWithRedirect, getRedirectResult, browserPopupRedirectResolver, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged, updateProfile, 
                 collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs, setDoc, arrayUnion, arrayRemove, getDoc, writeBatch, limit, startAfter
             };
         } catch (e) {
@@ -465,7 +466,7 @@
             const [email, setEmail] = useState('');
             const [password, setPassword] = useState(''); 
             const [loading, setLoading] = useState(false);
-            const { auth, googleProvider, signInWithPopup, signInWithRedirect, getRedirectResult, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail } = window.firebaseServices || {};
+            const { auth, googleProvider, signInWithPopup, signInWithRedirect, getRedirectResult, browserPopupRedirectResolver, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail } = window.firebaseServices || {};
             const browserHint = getBrowserLoginModeText();
             const inAppBrowser = isInAppBrowser();
 
@@ -2419,7 +2420,7 @@
                                 <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-[1.7rem] bg-white/15 border border-white/20 backdrop-blur-xl flex items-center justify-center text-3xl font-black shadow-lg shrink-0">{initial}</div>
                                 <div className="min-w-0 pt-1">
                                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-[11px] font-black mb-3">
-                                        <Icon name="settings-2" className="w-3.5 h-3.5" /> 應用程式設定 · v1.8.13
+                                        <Icon name="settings-2" className="w-3.5 h-3.5" /> 應用程式設定 · v1.8.14
                                     </div>
                                     <h2 className="text-2xl sm:text-3xl font-black tracking-tight truncate">{displayName}</h2>
                                     <p className="text-sm text-indigo-100 font-bold mt-1 truncate">{email || '個人化你的電子手冊'}</p>
@@ -2667,7 +2668,7 @@ function App() {
                 const loadingScreen = document.getElementById('loading-screen');
                 window.__EHANDBOOK_RENDERED__ = true;
                 if (loadingScreen) { loadingScreen.classList.add('hidden-loader'); setTimeout(() => loadingScreen.remove(), 500); }
-                // v1.8.13: 已審核保留全站功能；不再於載入時自動要求通知權限，並強化 Google Redirect 返回處理。
+                // v1.8.14: 已保留全站功能；不再於載入時自動要求通知權限，並加入 browserPopupRedirectResolver 修復 Google Redirect argument-error。
             }, []);
 
             useEffect(() => {
@@ -3987,6 +3988,6 @@ function App() {
             }
         }
     </script>
-<!-- VERSION_CHECK: v1.8.13-audited-full-build | no-v1.8.11-marker | generated-after-user-audit -->
+<!-- VERSION_CHECK: v1.8.14-google-redirect-resolver-fix | no-v1.8.11-marker | generated-after-user-audit -->
 </body>
 </html>
