@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-HK">
 <head>
-    <!-- 電子手冊 Pro v1.8.1 載入修復版：保留 v1.8 功能 + 修正主畫面載入卡住風險 -->
+    <!-- 電子手冊 Pro v1.8.9 Advanced Settings Page：設定頁 iPad 寬度修正 + 高級個人化設定 -->
 
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-8VCPLTE2QT"></script>
     <script>
@@ -20,6 +20,8 @@
     <meta name="apple-mobile-web-app-title" content="電子手冊">
     
     <title>電子手冊 Pro</title>
+    <meta name="ehandbook-version" content="v1.8.9-advanced-settings-page">
+    <script>window.__EHANDBOOK_VERSION__ = "v1.8.9-advanced-settings-page"; console.log("電子手冊 Pro v1.8.9-advanced-settings-page loaded");</script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js" crossorigin></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js" crossorigin></script>
@@ -109,6 +111,12 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .hidden-loader { opacity: 0; pointer-events: none; }
         
+
+        .reduce-motion-mode *, .reduce-motion-mode *::before, .reduce-motion-mode *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+        .large-text-mode { font-size: 1.04rem; }
+        .clean-glass-mode .glass-card { background: rgba(255,255,255,0.92); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 6px 22px rgba(15,23,42,0.04); }
+        .dark .clean-glass-mode .glass-card { background: rgba(15,23,42,0.92); }
+        .comfort-spacing-mode .animate-item, .comfort-spacing-mode .glass-card { letter-spacing: 0.002em; }
         .dynamic-island-scroll::-webkit-scrollbar { display: none; }
     </style>
 </head>
@@ -119,7 +127,7 @@
             try {
                 var box = document.getElementById('loading-screen');
                 if (box && !window.__EHANDBOOK_RENDERED__) {
-                    box.innerHTML = "<div style='max-width:420px;padding:22px;text-align:center'><div style='font-size:42px;margin-bottom:10px'>⚠️</div><h2 style='font-size:1.2rem;font-weight:800;margin-bottom:8px;color:#ef4444'>網站載入時發生錯誤</h2><p style='font-size:13px;color:#64748b;line-height:1.6'>請重新整理一次；如果仍然出現，請截圖 Console 錯誤。系統已加入 v1.8.1 載入保護。</p></div>";
+                    box.innerHTML = "<div style='max-width:420px;padding:22px;text-align:center'><div style='font-size:42px;margin-bottom:10px'>⚠️</div><h2 style='font-size:1.2rem;font-weight:800;margin-bottom:8px;color:#ef4444'>網站載入時發生錯誤</h2><p style='font-size:13px;color:#64748b;line-height:1.6'>請重新整理一次；如果仍然出現，請截圖 Console 錯誤。系統已加入 v1.8.9 Advanced Settings Page 啟動保護。</p></div>";
                 }
             } catch(e) {}
         });
@@ -137,7 +145,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs, setDoc, arrayUnion, arrayRemove, getDoc, writeBatch, limit, startAfter } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         const firebaseConfig = {
@@ -157,7 +165,7 @@
             const googleProvider = new GoogleAuthProvider();
             window.firebaseServices = { 
                 auth, db, googleProvider, 
-                signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, 
+                signInWithPopup, signInWithRedirect, getRedirectResult, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, 
                 collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, where, getDocs, setDoc, arrayUnion, arrayRemove, getDoc, writeBatch, limit, startAfter
             };
         } catch (e) {
@@ -169,6 +177,47 @@
     <script type="text/babel">
         const { useState, useEffect, useRef, useMemo } = React;
         const ADMIN_EMAIL = 'chimhinhin@gmail.com'; 
+
+        const isIPadLike = () => {
+            try {
+                const ua = navigator.userAgent || '';
+                const platform = navigator.platform || '';
+                return /iPad|iPhone|iPod/i.test(ua) || (platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            } catch (e) { return false; }
+        };
+
+        const isSafariLike = () => {
+            try {
+                const ua = navigator.userAgent || '';
+                return /Safari/i.test(ua) && !/Chrome|CriOS|FxiOS|Edg|Android/i.test(ua);
+            } catch (e) { return false; }
+        };
+
+        const isStandaloneMode = () => {
+            try {
+                return window.navigator.standalone === true || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+            } catch (e) { return false; }
+        };
+
+        const safeStorageGet = (key, fallback = '') => {
+            try {
+                const value = window.localStorage.getItem(key);
+                return value === null || value === undefined ? fallback : value;
+            } catch (e) { return fallback; }
+        };
+
+        const safeStorageSet = (key, value) => {
+            try { window.localStorage.setItem(key, value); } catch (e) {}
+        };
+
+        const safeStorageJSON = (key, fallback) => {
+            try {
+                const raw = window.localStorage.getItem(key);
+                if (!raw) return fallback;
+                const parsed = JSON.parse(raw);
+                return parsed === undefined || parsed === null ? fallback : parsed;
+            } catch (e) { return fallback; }
+        };
 
         const DEFAULT_SUBJECTS = [
             { name: '中文', color: 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800' },
@@ -354,11 +403,39 @@
             const [isLogin, setIsLogin] = useState(true);
             const [email, setEmail] = useState(''); const [password, setPassword] = useState(''); 
             const [loading, setLoading] = useState(false);
-            const { auth, googleProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword } = window.firebaseServices || {};
+            const { auth, googleProvider, signInWithPopup, signInWithRedirect, getRedirectResult, createUserWithEmailAndPassword, signInWithEmailAndPassword } = window.firebaseServices || {};
+
+            useEffect(() => {
+                if (!auth || !getRedirectResult) return;
+                getRedirectResult(auth).catch((error) => {
+                    console.warn('Google redirect result error:', error);
+                    if (error?.code && error.code !== 'auth/no-auth-event') {
+                        triggerAlert('Google 登入返回失敗: ' + (error.message || error.code), 'error');
+                    }
+                });
+            }, [auth, getRedirectResult]);
 
             const handleGoogleLogin = async () => { 
-                try { setLoading(true); await signInWithPopup(auth, googleProvider); } 
-                catch (error) { triggerAlert("Google 登入失敗: " + error.message, "error"); setLoading(false); } 
+                if (!auth || !googleProvider) { triggerAlert('Firebase 尚未準備好，請重新整理後再試。', 'error'); return; }
+                try {
+                    setLoading(true);
+                    const shouldUseRedirect = isIPadLike() || isSafariLike() || isStandaloneMode();
+                    if (shouldUseRedirect && signInWithRedirect) {
+                        await signInWithRedirect(auth, googleProvider);
+                        return;
+                    }
+                    await signInWithPopup(auth, googleProvider);
+                } catch (error) {
+                    console.warn('Google popup login failed:', error);
+                    const fallbackCodes = ['auth/popup-blocked', 'auth/popup-closed-by-user', 'auth/cancelled-popup-request', 'auth/operation-not-supported-in-this-environment'];
+                    if (signInWithRedirect && (isIPadLike() || isSafariLike() || isStandaloneMode() || fallbackCodes.includes(error?.code))) {
+                        try { await signInWithRedirect(auth, googleProvider); return; }
+                        catch (redirectError) { triggerAlert('Google 重新導向登入失敗: ' + (redirectError.message || redirectError.code), 'error'); }
+                    } else {
+                        triggerAlert('Google 登入失敗: ' + (error.message || error.code), 'error');
+                    }
+                    setLoading(false);
+                } 
             };
 
             const handleEmailAuth = async (e) => { 
@@ -2113,7 +2190,252 @@
             );
         }
 
-        function App() {
+        function UserSettingsPage({
+            user,
+            userProfile,
+            t,
+            autoSyncPublicEnabled,
+            syncPreferenceLoaded,
+            onToggleAutoSyncPublic,
+            unsyncedCount,
+            unreadNotificationCount,
+            isDarkMode,
+            setIsDarkMode,
+            themeColor,
+            setThemeColor,
+            layoutMode,
+            setLayoutMode,
+            customLayout,
+            setCustomLayout,
+            advancedPrefs,
+            setAdvancedPrefs,
+            onOpenNotifications,
+            onOpenAppearance,
+            onOpenSubjects,
+            onGoClass,
+            onLogout
+        }) {
+            const displayName = userProfile?.displayName || user?.displayName || '學生';
+            const email = user?.email || userProfile?.email || '';
+            const initial = String(displayName || email || 'E').trim().charAt(0).toUpperCase();
+            const syncTitle = autoSyncPublicEnabled ? '自動同步已開啟' : '手動同步模式';
+            const syncDesc = autoSyncPublicEnabled ? '新廣播功課會自動加入個人手冊，適合想省時間同避免漏功課。' : '新廣播功課會先提示你，再由你到班級分頁自行同步。';
+            const layoutOptions = [
+                { value: 'normal', label: '完整模式', desc: '顯示主頁卡片、時間表、輸入欄同任務列表', icon: 'layout-dashboard' },
+                { value: 'minimal', label: '極簡模式', desc: '只保留重要卡片同任務列表，主頁更乾淨', icon: 'minimize-2' },
+                { value: 'custom', label: '自定義', desc: '自己決定主頁每個區塊是否顯示', icon: 'sliders-horizontal' }
+            ];
+            const customBlocks = [
+                { key: 'cards', label: '狀態卡片', desc: '今日急件、明日預告、測驗考試統計', icon: 'columns-3' },
+                { key: 'timetable', label: '即時課堂', desc: '顯示目前課節、倒數及下一節', icon: 'calendar-clock' },
+                { key: 'input', label: '新增功課欄', desc: '主頁直接新增功課或測驗', icon: 'square-pen' },
+                { key: 'list', label: '任務列表', desc: '顯示個人手冊功課列表', icon: 'list-checks' }
+            ];
+            const advancedOptions = [
+                { key: 'largeText', label: '大字體模式', desc: 'iPad 同手機閱讀更舒服，適合長時間使用', icon: 'text' },
+                { key: 'reduceMotion', label: '減少動畫', desc: '降低過場動畫，頁面操作更穩定', icon: 'wind' },
+                { key: 'cleanGlass', label: '清晰玻璃模式', desc: '降低磨砂透明度，文字更清楚', icon: 'glass-water' },
+                { key: 'comfortSpacing', label: '舒適間距', desc: '設定卡片與文字呼吸感更強', icon: 'move-horizontal' },
+                { key: 'smartHints', label: '智能提示', desc: '保留同步、過期、時間表等使用提示', icon: 'sparkles' },
+                { key: 'focusFirst', label: '專注優先', desc: '主頁更重視今日任務與待辦事項', icon: 'target' }
+            ];
+            const quickActionOptions = [
+                { key: 'showClassShortcut', label: '班級同步快捷', desc: '在設定頁保留快速前往班級同步', icon: 'school-2' },
+                { key: 'showNotificationShortcut', label: '通知快捷', desc: '在設定頁快速打開通知中心', icon: 'bell' },
+                { key: 'showSubjectShortcut', label: '科目快捷', desc: '方便快速進入科目管理', icon: 'book-marked' },
+                { key: 'showAccountShortcut', label: '帳號操作', desc: '顯示登出與帳號相關操作', icon: 'user-cog' }
+            ];
+            const handleCustomToggle = (key) => setCustomLayout({ ...customLayout, [key]: !customLayout[key] });
+            const handleAdvancedToggle = (key) => setAdvancedPrefs({ ...advancedPrefs, [key]: !advancedPrefs?.[key] });
+            const themeEntries = Object.entries(THEME_CONFIG);
+
+            const SettingSection = ({ title, desc, icon, children, right }) => (
+                <section className="rounded-[2rem] bg-white/85 dark:bg-slate-900/85 border border-white/70 dark:border-slate-700 shadow-sm overflow-hidden">
+                    <div className="p-5 sm:p-6 border-b border-slate-100 dark:border-slate-800 flex items-start justify-between gap-4">
+                        <div className="flex items-start gap-3 min-w-0">
+                            <div className={`w-11 h-11 rounded-2xl ${t.lightBg} ${t.text} flex items-center justify-center shrink-0`}><Icon name={icon} className="w-5 h-5" /></div>
+                            <div className="min-w-0">
+                                <h3 className="text-base sm:text-lg font-black text-slate-800 dark:text-white">{title}</h3>
+                                <p className="text-xs sm:text-sm font-bold text-slate-400 dark:text-slate-500 mt-1 leading-relaxed">{desc}</p>
+                            </div>
+                        </div>
+                        {right}
+                    </div>
+                    <div className="p-5 sm:p-6">{children}</div>
+                </section>
+            );
+
+            return (
+                <div className="max-w-3xl mx-auto pb-10 space-y-5 sm:space-y-6 animate-item">
+                    <div className="relative overflow-hidden rounded-[2.25rem] p-5 sm:p-7 bg-gradient-to-br from-slate-950 via-indigo-950 to-sky-800 text-white shadow-[0_30px_90px_-35px_rgba(15,23,42,0.8)]">
+                        <div className="absolute -top-20 -right-16 w-56 h-56 rounded-full bg-cyan-300/20 blur-3xl"></div>
+                        <div className="absolute bottom-0 left-16 w-60 h-32 rounded-full bg-violet-300/20 blur-3xl"></div>
+                        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-[1.618fr_1fr] gap-6 items-end">
+                            <div className="flex items-start gap-4 min-w-0">
+                                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-[1.7rem] bg-white/15 border border-white/20 backdrop-blur-xl flex items-center justify-center text-3xl font-black shadow-lg shrink-0">{initial}</div>
+                                <div className="min-w-0 pt-1">
+                                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-[11px] font-black mb-3">
+                                        <Icon name="settings-2" className="w-3.5 h-3.5" /> 應用程式設定 · v1.8.9
+                                    </div>
+                                    <h2 className="text-2xl sm:text-3xl font-black tracking-tight truncate">{displayName}</h2>
+                                    <p className="text-sm text-indigo-100 font-bold mt-1 truncate">{email || '個人化你的電子手冊'}</p>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="rounded-[1.6rem] bg-white/10 border border-white/15 p-4 backdrop-blur-xl">
+                                    <div className="text-[10px] font-black text-indigo-100 uppercase">同步模式</div>
+                                    <div className="text-sm font-black mt-1">{syncTitle}</div>
+                                </div>
+                                <div className="rounded-[1.6rem] bg-white/10 border border-white/15 p-4 backdrop-blur-xl">
+                                    <div className="text-[10px] font-black text-indigo-100 uppercase">通知</div>
+                                    <div className="text-sm font-black mt-1">{unreadNotificationCount > 0 ? `${unreadNotificationCount} 則未讀` : '全部已讀'}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <SettingSection title="廣播功課同步" desc="控制管理員發放功課後，要自動加入個人手冊，定係由你手動確認。" icon="refresh-cw" right={
+                        unsyncedCount > 0 ? <span className="px-3 py-1.5 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 text-[11px] font-black shrink-0">{unsyncedCount} 份待同步</span> : null
+                    }>
+                        <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-5 items-stretch">
+                            <div className={`rounded-[1.75rem] p-5 border ${autoSyncPublicEnabled ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-800' : 'bg-orange-50 dark:bg-orange-900/20 border-orange-100 dark:border-orange-800'}`}>
+                                <div className="flex items-start gap-3">
+                                    <div className={`w-12 h-12 rounded-2xl text-white flex items-center justify-center shadow-lg ${autoSyncPublicEnabled ? 'bg-gradient-to-br from-emerald-500 to-teal-500' : 'bg-gradient-to-br from-orange-500 to-amber-500'}`}><Icon name={autoSyncPublicEnabled ? 'refresh-cw' : 'hand'} className="w-5 h-5" /></div>
+                                    <div>
+                                        <h4 className={`font-black text-lg ${autoSyncPublicEnabled ? 'text-emerald-800 dark:text-emerald-200' : 'text-orange-800 dark:text-orange-200'}`}>{syncTitle}</h4>
+                                        <p className={`text-sm font-bold leading-relaxed mt-1 ${autoSyncPublicEnabled ? 'text-emerald-700/80 dark:text-emerald-100/80' : 'text-orange-700/80 dark:text-orange-100/80'}`}>{syncDesc}</p>
+                                    </div>
+                                </div>
+                                {!autoSyncPublicEnabled && unsyncedCount > 0 && (
+                                    <button type="button" onClick={onGoClass} className="mt-4 w-full rounded-2xl bg-white/85 dark:bg-slate-900/50 border border-orange-200 dark:border-orange-800 px-4 py-3 flex items-center justify-between text-left hover:scale-[1.01] transition-all active:scale-[0.99]">
+                                        <span className="text-sm font-black text-orange-700 dark:text-orange-300 flex items-center gap-2"><Icon name="bell-ring" className="w-4 h-4" /> 前往班級分頁同步</span>
+                                        <Icon name="arrow-right" className="w-4 h-4 text-orange-500" />
+                                    </button>
+                                )}
+                            </div>
+                            <div className="grid grid-cols-2 lg:grid-cols-1 gap-3">
+                                <button type="button" disabled={!syncPreferenceLoaded} onClick={() => onToggleAutoSyncPublic(true)} className={`rounded-[1.5rem] border p-4 text-left transition-all active:scale-95 disabled:opacity-50 ${autoSyncPublicEnabled ? 'bg-emerald-500 text-white border-emerald-400 shadow-lg' : 'bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-emerald-300'}`}>
+                                    <Icon name="toggle-right" className="w-5 h-5 mb-2" /><div className="font-black text-sm">開啟自動同步</div><div className="text-[11px] font-bold opacity-75 mt-1">省時間，避免漏功課</div>
+                                </button>
+                                <button type="button" disabled={!syncPreferenceLoaded} onClick={() => onToggleAutoSyncPublic(false)} className={`rounded-[1.5rem] border p-4 text-left transition-all active:scale-95 disabled:opacity-50 ${!autoSyncPublicEnabled ? 'bg-orange-500 text-white border-orange-400 shadow-lg' : 'bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-orange-300'}`}>
+                                    <Icon name="toggle-left" className="w-5 h-5 mb-2" /><div className="font-black text-sm">保持手動同步</div><div className="text-[11px] font-bold opacity-75 mt-1">每份功課自己確認</div>
+                                </button>
+                            </div>
+                        </div>
+                    </SettingSection>
+
+                    <SettingSection title="外觀個人化" desc="調整主題色、深色模式同整體介面密度，令電子手冊更貼合你嘅使用習慣。" icon="palette" right={<button type="button" onClick={onOpenAppearance} className="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-300 text-xs font-black hover:bg-slate-200 dark:hover:bg-slate-700">進階外觀</button>}>
+                        <div className="space-y-5">
+                            <div>
+                                <div className="text-xs font-black text-slate-400 uppercase mb-3">主題顏色</div>
+                                <div className="grid grid-cols-4 sm:grid-cols-7 gap-3">
+                                    {themeEntries.map(([key, config]) => (
+                                        <button key={key} type="button" onClick={() => setThemeColor(key)} className={`rounded-[1.25rem] p-2 border transition-all active:scale-95 ${themeColor === key ? `${config.lightBg} ${config.border} shadow-md scale-[1.02]` : 'bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-700 hover:scale-[1.02]'}`}>
+                                            <div className={`w-full h-10 rounded-xl bg-gradient-to-br ${config.gradient} mb-2`}></div>
+                                            <div className={`text-[11px] font-black ${themeColor === key ? config.text : 'text-slate-400'}`}>{config.name}</div>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <button type="button" onClick={() => setIsDarkMode(false)} className={`p-4 rounded-[1.5rem] border flex items-center gap-3 text-left transition-all ${!isDarkMode ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 text-orange-600 dark:text-orange-300' : 'bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-500 dark:text-slate-300'}`}><Icon name="sun" className="w-5 h-5" /><div><div className="font-black text-sm">淺色模式</div><div className="text-[11px] font-bold opacity-75">乾淨清爽</div></div></button>
+                                <button type="button" onClick={() => setIsDarkMode(true)} className={`p-4 rounded-[1.5rem] border flex items-center gap-3 text-left transition-all ${isDarkMode ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-300' : 'bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-500 dark:text-slate-300'}`}><Icon name="moon" className="w-5 h-5" /><div><div className="font-black text-sm">深色模式</div><div className="text-[11px] font-bold opacity-75">夜晚護眼</div></div></button>
+                            </div>
+                        </div>
+                    </SettingSection>
+
+                    <SettingSection title="主頁排版設計" desc="像真正 App 設定一樣，自行決定主頁要完整、極簡，還是逐項開關。" icon="layout-template">
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                {layoutOptions.map(opt => (
+                                    <button key={opt.value} type="button" onClick={() => setLayoutMode(opt.value)} className={`p-4 rounded-[1.5rem] border text-left transition-all active:scale-95 ${layoutMode === opt.value ? `${t.lightBg} ${t.border} ${t.text} shadow-md` : 'bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-500 dark:text-slate-300 hover:border-slate-300'}`}>
+                                        <Icon name={opt.icon} className="w-5 h-5 mb-3" />
+                                        <div className="font-black text-sm">{opt.label}</div>
+                                        <div className="text-[11px] font-bold opacity-70 mt-1 leading-relaxed">{opt.desc}</div>
+                                    </button>
+                                ))}
+                            </div>
+                            <div className={`rounded-[1.75rem] border p-4 transition-all ${layoutMode === 'custom' ? 'bg-white dark:bg-slate-900 border-indigo-100 dark:border-indigo-800' : 'bg-slate-50/60 dark:bg-slate-800/50 border-slate-100 dark:border-slate-700 opacity-75'}`}>
+                                <div className="flex items-center justify-between gap-3 mb-3">
+                                    <div>
+                                        <div className="font-black text-sm text-slate-800 dark:text-white">自定義主頁區塊</div>
+                                        <div className="text-[11px] font-bold text-slate-400">選擇「自定義」後，以下開關會套用到主頁。</div>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    {customBlocks.map(block => (
+                                        <button key={block.key} type="button" onClick={() => { setLayoutMode('custom'); handleCustomToggle(block.key); }} className={`rounded-2xl border p-4 text-left flex items-start justify-between gap-3 transition-all active:scale-[0.98] ${customLayout[block.key] ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-100 dark:border-indigo-800' : 'bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-700'}`}>
+                                            <div className="flex items-start gap-3 min-w-0">
+                                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${customLayout[block.key] ? 'bg-indigo-600 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-500'}`}><Icon name={block.icon} className="w-4 h-4" /></div>
+                                                <div><div className="font-black text-sm text-slate-800 dark:text-white">{block.label}</div><div className="text-[11px] font-bold text-slate-400 mt-0.5 leading-relaxed">{block.desc}</div></div>
+                                            </div>
+                                            <div className={`w-12 h-7 rounded-full relative shrink-0 transition-all ${customLayout[block.key] ? 'bg-indigo-600' : 'bg-slate-300 dark:bg-slate-700'}`}><span className={`absolute top-[3px] w-5 h-5 rounded-full bg-white shadow transition-all ${customLayout[block.key] ? 'left-[24px]' : 'left-[4px]'}`}></span></div>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </SettingSection>
+
+                    <SettingSection title="高級體驗自定義" desc="微調動畫、文字、玻璃效果同快捷入口，令 iPad / 手機使用更貼近你習慣。" icon="sliders-horizontal">
+                        <div className="space-y-5">
+                            <div>
+                                <div className="text-xs font-black text-slate-400 uppercase mb-3">體驗開關</div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    {advancedOptions.map(opt => {
+                                        const actualEnabled = opt.key === 'smartHints' ? advancedPrefs?.smartHints !== false : advancedPrefs?.[opt.key] === true;
+                                        return (
+                                            <button key={opt.key} type="button" onClick={() => handleAdvancedToggle(opt.key)} className={`rounded-2xl border p-4 text-left flex items-start justify-between gap-3 transition-all active:scale-[0.98] ${actualEnabled ? `${t.lightBg} ${t.border}` : 'bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-700'}`}>
+                                                <div className="flex items-start gap-3 min-w-0">
+                                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${actualEnabled ? `bg-gradient-to-br ${t.gradient} text-white` : 'bg-slate-200 dark:bg-slate-700 text-slate-500'}`}><Icon name={opt.icon} className="w-4 h-4" /></div>
+                                                    <div><div className="font-black text-sm text-slate-800 dark:text-white">{opt.label}</div><div className="text-[11px] font-bold text-slate-400 mt-0.5 leading-relaxed">{opt.desc}</div></div>
+                                                </div>
+                                                <div className={`w-11 h-6 rounded-full relative shrink-0 transition-all ${actualEnabled ? 'bg-indigo-600' : 'bg-slate-300 dark:bg-slate-700'}`}><span className={`absolute top-[3px] w-[18px] h-[18px] rounded-full bg-white shadow transition-all ${actualEnabled ? 'left-[21px]' : 'left-[3px]'}`}></span></div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                            <div>
+                                <div className="text-xs font-black text-slate-400 uppercase mb-3">快捷入口顯示</div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    {quickActionOptions.map(opt => {
+                                        const enabled = advancedPrefs?.[opt.key] !== false;
+                                        return (
+                                            <button key={opt.key} type="button" onClick={() => handleAdvancedToggle(opt.key)} className={`rounded-2xl border p-4 text-left flex items-start justify-between gap-3 transition-all active:scale-[0.98] ${enabled ? 'bg-white dark:bg-slate-900 border-indigo-100 dark:border-indigo-800' : 'bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-700 opacity-75'}`}>
+                                                <div className="flex items-start gap-3 min-w-0">
+                                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${enabled ? 'bg-indigo-600 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-500'}`}><Icon name={opt.icon} className="w-4 h-4" /></div>
+                                                    <div><div className="font-black text-sm text-slate-800 dark:text-white">{opt.label}</div><div className="text-[11px] font-bold text-slate-400 mt-0.5 leading-relaxed">{opt.desc}</div></div>
+                                                </div>
+                                                <div className={`w-11 h-6 rounded-full relative shrink-0 transition-all ${enabled ? 'bg-indigo-600' : 'bg-slate-300 dark:bg-slate-700'}`}><span className={`absolute top-[3px] w-[18px] h-[18px] rounded-full bg-white shadow transition-all ${enabled ? 'left-[21px]' : 'left-[3px]'}`}></span></div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+                    </SettingSection>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <SettingSection title="通知與提醒" desc="管理通知中心、未讀提醒同版本更新資訊。" icon="bell-ring" right={unreadNotificationCount > 0 ? <span className="px-2.5 py-1 rounded-full bg-red-500 text-white text-[10px] font-black">{unreadNotificationCount}</span> : null}>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                {advancedPrefs?.showNotificationShortcut !== false && <button type="button" onClick={onOpenNotifications} className="p-4 rounded-2xl bg-orange-50 dark:bg-orange-900/20 border border-orange-100 dark:border-orange-800 text-left hover:scale-[1.01] active:scale-[0.98] transition-all"><Icon name="bell" className="w-5 h-5 text-orange-500 mb-2" /><div className="font-black text-sm text-orange-700 dark:text-orange-300">打開通知中心</div><div className="text-[11px] font-bold text-orange-600/70 dark:text-orange-200/70 mt-1">查看廣播、更新、過期功課</div></button>}
+                                {advancedPrefs?.showClassShortcut !== false && <button type="button" onClick={onGoClass} className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 text-left hover:scale-[1.01] active:scale-[0.98] transition-all"><Icon name="school-2" className="w-5 h-5 text-emerald-500 mb-2" /><div className="font-black text-sm text-emerald-700 dark:text-emerald-300">前往班級同步</div><div className="text-[11px] font-bold text-emerald-600/70 dark:text-emerald-200/70 mt-1">處理老師發放的功課</div></button>}
+                            </div>
+                        </SettingSection>
+                        <SettingSection title="科目與帳號" desc="管理科目顏色、帳戶操作及登出。" icon="user-cog">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                {advancedPrefs?.showSubjectShortcut !== false && <button type="button" onClick={onOpenSubjects} className="p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 text-left hover:scale-[1.01] active:scale-[0.98] transition-all"><Icon name="school" className="w-5 h-5 text-indigo-500 mb-2" /><div className="font-black text-sm text-indigo-700 dark:text-indigo-300">科目管理</div><div className="text-[11px] font-bold text-indigo-600/70 dark:text-indigo-200/70 mt-1">自訂科目、排序、顏色</div></button>}
+                                {advancedPrefs?.showAccountShortcut !== false && <button type="button" onClick={onLogout} className="p-4 rounded-2xl bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 text-left hover:scale-[1.01] active:scale-[0.98] transition-all"><Icon name="log-out" className="w-5 h-5 text-red-500 mb-2" /><div className="font-black text-sm text-red-700 dark:text-red-300">登出帳號</div><div className="text-[11px] font-bold text-red-600/70 dark:text-red-200/70 mt-1">切換或重新登入</div></button>}
+                            </div>
+                        </SettingSection>
+                    </div>
+                </div>
+            );
+        }
+
+        
+function App() {
             const [user, setUser] = useState(null);
             const [authLoading, setAuthLoading] = useState(true);
             const [items, setItems] = useState([]);
@@ -2133,11 +2455,23 @@
             const [viewMode, setViewMode] = useState('current');
             const [appMode, setAppMode] = useState('personal'); 
 
-            const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('isDarkMode') === 'true');
-            const [themeColor, setThemeColor] = useState(() => localStorage.getItem('themeColor') || 'indigo');
+            const [isDarkMode, setIsDarkMode] = useState(() => safeStorageGet('isDarkMode') === 'true');
+            const [themeColor, setThemeColor] = useState(() => safeStorageGet('themeColor', 'indigo') || 'indigo');
             const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
-            const [layoutMode, setLayoutMode] = useState(() => localStorage.getItem('layoutMode') || 'normal');
-            const [customLayout, setCustomLayout] = useState(() => JSON.parse(localStorage.getItem('customLayout')) || { cards: true, timetable: true, input: true, list: true });
+            const [layoutMode, setLayoutMode] = useState(() => safeStorageGet('layoutMode', 'normal') || 'normal');
+            const [customLayout, setCustomLayout] = useState(() => safeStorageJSON('customLayout', { cards: true, timetable: true, input: true, list: true }));
+            const [advancedPrefs, setAdvancedPrefs] = useState(() => safeStorageJSON('advancedPrefs', {
+                largeText: false,
+                reduceMotion: false,
+                cleanGlass: false,
+                comfortSpacing: true,
+                smartHints: true,
+                focusFirst: false,
+                showClassShortcut: true,
+                showNotificationShortcut: true,
+                showSubjectShortcut: true,
+                showAccountShortcut: true
+            }));
             
             const t = THEME_CONFIG[themeColor] || THEME_CONFIG.indigo;
             const [exitingIds, setExitingIds] = useState([]);
@@ -2167,8 +2501,11 @@
             const [selectedClassBoard, setSelectedClassBoard] = useState('全校');
             const [publicTasks, setPublicTasks] = useState([]);
             const [syncingPublicIds, setSyncingPublicIds] = useState({});
+            const [autoSyncPublicEnabled, setAutoSyncPublicEnabled] = useState(false);
+            const [syncPreferenceLoaded, setSyncPreferenceLoaded] = useState(false);
             const [isNotificationCenterOpen, setIsNotificationCenterOpen] = useState(false);
             const [showUpdateIntro, setShowUpdateIntro] = useState(false);
+            const [showSyncModeIntro, setShowSyncModeIntro] = useState(false);
             const [readNotificationIds, setReadNotificationIds] = useState([]);
             const [predictedSubject, setPredictedSubject] = useState('');
             const [subjectManuallySelected, setSubjectManuallySelected] = useState(false);
@@ -2179,18 +2516,28 @@
             const [globalNow, setGlobalNow] = useState(new Date());
             const itemsRef = useRef([]);
             const autoDeleteRan = useRef(false);
+            const autoSyncingPublicIdsRef = useRef(new Set());
+            const syncModeIntroClosedForSessionRef = useRef(false);
 
             useEffect(() => { 
                 const loadingScreen = document.getElementById('loading-screen');
                 window.__EHANDBOOK_RENDERED__ = true;
                 if (loadingScreen) { loadingScreen.classList.add('hidden-loader'); setTimeout(() => loadingScreen.remove(), 500); }
-                // v1.8.1: 不再於載入時自動要求瀏覽器通知權限，避免部分裝置卡住或彈出原生提示。 
+                // v1.8.9: 不再於載入時自動要求瀏覽器通知權限，設定頁改為 iPad 友善寬度並加入高級個人化設定。 
                 const timer = setInterval(() => setGlobalNow(new Date()), 1000);
                 return () => clearInterval(timer);
             }, []);
 
-            useEffect(() => { localStorage.setItem('isDarkMode', isDarkMode); if (isDarkMode) document.documentElement.classList.add('dark'); else document.documentElement.classList.remove('dark'); }, [isDarkMode]);
-            useEffect(() => { localStorage.setItem('themeColor', themeColor); localStorage.setItem('layoutMode', layoutMode); localStorage.setItem('customLayout', JSON.stringify(customLayout)); }, [themeColor, layoutMode, customLayout]);
+            useEffect(() => { safeStorageSet('isDarkMode', String(isDarkMode)); if (isDarkMode) document.documentElement.classList.add('dark'); else document.documentElement.classList.remove('dark'); }, [isDarkMode]);
+            useEffect(() => { safeStorageSet('themeColor', themeColor); safeStorageSet('layoutMode', layoutMode); safeStorageSet('customLayout', JSON.stringify(customLayout)); }, [themeColor, layoutMode, customLayout]);
+            useEffect(() => {
+                safeStorageSet('advancedPrefs', JSON.stringify(advancedPrefs));
+                const root = document.documentElement;
+                root.classList.toggle('reduce-motion-mode', !!advancedPrefs.reduceMotion);
+                root.classList.toggle('large-text-mode', !!advancedPrefs.largeText);
+                root.classList.toggle('clean-glass-mode', !!advancedPrefs.cleanGlass);
+                root.classList.toggle('comfort-spacing-mode', advancedPrefs.comfortSpacing !== false);
+            }, [advancedPrefs]);
 
             useEffect(() => {
                 if (!window.firebaseServices || !auth) { setAuthLoading(false); return; }
@@ -2241,7 +2588,7 @@
                     return;
                 }
                 try {
-                    const saved = JSON.parse(localStorage.getItem(`ehandbook_read_notifications_${user.uid}`) || '[]');
+                    const saved = safeStorageJSON(`ehandbook_read_notifications_${user.uid}`, []);
                     setReadNotificationIds(Array.isArray(saved) ? saved : []);
                 } catch (e) {
                     setReadNotificationIds([]);
@@ -2259,7 +2606,7 @@
                 const releaseKey = `${version}::${systemConfig.updatePublishedAt || ''}`;
                 let hiddenReleases = [];
                 try {
-                    const rawHidden = localStorage.getItem(`ehandbook_update_hidden_${user.uid}`) || '[]';
+                    const rawHidden = safeStorageGet(`ehandbook_update_hidden_${user.uid}`, '[]');
                     const parsedHidden = JSON.parse(rawHidden);
                     hiddenReleases = Array.isArray(parsedHidden) ? parsedHidden : [];
                 } catch (e) {
@@ -2277,12 +2624,32 @@
                     const key = `ehandbook_update_hidden_${user.uid}`;
                     let old = [];
                     try {
-                        const parsedOld = JSON.parse(localStorage.getItem(key) || '[]');
+                        const parsedOld = safeStorageJSON(key, []);
                         old = Array.isArray(parsedOld) ? parsedOld : [];
                     } catch (e) { old = []; }
-                    localStorage.setItem(key, JSON.stringify(Array.from(new Set([...old, releaseKey]))));
+                    safeStorageSet(key, JSON.stringify(Array.from(new Set([...old, releaseKey]))));
                 }
                 setShowUpdateIntro(false);
+            };
+
+            useEffect(() => {
+                if (!user?.uid || showUpdateIntro || syncModeIntroClosedForSessionRef.current || advancedPrefs.smartHints === false) {
+                    setShowSyncModeIntro(false);
+                    return;
+                }
+                const hidden = safeStorageGet(`ehandbook_sync_mode_intro_v183_${user.uid}`, '') === 'hidden';
+                setShowSyncModeIntro(!hidden);
+            }, [user?.uid, showUpdateIntro, advancedPrefs.smartHints]);
+
+            const closeSyncModeIntroForNow = () => {
+                syncModeIntroClosedForSessionRef.current = true;
+                setShowSyncModeIntro(false);
+            };
+
+            const hideSyncModeIntroPermanently = () => {
+                if (user?.uid) safeStorageSet(`ehandbook_sync_mode_intro_v183_${user.uid}`, 'hidden');
+                syncModeIntroClosedForSessionRef.current = true;
+                setShowSyncModeIntro(false);
             };
 
             useEffect(() => {
@@ -2301,6 +2668,25 @@
                 const unsubTimetable = onSnapshot(doc(db, 'users', user.uid, 'settings', 'timetable'), (docSnap) => setTimetableConfig(docSnap.exists() && docSnap.data().timeSlots ? docSnap.data() : { timeSlots: DEFAULT_TIME_SLOTS, schedule: DEFAULT_SCHEDULE }), (err) => console.warn("Timetable err:", err));
                 const unsubSubjects = onSnapshot(doc(db, 'users', user.uid, 'settings', 'subjects'), (docSnap) => setSubjects(docSnap.exists() && docSnap.data().list ? docSnap.data().list : DEFAULT_SUBJECTS), (err) => console.warn("Subjects err:", err));
                 return () => { unsubItems(); unsubTimetable(); unsubSubjects(); };
+            }, [user, db]);
+
+            useEffect(() => {
+                if (!user || !db) {
+                    setAutoSyncPublicEnabled(false);
+                    setSyncPreferenceLoaded(false);
+                    return;
+                }
+                setSyncPreferenceLoaded(false);
+                const unsubSyncPrefs = onSnapshot(doc(db, 'users', user.uid, 'settings', 'syncPreferences'), (docSnap) => {
+                    const data = docSnap.exists() ? docSnap.data() : {};
+                    setAutoSyncPublicEnabled(data.autoSyncPublicEnabled === true);
+                    setSyncPreferenceLoaded(true);
+                }, (err) => {
+                    console.warn('Sync preferences err:', err);
+                    setAutoSyncPublicEnabled(false);
+                    setSyncPreferenceLoaded(true);
+                });
+                return () => unsubSyncPrefs();
             }, [user, db]);
 
             useEffect(() => {
@@ -2344,7 +2730,7 @@
                                 ? createdValue.toDate().getTime()
                                 : (createdValue ? new Date(createdValue).getTime() : 0);
                             if (isForMe && !existingPublicIds.has(publicId) && createdTime > pageLoadTime) {
-                                triggerAlert(`收到新廣播功課通知：${publicData.subject || '未命名科目'}`);
+                                triggerAlert(autoSyncPublicEnabled ? `收到新廣播功課，正在自動同步：${publicData.subject || '未命名科目'}` : `收到新廣播功課通知：${publicData.subject || '未命名科目'}`);
                             }
                         });
                     } catch (e) {
@@ -2352,7 +2738,7 @@
                     }
                 }, (err) => console.warn("Public tasks err:", err));
                 return () => unsubscribe();
-            }, [user, db, joinedClassesStr, pageLoadTime]);
+            }, [user, db, joinedClassesStr, pageLoadTime, autoSyncPublicEnabled]);
 
             const triggerAlert = (message, type = 'success') => {
                 setToast({ isVisible: true, message, type });
@@ -2421,6 +2807,80 @@
             }, [publicTasks, joinedClassesStr]);
 
             const unsyncedPublicTasks = useMemo(() => visiblePublicTasks.filter(task => !syncedPublicIds.has(task.id) && !task.forceExpired), [visiblePublicTasks, syncedPublicIds]);
+
+            const handleToggleAutoSyncPublic = async (nextValue) => {
+                if (!user || !db) return;
+                const oldValue = autoSyncPublicEnabled;
+                setAutoSyncPublicEnabled(nextValue);
+                try {
+                    await setDoc(doc(db, 'users', user.uid, 'settings', 'syncPreferences'), {
+                        autoSyncPublicEnabled: nextValue,
+                        updatedAt: serverTimestamp(),
+                        updatedBy: user.displayName || user.email || 'user'
+                    }, { merge: true });
+                    triggerAlert(nextValue ? '已開啟自動同步：新廣播功課會自動加入個人手冊' : '已關閉自動同步：新廣播功課會在主頁提示你手動同步');
+                } catch (e) {
+                    setAutoSyncPublicEnabled(oldValue);
+                    triggerAlert('同步模式儲存失敗，請稍後再試', 'error');
+                }
+            };
+
+            const syncPublicTaskToPersonal = async (task, options = {}) => {
+                if (!user || !db || !task?.id) return false;
+                const { silent = false, auto = false } = options;
+                try {
+                    const duplicateQ = query(collection(db, "users", user.uid, "items"), where("publicRefId", "==", task.id));
+                    const duplicateSnap = await getDocs(duplicateQ);
+                    if (!duplicateSnap.empty || syncedPublicIds.has(task.id)) {
+                        if (!silent) triggerAlert("呢份廣播功課已經同步過");
+                        return false;
+                    }
+
+                    const syncedItem = {
+                        type: task.type || 'homework',
+                        subject: task.subject || '其他',
+                        description: task.description || '',
+                        dueDate: task.dueDate || '',
+                        completed: false,
+                        createdAt: new Date().toISOString(),
+                        publicRefId: task.id,
+                        senderName: task.senderName || '老師',
+                        targetClass: task.targetClass || '全校',
+                        autoSynced: auto === true,
+                        forceExpired: task.forceExpired === true
+                    };
+                    await addDoc(collection(db, "users", user.uid, "items"), syncedItem);
+                    if (!silent) triggerAlert("已同步到你嘅個人手冊");
+                    return true;
+                } catch (error) {
+                    console.warn("Sync public task failed:", error);
+                    if (!silent) triggerAlert("同步失敗，請稍後再試", "error");
+                    throw error;
+                }
+            };
+
+            useEffect(() => {
+                if (!autoSyncPublicEnabled || !syncPreferenceLoaded || !user?.uid || !db || unsyncedPublicTasks.length === 0) return;
+                const targets = unsyncedPublicTasks.filter(task => !autoSyncingPublicIdsRef.current.has(task.id));
+                if (targets.length === 0) return;
+                targets.forEach(async (task) => {
+                    autoSyncingPublicIdsRef.current.add(task.id);
+                    setSyncingPublicIds(prev => ({ ...prev, [task.id]: true }));
+                    try {
+                        const ok = await syncPublicTaskToPersonal(task, { silent: true, auto: true });
+                        if (ok) triggerAlert(`已自動同步「${task.subject || '功課'}」到個人手冊`);
+                    } catch (e) {
+                        // silent catch already logged by helper
+                    } finally {
+                        autoSyncingPublicIdsRef.current.delete(task.id);
+                        setSyncingPublicIds(prev => {
+                            const next = { ...prev };
+                            delete next[task.id];
+                            return next;
+                        });
+                    }
+                });
+            }, [autoSyncPublicEnabled, syncPreferenceLoaded, user?.uid, db, unsyncedPublicTasks]);
 
             const userNotifications = useMemo(() => {
                 const notices = [];
@@ -2527,6 +2987,22 @@
                     });
                 }
 
+                if (!autoSyncPublicEnabled && unsyncedPublicTasks.length > 0) {
+                    notices.push({
+                        id: `manual-sync-needed-${unsyncedPublicTasks.map(t => t.id).join('-')}`,
+                        type: 'sync-mode',
+                        icon: 'hand',
+                        title: '你有功課需要手動同步',
+                        message: `自動同步目前關閉，尚有 ${unsyncedPublicTasks.length} 份廣播功課等你同步。`,
+                        meta: '班級廣播提醒',
+                        time: '現在',
+                        sortTime: Date.now() + 2,
+                        accent: 'orange',
+                        action: 'class',
+                        targetClass: '全校'
+                    });
+                }
+
                 visiblePublicTasks.slice(0, 12).forEach(task => {
                     const targetCode = task.targetClass || '全校';
                     const cls = systemClasses.find(c => c.code === targetCode);
@@ -2554,7 +3030,7 @@
                 return notices
                     .sort((a, b) => (b.sortTime || 0) - (a.sortTime || 0))
                     .map(n => ({ ...n, unread: !readNotificationIds.includes(n.id) }));
-            }, [systemConfig?.announcementText, systemConfig?.adminReminders, systemConfig?.updatePopupEnabled, systemConfig?.updateVersion, systemConfig?.updateTitle, systemConfig?.updateSummary, systemConfig?.updateAudience, systemConfig?.updatePublishedAt, isAdmin, visiblePublicTasks, joinedClassesStr, systemClasses, syncedPublicIds, readNotificationIds, items, timetableConfig?.updatedAt, timetableConfig?.updatedBy]);
+            }, [systemConfig?.announcementText, systemConfig?.adminReminders, systemConfig?.updatePopupEnabled, systemConfig?.updateVersion, systemConfig?.updateTitle, systemConfig?.updateSummary, systemConfig?.updateAudience, systemConfig?.updatePublishedAt, isAdmin, visiblePublicTasks, joinedClassesStr, systemClasses, syncedPublicIds, readNotificationIds, items, timetableConfig?.updatedAt, timetableConfig?.updatedBy, autoSyncPublicEnabled, unsyncedPublicTasks]);
 
             const unreadNotificationCount = useMemo(() => userNotifications.filter(n => n.unread).length, [userNotifications]);
 
@@ -2563,7 +3039,7 @@
                 const targetIds = Array.isArray(ids) ? ids : [ids];
                 setReadNotificationIds(prev => {
                     const merged = Array.from(new Set([...prev, ...targetIds.filter(Boolean)]));
-                    localStorage.setItem(`ehandbook_read_notifications_${user.uid}`, JSON.stringify(merged));
+                    safeStorageSet(`ehandbook_read_notifications_${user.uid}`, JSON.stringify(merged));
                     return merged;
                 });
             };
@@ -2599,30 +3075,9 @@
                 if (syncingPublicIds[task.id]) return;
                 setSyncingPublicIds(prev => ({ ...prev, [task.id]: true }));
                 try {
-                    const duplicateQ = query(collection(db, "users", user.uid, "items"), where("publicRefId", "==", task.id));
-                    const duplicateSnap = await getDocs(duplicateQ);
-                    if (!duplicateSnap.empty || syncedPublicIds.has(task.id)) {
-                        triggerAlert("呢份廣播功課已經同步過");
-                        return;
-                    }
-
-                    const syncedItem = {
-                        type: task.type || 'homework',
-                        subject: task.subject || '其他',
-                        description: task.description || '',
-                        dueDate: task.dueDate || '',
-                        completed: false,
-                        createdAt: new Date().toISOString(),
-                        publicRefId: task.id,
-                        senderName: task.senderName || '老師',
-                        targetClass: task.targetClass || '全校',
-                        forceExpired: task.forceExpired === true
-                    };
-                    await addDoc(collection(db, "users", user.uid, "items"), syncedItem);
-                    triggerAlert("已同步到你嘅個人手冊");
+                    await syncPublicTaskToPersonal(task, { silent: false, auto: false });
                 } catch (error) {
                     console.warn("Manual sync public task failed:", error);
-                    triggerAlert("同步失敗，請稍後再試", "error");
                 } finally {
                     setSyncingPublicIds(prev => {
                         const next = { ...prev };
@@ -2837,11 +3292,11 @@
                         <header className="flex items-center justify-between mb-8 max-w-3xl mx-auto glass-card bg-white/80 dark:bg-slate-900/80 px-5 py-4 rounded-[2rem]">
                             <div className="flex items-center gap-3">
                                 <div className={`w-11 h-11 rounded-2xl flex items-center justify-center bg-gradient-to-br ${t.gradient} text-white shadow-lg`}>
-                                    <Icon name={viewMode === 'timetable' || viewMode === 'timetable_edit' ? "calendar-clock" : viewMode === 'history' ? "timer" : "book-open"} className="w-6 h-6" />
+                                    <Icon name={viewMode === 'settings' ? "sliders-horizontal" : viewMode === 'timetable' || viewMode === 'timetable_edit' ? "calendar-clock" : viewMode === 'history' ? "timer" : "book-open"} className="w-6 h-6" />
                                 </div>
                                 <div>
                                     <h1 className="text-lg sm:text-xl font-black text-slate-800 dark:text-white leading-tight tracking-tight">
-                                        {viewMode === 'timetable' ? '上課時間表' : viewMode === 'timetable_edit' ? '編輯時間表' : viewMode === 'history' ? '歷史紀錄' : '學生小幫手'}
+                                        {viewMode === 'settings' ? '應用程式設定' : viewMode === 'timetable' ? '上課時間表' : viewMode === 'timetable_edit' ? '編輯時間表' : viewMode === 'history' ? '歷史紀錄' : '學生小幫手'}
                                     </h1>
                                     <p className="text-xs font-bold text-slate-500 mt-0.5">{globalNow.toLocaleDateString('zh-HK', { year: 'numeric', month: 'numeric', day: 'numeric', weekday: 'short' })}</p>
                                 </div>
@@ -2861,13 +3316,7 @@
                                         <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-black flex items-center justify-center border-2 border-white dark:border-slate-900 leading-none">{unreadNotificationCount > 9 ? '9+' : unreadNotificationCount}</span>
                                     )}
                                 </button>
-                                <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-xl p-1 shadow-inner border border-slate-200/50">
-                                    <button onClick={() => setIsPreferencesOpen(true)} className="p-2 rounded-lg hover:bg-white text-slate-500 hover:text-slate-800 transition-all hover:shadow-sm" title="外觀設定"><Icon name="palette" className="w-4 h-4" /></button>
-                                    <div className="w-px h-4 bg-slate-300 mx-1"></div>
-                                    <button onClick={() => setIsSubjectManagerOpen(true)} className="p-2 rounded-lg hover:bg-white text-slate-500 hover:text-slate-800 transition-all hover:shadow-sm" title="科目管理"><Icon name="school" className="w-4 h-4" /></button>
-                                    <div className="w-px h-4 bg-slate-300 mx-1"></div>
-                                    <button onClick={handleLogout} className="p-2 rounded-lg hover:bg-red-50 text-slate-500 hover:text-red-600 transition-all" title="登出"><Icon name="log-out" className="w-4 h-4" /></button>
-                                </div>
+
                             </div>
                         </header>
                         )}
@@ -2881,10 +3330,35 @@
                         {viewMode !== 'admin' && (
                             <div key={`${viewMode}-${appMode}`} className="animate-item">
                                 {viewMode === 'timetable' ? ( <div className="max-w-3xl mx-auto"><Timetable currentDay={currentTimetableDay} config={timetableConfig} onDayChange={setCurrentTimetableDay} subjects={subjects} globalNow={globalNow} /></div> ) : 
-                                 viewMode === 'timetable_edit' ? ( <TimetableEditor initialConfig={timetableConfig} onSave={saveTimetableConfig} onCancel={() => setViewMode('timetable')} subjects={subjects} triggerConfirm={triggerConfirm} /> ) : (
+                                 viewMode === 'timetable_edit' ? ( <TimetableEditor initialConfig={timetableConfig} onSave={saveTimetableConfig} onCancel={() => setViewMode('timetable')} subjects={subjects} triggerConfirm={triggerConfirm} /> ) :
+                                 viewMode === 'settings' ? ( <UserSettingsPage
+                                    user={user}
+                                    userProfile={userProfile}
+                                    t={t}
+                                    autoSyncPublicEnabled={autoSyncPublicEnabled}
+                                    syncPreferenceLoaded={syncPreferenceLoaded}
+                                    onToggleAutoSyncPublic={handleToggleAutoSyncPublic}
+                                    unsyncedCount={unsyncedPublicTasks.length}
+                                    unreadNotificationCount={unreadNotificationCount}
+                                    isDarkMode={isDarkMode}
+                                    setIsDarkMode={setIsDarkMode}
+                                    themeColor={themeColor}
+                                    setThemeColor={setThemeColor}
+                                    layoutMode={layoutMode}
+                                    setLayoutMode={setLayoutMode}
+                                    customLayout={customLayout}
+                                    setCustomLayout={setCustomLayout}
+                                    advancedPrefs={advancedPrefs}
+                                    setAdvancedPrefs={setAdvancedPrefs}
+                                    onOpenNotifications={() => setIsNotificationCenterOpen(true)}
+                                    onOpenAppearance={() => setIsPreferencesOpen(true)}
+                                    onOpenSubjects={() => setIsSubjectManagerOpen(true)}
+                                    onGoClass={() => { setViewMode('current'); setAppMode('class'); }}
+                                    onLogout={handleLogout}
+                                 /> ) : (
                                 
                                 <div className="max-w-3xl mx-auto pt-2">
-                                    {viewMode === 'current' && appMode === 'personal' && unsyncedPublicTasks.length > 0 && (
+                                    {viewMode === 'current' && appMode === 'personal' && !autoSyncPublicEnabled && unsyncedPublicTasks.length > 0 && (
                                         <button onClick={() => { setAppMode('class'); setViewMode('current'); }} className="w-full mb-6 text-left relative overflow-hidden rounded-3xl p-[2px] shadow-lg transition-all hover:scale-[1.01] active:scale-[0.99]">
                                             <div className="absolute inset-0 bg-gradient-to-r from-amber-400 via-orange-500 to-pink-500 animate-gradient-x"></div>
                                             <div className="relative rounded-3xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl p-4 sm:p-5 flex items-center justify-between gap-4">
@@ -2892,7 +3366,7 @@
                                                     <div className="w-11 h-11 rounded-2xl bg-orange-100 dark:bg-orange-900/40 text-orange-500 flex items-center justify-center shrink-0 animate-float"><Icon name="bell-ring" className="w-5 h-5" /></div>
                                                     <div>
                                                         <div className="text-sm sm:text-base font-black text-slate-800 dark:text-white">收到新廣播功課通知</div>
-                                                        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-bold mt-0.5">請前往班級分頁一鍵同步，尚有 {unsyncedPublicTasks.length} 份未同步。</p>
+                                                        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-bold mt-0.5">你已關閉自動同步，請前往班級分頁自行同步。尚有 {unsyncedPublicTasks.length} 份未同步。</p>
                                                     </div>
                                                 </div>
                                                 <span className="hidden sm:flex items-center gap-1 text-xs font-black text-orange-600 bg-orange-50 dark:bg-orange-900/30 px-3 py-2 rounded-xl">立即同步 <Icon name="arrow-right" className="w-4 h-4" /></span>
@@ -3048,12 +3522,15 @@
 
                                     {viewMode === 'current' && appMode === 'class' && (
                                         <div className="space-y-6 animate-fadeIn pb-10">
-                                            <div className="glass-card bg-white/90 dark:bg-slate-800/90 rounded-3xl p-6 shadow-sm border border-white/40 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                                            <div className="glass-card bg-white/90 dark:bg-slate-800/90 rounded-3xl p-6 shadow-sm border border-white/40 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                                                 <div>
                                                     <h3 className="text-xl font-bold flex items-center gap-2 dark:text-white"><Icon name="school" className={t.text} /> 班級廣播</h3>
-                                                    <p className="text-sm text-slate-500 mt-1">全校及已加入班級的廣播任務，需要你手動同步到個人手冊。</p>
+                                                    <p className="text-sm text-slate-500 mt-1">全校及已加入班級的廣播任務，可選擇自動同步或手動同步到個人手冊。</p>
                                                 </div>
-                                                <button onClick={() => setIsJoinClassOpen(true)} className={`px-4 py-2.5 rounded-xl font-bold text-sm text-white shadow-md active:scale-95 transition-all flex items-center gap-2 ${t.bg}`}><Icon name="plus" className="w-4 h-4" /> 加入班級</button>
+                                                <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
+                                                    <button type="button" onClick={() => handleToggleAutoSyncPublic(!autoSyncPublicEnabled)} disabled={!syncPreferenceLoaded} className={`px-4 py-2.5 rounded-xl font-bold text-sm shadow-md active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50 ${autoSyncPublicEnabled ? 'bg-emerald-500 hover:bg-emerald-600 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600'}`}><Icon name={autoSyncPublicEnabled ? 'refresh-cw' : 'hand'} className="w-4 h-4" /> {autoSyncPublicEnabled ? '自動同步已開' : '手動同步中'}</button>
+                                                    <button onClick={() => setIsJoinClassOpen(true)} className={`px-4 py-2.5 rounded-xl font-bold text-sm text-white shadow-md active:scale-95 transition-all flex items-center justify-center gap-2 ${t.bg}`}><Icon name="plus" className="w-4 h-4" /> 加入班級</button>
+                                                </div>
                                             </div>
 
                                             {joinedClasses.length === 0 && (
@@ -3128,22 +3605,18 @@
                         )}
                     </div>
 
-                    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 glass-card bg-white/90 dark:bg-slate-800/90 rounded-full p-2 shadow-lg border border-white/50 dark:border-slate-700/50 z-[100] flex items-center justify-between gap-1 sm:gap-2 max-w-[95%] overflow-x-auto dynamic-island-scroll">
+                                        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 glass-card bg-white/90 dark:bg-slate-800/90 rounded-full p-2 shadow-lg border border-white/50 dark:border-slate-700/50 z-[100] flex items-center justify-between gap-1 sm:gap-2 max-w-[95%] overflow-x-auto dynamic-island-scroll">
                         <NavItem icon="book-open" label="主頁" active={viewMode === 'current' && appMode === 'personal'} onClick={() => { setViewMode('current'); setAppMode('personal'); setIsListVisible(true); }} t={t} />
                         <NavItem icon="school" label="班級" active={viewMode === 'current' && appMode === 'class'} onClick={() => { setViewMode('current'); setAppMode('class'); setIsListVisible(true); }} t={t} />
                         <NavItem icon="calendar-clock" label="時間表" active={viewMode === 'timetable' || viewMode === 'timetable_edit'} onClick={() => { setViewMode('timetable'); setIsListVisible(true); }} t={t} />
                         <NavItem icon="timer" label="歷史" active={viewMode === 'history'} onClick={() => { setViewMode('history'); setAppMode('personal'); setIsListVisible(true); }} t={t} />
+                        <NavItem icon="sliders-horizontal" label="設定" active={viewMode === 'settings'} onClick={() => { setViewMode('settings'); setAppMode('personal'); setIsListVisible(true); }} t={t} />
                         {isAdmin && ( <><div className="w-px h-6 bg-slate-200 dark:bg-slate-700 mx-1"></div><NavItem icon="shield" label="後台" active={viewMode === 'admin'} onClick={() => setViewMode('admin')} t={t} /></> )}
                     </div>
 
                     {editingItem && <EditModal item={editingItem} onClose={() => setEditingItem(null)} onSave={handleUpdateItem} triggerAlert={triggerAlert} triggerConfirm={triggerConfirm} subjects={subjects} />}
                     <DatePickerModal isOpen={isDueDatePickerOpen} value={dueDate} onSelect={setDueDate} onClose={() => setIsDueDatePickerOpen(false)} title="選擇功課交期" />
                     {quickView.isOpen && <QuickViewModal isOpen={quickView.isOpen} onClose={() => setQuickView({ isOpen: false, title: '', items: [] })} title={quickView.title} items={quickView.items} subjects={subjects} onEdit={setEditingItem} onDelete={deleteItem} isAdmin={isAdmin} userUid={user?.uid} />}
-                    {isPreferencesOpen && <AppearanceModal isOpen={isPreferencesOpen} onClose={() => setIsPreferencesOpen(false)} t={t} themeColor={themeColor} setThemeColor={setThemeColor} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} layoutMode={layoutMode} setLayoutMode={setLayoutMode} customLayout={customLayout} setCustomLayout={setCustomLayout} />}
-                    {showNameSetup && <NameSetupModal user={user} onSave={handleNameSetupSave} loading={nameSetupLoading} triggerAlert={triggerAlert} triggerConfirm={triggerConfirm} t={t} />}
-                    <JoinClassModal isOpen={isJoinClassOpen} onClose={() => setIsJoinClassOpen(false)} systemClasses={systemClasses} joinedClasses={joinedClasses} onJoin={handleJoinClassSubmit} triggerConfirm={triggerConfirm} t={t} />
-                    {isSubjectManagerOpen && <SubjectManagerModal isOpen={isSubjectManagerOpen} onClose={() => setIsSubjectManagerOpen(false)} currentSubjects={subjects} onSave={saveSubjects} triggerConfirm={triggerConfirm} triggerAlert={triggerAlert} />}
-
                     {showUpdateIntro && systemConfig?.updateVersion && (
                         <div className="fixed inset-0 z-[270] flex items-center justify-center p-4 sm:p-6">
                             <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-md"></div>
@@ -3181,6 +3654,48 @@
                                 <div className="p-5 border-t border-slate-100 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl">
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3"><button onClick={closeUpdateIntroForNow} className="py-4 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-200 font-black active:scale-[0.98] transition-all">今次關閉，下次再提示</button><button onClick={hideUpdateIntroForThisRelease} className="py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black shadow-lg active:scale-[0.98] transition-all">不再顯示今次更新</button></div>
                                     <p className="text-center text-[11px] text-slate-400 font-bold mt-3">同一版本只會自動顯示一次，可在通知中心再次查看。</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {showSyncModeIntro && !showUpdateIntro && (
+                        <div className="fixed inset-0 z-[268] flex items-center justify-center p-4 sm:p-6">
+                            <div className="absolute inset-0 bg-slate-950/55 backdrop-blur-md"></div>
+                            <div className="relative w-full max-w-[520px] max-h-[86vh] overflow-hidden rounded-[2rem] glass-card bg-white/95 dark:bg-slate-900/95 border border-white/60 dark:border-slate-700 shadow-2xl flex flex-col animate-pop-in">
+                                <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-blue-600 to-emerald-500 text-white p-6 sm:p-7">
+                                    <div className="absolute inset-0 opacity-25 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.9),transparent_45%)]"></div>
+                                    <div className="relative">
+                                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 border border-white/20 text-xs font-black mb-4"><Icon name="refresh-cw" className="w-4 h-4" /> 新功能教學</div>
+                                        <h3 className="text-2xl font-black tracking-tight">廣播功課同步模式已升級</h3>
+                                        <p className="text-sm text-indigo-100 font-bold mt-2">你可以自行選擇「自動同步」或「手動同步」，按自己習慣使用。</p>
+                                    </div>
+                                </div>
+                                <div className="overflow-y-auto p-5 sm:p-6 space-y-4 scrollbar-hide">
+                                    <div className="rounded-3xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 p-4">
+                                        <div className="flex items-center gap-2 font-black text-emerald-700 dark:text-emerald-300 mb-2"><Icon name="refresh-cw" className="w-5 h-5"/> 自動同步</div>
+                                        <p className="text-sm font-bold text-emerald-800/80 dark:text-emerald-100/90 leading-relaxed">開啟後，管理員發放新廣播功課時，系統會自動幫你加入個人手冊，不需要再手動按同步。</p>
+                                    </div>
+                                    <div className="rounded-3xl bg-orange-50 dark:bg-orange-900/20 border border-orange-100 dark:border-orange-800 p-4">
+                                        <div className="flex items-center gap-2 font-black text-orange-700 dark:text-orange-300 mb-2"><Icon name="hand" className="w-5 h-5"/> 手動同步</div>
+                                        <p className="text-sm font-bold text-orange-800/80 dark:text-orange-100/90 leading-relaxed">關閉自動同步後，有新廣播功課時主頁會顯示醒目提示，你可以前往班級分頁自行選擇同步。</p>
+                                    </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <button type="button" onClick={() => handleToggleAutoSyncPublic(true)} className="rounded-3xl p-4 text-left bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-700 transition-all">
+                                            <div className="font-black text-slate-800 dark:text-white flex items-center gap-2"><Icon name="toggle-right" className="w-5 h-5 text-emerald-500"/> 開啟自動同步</div>
+                                            <div className="text-xs font-bold text-slate-400 mt-1">適合想省時間、不想漏功課的用戶。</div>
+                                        </button>
+                                        <button type="button" onClick={() => handleToggleAutoSyncPublic(false)} className="rounded-3xl p-4 text-left bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 hover:border-orange-300 dark:hover:border-orange-700 transition-all">
+                                            <div className="font-black text-slate-800 dark:text-white flex items-center gap-2"><Icon name="toggle-left" className="w-5 h-5 text-orange-500"/> 保持手動同步</div>
+                                            <div className="text-xs font-bold text-slate-400 mt-1">適合想自己確認每份功課才加入的人。</div>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="p-5 border-t border-slate-100 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <button onClick={closeSyncModeIntroForNow} className="py-4 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-200 font-black active:scale-[0.98] transition-all">今次關閉，下次再提示</button>
+                                        <button onClick={hideSyncModeIntroPermanently} className="py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black shadow-lg active:scale-[0.98] transition-all">我知道了，不再顯示</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
