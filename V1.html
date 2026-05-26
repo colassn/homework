@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-HK">
 <head>
-    <!-- 電子手冊 Pro v1.8.18 Auth UX Stable Fix：保留所有設定功能，專注修復 Google 登入 argument-error -->
+    <!-- 電子手冊 Pro v1.8.17 Auth Only Stable Fix：保留所有設定功能，專注修復 Google 登入 argument-error -->
 
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-8VCPLTE2QT"></script>
     <script>
@@ -20,8 +20,8 @@
     <meta name="apple-mobile-web-app-title" content="電子手冊">
     
     <title>電子手冊 Pro</title>
-    <meta name="ehandbook-version" content="v1.8.18-auth-ux-popup-first-fix">
-    <script>window.__EHANDBOOK_VERSION__ = "v1.8.18-auth-ux-popup-first-fix"; console.log("電子手冊 Pro v1.8.18-auth-ux-popup-first-fix loaded");</script>
+    <meta name="ehandbook-version" content="v1.8.17-auth-only-stable-fix">
+    <script>window.__EHANDBOOK_VERSION__ = "v1.8.17-auth-only-stable-fix"; console.log("電子手冊 Pro v1.8.17-auth-only-stable-fix loaded");</script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js" crossorigin></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js" crossorigin></script>
@@ -130,7 +130,7 @@
             try {
                 var box = document.getElementById('loading-screen');
                 if (box && !window.__EHANDBOOK_RENDERED__) {
-                    box.innerHTML = "<div style='max-width:420px;padding:22px;text-align:center'><div style='font-size:42px;margin-bottom:10px'>⚠️</div><h2 style='font-size:1.2rem;font-weight:800;margin-bottom:8px;color:#ef4444'>網站載入時發生錯誤</h2><p style='font-size:13px;color:#64748b;line-height:1.6'>請重新整理一次；如果仍然出現，請截圖 Console 錯誤。系統已加入 v1.8.18 登入修復版啟動保護。</p></div>";
+                    box.innerHTML = "<div style='max-width:420px;padding:22px;text-align:center'><div style='font-size:42px;margin-bottom:10px'>⚠️</div><h2 style='font-size:1.2rem;font-weight:800;margin-bottom:8px;color:#ef4444'>網站載入時發生錯誤</h2><p style='font-size:13px;color:#64748b;line-height:1.6'>請重新整理一次；如果仍然出現，請截圖 Console 錯誤。系統已加入 v1.8.17 登入修復版啟動保護。</p></div>";
                 }
             } catch(e) {}
         });
@@ -186,7 +186,7 @@
                 try { localStorage.removeItem('ehandbook_google_redirect_pending'); } catch(e) {}
                 try { localStorage.removeItem('ehandbook_google_redirect_started_at'); } catch(e) {}
             };
-            window.__EHANDBOOK_REDIRECT_RESULT_PROMISE__ = getRedirectResult(auth, browserPopupRedirectResolver)
+            window.__EHANDBOOK_REDIRECT_RESULT_PROMISE__ = getRedirectResult(auth)
                 .then((result) => {
                     window.__EHANDBOOK_REDIRECT_RESULT__ = result || null;
                     if (result && result.user) {
@@ -514,66 +514,41 @@
 
             const handleGoogleLogin = async () => { 
                 if (!auth || !googleProvider) { triggerAlert('Firebase 尚未準備好，請重新整理後再試。', 'error'); return; }
-
                 const startRedirectLogin = async () => {
                     safeStorageSet('ehandbook_google_redirect_pending', '1');
                     safeStorageSet('ehandbook_google_redirect_started_at', String(Date.now()));
                     window.__EHANDBOOK_REDIRECT_PENDING__ = true;
-                    await signInWithRedirect(auth, googleProvider, browserPopupRedirectResolver);
+                    await signInWithRedirect(auth, googleProvider);
                 };
-
                 try {
                     setLoading(true);
                     await (window.__EHANDBOOK_AUTH_PERSISTENCE_READY__ || Promise.resolve());
                     googleProvider.setCustomParameters?.({ prompt: 'select_account' });
-
-                    /*
-                     * v1.8.18 重點：
-                     * 不再因 Safari / iPad 就強制 Redirect。
-                     * 因為 Redirect 會出現 Firebase / Google 的「Continue to app」中轉頁，
-                     * 有時會等約 10 秒才跳到 Google 帳戶選擇頁。
-                     * 現在：普通 Safari / iPad / Chrome 一律先 Popup；
-                     * 只有內置瀏覽器 / PWA standalone / Popup 真正失敗時，才 fallback Redirect。
-                     */
-                    const forceRedirect = isInAppBrowser() || isStandaloneMode();
-
-                    if (forceRedirect) {
+                    const shouldUseRedirect = isIPadLike() || isSafariLike() || isStandaloneMode() || isInAppBrowser();
+                    if (shouldUseRedirect && signInWithRedirect) {
                         await startRedirectLogin();
                         return;
                     }
-
                     window.__EHANDBOOK_CLEAR_REDIRECT_PENDING__?.();
-
-                    try {
-                        const credential = await signInWithPopup(auth, googleProvider, browserPopupRedirectResolver);
-                        if (credential?.user) {
-                            triggerAlert('Google 登入成功，正在進入主頁…');
-                            return;
-                        }
-                    } catch (popupError) {
-                        console.warn('Google popup login failed, checking redirect fallback:', popupError);
-
-                        const fallbackCodes = [
-                            'auth/popup-blocked',
-                            'auth/popup-closed-by-user',
-                            'auth/cancelled-popup-request',
-                            'auth/operation-not-supported-in-this-environment',
-                            'auth/web-storage-unsupported',
-                            'auth/internal-error'
-                        ];
-
-                        if (signInWithRedirect && fallbackCodes.includes(popupError?.code)) {
+                    const credential = await signInWithPopup(auth, googleProvider);
+                    if (credential?.user) {
+                        triggerAlert('Google 登入成功，正在進入主頁…');
+                    }
+                } catch (error) {
+                    console.warn('Google popup login failed:', error);
+                    const fallbackCodes = ['auth/popup-blocked', 'auth/popup-closed-by-user', 'auth/cancelled-popup-request', 'auth/operation-not-supported-in-this-environment', 'auth/web-storage-unsupported'];
+                    if (signInWithRedirect && (isIPadLike() || isSafariLike() || isStandaloneMode() || isInAppBrowser() || fallbackCodes.includes(error?.code))) {
+                        try {
                             await startRedirectLogin();
                             return;
                         }
-
-                        triggerAlert(getFriendlyAuthError(popupError, 'login'), 'error');
-                        setLoading(false);
+                        catch (redirectError) {
+                            window.__EHANDBOOK_CLEAR_REDIRECT_PENDING__?.();
+                            triggerAlert(getFriendlyAuthError(redirectError, 'login'), 'error');
+                        }
+                    } else {
+                        triggerAlert(getFriendlyAuthError(error, 'login'), 'error');
                     }
-                } catch (error) {
-                    console.warn('Google login failed:', error);
-                    window.__EHANDBOOK_CLEAR_REDIRECT_PENDING__?.();
-                    triggerAlert(getFriendlyAuthError(error, 'login'), 'error');
                     setLoading(false);
                 } 
             };
@@ -4083,6 +4058,6 @@ function App() {
             }
         }
     </script>
-<!-- VERSION_CHECK: v1.8.18-auth-ux-popup-first-fix | original-full-code-preserved | only-auth-login-ux-changed | popup-first-no-forced-safari-redirect -->
+<!-- VERSION_CHECK: v1.8.17-auth-only-stable-fix | based-on-uploaded-v1.8.14 | auth-only-changes | original-functions-preserved -->
 </body>
 </html>
